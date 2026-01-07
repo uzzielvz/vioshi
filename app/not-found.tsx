@@ -6,7 +6,7 @@ export default function NotFound() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 pt-[64px]">
         <div className="px-6 md:px-8 py-8 md:py-12">
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
