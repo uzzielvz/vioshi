@@ -14,10 +14,13 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [locale, setLocale] = useState<'es' | 'en'>('es'); // ES/MXN por defecto
+  const [mobileShopOpen, setMobileShopOpen] = useState(false);
+  const [mobileSupportOpen, setMobileSupportOpen] = useState(false);
   const { itemCount } = useCart();
   
   const currency = locale === 'es' ? 'MXN' : 'USD';
   const language = locale === 'es' ? 'ES' : 'EN';
+  const country = locale === 'es' ? 'MÉXICO' : 'UNITED STATES';
 
   // Fijar submenú basado en la ruta actual
   useEffect(() => {
@@ -106,7 +109,8 @@ export default function Header() {
           href="/" 
           className="text-lg font-bold text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
           style={{ 
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif'
+            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+            textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
           }}
         >
           VIOGI
@@ -122,13 +126,24 @@ export default function Header() {
               onClick={handleShopClick}
               className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 flex items-center gap-1"
               style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                letterSpacing: '0.02em',
+                fontSize: '11px',
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
               SHOP
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+              {/* CHEVRON que rota */}
+              <svg 
+                className="w-3 h-3 transition-transform duration-200" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24" 
+                strokeWidth={2.5}
+                style={{
+                  transform: shopOpen ? 'rotate(90deg)' : 'rotate(0deg)'
+                }}
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </Link>
@@ -139,8 +154,8 @@ export default function Header() {
             href="/archive" 
             className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
             style={{ 
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-              letterSpacing: '0.05em',
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              letterSpacing: '0.02em',
               fontSize: '11px',
               padding: '0',
               margin: '0'
@@ -156,13 +171,24 @@ export default function Header() {
               onClick={handleSupportClick}
               className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 flex items-center gap-1"
               style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                letterSpacing: '0.02em',
+                fontSize: '11px',
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
               SOPORTE
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+              {/* CHEVRON que rota */}
+              <svg 
+                className="w-3 h-3 transition-transform duration-200" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24" 
+                strokeWidth={2.5}
+                style={{
+                  transform: supportOpen ? 'rotate(90deg)' : 'rotate(0deg)'
+                }}
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </Link>
@@ -183,9 +209,10 @@ export default function Header() {
             }}
             className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
             style={{ 
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-              letterSpacing: '0.05em',
-              fontSize: '11px'
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              letterSpacing: '0.02em',
+              fontSize: '11px',
+              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
             }}
           >
             {searchOpen ? 'CERRAR' : 'BUSCAR'}
@@ -194,34 +221,91 @@ export default function Header() {
           {/* IDIOMA / MONEDA */}
           <button 
             onClick={() => setCurrencyOpen(!currencyOpen)}
-            className="hidden md:flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
+            className="hidden md:flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 relative"
             style={{ 
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-              letterSpacing: '0.05em',
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              letterSpacing: '0.02em',
               fontSize: '11px'
             }}
           >
-            {/* BANDERA SVG */}
+            {language} / {currency}
+            {/* CHEVRON que rota */}
             <svg 
-              className="w-4 h-4" 
+              className="w-3 h-3 transition-transform duration-200" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24" 
-              strokeWidth="2"
+              strokeWidth={2.5}
+              style={{
+                transform: currencyOpen ? 'rotate(90deg)' : 'rotate(0deg)'
+              }}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 21v-13l9-4 9 4v13M3 8l9-4 9 4" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
-            {language} / {currency}
           </button>
+          
+          {/* DROPDOWN COMPACTO */}
+          {currencyOpen && (
+            <div 
+              className="hidden md:block absolute border"
+              style={{
+                top: '100%',
+                right: 0,
+                marginTop: '4px',
+                minWidth: '120px',
+                zIndex: 50,
+                background: 'rgba(255, 255, 255, 0.98)',
+                borderColor: 'rgba(232, 232, 232, 0.3)'
+              }}
+            >
+              <button
+                onClick={() => {
+                  setLocale('es');
+                  setCurrencyOpen(false);
+                }}
+                className="w-full text-left px-4 py-2 hover:opacity-60 transition-opacity duration-200"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase',
+                  opacity: locale === 'es' ? 1 : 0.6,
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                }}
+              >
+                ES / MXN
+              </button>
+              <button
+                onClick={() => {
+                  setLocale('en');
+                  setCurrencyOpen(false);
+                }}
+                className="w-full text-left px-4 py-2 hover:opacity-60 transition-opacity duration-200"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase',
+                  opacity: locale === 'en' ? 1 : 0.6,
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                }}
+              >
+                EN / USD
+              </button>
+            </div>
+          )}
 
           {/* CARRITO */}
           <Link 
             href="/cart" 
             className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
             style={{ 
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-              letterSpacing: '0.05em',
-              fontSize: '11px'
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              letterSpacing: '0.02em',
+              fontSize: '11px',
+              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
             }}
           >
             CARRITO
@@ -233,8 +317,8 @@ export default function Header() {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Menu"
             style={{ 
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-              letterSpacing: '0.05em',
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              letterSpacing: '0.02em',
               fontSize: '11px'
             }}
           >
@@ -257,138 +341,102 @@ export default function Header() {
           {shopOpen && (
             <>
               <Link 
-                href="/collections/new" 
+                href="/collections/hoodie" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
                   fontSize: '11px',
                   padding: '0',
-                  margin: '0'
+                  margin: '0',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
-                NUEVOS LANZAMIENTOS
+                HOODIE
               </Link>
               <Link 
-                href="/collections/tees" 
+                href="/collections/chamarra" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
-                CAMISETAS
-              </Link>
-              <Link 
-                href="/collections/outerwear" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
-                }}
-              >
-                ABRIGOS
-              </Link>
-              <Link 
-                href="/collections/sweats" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
-                }}
-              >
-                SUDADERAS
-              </Link>
-              <Link 
-                href="/collections/tops-shirts" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
-                }}
-              >
-                TOPS & CAMISAS
-              </Link>
-              <Link 
-                href="/collections/knits" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
-                }}
-              >
-                TEJIDOS
+                CHAMARRA
               </Link>
               <Link 
                 href="/collections/pants" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
-                PANTALONES
+                PANTS
               </Link>
               <Link 
-                href="/collections/shorts" 
+                href="/collections/jeans" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
-                SHORTS
+                JEANS
               </Link>
               <Link 
-                href="/collections/denim" 
+                href="/collections/camisas" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
-                DENIM
+                CAMISAS
               </Link>
               <Link 
-                href="/collections/headwear" 
+                href="/collections/playeras" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
-                GORRAS
+                PLAYERAS
               </Link>
               <Link 
-                href="/collections/sunglasses" 
+                href="/collections/accesorios" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
-                }}
-              >
-                LENTES DE SOL
-              </Link>
-              <Link 
-                href="/collections/accessories" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
                 ACCESORIOS
+              </Link>
+              <Link 
+                href="/collections/bolsos" 
+                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                style={{ 
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                }}
+              >
+                BOLSOS
               </Link>
             </>
           )}
@@ -399,86 +447,70 @@ export default function Header() {
                 href="/pages/customer-support" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
-                ATENCIÓN AL CLIENTE
+                CUSTOMER SUPPORT
               </Link>
               <Link 
                 href="/pages/customer-support#chat" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
                 CHAT
               </Link>
               <Link 
-                href="/account" 
+                href="/pages/locaciones" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
-                CUENTA
+                LOCACIONES
               </Link>
               <Link 
-                href="/pages/chapters" 
+                href="/pages/shipping-payments-returns" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
-                CAPÍTULOS
-              </Link>
-              <Link 
-                href="/pages/shipping-returns" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
-                }}
-              >
-                ENVÍOS Y DEVOLUCIONES
+                ENVÍOS, PAGOS Y DEVOLUCIONES
               </Link>
               <Link 
                 href="/pages/size-guide" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
                 GUÍA DE TALLAS
               </Link>
               <Link 
-                href="/pages/warranty" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
-                }}
-              >
-                GARANTÍA
-              </Link>
-              <Link 
                 href="/pages/legal" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
                 LEGAL
@@ -487,9 +519,10 @@ export default function Header() {
                 href="/pages/accessibility" 
                 className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
                 style={{ 
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  letterSpacing: '0.05em',
-                  fontSize: '11px'
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
                 ACCESIBILIDAD
@@ -499,95 +532,17 @@ export default function Header() {
         </div>
       )}
 
-      {/* CURRENCY/LANGUAGE SELECTOR */}
-      {currencyOpen && (
-        <>
-          {/* DROPDOWN */}
-          <div 
-            className="fixed left-0 right-0 bg-white"
-            style={{
-              top: '56px',
-              borderBottom: '1px solid #E8E8E8',
-              zIndex: 39
-            }}
-          >
-            <div className="flex items-center gap-6 py-4 px-8">
-              {/* ESPAÑOL / MXN */}
-              <button
-                onClick={() => {
-                  setLocale('es');
-                  setCurrencyOpen(false);
-                }}
-                className="flex items-center gap-2 hover:opacity-60 transition-opacity duration-200"
-                style={{
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase',
-                  opacity: locale === 'es' ? 1 : 0.5
-                }}
-              >
-                {/* BANDERA MX */}
-                <svg className="w-4 h-3" viewBox="0 0 24 18" fill="none">
-                  <rect width="8" height="18" fill="#006847" />
-                  <rect x="8" width="8" height="18" fill="#FFFFFF" />
-                  <rect x="16" width="8" height="18" fill="#CE1126" />
-                </svg>
-                ES / MXN
-              </button>
-
-              {/* ENGLISH / USD */}
-              <button
-                onClick={() => {
-                  setLocale('en');
-                  setCurrencyOpen(false);
-                }}
-                className="flex items-center gap-2 hover:opacity-60 transition-opacity duration-200"
-                style={{
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase',
-                  opacity: locale === 'en' ? 1 : 0.5
-                }}
-              >
-                {/* BANDERA US */}
-                <svg className="w-4 h-3" viewBox="0 0 24 18" fill="none">
-                  <rect width="24" height="18" fill="#B22234" />
-                  <rect width="24" height="2" y="2" fill="#FFFFFF" />
-                  <rect width="24" height="2" y="6" fill="#FFFFFF" />
-                  <rect width="24" height="2" y="10" fill="#FFFFFF" />
-                  <rect width="24" height="2" y="14" fill="#FFFFFF" />
-                  <rect width="10" height="10" fill="#3C3B6E" />
-                </svg>
-                EN / USD
-              </button>
-            </div>
-          </div>
-
-          {/* OVERLAY */}
-          <div
-            onClick={() => setCurrencyOpen(false)}
-            className="fixed inset-0 bg-black bg-opacity-30"
-            style={{
-              top: '56px',
-              zIndex: 38
-            }}
-          />
-        </>
-      )}
 
       {/* SEARCH MODAL - Debajo del header */}
       {searchOpen && (
         <>
           {/* SEARCH BAR */}
           <div 
-            className="fixed left-0 right-0 bg-white"
+            className="fixed left-0 right-0"
             style={{
               top: '56px', // Altura del header
-              borderBottom: '1px solid #E8E8E8',
+              background: 'transparent',
+              borderBottom: '1px solid rgba(232, 232, 232, 0.3)',
               zIndex: 39
             }}
           >
@@ -612,10 +567,11 @@ export default function Header() {
                 placeholder="BUSCAR AQUÍ"
                 className="flex-1 bg-transparent text-black placeholder-gray-400 outline-none"
                 style={{
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   fontSize: '11px',
-                  fontWeight: 500,
-                  letterSpacing: '0.05em'
+                  fontWeight: 800,
+                  letterSpacing: '0.02em',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
                 autoFocus
               />
@@ -652,158 +608,462 @@ export default function Header() {
         </>
       )}
 
-      {/* Mobile Fullscreen Menu */}
+      {/* Mobile Fullscreen Menu - Estilo Stüssy */}
       {mobileMenuOpen && (
         <div 
-          className="md:hidden"
-          style={{ background: 'white' }}
+          className="md:hidden fixed inset-0 z-50 overflow-y-auto"
+          style={{ 
+            top: '56px',
+            background: 'white'
+          }}
         >
           <nav className="flex flex-col">
+            {/* SHOP - Acordeón */}
+            <div className="border-b" style={{ borderColor: 'rgba(0, 0, 0, 0.08)' }}>
+              <button
+                onClick={() => setMobileShopOpen(!mobileShopOpen)}
+                className="w-full flex items-center justify-between px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 mobile-menu-button"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase',
+                  WebkitTapHighlightColor: 'transparent',
+                  backgroundColor: 'white'
+                }}
+              >
+                SHOP
+                <svg 
+                  className="w-3 h-3 transition-transform duration-200" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24" 
+                  strokeWidth={2.5}
+                  style={{
+                    transform: mobileShopOpen ? 'rotate(90deg)' : 'rotate(0deg)'
+                  }}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {mobileShopOpen && (
+                <div className="pb-3">
+                  <Link 
+                    href="/collections/hoodie" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    HOODIE
+                  </Link>
+                  <Link 
+                    href="/collections/chamarra" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    CHAMARRA
+                  </Link>
+                  <Link 
+                    href="/collections/pants" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    PANTS
+                  </Link>
+                  <Link 
+                    href="/collections/jeans" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    JEANS
+                  </Link>
+                  <Link 
+                    href="/collections/camisas" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    CAMISAS
+                  </Link>
+                  <Link 
+                    href="/collections/playeras" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    PLAYERAS
+                  </Link>
+                  <Link 
+                    href="/collections/accesorios" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    ACCESORIOS
+                  </Link>
+                  <Link 
+                    href="/collections/bolsos" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    BOLSOS
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* SUPPORT - Acordeón */}
+            <div className="border-b" style={{ borderColor: 'rgba(0, 0, 0, 0.08)' }}>
+              <button
+                onClick={() => setMobileSupportOpen(!mobileSupportOpen)}
+                className="w-full flex items-center justify-between px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 mobile-menu-button"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase',
+                  WebkitTapHighlightColor: 'transparent',
+                  backgroundColor: 'white'
+                }}
+              >
+                SOPORTE
+                <svg 
+                  className="w-3 h-3 transition-transform duration-200" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24" 
+                  strokeWidth={2.5}
+                  style={{
+                    transform: mobileSupportOpen ? 'rotate(90deg)' : 'rotate(0deg)'
+                  }}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {mobileSupportOpen && (
+                <div className="pb-3">
+                  <Link 
+                    href="/pages/customer-support" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    CUSTOMER SUPPORT
+                  </Link>
+                  <Link 
+                    href="/pages/customer-support#chat" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    CHAT
+                  </Link>
+                  <Link 
+                    href="/pages/locaciones" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    LOCACIONES
+                  </Link>
+                  <Link 
+                    href="/pages/shipping-payments-returns" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    ENVÍOS, PAGOS Y DEVOLUCIONES
+                  </Link>
+                  <Link 
+                    href="/pages/size-guide" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    GUÍA DE TALLAS
+                  </Link>
+                  <Link 
+                    href="/pages/legal" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    LEGAL
+                  </Link>
+                  <Link 
+                    href="/pages/accessibility" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    ACCESIBILIDAD
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* CUENTA */}
             <Link 
-              href="/collections/new" 
-              className="px-4 py-4 text-xs font-medium uppercase border-b border-gray-200 hover:opacity-60 transition-opacity duration-200"
+              href="/account" 
+              className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
               onClick={() => setMobileMenuOpen(false)}
               style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                letterSpacing: '0.02em',
+                fontSize: '11px',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                borderColor: 'rgba(0, 0, 0, 0.08)',
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
-              Nuevos Lanzamientos
+              CUENTA
             </Link>
+
+            {/* CAPÍTULOS */}
             <Link 
-              href="/collections/tees" 
-              className="px-4 py-4 text-xs font-medium uppercase border-b border-gray-200 hover:opacity-60 transition-opacity duration-200"
+              href="/pages/chapters" 
+              className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
               onClick={() => setMobileMenuOpen(false)}
               style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                letterSpacing: '0.02em',
+                fontSize: '11px',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                borderColor: 'rgba(0, 0, 0, 0.08)',
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
-              Camisetas
+              CAPÍTULOS
             </Link>
-            <Link 
-              href="/collections/sweats" 
-              className="px-4 py-4 text-xs font-medium uppercase border-b border-gray-200 hover:opacity-60 transition-opacity duration-200"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
-              }}
-            >
-              Sudaderas
-            </Link>
-            <Link 
-              href="/collections/outerwear" 
-              className="px-4 py-4 text-xs font-medium uppercase border-b border-gray-200 hover:opacity-60 transition-opacity duration-200"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
-              }}
-            >
-              Abrigos
-            </Link>
-            <Link 
-              href="/collections/shorts" 
-              className="px-4 py-4 text-xs font-medium uppercase border-b border-gray-200 hover:opacity-60 transition-opacity duration-200"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
-              }}
-            >
-              Shorts
-            </Link>
-            <Link 
-              href="/collections/denim" 
-              className="px-4 py-4 text-xs font-medium uppercase border-b border-gray-200 hover:opacity-60 transition-opacity duration-200"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
-              }}
-            >
-              Denim
-            </Link>
-            <Link 
-              href="/collections/accessories" 
-              className="px-4 py-4 text-xs font-medium uppercase border-b border-gray-200 hover:opacity-60 transition-opacity duration-200"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
-              }}
-            >
-              Accesorios
-            </Link>
+            {/* ARCHIVO */}
             <Link 
               href="/archive" 
-              className="px-4 py-4 text-xs font-medium uppercase border-b border-gray-200 hover:opacity-60 transition-opacity duration-200"
+              className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
               onClick={() => setMobileMenuOpen(false)}
               style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                letterSpacing: '0.02em',
+                fontSize: '11px',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                borderColor: 'rgba(0, 0, 0, 0.08)',
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
-              Archivo
+              ARCHIVO
             </Link>
-            <Link 
-              href="/pages/customer-support" 
-              className="px-4 py-4 text-xs font-medium uppercase border-b border-gray-200 hover:opacity-60 transition-opacity duration-200"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
-              }}
-            >
-              Atención al Cliente
-            </Link>
-            <Link 
-              href="/pages/shipping-returns" 
-              className="px-4 py-4 text-xs font-medium uppercase border-b border-gray-200 hover:opacity-60 transition-opacity duration-200"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
-              }}
-            >
-              Envíos y Devoluciones
-            </Link>
-            <Link 
-              href="/pages/size-guide" 
-              className="px-4 py-4 text-xs font-medium uppercase border-b border-gray-200 hover:opacity-60 transition-opacity duration-200"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
-              }}
-            >
-              Guía de Tallas
-            </Link>
-            <Link 
-              href="/pages/warranty" 
-              className="px-4 py-4 text-xs font-medium uppercase hover:opacity-60 transition-opacity duration-200"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ 
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
-                letterSpacing: '0.05em',
-                fontSize: '11px'
-              }}
-            >
-              Garantía
-            </Link>
+
+            {/* SHIPPING TO - Selector de País/Moneda */}
+            <div className="px-6 py-5 flex items-center justify-between border-b" style={{ borderColor: 'rgba(0, 0, 0, 0.08)' }}>
+              <p 
+                style={{ 
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase'
+                }}
+              >
+                ENVÍO A: {country} / {currency}
+              </p>
+              <button
+                onClick={() => setCurrencyOpen(!currencyOpen)}
+                className="text-black hover:opacity-60 transition-opacity duration-200"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                }}
+              >
+                CAMBIAR
+              </button>
+            </div>
           </nav>
+
+          {/* MODAL DE IDIOMA/MONEDA EN MOBILE */}
+          {currencyOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
+              <div className="bg-white rounded-lg p-8 max-w-sm w-full mx-4">
+                <h3 
+                  className="mb-6"
+                  style={{
+                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    letterSpacing: '0.02em',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  SELECCIONAR IDIOMA / MONEDA
+                </h3>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      setLocale('es');
+                      setCurrencyOpen(false);
+                    }}
+                    className="w-full text-left p-4 border border-gray-200 rounded hover:opacity-60 transition-opacity duration-200"
+                    style={{
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      letterSpacing: '0.02em',
+                      textTransform: 'uppercase',
+                      opacity: locale === 'es' ? 1 : 0.6
+                    }}
+                  >
+                    ES / MXN
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLocale('en');
+                      setCurrencyOpen(false);
+                    }}
+                    className="w-full text-left p-4 border border-gray-200 rounded hover:opacity-60 transition-opacity duration-200"
+                    style={{
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      letterSpacing: '0.02em',
+                      textTransform: 'uppercase',
+                      opacity: locale === 'en' ? 1 : 0.6
+                    }}
+                  >
+                    EN / USD
+                  </button>
+                </div>
+                <button
+                  onClick={() => setCurrencyOpen(false)}
+                  className="mt-6 w-full p-3 bg-black text-white hover:opacity-80 transition-opacity duration-200"
+                  style={{
+                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    letterSpacing: '0.02em',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  CERRAR
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </header>

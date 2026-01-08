@@ -13,11 +13,12 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="hover:opacity-60 transition-opacity duration-200"
               style={{
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                 fontSize: '11px',
-                fontWeight: 500,
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase'
+                fontWeight: 800,
+                letterSpacing: '0.02em',
+                textTransform: 'uppercase',
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
               INSTAGRAM
@@ -26,11 +27,12 @@ export default function Footer() {
               href="/pages/customer-support"
               className="hover:opacity-60 transition-opacity duration-200"
               style={{
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                 fontSize: '11px',
-                fontWeight: 500,
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase'
+                fontWeight: 800,
+                letterSpacing: '0.02em',
+                textTransform: 'uppercase',
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
               SOPORTE
@@ -40,10 +42,10 @@ export default function Footer() {
           {/* RIGHT - COPYRIGHT */}
           <p 
             style={{
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
               fontSize: '11px',
               fontWeight: 400,
-              letterSpacing: '0.05em'
+              letterSpacing: '0.02em'
             }}
           >
             © {new Date().getFullYear()} VIOGI
