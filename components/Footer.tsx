@@ -16,9 +16,10 @@ export default function Footer() {
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                 fontSize: '11px',
                 fontWeight: 800,
-                letterSpacing: '0.02em',
+                letterSpacing: '-0.01em',
                 textTransform: 'uppercase',
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                fontStretch: 'condensed'
               }}
             >
               INSTAGRAM
@@ -30,9 +31,10 @@ export default function Footer() {
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                 fontSize: '11px',
                 fontWeight: 800,
-                letterSpacing: '0.02em',
+                letterSpacing: '-0.01em',
                 textTransform: 'uppercase',
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                fontStretch: 'condensed'
               }}
             >
               SOPORTE
@@ -45,7 +47,8 @@ export default function Footer() {
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
               fontSize: '11px',
               fontWeight: 400,
-              letterSpacing: '0.02em'
+              letterSpacing: '-0.01em',
+              fontStretch: 'condensed'
             }}
           >
             © {new Date().getFullYear()} VIOGI

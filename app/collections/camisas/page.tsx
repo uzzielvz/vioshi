@@ -3,33 +3,33 @@ import Footer from "@/components/Footer";
 import ProductGrid from "@/components/ProductGrid";
 import { getProducts } from "@/lib/products";
 
-export default async function NewArrivalsPage() {
+export default async function CamisasPage() {
   const products = await getProducts();
-  const newProducts = products.filter(p => p.category === 'hoodie' || p.category === 'outerwear');
+  const camisasProducts = products.filter(p => p.category === 'camisas');
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
       <Header />
       <main className="flex-1 pt-[56px]">
-        <div className="px-6 md:px-32 py-8 md:py-12">
-          {/* Título - Solo visible en móvil */}
+        <div className="px-4 py-8 md:py-12">
+          {/* Título solo visible en móvil */}
           <h1 
             className="md:hidden mb-8 uppercase"
             style={{
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '13px',
+              fontSize: '10px',
               fontWeight: 800,
-              letterSpacing: '-0.01em',
-              fontStretch: 'condensed'
+              letterSpacing: '0.02em',
+              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
             }}
           >
-            New Arrivals
+            Camisas
           </h1>
-          
-          <ProductGrid products={newProducts} />
+          <ProductGrid products={camisasProducts} />
         </div>
       </main>
       <Footer />
     </div>
   );
 }
+

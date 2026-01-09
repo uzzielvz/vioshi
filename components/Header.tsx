@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/store/cartStore";
+import CartModal from "./CartModal";
 
 export default function Header() {
   const pathname = usePathname();
@@ -13,6 +14,7 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currencyOpen, setCurrencyOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const [locale, setLocale] = useState<'es' | 'en'>('es'); // ES/MXN por defecto
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const [mobileSupportOpen, setMobileSupportOpen] = useState(false);
@@ -94,11 +96,18 @@ export default function Header() {
   }, [searchOpen, currencyOpen]);
 
   return (
-    <header 
-      className="fixed top-0 left-0 right-0 z-40"
-      style={{
-        background: 'transparent',
-        borderBottom: '1px solid rgba(232, 232, 232, 0.3)'
+    <>
+      <style jsx>{`
+        .submenu-link:hover {
+          color: #000 !important;
+          border-bottom: 1px solid #000 !important;
+        }
+      `}</style>
+      
+      <header 
+        className="fixed top-0 left-0 right-0 z-40"
+        style={{
+          background: searchOpen ? 'white' : 'transparent'
       }}
     >
       {/* ROW 1 - HEADER PRINCIPAL */}
@@ -110,7 +119,9 @@ export default function Header() {
           className="text-lg font-bold text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
           style={{ 
             fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-            textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+            textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+            fontStretch: 'condensed',
+            letterSpacing: '-0.02em'
           }}
         >
           VIOGI
@@ -127,9 +138,10 @@ export default function Header() {
               className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 flex items-center gap-1"
               style={{ 
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                letterSpacing: '0.02em',
+                letterSpacing: '-0.01em',
                 fontSize: '11px',
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                fontStretch: 'condensed'
               }}
             >
               SHOP
@@ -155,7 +167,7 @@ export default function Header() {
             className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
             style={{ 
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              letterSpacing: '0.02em',
+              letterSpacing: '-0.01em',
               fontSize: '11px',
               padding: '0',
               margin: '0'
@@ -172,9 +184,10 @@ export default function Header() {
               className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 flex items-center gap-1"
               style={{ 
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                letterSpacing: '0.02em',
+                letterSpacing: '-0.01em',
                 fontSize: '11px',
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                fontStretch: 'condensed'
               }}
             >
               SOPORTE
@@ -205,14 +218,17 @@ export default function Header() {
                 setSearchQuery("");
               } else {
                 setSearchOpen(true);
+                setMobileMenuOpen(false); // Cerrar menú móvil al abrir búsqueda
               }
             }}
             className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
             style={{ 
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              letterSpacing: '0.02em',
+              letterSpacing: '-0.01em',
               fontSize: '11px',
-              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+              minWidth: '60px',
+              textAlign: 'center'
             }}
           >
             {searchOpen ? 'CERRAR' : 'BUSCAR'}
@@ -224,8 +240,9 @@ export default function Header() {
             className="hidden md:flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 relative"
             style={{ 
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              letterSpacing: '0.02em',
-              fontSize: '11px'
+              letterSpacing: '-0.01em',
+              fontSize: '11px',
+              minWidth: '85px'
             }}
           >
             {language} / {currency}
@@ -268,7 +285,7 @@ export default function Header() {
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   fontSize: '11px',
                   fontWeight: 800,
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   textTransform: 'uppercase',
                   opacity: locale === 'es' ? 1 : 0.6,
                   textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
@@ -286,7 +303,7 @@ export default function Header() {
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   fontSize: '11px',
                   fontWeight: 800,
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   textTransform: 'uppercase',
                   opacity: locale === 'en' ? 1 : 0.6,
                   textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
@@ -297,32 +314,49 @@ export default function Header() {
             </div>
           )}
 
-          {/* CARRITO */}
-          <Link 
-            href="/cart" 
+          {/* BAG */}
+          <button 
+            onClick={() => setCartOpen(true)}
             className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
             style={{ 
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              letterSpacing: '0.02em',
+              letterSpacing: '-0.01em',
               fontSize: '11px',
-              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+              minWidth: '60px',
+              textAlign: 'center',
+              display: 'inline-block'
             }}
           >
-            CARRITO
-          </Link>
+            {/* Desktop: BAG(1) */}
+            <span className="hidden md:inline">
+              BAG{itemCount > 0 ? `(${itemCount})` : ''}
+            </span>
+            {/* Mobile: BAG 1 */}
+            <span className="md:hidden">
+              BAG{itemCount > 0 ? ` ${itemCount}` : ''}
+            </span>
+          </button>
 
           {/* MENU - Mobile only */}
           <button
-            className="md:hidden text-xs font-medium uppercase hover:opacity-60 transition-opacity duration-200"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
+            onClick={() => {
+              setMobileMenuOpen(!mobileMenuOpen);
+              setSearchOpen(false); // Cerrar búsqueda al abrir menú móvil
+              setSearchQuery("");
+            }}
             aria-label="Menu"
             style={{ 
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              letterSpacing: '0.02em',
-              fontSize: '11px'
+              letterSpacing: '-0.01em',
+              fontSize: '11px',
+              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+              minWidth: '55px',
+              textAlign: 'right'
             }}
           >
-            MENÚ
+            {mobileMenuOpen ? 'CERRAR' : 'MENÚ'}
           </button>
         </div>
       </div>
@@ -341,99 +375,158 @@ export default function Header() {
           {shopOpen && (
             <>
               <Link 
-                href="/collections/hoodie" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                href="/collections/new" 
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
                   padding: '0',
                   margin: '0',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/collections/new' ? '#000' : '#999',
+                  borderBottom: pathname === '/collections/new' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                NUEVO DROP
+              </Link>
+              <Link 
+                href="/collections/hoodie" 
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
+                style={{ 
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '-0.01em',
+                  fontSize: '11px',
+                  padding: '0',
+                  margin: '0',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/collections/hoodie' ? '#000' : '#999',
+                  borderBottom: pathname === '/collections/hoodie' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 HOODIE
               </Link>
               <Link 
                 href="/collections/chamarra" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/collections/chamarra' ? '#000' : '#999',
+                  borderBottom: pathname === '/collections/chamarra' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 CHAMARRA
               </Link>
               <Link 
                 href="/collections/pants" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/collections/pants' ? '#000' : '#999',
+                  borderBottom: pathname === '/collections/pants' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 PANTS
               </Link>
               <Link 
                 href="/collections/jeans" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/collections/jeans' ? '#000' : '#999',
+                  borderBottom: pathname === '/collections/jeans' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 JEANS
               </Link>
               <Link 
                 href="/collections/camisas" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/collections/camisas' ? '#000' : '#999',
+                  borderBottom: pathname === '/collections/camisas' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 CAMISAS
               </Link>
               <Link 
                 href="/collections/playeras" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/collections/playeras' ? '#000' : '#999',
+                  borderBottom: pathname === '/collections/playeras' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 PLAYERAS
               </Link>
               <Link 
                 href="/collections/accesorios" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/collections/accesorios' ? '#000' : '#999',
+                  borderBottom: pathname === '/collections/accesorios' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 ACCESORIOS
               </Link>
               <Link 
                 href="/collections/bolsos" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/collections/bolsos' ? '#000' : '#999',
+                  borderBottom: pathname === '/collections/bolsos' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 BOLSOS
@@ -445,84 +538,118 @@ export default function Header() {
             <>
               <Link 
                 href="/pages/customer-support" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/pages/customer-support' ? '#000' : '#999',
+                  borderBottom: pathname === '/pages/customer-support' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 CUSTOMER SUPPORT
               </Link>
               <Link 
                 href="/pages/customer-support#chat" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  color: pathname === '/pages/customer-support#chat' ? '#000' : '#999',
+                  borderBottom: pathname === '/pages/customer-support#chat' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 CHAT
               </Link>
               <Link 
                 href="/pages/locaciones" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/pages/locaciones' ? '#000' : '#999',
+                  borderBottom: pathname === '/pages/locaciones' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 LOCACIONES
               </Link>
               <Link 
                 href="/pages/shipping-payments-returns" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/pages/shipping-payments-returns' ? '#000' : '#999',
+                  borderBottom: pathname === '/pages/shipping-payments-returns' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 ENVÍOS, PAGOS Y DEVOLUCIONES
               </Link>
               <Link 
                 href="/pages/size-guide" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/pages/size-guide' ? '#000' : '#999',
+                  borderBottom: pathname === '/pages/size-guide' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 GUÍA DE TALLAS
               </Link>
               <Link 
                 href="/pages/legal" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/pages/legal' ? '#000' : '#999',
+                  borderBottom: pathname === '/pages/legal' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 LEGAL
               </Link>
               <Link 
                 href="/pages/accessibility" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
+                className="text-xs font-medium uppercase tracking-wide whitespace-nowrap submenu-link"
                 style={{ 
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  lineHeight: '1',
+                  fontStretch: 'condensed',
+                  color: pathname === '/pages/accessibility' ? '#000' : '#999',
+                  borderBottom: pathname === '/pages/accessibility' ? '1px solid #000' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 ACCESIBILIDAD
@@ -540,13 +667,12 @@ export default function Header() {
           <div 
             className="fixed left-0 right-0"
             style={{
-              top: '56px', // Altura del header
-              background: 'transparent',
-              borderBottom: '1px solid rgba(232, 232, 232, 0.3)',
+              top: '56px',
+              background: 'white',
               zIndex: 39
             }}
           >
-            <div className="flex items-center gap-4 py-4 px-8 md:px-0" style={{ paddingLeft: '32px' }}>
+            <div className="flex items-center gap-4 py-4 px-8 md:px-0" style={{ paddingLeft: '32px', background: 'white' }}>
               {/* LUPA - Mobile: alineada al borde, Desktop: alineada con SHOP */}
               <svg 
                 className="w-5 h-5 text-black flex-shrink-0 md:ml-24" 
@@ -565,13 +691,14 @@ export default function Header() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="BUSCAR AQUÍ"
-                className="flex-1 bg-transparent text-black placeholder-gray-400 outline-none"
+                className="flex-1 text-black outline-none search-input-placeholder"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   fontSize: '11px',
                   fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  letterSpacing: '-0.01em',
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  background: 'white'
                 }}
                 autoFocus
               />
@@ -593,16 +720,17 @@ export default function Header() {
             </div>
           </div>
 
-          {/* OVERLAY - Sombreado del contenido */}
+          {/* OVERLAY - Click para cerrar (sin oscurecer) */}
           <div
             onClick={() => {
               setSearchOpen(false);
               setSearchQuery("");
             }}
-            className="fixed inset-0 bg-black bg-opacity-30"
+            className="fixed inset-0"
             style={{
-              top: '56px', // Comienza debajo del header
-              zIndex: 38
+              top: '56px',
+              zIndex: 38,
+              background: 'transparent'
             }}
           />
         </>
@@ -627,7 +755,7 @@ export default function Header() {
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   fontSize: '11px',
                   fontWeight: 800,
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   textTransform: 'uppercase',
                   WebkitTapHighlightColor: 'transparent',
                   backgroundColor: 'white'
@@ -650,12 +778,27 @@ export default function Header() {
               {mobileShopOpen && (
                 <div className="pb-3">
                   <Link 
+                    href="/collections/new" 
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ 
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '-0.01em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    NUEVO DROP
+                  </Link>
+                  <Link 
                     href="/collections/hoodie" 
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -670,7 +813,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -685,7 +828,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -700,7 +843,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -715,7 +858,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -730,7 +873,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -745,7 +888,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -760,7 +903,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -782,7 +925,7 @@ export default function Header() {
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   fontSize: '11px',
                   fontWeight: 800,
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   textTransform: 'uppercase',
                   WebkitTapHighlightColor: 'transparent',
                   backgroundColor: 'white'
@@ -810,7 +953,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -825,7 +968,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -840,7 +983,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -855,7 +998,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -870,7 +1013,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -885,7 +1028,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -900,7 +1043,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{ 
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       fontSize: '11px',
                       fontWeight: 800,
                       textTransform: 'uppercase',
@@ -920,7 +1063,7 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(false)}
               style={{ 
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                letterSpacing: '0.02em',
+                letterSpacing: '-0.01em',
                 fontSize: '11px',
                 fontWeight: 800,
                 textTransform: 'uppercase',
@@ -938,7 +1081,7 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(false)}
               style={{ 
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                letterSpacing: '0.02em',
+                letterSpacing: '-0.01em',
                 fontSize: '11px',
                 fontWeight: 800,
                 textTransform: 'uppercase',
@@ -955,7 +1098,7 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(false)}
               style={{ 
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                letterSpacing: '0.02em',
+                letterSpacing: '-0.01em',
                 fontSize: '11px',
                 fontWeight: 800,
                 textTransform: 'uppercase',
@@ -973,7 +1116,7 @@ export default function Header() {
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   fontSize: '11px',
                   fontWeight: 800,
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   textTransform: 'uppercase'
                 }}
               >
@@ -984,11 +1127,13 @@ export default function Header() {
                 className="text-black hover:opacity-60 transition-opacity duration-200"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
+                  letterSpacing: '-0.01em',
                   fontSize: '11px',
                   fontWeight: 800,
                   textTransform: 'uppercase',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+                  minWidth: '70px',
+                  textAlign: 'right'
                 }}
               >
                 CAMBIAR
@@ -1006,7 +1151,7 @@ export default function Header() {
                     fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                     fontSize: '11px',
                     fontWeight: 800,
-                    letterSpacing: '0.02em',
+                    letterSpacing: '-0.01em',
                     textTransform: 'uppercase'
                   }}
                 >
@@ -1023,7 +1168,7 @@ export default function Header() {
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       fontSize: '11px',
                       fontWeight: 800,
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       textTransform: 'uppercase',
                       opacity: locale === 'es' ? 1 : 0.6
                     }}
@@ -1040,7 +1185,7 @@ export default function Header() {
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       fontSize: '11px',
                       fontWeight: 800,
-                      letterSpacing: '0.02em',
+                      letterSpacing: '-0.01em',
                       textTransform: 'uppercase',
                       opacity: locale === 'en' ? 1 : 0.6
                     }}
@@ -1055,7 +1200,7 @@ export default function Header() {
                     fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                     fontSize: '11px',
                     fontWeight: 800,
-                    letterSpacing: '0.02em',
+                    letterSpacing: '-0.01em',
                     textTransform: 'uppercase'
                   }}
                 >
@@ -1067,5 +1212,9 @@ export default function Header() {
         </div>
       )}
     </header>
+    
+    {/* Cart Modal */}
+    <CartModal isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+    </>
   );
 }

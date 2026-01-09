@@ -3,24 +3,26 @@ import Footer from "@/components/Footer";
 import ProductGrid from "@/components/ProductGrid";
 import { getProducts } from "@/lib/products";
 
-export default async function AllProductsPage() {
+export default async function TodoPage() {
   const products = await getProducts();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
       <Header />
       <main className="flex-1 pt-[56px]">
-        <div className="px-6 md:px-8 py-8 md:py-12">
+        <div className="px-4 py-8 md:py-12">
+          {/* Título solo visible en móvil */}
           <h1 
-            className="mb-8 md:mb-12 uppercase"
+            className="md:hidden mb-8 uppercase"
             style={{
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '14px',
-              fontWeight: 700,
-              letterSpacing: '0.1em'
+              fontSize: '10px',
+              fontWeight: 800,
+              letterSpacing: '0.02em',
+              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
             }}
           >
-            Todos los Productos
+            Todo
           </h1>
           <ProductGrid products={products} />
         </div>

@@ -18,7 +18,8 @@ body {
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  font-stretch: condensed;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -72,6 +73,13 @@ nav a:focus {
   color: #000000 !important;
 }
 
+/* Estilos para placeholder del input de búsqueda */
+.search-input-placeholder::placeholder {
+  font-size: 9px;
+  font-weight: 400;
+  color: #999999;
+  letter-spacing: 0.05em;
+}
 
 @layer utilities {
   .text-balance {

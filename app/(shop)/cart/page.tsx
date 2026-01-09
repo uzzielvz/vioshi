@@ -3,27 +3,76 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/store/cartStore";
-import { Button } from "@/components/common/Button";
 import Link from "next/link";
 import Image from "next/image";
-import { formatPrice } from "@/lib/utils";
 
 export default function CartPage() {
   const { cart, itemCount, removeItem, updateQuantity } = useCart();
 
+  // Carrito vacío
   if (itemCount === 0) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
+      <div className="min-h-screen flex flex-col bg-white">
         <Header />
-        <main className="flex-1 pt-[64px]">
-          <div className="px-6 md:px-8 py-8 md:py-12">
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-              <h1 className="text-2xl md:text-3xl font-normal mb-4 tracking-wide uppercase">
-                Your cart is empty
-              </h1>
-              <p className="text-sm text-gray-600 mb-8">Add some products to get started</p>
+        <main className="flex-1 pt-[56px]">
+          <div className="px-8 py-12 md:px-32 max-w-4xl">
+            {/* Título */}
+            <h1 
+              className="mb-8 pb-6 border-b uppercase"
+              style={{
+                borderColor: 'rgba(0, 0, 0, 0.1)',
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontSize: '13px',
+                fontWeight: 800,
+                letterSpacing: '-0.01em',
+                fontStretch: 'condensed'
+              }}
+            >
+              Shopping Bag
+            </h1>
+
+            {/* Mensaje de carrito vacío */}
+            <div className="py-12">
+              <p 
+                className="mb-4 uppercase"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '-0.01em'
+                }}
+              >
+                You have no items in your shopping bag.
+              </p>
+              
+              <p 
+                className="mb-8 uppercase"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '-0.01em'
+                }}
+              >
+                Free standard shipping in MX for orders over $1500 MXN. Exclusions apply.
+              </p>
+            </div>
+
+            {/* Botón continuar comprando */}
+            <div className="mt-auto pt-12">
               <Link href="/collections/all">
-                <Button variant="primary">Continue Shopping</Button>
+                <button
+                  className="w-full bg-black text-white py-4 px-6 hover:bg-gray-800 transition-colors uppercase"
+                  style={{
+                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    letterSpacing: '-0.01em',
+                    fontStretch: 'condensed'
+                  }}
+                >
+                  Continue Shopping
+                </button>
               </Link>
             </div>
           </div>
@@ -33,121 +82,317 @@ export default function CartPage() {
     );
   }
 
+  // Carrito con productos
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
-      <main className="flex-1 pt-[64px]">
-        <div className="px-6 md:px-8 py-8 md:py-12">
-          <h1 className="text-2xl md:text-3xl font-normal mb-8 md:mb-12 tracking-wide uppercase">
-            Shopping Cart
+      <main className="flex-1 pt-[56px]">
+        <div className="px-8 py-12 md:px-32 max-w-6xl mx-auto">
+          {/* Título */}
+          <h1 
+            className="mb-8 pb-6 border-b uppercase"
+            style={{
+              borderColor: 'rgba(0, 0, 0, 0.1)',
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              fontSize: '13px',
+              fontWeight: 800,
+              letterSpacing: '-0.01em',
+              fontStretch: 'condensed'
+            }}
+          >
+            Shopping Bag
           </h1>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Cart Items */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            {/* Lista de productos */}
             <div className="lg:col-span-2">
-              <div className="border border-black">
-                {cart.items.map((item, index) => (
+              <div className="space-y-8">
+                {cart.items.map((item) => (
                   <div
                     key={item.id}
-                    className={`p-6 flex gap-4 ${
-                      index !== cart.items.length - 1 ? "border-b border-black" : ""
-                    }`}
+                    className="flex gap-6 pb-8 border-b"
+                    style={{ borderColor: 'rgba(0, 0, 0, 0.1)' }}
                   >
-                    <div className="relative w-24 h-24 bg-gray-100 flex-shrink-0">
+                    {/* Imagen del producto */}
+                    <Link 
+                      href={`/products/${item.slug || item.productId}`}
+                      className="relative w-32 h-32 md:w-40 md:h-40 bg-gray-100 flex-shrink-0"
+                    >
                       <Image
                         src={item.image}
                         alt={item.productName}
                         fill
                         className="object-cover"
                       />
-                    </div>
+                    </Link>
 
-                    <div className="flex-1">
-                      <Link href={`/products/${item.slug || item.productId}`}>
-                        <h3 className="text-sm font-normal uppercase tracking-wide mb-2 hover:opacity-70">
-                          {item.productName}
-                        </h3>
-                      </Link>
+                    {/* Información del producto */}
+                    <div className="flex-1 flex flex-col">
+                      <div className="flex justify-between mb-2">
+                        <Link href={`/products/${item.slug || item.productId}`}>
+                          <h3 
+                            className="uppercase hover:opacity-60 transition-opacity"
+                            style={{
+                              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                              fontSize: '11px',
+                              fontWeight: 800,
+                              letterSpacing: '-0.01em',
+                              fontStretch: 'condensed'
+                            }}
+                          >
+                            {item.productName}
+                          </h3>
+                        </Link>
+                        
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="text-gray-500 hover:text-black transition-colors"
+                        >
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            strokeWidth={2} 
+                            stroke="currentColor" 
+                            className="w-4 h-4"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      {/* Variantes */}
                       {(item.color || item.size) && (
-                        <p className="text-xs text-gray-600 mb-2">
+                        <p 
+                          className="mb-4 text-gray-600"
+                          style={{
+                            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                            fontSize: '11px',
+                            letterSpacing: '-0.01em'
+                          }}
+                        >
                           {item.color && <span>Color: {item.color}</span>}
-                          {item.color && item.size && <span> / </span>}
+                          {item.color && item.size && <span className="mx-2">/</span>}
                           {item.size && <span>Size: {item.size}</span>}
                         </p>
                       )}
-                      <p className="text-sm font-normal">{formatPrice(item.price)}</p>
 
-                      <div className="flex items-center gap-4 mt-4">
+                      {/* Precio y cantidad */}
+                      <div className="flex items-center justify-between mt-auto">
+                        {/* Selector de cantidad */}
                         <div className="flex items-center border border-black">
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="px-3 py-1 hover:bg-gray-100"
+                            className="px-3 py-1 hover:bg-gray-100 transition-colors"
+                            style={{
+                              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                              fontSize: '12px',
+                              fontWeight: 700
+                            }}
                           >
                             -
                           </button>
-                          <span className="px-4 py-1 border-x border-black">
+                          <span 
+                            className="px-4 py-1 border-x border-black"
+                            style={{
+                              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                              fontSize: '12px',
+                              fontWeight: 700
+                            }}
+                          >
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="px-3 py-1 hover:bg-gray-100"
+                            className="px-3 py-1 hover:bg-gray-100 transition-colors"
+                            style={{
+                              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                              fontSize: '12px',
+                              fontWeight: 700
+                            }}
                           >
                             +
                           </button>
                         </div>
 
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          className="text-xs uppercase tracking-wide hover:opacity-70"
+                        {/* Precio */}
+                        <p 
+                          style={{
+                            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                            fontSize: '14px',
+                            fontWeight: 700,
+                            letterSpacing: '-0.01em'
+                          }}
                         >
-                          Remove
-                        </button>
+                          ${(item.price * item.quantity).toFixed(2)} MXN
+                        </p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-
-              <div className="mt-6">
-                <Link href="/collections/all">
-                  <Button variant="secondary" fullWidth>
-                    Continue Shopping
-                  </Button>
-                </Link>
-              </div>
             </div>
 
-            {/* Cart Summary */}
+            {/* Resumen del pedido */}
             <div className="lg:col-span-1">
-              <div className="border border-black p-6">
-                <h2 className="text-lg font-normal uppercase tracking-wide mb-6">
+              <div className="border border-gray-200 p-6">
+                <h2 
+                  className="mb-6 pb-4 border-b uppercase"
+                  style={{
+                    borderColor: 'rgba(0, 0, 0, 0.1)',
+                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    letterSpacing: '-0.01em',
+                    fontStretch: 'condensed'
+                  }}
+                >
                   Order Summary
                 </h2>
 
                 <div className="space-y-4 mb-6">
-                  <div className="flex justify-between text-sm">
-                    <span>Subtotal</span>
-                    <span>{formatPrice(cart.subtotal)}</span>
+                  <div className="flex justify-between">
+                    <span 
+                      className="uppercase"
+                      style={{
+                        fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                        fontSize: '11px',
+                        fontWeight: 400,
+                        letterSpacing: '-0.01em'
+                      }}
+                    >
+                      Subtotal
+                    </span>
+                    <span 
+                      style={{
+                        fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        letterSpacing: '-0.01em'
+                      }}
+                    >
+                      ${cart.subtotal.toFixed(2)} MXN
+                    </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Shipping</span>
-                    <span>{formatPrice(cart.shipping)}</span>
+
+                  <div className="flex justify-between">
+                    <span 
+                      className="uppercase"
+                      style={{
+                        fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                        fontSize: '11px',
+                        fontWeight: 400,
+                        letterSpacing: '-0.01em'
+                      }}
+                    >
+                      Shipping
+                    </span>
+                    <span 
+                      style={{
+                        fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        letterSpacing: '-0.01em'
+                      }}
+                    >
+                      {cart.subtotal >= 1500 ? 'FREE' : `$${cart.shipping.toFixed(2)} MXN`}
+                    </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Tax</span>
-                    <span>{formatPrice(cart.tax)}</span>
+
+                  <div className="flex justify-between">
+                    <span 
+                      className="uppercase"
+                      style={{
+                        fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                        fontSize: '11px',
+                        fontWeight: 400,
+                        letterSpacing: '-0.01em'
+                      }}
+                    >
+                      Tax
+                    </span>
+                    <span 
+                      style={{
+                        fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        letterSpacing: '-0.01em'
+                      }}
+                    >
+                      ${cart.tax.toFixed(2)} MXN
+                    </span>
                   </div>
-                  <div className="border-t border-black pt-4">
-                    <div className="flex justify-between font-normal">
-                      <span className="uppercase tracking-wide">Total</span>
-                      <span>{formatPrice(cart.total)}</span>
+
+                  <div className="border-t pt-4" style={{ borderColor: 'rgba(0, 0, 0, 0.1)' }}>
+                    <div className="flex justify-between">
+                      <span 
+                        className="uppercase"
+                        style={{
+                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          letterSpacing: '-0.01em',
+                          fontStretch: 'condensed'
+                        }}
+                      >
+                        Total
+                      </span>
+                      <span 
+                        style={{
+                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                          fontSize: '14px',
+                          fontWeight: 800,
+                          letterSpacing: '-0.01em'
+                        }}
+                      >
+                        ${cart.total.toFixed(2)} MXN
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                <Button variant="primary" fullWidth>
+                <button
+                  className="w-full bg-black text-white py-4 px-6 mb-4 hover:bg-gray-800 transition-colors uppercase"
+                  style={{
+                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    letterSpacing: '-0.01em',
+                    fontStretch: 'condensed'
+                  }}
+                >
                   Proceed to Checkout
-                </Button>
+                </button>
+
+                <Link href="/collections/all">
+                  <button
+                    className="w-full border border-black bg-white text-black py-4 px-6 hover:bg-gray-50 transition-colors uppercase"
+                    style={{
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      letterSpacing: '-0.01em',
+                      fontStretch: 'condensed'
+                    }}
+                  >
+                    Continue Shopping
+                  </button>
+                </Link>
+
+                {/* Mensaje de envío gratis */}
+                {cart.subtotal < 1500 && (
+                  <p 
+                    className="mt-6 text-gray-600 text-center"
+                    style={{
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      fontSize: '10px',
+                      letterSpacing: '-0.01em',
+                      lineHeight: '1.5'
+                    }}
+                  >
+                    Agrega ${(1500 - cart.subtotal).toFixed(2)} MXN más para obtener envío gratis
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -157,4 +402,3 @@ export default function CartPage() {
     </div>
   );
 }
-
