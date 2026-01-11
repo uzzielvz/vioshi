@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/common/Button";
 import { useCart } from "@/store/cartStore";
 import { useState } from "react";
 import { generateId } from "@/lib/utils";
@@ -14,73 +13,112 @@ interface ProductCardProps {
   image: string;
   slug: string;
   soldOut?: boolean;
+  isNew?: boolean;
 }
 
-export default function ProductCard({ id, name, price, image, slug, soldOut }: ProductCardProps) {
+export default function ProductCard({ id, name, price, image, slug, soldOut, isNew }: ProductCardProps) {
   const { addItem } = useCart();
-  const [isAdding, setIsAdding] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
+  const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    setIsAdding(true);
-    try {
-      addItem({
-        id: generateId(),
-        productId: id,
-        productName: name,
-        quantity: 1,
-        price,
-        image,
-        slug,
-      });
-      
-      // Show feedback
-      setTimeout(() => setIsAdding(false), 1000);
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      setIsAdding(false);
-    }
+
+    addItem({
+      id: generateId(),
+      productId: id,
+      productName: name,
+      quantity: 1,
+      price,
+      image,
+      slug,
+    });
   };
 
   return (
     <div className="group">
       <Link href={`/products/${slug}`} className="block">
-        <div className="relative aspect-square bg-[#EFEFEF] overflow-hidden mb-3">
+        <div
+          className="relative aspect-[3/4] bg-[#F5F5F5] overflow-hidden mb-3"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           <Image
             src={image}
             alt={name}
             fill
-            className="object-cover transition-opacity duration-300 group-hover:opacity-90"
+            className="object-cover"
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
           />
-          {soldOut && (
-            <div className="absolute inset-0 bg-white/90 flex items-center justify-center">
-              <span className="text-black text-sm uppercase tracking-wide font-normal">SOLD OUT</span>
+
+          {isNew && !soldOut && (
+            <div
+              className="absolute top-3 left-3"
+              style={{
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontSize: '10px',
+                fontWeight: 500
+              }}
+            >
+              <span className="bg-black text-white px-2 py-1 uppercase tracking-wide">
+                New
+              </span>
             </div>
+          )}
+
+          {soldOut && (
+            <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+              <span
+                className="text-black uppercase tracking-wide"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 500
+                }}
+              >
+                Sold Out
+              </span>
+            </div>
+          )}
+
+          {!soldOut && isHovered && (
+            <button
+              onClick={handleQuickAdd}
+              className="absolute bottom-0 left-0 right-0 bg-black text-white py-3 text-center uppercase tracking-wide transition-opacity duration-200"
+              style={{
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontSize: '11px',
+                fontWeight: 500
+              }}
+            >
+              Quick Add
+            </button>
           )}
         </div>
       </Link>
-      <div>
+
+      <div className="space-y-1">
         <Link href={`/products/${slug}`}>
-          <h3 className="text-sm font-normal tracking-wide mb-1 uppercase hover:opacity-70 transition-opacity">
+          <h3
+            className="uppercase tracking-wide hover:opacity-60 transition-opacity"
+            style={{
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              fontSize: '11px',
+              fontWeight: 500
+            }}
+          >
             {name}
           </h3>
         </Link>
-        <p className="text-sm font-normal mb-3">${price}</p>
-        
-        {!soldOut && (
-          <Button
-            variant="primary"
-            size="sm"
-            fullWidth
-            onClick={handleAddToCart}
-            loading={isAdding}
-          >
-            {isAdding ? "Added" : "Add to Cart"}
-          </Button>
-        )}
+        <p
+          style={{
+            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+            fontSize: '11px',
+            fontWeight: 400
+          }}
+        >
+          ${price.toLocaleString()} MXN
+        </p>
       </div>
     </div>
   );

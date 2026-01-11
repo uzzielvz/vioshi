@@ -4,8 +4,8 @@ import ProductGrid from "@/components/ProductGrid";
 import { getProducts } from "@/lib/products";
 
 const categoryNames: Record<string, string> = {
-  all: "Todos los Productos",
-  new: "Nuevo Drop",
+  all: "All Products",
+  new: "New Drop",
   hoodie: "Hoodies",
   chamarra: "Chamarras",
   pants: "Pants",
@@ -14,9 +14,6 @@ const categoryNames: Record<string, string> = {
   playeras: "Playeras",
   accesorios: "Accesorios",
   bolsos: "Bolsos",
-  tees: "Playeras",
-  outerwear: "Outerwear",
-  accessories: "Accesorios",
 };
 
 export default async function CategoryPage({
@@ -29,13 +26,31 @@ export default async function CategoryPage({
   const categoryName = categoryNames[params.category] || "Products";
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
-      <main className="flex-1 pt-[64px]">
-        <div className="px-6 md:px-8 py-8 md:py-12">
-          <h1 className="text-2xl md:text-3xl font-normal mb-8 md:mb-12 tracking-wide uppercase">
-            {categoryName}
-          </h1>
+      <main className="flex-1 pt-14">
+        <div className="px-4 md:px-8 py-8 md:py-12">
+          <div className="flex items-center justify-between mb-8 md:mb-12">
+            <h1
+              className="uppercase tracking-wide"
+              style={{
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontSize: '11px',
+                fontWeight: 500
+              }}
+            >
+              {categoryName}
+            </h1>
+            <p
+              className="text-gray-500"
+              style={{
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontSize: '11px'
+              }}
+            >
+              {products.length} {products.length === 1 ? 'Product' : 'Products'}
+            </p>
+          </div>
           <ProductGrid products={products} />
         </div>
       </main>
