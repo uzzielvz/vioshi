@@ -5,148 +5,62 @@ export default function LocacionesPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
       <Header />
-      <main className="flex-1 pt-[56px]">
-        <div className="px-8 py-12 md:px-32 max-w-6xl">
-          {/* Título solo visible en móvil */}
-          <h1 
-            className="md:hidden mb-8 uppercase"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '10px',
-              fontWeight: 800,
-              letterSpacing: '0.02em',
-              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-            }}
-          >
+      <main className="flex-1 pt-[64px]">
+        <div className="max-w-4xl mx-auto px-6 md:px-8 py-12 md:py-16">
+          <h1 className="text-2xl md:text-3xl font-normal mb-8 tracking-wide uppercase">
             Locaciones
           </h1>
 
-          <div 
-            className="space-y-12"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif"
-            }}
-          >
+          <div className="space-y-12">
             <section>
-              <h2 
-                className="text-2xl font-bold mb-6 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                Nuestras tiendas
-              </h2>
-              <p className="text-base leading-relaxed mb-8">
-                Visita nuestras tiendas físicas para vivir la experiencia completa VIOGI. 
-                Descubre nuestras colecciones y recibe asesoramiento personalizado de nuestro equipo.
+              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Tienda Flagship</h2>
+              <div className="bg-white p-6 border border-gray-200">
+                <h3 className="font-medium mb-2">VIOGI CDMX</h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  Av. Presidente Masaryk 123<br />
+                  Col. Polanco, Miguel Hidalgo<br />
+                  11560 Ciudad de México, CDMX
+                </p>
+                <p className="text-gray-600 text-sm">
+                  <strong>Horario:</strong><br />
+                  Lunes a Sábado: 11:00 - 20:00<br />
+                  Domingo: 12:00 - 18:00
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Puntos de Venta</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="bg-white p-6 border border-gray-200">
+                  <h3 className="font-medium mb-2">Monterrey</h3>
+                  <p className="text-gray-600 text-sm">
+                    Calzada del Valle 400<br />
+                    Col. Del Valle, San Pedro Garza García<br />
+                    66220 Nuevo León
+                  </p>
+                </div>
+                <div className="bg-white p-6 border border-gray-200">
+                  <h3 className="font-medium mb-2">Guadalajara</h3>
+                  <p className="text-gray-600 text-sm">
+                    Av. México 2500<br />
+                    Col. Ladrón de Guevara<br />
+                    44600 Jalisco
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Stockists</h2>
+              <p className="text-gray-600 mb-4">
+                También puedes encontrar productos VIOGI en tiendas seleccionadas:
               </p>
-            </section>
-
-            {/* Tienda 1 */}
-            <section className="border-t pt-6">
-              <h3 
-                className="text-xl font-bold mb-4 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                VIOGI Polanco
-              </h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-base leading-relaxed mb-2">
-                    <strong>Dirección:</strong><br />
-                    Av. Presidente Masaryk 300<br />
-                    Polanco, Miguel Hidalgo<br />
-                    Ciudad de México, 11560
-                  </p>
-                  <p className="text-base leading-relaxed mb-2">
-                    <strong>Horario:</strong><br />
-                    Lunes a Sábado: 11:00 AM - 8:00 PM<br />
-                    Domingo: 12:00 PM - 6:00 PM
-                  </p>
-                  <p className="text-base leading-relaxed">
-                    <strong>Teléfono:</strong> <a href="tel:+525555555551" className="underline">+52 55 5555 5551</a>
-                  </p>
-                </div>
-                <div className="bg-gray-200 h-64 flex items-center justify-center text-gray-500">
-                  Mapa
-                </div>
-              </div>
-            </section>
-
-            {/* Tienda 2 */}
-            <section className="border-t pt-6">
-              <h3 
-                className="text-xl font-bold mb-4 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                VIOGI Roma Norte
-              </h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-base leading-relaxed mb-2">
-                    <strong>Dirección:</strong><br />
-                    Av. Álvaro Obregón 150<br />
-                    Roma Norte, Cuauhtémoc<br />
-                    Ciudad de México, 06700
-                  </p>
-                  <p className="text-base leading-relaxed mb-2">
-                    <strong>Horario:</strong><br />
-                    Lunes a Sábado: 11:00 AM - 8:00 PM<br />
-                    Domingo: 12:00 PM - 6:00 PM
-                  </p>
-                  <p className="text-base leading-relaxed">
-                    <strong>Teléfono:</strong> <a href="tel:+525555555552" className="underline">+52 55 5555 5552</a>
-                  </p>
-                </div>
-                <div className="bg-gray-200 h-64 flex items-center justify-center text-gray-500">
-                  Mapa
-                </div>
-              </div>
-            </section>
-
-            {/* Tienda 3 */}
-            <section className="border-t pt-6">
-              <h3 
-                className="text-xl font-bold mb-4 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                VIOGI Guadalajara
-              </h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-base leading-relaxed mb-2">
-                    <strong>Dirección:</strong><br />
-                    Av. Chapultepec Norte 123<br />
-                    Americana, Guadalajara<br />
-                    Jalisco, 44160
-                  </p>
-                  <p className="text-base leading-relaxed mb-2">
-                    <strong>Horario:</strong><br />
-                    Lunes a Sábado: 11:00 AM - 8:00 PM<br />
-                    Domingo: 12:00 PM - 6:00 PM
-                  </p>
-                  <p className="text-base leading-relaxed">
-                    <strong>Teléfono:</strong> <a href="tel:+523333333333" className="underline">+52 33 3333 3333</a>
-                  </p>
-                </div>
-                <div className="bg-gray-200 h-64 flex items-center justify-center text-gray-500">
-                  Mapa
-                </div>
-              </div>
+              <ul className="space-y-2 text-gray-600 text-sm">
+                <li>• Tier Zero - CDMX</li>
+                <li>• Lust - Monterrey</li>
+                <li>• Common People - Guadalajara</li>
+              </ul>
             </section>
           </div>
         </div>
@@ -155,4 +69,3 @@ export default function LocacionesPage() {
     </div>
   );
 }
-

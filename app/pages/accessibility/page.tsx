@@ -5,225 +5,84 @@ export default function AccessibilityPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
       <Header />
-      <main className="flex-1 pt-[56px]">
-        <div className="px-8 py-12 md:px-32 max-w-6xl">
-          {/* Título solo visible en móvil */}
-          <h1 
-            className="md:hidden mb-8 uppercase"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '10px',
-              fontWeight: 800,
-              letterSpacing: '0.02em',
-              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-            }}
-          >
+      <main className="flex-1 pt-[64px]">
+        <div className="max-w-4xl mx-auto px-6 md:px-8 py-12 md:py-16">
+          <h1 className="text-2xl md:text-3xl font-normal mb-8 tracking-wide uppercase">
             Accesibilidad
           </h1>
 
-          <div 
-            className="space-y-12"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif"
-            }}
-          >
+          <div className="space-y-8 text-sm text-gray-600">
             <section>
-              <h2 
-                className="text-2xl font-bold mb-6 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                Compromiso con la accesibilidad
+              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide text-black">
+                Nuestro Compromiso
               </h2>
-              <p className="text-base leading-relaxed mb-4">
-                En VIOGI estamos comprometidos a garantizar la accesibilidad digital para personas con discapacidades. 
-                Continuamente mejoramos la experiencia del usuario para todos y aplicamos los estándares de accesibilidad 
-                relevantes.
+              <p>
+                En VIOGI, estamos comprometidos a hacer que nuestro sitio web sea accesible para
+                todas las personas, incluyendo aquellas con discapacidades. Trabajamos continuamente
+                para mejorar la experiencia de usuario y aplicar los estándares de accesibilidad relevantes.
               </p>
             </section>
 
-            <section className="border-t pt-8">
-              <h3 
-                className="text-xl font-bold mb-4 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                Estándares de conformidad
-              </h3>
-              <p className="text-gray-700 mb-4">
-                Nuestro objetivo es cumplir con las Pautas de Accesibilidad para el Contenido Web (WCAG) 2.1 nivel AA. 
-                Estas pautas explican cómo hacer el contenido web más accesible para personas con discapacidades y también 
-                hacen que el contenido web sea más usable para todos los usuarios.
+            <section>
+              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide text-black">
+                Estándares de Accesibilidad
+              </h2>
+              <p className="mb-4">
+                Nuestro objetivo es cumplir con las Pautas de Accesibilidad para el Contenido Web
+                (WCAG) 2.1 nivel AA. Estas pautas explican cómo hacer el contenido web más accesible
+                para personas con diversas discapacidades.
               </p>
-            </section>
-
-            <section className="border-t pt-8">
-              <h3 
-                className="text-xl font-bold mb-4 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                Medidas para apoyar la accesibilidad
-              </h3>
-              <p className="text-gray-700 mb-4">
-                VIOGI toma las siguientes medidas para garantizar la accesibilidad de nuestro sitio web:
-              </p>
-              <ul className="list-disc list-inside space-y-2 text-gray-700">
-                <li>Incluir la accesibilidad como parte de nuestra misión</li>
-                <li>Integrar la accesibilidad en nuestras políticas internas</li>
-                <li>Asignar objetivos y responsabilidades claras de accesibilidad</li>
-                <li>Garantizar que nuestros desarrolladores estén capacitados en accesibilidad</li>
-                <li>Incluir personas con discapacidades en nuestro diseño y pruebas de usuario</li>
-                <li>Auditar regularmente nuestro sitio para problemas de accesibilidad</li>
-              </ul>
-            </section>
-
-            <section className="border-t pt-8">
-              <h3 
-                className="text-xl font-bold mb-4 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                Características de accesibilidad
-              </h3>
-              <p className="text-gray-700 mb-4">
-                Nuestro sitio web incluye las siguientes características de accesibilidad:
-              </p>
-              <ul className="list-disc list-inside space-y-2 text-gray-700">
-                <li>Texto alternativo para imágenes</li>
-                <li>Encabezados estructurados para facilitar la navegación</li>
-                <li>Enlaces descriptivos que tienen sentido fuera de contexto</li>
-                <li>Suficiente contraste de color entre texto y fondo</li>
-                <li>Formularios con etiquetas claras y mensajes de error</li>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Texto alternativo en imágenes</li>
+                <li>Contraste de colores adecuado</li>
                 <li>Navegación por teclado</li>
-                <li>Diseño responsive que funciona en diferentes dispositivos</li>
-                <li>Compatibilidad con lectores de pantalla</li>
+                <li>Estructura semántica del contenido</li>
+                <li>Formularios accesibles con etiquetas claras</li>
               </ul>
             </section>
 
-            <section className="border-t pt-8">
-              <h3 
-                className="text-xl font-bold mb-4 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                Tecnologías compatibles
-              </h3>
-              <p className="text-gray-700 mb-4">
-                La accesibilidad de nuestro sitio web se basa en las siguientes tecnologías para funcionar:
-              </p>
-              <ul className="list-disc list-inside space-y-2 text-gray-700">
-                <li>HTML5</li>
-                <li>CSS3</li>
-                <li>JavaScript</li>
-                <li>ARIA (Accessible Rich Internet Applications)</li>
-              </ul>
-            </section>
-
-            <section className="border-t pt-8">
-              <h3 
-                className="text-xl font-bold mb-4 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                Limitaciones conocidas
-              </h3>
-              <p className="text-gray-700 mb-4">
-                A pesar de nuestros mejores esfuerzos, algunas páginas o contenidos de nuestro sitio web 
-                pueden no estar completamente accesibles todavía. Estamos trabajando activamente para mejorar 
-                estas áreas:
-              </p>
-              <ul className="list-disc list-inside space-y-2 text-gray-700">
-                <li>Algunos PDF antiguos pueden no ser completamente accesibles</li>
-                <li>Algunos videos pueden no tener subtítulos completos</li>
-                <li>Algunas imágenes de productos de terceros pueden carecer de texto alternativo adecuado</li>
-              </ul>
-              <p className="text-gray-700 mt-4">
-                Estamos comprometidos a abordar estas limitaciones en futuras actualizaciones.
-              </p>
-            </section>
-
-            <section className="border-t pt-8">
-              <h3 
-                className="text-xl font-bold mb-4 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                Retroalimentación
-              </h3>
-              <p className="text-gray-700 mb-4">
-                Agradecemos tus comentarios sobre la accesibilidad de nuestro sitio web. Si encuentras 
-                alguna barrera de accesibilidad o tienes sugerencias de mejora, por favor contáctanos:
-              </p>
-              <div className="space-y-2 text-gray-700">
-                <p>
-                  <strong>Email:</strong> <a href="mailto:accessibility@viogi.com" className="underline">accessibility@viogi.com</a>
-                </p>
-                <p>
-                  <strong>Teléfono:</strong> <a href="tel:+525555555555" className="underline">+52 55 5555 5555</a>
-                </p>
-                <p>
-                  <strong>Dirección:</strong> Av. Presidente Masaryk 300, Polanco, CDMX, 11560
-                </p>
+            <section>
+              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide text-black">
+                Funciones de Accesibilidad
+              </h2>
+              <div className="space-y-4">
+                <div className="bg-white p-4 border border-gray-200">
+                  <h3 className="font-medium text-black mb-2">Navegación por Teclado</h3>
+                  <p>Puedes navegar por todo el sitio usando solo el teclado (Tab, Enter, Escape).</p>
+                </div>
+                <div className="bg-white p-4 border border-gray-200">
+                  <h3 className="font-medium text-black mb-2">Lectores de Pantalla</h3>
+                  <p>El sitio es compatible con lectores de pantalla como NVDA, JAWS y VoiceOver.</p>
+                </div>
+                <div className="bg-white p-4 border border-gray-200">
+                  <h3 className="font-medium text-black mb-2">Zoom</h3>
+                  <p>El sitio funciona correctamente con zoom de hasta 200%.</p>
+                </div>
               </div>
-              <p className="text-gray-700 mt-4">
-                Intentaremos responder a tu solicitud dentro de 5 días hábiles.
-              </p>
             </section>
 
-            <section className="border-t pt-8">
-              <h3 
-                className="text-xl font-bold mb-4 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                Evaluación y auditorías
-              </h3>
-              <p className="text-gray-700">
-                Este sitio web fue evaluado por última vez para accesibilidad en enero de 2026. 
-                La evaluación se realizó mediante una combinación de herramientas automatizadas y pruebas manuales 
-                realizadas por expertos en accesibilidad y usuarios con discapacidades.
+            <section>
+              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide text-black">
+                Retroalimentación
+              </h2>
+              <p className="mb-4">
+                Valoramos tu opinión sobre la accesibilidad de nuestro sitio. Si encuentras
+                barreras de accesibilidad o tienes sugerencias para mejorar, por favor contáctanos:
               </p>
+              <ul className="space-y-1">
+                <li>Email: <strong className="text-black">accessibility@viogi.com</strong></li>
+                <li>Teléfono: <strong className="text-black">+52 55 1234 5678</strong></li>
+              </ul>
             </section>
 
-            <section className="border-t pt-8 bg-gray-100 p-6 -mx-8 md:-mx-32 px-8 md:px-32">
-              <h3 
-                className="text-xl font-bold mb-4 uppercase"
-                style={{
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                Aprobación formal
-              </h3>
-              <p className="text-gray-700">
-                Esta declaración de accesibilidad fue creada el 8 de enero de 2026 y se revisa periódicamente. 
-                Está aprobada por la dirección de VIOGI.
+            <section>
+              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide text-black">
+                Asistencia
+              </h2>
+              <p>
+                Si necesitas ayuda para navegar nuestro sitio o completar una compra debido a
+                una discapacidad, nuestro equipo de atención al cliente está disponible para
+                asistirte por teléfono o chat.
               </p>
             </section>
           </div>
@@ -233,4 +92,3 @@ export default function AccessibilityPage() {
     </div>
   );
 }
-

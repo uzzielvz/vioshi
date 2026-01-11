@@ -3,57 +3,43 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer className="bg-white text-black mt-auto border-t border-gray-200">
-      <div className="max-w-[1920px] mx-auto px-8 py-6">
-        <div className="flex items-center justify-between">
-          {/* LEFT - INSTAGRAM & SUPPORT */}
-          <div className="flex items-center gap-6">
-            <a
-              href="https://www.instagram.com/viogi_/?hl=es"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-60 transition-opacity duration-200"
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                fontSize: '11px',
-                fontWeight: 800,
-                letterSpacing: '-0.01em',
-                textTransform: 'uppercase',
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
-                fontStretch: 'condensed'
-              }}
-            >
-              INSTAGRAM
-            </a>
-            <Link
-              href="/pages/customer-support"
-              className="hover:opacity-60 transition-opacity duration-200"
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                fontSize: '11px',
-                fontWeight: 800,
-                letterSpacing: '-0.01em',
-                textTransform: 'uppercase',
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
-                fontStretch: 'condensed'
-              }}
-            >
-              SOPORTE
-            </Link>
-          </div>
-
-          {/* RIGHT - COPYRIGHT */}
-          <p 
+      <div className="flex items-center justify-between px-6 md:px-8 py-4">
+        <div className="flex items-center gap-6">
+          <a
+            href="https://www.instagram.com/viogi_/?hl=es"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs uppercase tracking-wide hover:opacity-60 transition-opacity"
             style={{
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
               fontSize: '11px',
-              fontWeight: 400,
-              letterSpacing: '-0.01em',
-              fontStretch: 'condensed'
+              fontWeight: 500
             }}
           >
-            © {new Date().getFullYear()} VIOGI
-          </p>
+            Instagram
+          </a>
+          <Link
+            href="/vender"
+            className="text-xs uppercase tracking-wide hover:opacity-60 transition-opacity"
+            style={{
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              fontSize: '11px',
+              fontWeight: 500
+            }}
+          >
+            Quiero Vender con Ustedes
+          </Link>
         </div>
+        <p
+          className="text-xs uppercase tracking-wide"
+          style={{
+            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+            fontSize: '11px',
+            fontWeight: 500
+          }}
+        >
+          © {new Date().getFullYear()} VIOGI
+        </p>
       </div>
     </footer>
   );

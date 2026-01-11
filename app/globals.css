@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
 @tailwind base;
@@ -14,71 +14,10 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif;
-  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.02em;
-  font-stretch: condensed;
-  -webkit-tap-highlight-color: transparent;
-}
-
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
-a, button {
-  color: #000000;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-a:active, button:active {
-  color: #000000;
-  background-color: transparent !important;
-}
-
-button:active {
-  background-color: transparent !important;
-  outline: none !important;
-}
-
-button:focus {
-  outline: none !important;
-  background-color: transparent !important;
-}
-
-/* Quitar efecto gris en mobile menu */
-nav button:active,
-nav a:active,
-nav button:focus,
-nav a:focus {
-  background-color: white !important;
-  color: #000000 !important;
-}
-
-/* Eliminar todos los efectos de tap/touch */
-* {
-  -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
-  -webkit-tap-highlight-color: transparent !important;
-  tap-highlight-color: transparent !important;
-}
-
-/* Específico para botones del menú móvil */
-.mobile-menu-button:active,
-.mobile-menu-button:focus {
-  background-color: white !important;
-  color: #000000 !important;
-}
-
-/* Estilos para placeholder del input de búsqueda */
-.search-input-placeholder::placeholder {
-  font-size: 9px;
-  font-weight: 400;
-  color: #999999;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.01em;
 }
 
 @layer utilities {
