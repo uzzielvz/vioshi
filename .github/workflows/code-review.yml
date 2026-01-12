@@ -1,0 +1,113 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **/*.ts
+            **/*.tsx
+            **/*.js
+            **/*.jsx
+            **/*.css
+
+      - name: Setup Node.js
+        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: npm ci
+
+      - name: Run ESLint on changed files
+        if: steps.changed-files.outputs.any_changed == 'true'
+        id: eslint
+        continue-on-error: true
+        run: |
+          echo "## ESLint Results" >> $GITHUB_STEP_SUMMARY
+          npx eslint ${{ steps.changed-files.outputs.all_changed_files }} --format json > eslint-results.json || true
+          cat eslint-results.json
+
+      - name: Run TypeScript check
+        if: steps.changed-files.outputs.any_changed == 'true'
+        id: typecheck
+        continue-on-error: true
+        run: |
+          echo "## TypeScript Results" >> $GITHUB_STEP_SUMMARY
+          npx tsc --noEmit 2>&1 | tee typecheck-results.txt || true
+
+      - name: AI Code Review with Claude
+        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: anthropics/anthropic-quickstarts@main
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Comment PR with review summary
+        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            
+            let comment = '## 🤖 Automated Code Review\n\n';
+            comment += '### Files Changed\n';
+            comment += '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ').map(f => `- \`${f}\``).join('\n');
+            comment += '\n\n';
+            
+            // Add ESLint results if available
+            try {
+              const eslintResults = JSON.parse(fs.readFileSync('eslint-results.json', 'utf8'));
+              const errors = eslintResults.reduce((acc, file) => acc + file.errorCount, 0);
+              const warnings = eslintResults.reduce((acc, file) => acc + file.warningCount, 0);
+              
+              if (errors > 0 || warnings > 0) {
+                comment += `### ESLint\n- ❌ Errors: ${errors}\n- ⚠️ Warnings: ${warnings}\n\n`;
+              } else {
+                comment += '### ESLint\n✅ No issues found\n\n';
+              }
+            } catch (e) {
+              comment += '### ESLint\n⏭️ Skipped\n\n';
+            }
+            
+            // Add TypeScript results if available
+            try {
+              const tsResults = fs.readFileSync('typecheck-results.txt', 'utf8');
+              if (tsResults.includes('error')) {
+                comment += '### TypeScript\n❌ Type errors found. Check the workflow logs for details.\n\n';
+              } else {
+                comment += '### TypeScript\n✅ No type errors\n\n';
+              }
+            } catch (e) {
+              comment += '### TypeScript\n⏭️ Skipped\n\n';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

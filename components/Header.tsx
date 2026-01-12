@@ -22,30 +22,24 @@ export default function Header() {
   const language = locale === 'es' ? 'ES' : 'EN';
   const country = locale === 'es' ? 'MÉXICO' : 'UNITED STATES';
 
-  const supportPages = [
-    '/pages/customer-support',
-    '/pages/locaciones',
-    '/pages/shipping-payments-returns',
-    '/pages/size-guide',
-    '/pages/legal',
-    '/pages/accessibility'
-  ];
-
-  const isShopPage = pathname.startsWith('/collections');
-  const isSupportPage = supportPages.some(page => pathname.startsWith(page));
-
+  // Fijar submenú basado en la ruta actual
   useEffect(() => {
-    if (isShopPage) {
+    if (pathname.startsWith('/collections') || pathname === '/collections/all') {
       setShopOpen(true);
       setSupportOpen(false);
-    } else if (isSupportPage) {
+    } else if (pathname.startsWith('/pages/customer-support') || pathname.startsWith('/support')) {
       setSupportOpen(true);
       setShopOpen(false);
     } else {
+      // En otras páginas, cerrar ambos por defecto
       setShopOpen(false);
       setSupportOpen(false);
     }
-  }, [pathname, isShopPage, isSupportPage]);
+  }, [pathname]);
+
+  // Verificar si estamos en una página donde el menú debe estar fijo
+  const isShopPage = pathname.startsWith('/collections') || pathname === '/collections/all';
+  const isSupportPage = pathname.startsWith('/pages/customer-support') || pathname.startsWith('/support');
 
   // Manejar click en SHOP
   const handleShopClick = (e: React.MouseEvent) => {
@@ -100,11 +94,11 @@ export default function Header() {
   }, [searchOpen, currencyOpen]);
 
   return (
-    <header 
+    <header
       className="fixed top-0 left-0 right-0 z-40"
       style={{
-        background: searchOpen ? 'white' : 'transparent',
-        borderBottom: searchOpen ? 'none' : '1px solid rgba(232, 232, 232, 0.3)'
+        background: 'white',
+        borderBottom: 'none'
       }}
     >
       {/* ROW 1 - HEADER PRINCIPAL */}
@@ -995,6 +989,7 @@ export default function Header() {
                 textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
+          
               CUENTA
             </Link>
 
