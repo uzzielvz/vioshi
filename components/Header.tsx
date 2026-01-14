@@ -16,7 +16,7 @@ export default function Header() {
   const [locale, setLocale] = useState<'es' | 'en'>('es'); // ES/MXN por defecto
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const [mobileSupportOpen, setMobileSupportOpen] = useState(false);
-  const { itemCount } = useCart();
+  const { itemCount, openCart } = useCart();
   
   const currency = locale === 'es' ? 'MXN' : 'USD';
   const language = locale === 'es' ? 'ES' : 'EN';
@@ -27,7 +27,7 @@ export default function Header() {
     if (pathname.startsWith('/collections') || pathname === '/collections/all') {
       setShopOpen(true);
       setSupportOpen(false);
-    } else if (pathname.startsWith('/pages/customer-support') || pathname.startsWith('/support')) {
+    } else if ((pathname.startsWith('/pages/') && pathname !== '/pages/chapters') || pathname.startsWith('/support')) {
       setSupportOpen(true);
       setShopOpen(false);
     } else {
@@ -39,7 +39,7 @@ export default function Header() {
 
   // Verificar si estamos en una página donde el menú debe estar fijo
   const isShopPage = pathname.startsWith('/collections') || pathname === '/collections/all';
-  const isSupportPage = pathname.startsWith('/pages/customer-support') || pathname.startsWith('/support');
+  const isSupportPage = (pathname.startsWith('/pages/') && pathname !== '/pages/chapters') || pathname.startsWith('/support');
 
   // Manejar click en SHOP
   const handleShopClick = (e: React.MouseEvent) => {
@@ -97,12 +97,12 @@ export default function Header() {
     <header
       className="fixed top-0 left-0 right-0 z-40"
       style={{
-        background: 'white',
+        background: searchOpen ? 'white' : 'transparent',
         borderBottom: 'none'
       }}
     >
       {/* ROW 1 - HEADER PRINCIPAL */}
-      <div className="flex items-center justify-between px-8 h-14">
+      <div className="flex items-center justify-between px-8 h-14" style={{ background: searchOpen ? 'white' : 'transparent' }}>
         
         {/* LEFT - LOGO SOLAMENTE */}
         <Link 
@@ -298,19 +298,19 @@ export default function Header() {
             </div>
           )}
 
-          {/* CARRITO */}
-          <Link 
-            href="/cart" 
+          {/* BAG */}
+          <button
+            onClick={openCart}
             className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
-            style={{ 
+            style={{
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
               letterSpacing: '0.02em',
               fontSize: '11px',
               textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
             }}
           >
-            CARRITO
-          </Link>
+            BAG {itemCount > 0 && `(${itemCount})`}
+          </button>
 
           {/* MENU - Mobile only */}
           <button
@@ -346,139 +346,141 @@ export default function Header() {
         >
           {shopOpen && (
             <>
-              <Link 
-                href="/collections/new" 
-                className="text-xs font-medium uppercase tracking-wide hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/collections/new"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   padding: '0',
                   margin: '0',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
                   lineHeight: '1',
                   color: pathname === '/collections/new' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/new' ? '1px solid #000' : 'none'
+                  borderBottom: pathname === '/collections/new' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/collections/new' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 NUEVO DROP
               </Link>
-              <Link 
-                href="/collections/hoodie" 
-                className="text-xs font-medium uppercase tracking-wide hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/collections/hoodie"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   padding: '0',
                   margin: '0',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
                   lineHeight: '1',
                   color: pathname === '/collections/hoodie' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/hoodie' ? '1px solid #000' : 'none'
+                  borderBottom: pathname === '/collections/hoodie' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/collections/hoodie' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 HOODIE
               </Link>
-              <Link 
-                href="/collections/chamarra" 
-                className="text-xs font-medium uppercase tracking-wide hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/collections/chamarra"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
                   lineHeight: '1',
                   color: pathname === '/collections/chamarra' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/chamarra' ? '1px solid #000' : 'none'
+                  borderBottom: pathname === '/collections/chamarra' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/collections/chamarra' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 CHAMARRA
               </Link>
-              <Link 
-                href="/collections/pants" 
-                className="text-xs font-medium uppercase tracking-wide hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/collections/pants"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
                   lineHeight: '1',
                   color: pathname === '/collections/pants' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/pants' ? '1px solid #000' : 'none'
+                  borderBottom: pathname === '/collections/pants' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/collections/pants' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 PANTS
               </Link>
-              <Link 
-                href="/collections/jeans" 
-                className="text-xs font-medium uppercase tracking-wide hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/collections/jeans"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
                   lineHeight: '1',
                   color: pathname === '/collections/jeans' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/jeans' ? '1px solid #000' : 'none'
+                  borderBottom: pathname === '/collections/jeans' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/collections/jeans' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 JEANS
               </Link>
-              <Link 
-                href="/collections/camisas" 
-                className="text-xs font-medium uppercase tracking-wide hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/collections/camisas"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
                   lineHeight: '1',
                   color: pathname === '/collections/camisas' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/camisas' ? '1px solid #000' : 'none'
+                  borderBottom: pathname === '/collections/camisas' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/collections/camisas' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 CAMISAS
               </Link>
-              <Link 
-                href="/collections/playeras" 
-                className="text-xs font-medium uppercase tracking-wide hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/collections/playeras"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
                   lineHeight: '1',
                   color: pathname === '/collections/playeras' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/playeras' ? '1px solid #000' : 'none'
+                  borderBottom: pathname === '/collections/playeras' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/collections/playeras' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 PLAYERAS
               </Link>
-              <Link 
-                href="/collections/accesorios" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/collections/accesorios"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
                   lineHeight: '1',
-                  borderBottom: pathname === '/collections/accesorios' ? '1px solid #000' : 'none'
+                  color: pathname === '/collections/accesorios' ? '#000' : '#666',
+                  borderBottom: pathname === '/collections/accesorios' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/collections/accesorios' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 ACCESORIOS
               </Link>
-              <Link 
-                href="/collections/bolsos" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/collections/bolsos"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
                   lineHeight: '1',
-                  borderBottom: pathname === '/collections/bolsos' ? '1px solid #000' : 'none'
+                  color: pathname === '/collections/bolsos' ? '#000' : '#666',
+                  borderBottom: pathname === '/collections/bolsos' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/collections/bolsos' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 BOLSOS
@@ -488,86 +490,107 @@ export default function Header() {
 
           {supportOpen && (
             <>
-              <Link 
-                href="/pages/customer-support" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/pages/customer-support"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  lineHeight: '1',
+                  color: pathname === '/pages/customer-support' ? '#000' : '#666',
+                  borderBottom: pathname === '/pages/customer-support' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/pages/customer-support' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 CUSTOMER SUPPORT
               </Link>
-              <Link 
-                href="/pages/customer-support#chat" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/pages/customer-support#chat"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  lineHeight: '1',
+                  color: '#666',
+                  borderBottom: '1px solid transparent',
+                  textShadow: 'none'
                 }}
               >
                 CHAT
               </Link>
-              <Link 
-                href="/pages/locaciones" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/pages/locaciones"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  lineHeight: '1',
+                  color: pathname === '/pages/locaciones' ? '#000' : '#666',
+                  borderBottom: pathname === '/pages/locaciones' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/pages/locaciones' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 LOCACIONES
               </Link>
-              <Link 
-                href="/pages/shipping-payments-returns" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/pages/shipping-payments-returns"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  lineHeight: '1',
+                  color: pathname === '/pages/shipping-payments-returns' ? '#000' : '#666',
+                  borderBottom: pathname === '/pages/shipping-payments-returns' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/pages/shipping-payments-returns' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 ENVÍOS, PAGOS Y DEVOLUCIONES
               </Link>
-              <Link 
-                href="/pages/size-guide" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/pages/size-guide"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  lineHeight: '1',
+                  color: pathname === '/pages/size-guide' ? '#000' : '#666',
+                  borderBottom: pathname === '/pages/size-guide' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/pages/size-guide' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 GUÍA DE TALLAS
               </Link>
-              <Link 
-                href="/pages/legal" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/pages/legal"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  lineHeight: '1',
+                  color: pathname === '/pages/legal' ? '#000' : '#666',
+                  borderBottom: pathname === '/pages/legal' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/pages/legal' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 LEGAL
               </Link>
-              <Link 
-                href="/pages/accessibility" 
-                className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-                style={{ 
+              <Link
+                href="/pages/accessibility"
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                  lineHeight: '1',
+                  color: pathname === '/pages/accessibility' ? '#000' : '#666',
+                  borderBottom: pathname === '/pages/accessibility' ? '1px solid #000' : '1px solid transparent',
+                  textShadow: pathname === '/pages/accessibility' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
                 ACCESIBILIDAD
@@ -578,25 +601,26 @@ export default function Header() {
       )}
 
 
-      {/* SEARCH MODAL - Debajo del header */}
+      {/* SEARCH MODAL - Estilo Stüssy */}
       {searchOpen && (
         <>
           {/* SEARCH BAR */}
-          <div 
+          <div
             className="fixed left-0 right-0"
             style={{
               top: '56px',
               background: 'white',
-              zIndex: 39
+              zIndex: 39,
+              borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
             }}
           >
             <div className="flex items-center gap-4 py-4 px-8 md:px-0" style={{ paddingLeft: '32px', background: 'white' }}>
               {/* LUPA - Mobile: alineada al borde, Desktop: alineada con SHOP */}
-              <svg 
-                className="w-5 h-5 text-black flex-shrink-0 md:ml-24" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
+              <svg
+                className="w-5 h-5 text-black flex-shrink-0 md:ml-24"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
                 strokeWidth="2"
               >
                 <circle cx="11" cy="11" r="7" />
@@ -608,29 +632,29 @@ export default function Header() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="BUSCAR AQUÍ"
-                className="flex-1 text-black outline-none search-input-placeholder"
+                placeholder="SEARCH HERE"
+                className="flex-1 text-black outline-none search-input-placeholder text-[10px] md:text-[11px]"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 800,
+                  fontWeight: 400,
                   letterSpacing: '0.02em',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
-                  background: 'white'
+                  background: 'white',
+                  color: '#000'
                 }}
                 autoFocus
               />
 
-              {/* X CERRAR */}
+              {/* X CERRAR - Grande (oculta en móvil) */}
               <button
                 onClick={() => {
                   setSearchOpen(false);
                   setSearchQuery("");
                 }}
-                className="text-black hover:opacity-60 transition-opacity duration-200 flex-shrink-0"
+                className="hidden md:block text-black hover:opacity-60 transition-opacity duration-200 flex-shrink-0 mr-6"
                 style={{
-                  fontSize: '20px',
-                  lineHeight: '1'
+                  fontSize: '28px',
+                  lineHeight: '1',
+                  fontWeight: '300'
                 }}
               >
                 ×
@@ -638,17 +662,17 @@ export default function Header() {
             </div>
           </div>
 
-          {/* OVERLAY - Click para cerrar (sin oscurecer) */}
+          {/* OVERLAY GRIS - Click para cerrar con cursor X */}
           <div
             onClick={() => {
               setSearchOpen(false);
               setSearchQuery("");
             }}
-            className="fixed inset-0"
+            className="fixed inset-0 search-overlay-cursor"
             style={{
-              top: '56px',
-              zIndex: 38,
-              background: 'transparent'
+              top: '112px',
+              zIndex: 37,
+              background: 'rgba(0, 0, 0, 0.4)'
             }}
           />
         </>

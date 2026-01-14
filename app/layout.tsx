@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CartProvider } from "@/store/cartStore";
+import CartDrawer from "@/components/CartDrawer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function RootLayout({
       <body className="antialiased">
         <CartProvider>
           {children}
+          <CartDrawer />
         </CartProvider>
       </body>
     </html>
