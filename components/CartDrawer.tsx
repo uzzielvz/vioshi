@@ -20,10 +20,10 @@ export default function CartDrawer() {
 
       {/* CART DRAWER */}
       <div
-        className="fixed top-0 right-0 h-full w-full md:w-[500px] bg-white z-50 shadow-2xl flex flex-col animate-slide-in"
+        className="fixed top-0 right-0 h-full w-full md:w-[540px] bg-white z-50 shadow-2xl flex flex-col animate-slide-in"
       >
         {/* HEADER */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
+        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200">
           <h2
             style={{
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -49,7 +49,7 @@ export default function CartDrawer() {
         </div>
 
         {/* CART ITEMS */}
-        <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div className="flex-1 overflow-y-auto px-8 py-8">
           {cart.items.length === 0 ? (
             <p
               className="text-center text-gray-500 py-12"
@@ -196,7 +196,7 @@ export default function CartDrawer() {
 
         {/* FOOTER */}
         {cart.items.length > 0 && (
-          <div className="border-t border-gray-200 px-6 py-6">
+          <div className="border-t border-gray-200 px-8 py-6">
             {/* SUBTOTAL */}
             <div className="flex items-center justify-between mb-6">
               <span

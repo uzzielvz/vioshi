@@ -97,12 +97,12 @@ export default function Header() {
     <header
       className="fixed top-0 left-0 right-0 z-40"
       style={{
-        background: searchOpen ? 'white' : 'transparent',
+        background: (searchOpen || mobileMenuOpen) ? 'white' : 'transparent',
         borderBottom: 'none'
       }}
     >
       {/* ROW 1 - HEADER PRINCIPAL */}
-      <div className="flex items-center justify-between px-8 h-14" style={{ background: searchOpen ? 'white' : 'transparent' }}>
+      <div className="flex items-center justify-between px-8 h-14" style={{ background: (searchOpen || mobileMenuOpen) ? 'white' : 'transparent' }}>
         
         {/* LEFT - LOGO SOLAMENTE */}
         <Link 
@@ -309,7 +309,9 @@ export default function Header() {
               textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
             }}
           >
-            BAG {itemCount > 0 && `(${itemCount})`}
+            {/* Desktop: BAG (1), Mobile: BAG 1 */}
+            <span className="hidden md:inline">BAG {itemCount > 0 && `(${itemCount})`}</span>
+            <span className="inline md:hidden">BAG {itemCount > 0 && itemCount}</span>
           </button>
 
           {/* MENU - Mobile only */}
@@ -719,11 +721,26 @@ export default function Header() {
               </button>
               {mobileShopOpen && (
                 <div className="pb-3">
-                  <Link 
-                    href="/collections/new" 
+                  <Link
+                    href="/collections/all"
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
+                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                      letterSpacing: '0.02em',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+                    }}
+                  >
+                    TODO
+                  </Link>
+                  <Link
+                    href="/collections/new"
+                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -999,11 +1016,11 @@ export default function Header() {
             </div>
 
             {/* CUENTA */}
-            <Link 
-              href="/account" 
+            <Link
+              href="/account"
               className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
               onClick={() => setMobileMenuOpen(false)}
-              style={{ 
+              style={{
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                 letterSpacing: '0.02em',
                 fontSize: '11px',
@@ -1013,7 +1030,7 @@ export default function Header() {
                 textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
-          
+
               CUENTA
             </Link>
 
