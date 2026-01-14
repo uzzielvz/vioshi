@@ -11,9 +11,13 @@
   --font-logo: 'Bebas Neue', 'Impact', sans-serif;
 }
 
+html {
+  background: #ffffff;
+}
+
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -24,4 +28,41 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+.submenu-link:hover {
+  color: #000 !important;
+  border-bottom: 1px solid #000 !important;
+  text-shadow: 0 0 0.5px rgba(0, 0, 0, 0.8) !important;
+}
+
+.search-input-placeholder::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+  font-weight: 400;
+  font-family: 'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+@media (min-width: 768px) {
+  .search-input-placeholder::placeholder {
+    font-size: 11px;
+  }
+}
+
+.search-overlay-cursor {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M18 6L6 18M6 6l12 12' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") 12 12, pointer;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
 }
