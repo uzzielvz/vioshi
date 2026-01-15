@@ -14,9 +14,10 @@ interface ProductCardProps {
   slug: string;
   soldOut?: boolean;
   isNew?: boolean;
+  size?: string;
 }
 
-export default function ProductCard({ id, name, price, image, slug, soldOut, isNew }: ProductCardProps) {
+export default function ProductCard({ id, name, price, image, slug, soldOut, isNew, size }: ProductCardProps) {
   const { addItem } = useCart();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -110,6 +111,18 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
             {name}
           </h3>
         </Link>
+        {size && (
+          <p
+            style={{
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              fontSize: '11px',
+              fontWeight: 400,
+              color: '#666'
+            }}
+          >
+            {size}
+          </p>
+        )}
         <p
           style={{
             fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -117,7 +130,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
             fontWeight: 400
           }}
         >
-          ${price.toLocaleString()} MXN
+          ${price.toLocaleString()}
         </p>
       </div>
     </div>

@@ -3,6 +3,7 @@ export interface Product {
   name: string;
   price: number;
   image: string;
+  images?: string[]; // Gallery images
   slug: string;
   description?: string;
   category?: string;
@@ -55,6 +56,11 @@ export async function getProducts(category?: string): Promise<Product[]> {
       name: "HOODIE PLAYBOY",
       price: 400,
       image: "/products/HOODIE PLAYBOY-M-400.png",
+      images: [
+        "/products/HOODIE PLAYBOY-M-400.png",
+        "/products/HOODIE PLAYBOY-M-400.png",
+        "/products/HOODIE PLAYBOY-M-400.png",
+      ],
       slug: "hoodie-playboy-m",
       category: "hoodie",
       size: "M",

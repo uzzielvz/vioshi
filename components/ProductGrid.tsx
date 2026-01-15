@@ -8,6 +8,7 @@ interface Product {
   slug: string;
   soldOut?: boolean;
   isNew?: boolean;
+  size?: string;
 }
 
 interface ProductGridProps {
@@ -51,6 +52,7 @@ export default function ProductGrid({ products, columns = 4 }: ProductGridProps)
           slug={product.slug}
           soldOut={product.soldOut}
           isNew={product.isNew}
+          size={product.size}
         />
       ))}
     </div>
