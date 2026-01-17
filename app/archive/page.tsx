@@ -1,65 +1,116 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import Image from "next/image";
 
-const archiveCollections = [
-  { name: "DROP 001 - ORIGINS", season: "FW 2024", slug: "drop-001" },
-  { name: "DROP 002 - STREETS", season: "SS 2025", slug: "drop-002" },
+const archiveEntries = [
+  {
+    date: "15.01.2025",
+    image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1200&h=1600&fit=crop",
+    description: "NUEVA COLECCIÓN INSPIRADA EN LAS CALLES DE LA CIUDAD. PIEZAS ESENCIALES QUE COMBINAN FUNCIONALIDAD CON ESTILO URBANO CONTEMPORÁNEO.",
+    slug: "drop-001",
+  },
+  {
+    date: "10.12.2024",
+    image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=1200&h=1600&fit=crop",
+    description: "DROP DE INVIERNO CON PRENDAS PREMIUM DISEÑADAS PARA EL CLIMA FRÍO. ABRIGOS, SUDADERAS Y ACCESORIOS QUE DEFINEN EL ESTILO VIOGI.",
+    slug: "drop-002",
+  },
+  {
+    date: "20.11.2024",
+    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=1200&h=1600&fit=crop",
+    description: "LANZAMIENTO DE NUESTRA LÍNEA DE DENIM. JEANS Y CHAQUETAS CON CORTES MODERNOS Y ACABADOS ÚNICOS QUE REFLEJAN NUESTRA IDENTIDAD.",
+    slug: "drop-003",
+  },
 ];
 
 export default function ArchivePage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
       <main className="flex-1 pt-[64px]">
-        <div className="max-w-6xl mx-auto px-6 md:px-8 py-12 md:py-16">
-          <h1 className="text-2xl md:text-3xl font-normal mb-8 tracking-wide uppercase">
-            Archivo
+        <div className="max-w-4xl mx-auto px-6 md:px-8 py-12 md:py-16">
+          <h1
+            className="text-2xl md:text-3xl font-bold mb-12 tracking-wide uppercase"
+            style={{
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              fontSize: '13px',
+              letterSpacing: '0.05em',
+              fontWeight: 800,
+            }}
+          >
+            ARCHIVO
           </h1>
 
-          <p className="text-gray-600 mb-12 max-w-2xl">
-            Explora las colecciones pasadas de VIOGI. Cada drop representa un capítulo
-            en nuestra historia de streetwear premium accesible.
-          </p>
-
-          <div className="grid gap-8 md:grid-cols-2">
-            {archiveCollections.map((collection) => (
+          <div className="space-y-16 md:space-y-24">
+            {archiveEntries.map((entry, index) => (
               <Link
-                key={collection.slug}
-                href={`/archive/${collection.slug}`}
-                className="group block bg-white border border-gray-200 hover:border-black transition-colors"
+                key={entry.slug}
+                href={`/archive/${entry.slug}`}
+                className="block group"
               >
-                <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-gray-400 text-sm uppercase tracking-wide">
-                      Coming Soon
-                    </span>
-                  </div>
+                {/* Date */}
+                <p
+                  className="text-xs uppercase tracking-wide text-gray-500 mb-4 font-bold"
+                  style={{
+                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                    fontSize: '11px',
+                    letterSpacing: '0.05em',
+                    fontWeight: 800,
+                  }}
+                >
+                  {entry.date}
+                </p>
+
+                {/* Image */}
+                <div className="relative w-full aspect-[3/4] mb-6 overflow-hidden bg-gray-100">
+                  <Image
+                    src={entry.image}
+                    alt={`Archive entry ${index + 1}`}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 800px"
+                  />
                 </div>
-                <div className="p-6">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
-                    {collection.season}
-                  </p>
-                  <h2 className="text-lg font-medium uppercase tracking-wide group-hover:opacity-60 transition-opacity">
-                    {collection.name}
-                  </h2>
-                </div>
+
+                {/* Description */}
+                <p
+                  className="text-sm leading-relaxed text-gray-700 max-w-2xl uppercase tracking-wide font-bold"
+                  style={{
+                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                    fontSize: '11px',
+                    letterSpacing: '0.05em',
+                    lineHeight: '1.6',
+                    fontWeight: 800,
+                  }}
+                >
+                  {entry.description}
+                </p>
               </Link>
             ))}
           </div>
 
-          <div className="mt-16 pt-8 border-t border-gray-200">
-            <p className="text-gray-500 text-sm">
-              Próximamente más contenido del archivo. Sigue nuestro{" "}
+          <div className="mt-20 pt-8 border-t border-gray-200">
+            <p
+              className="text-gray-500 text-sm uppercase tracking-wide font-bold"
+              style={{
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontSize: '11px',
+                letterSpacing: '0.05em',
+                fontWeight: 800,
+              }}
+            >
+              PRÓXIMAMENTE MÁS CONTENIDO DEL ARCHIVO. SIGUE NUESTRO{" "}
               <a
                 href="https://www.instagram.com/viogi_/?hl=es"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline hover:opacity-60"
+                className="underline hover:opacity-60 transition-opacity font-bold"
+                style={{ fontWeight: 800 }}
               >
-                Instagram
+                INSTAGRAM
               </a>
-              {" "}para actualizaciones.
+              {" "}PARA ACTUALIZACIONES.
             </p>
           </div>
         </div>

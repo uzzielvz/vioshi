@@ -237,7 +237,7 @@ export default function CartDrawer() {
               >
                 CONTINUE SHOPPING
               </button>
-              <Link href="/checkout" className="flex-1">
+              <Link href="/checkout" onClick={closeCart} className="flex-1">
                 <button
                   className="w-full py-4 bg-black text-white hover:opacity-80 transition-opacity duration-200"
                   style={{

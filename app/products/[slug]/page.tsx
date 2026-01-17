@@ -270,7 +270,7 @@ export default function ProductPage({
                     }}
                   >
                     PRODUCT DETAILS
-                    <span className="text-xl">{'>'}</span>
+                    <span className="text-xs text-gray-400 font-light">+</span>
                   </summary>
                   <p
                     className="mt-4 text-gray-600 leading-relaxed"
@@ -294,7 +294,7 @@ export default function ProductPage({
                     }}
                   >
                     SIZE GUIDE
-                    <span className="text-xl">{'>'}</span>
+                    <span className="text-xs text-gray-400 font-light">+</span>
                   </summary>
                   <p
                     className="mt-4 text-gray-600 leading-relaxed"
