@@ -683,59 +683,53 @@ export default function CheckoutPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-8">
+      <footer className="bg-[#F7F7F7] border-t border-gray-200 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-xs">
-            <div>
-              <h3 className="uppercase tracking-wider font-medium mb-3">Ayuda</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/pages/customer-support" className="hover:opacity-60">
-                    Soporte
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/pages/shipping-payments-returns" className="hover:opacity-60">
-                    Envíos y Devoluciones
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/pages/size-guide" className="hover:opacity-60">
-                    Guía de Tallas
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="uppercase tracking-wider font-medium mb-3">Legal</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/pages/legal" className="hover:opacity-60">
-                    Términos y Condiciones
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/pages/accessibility" className="hover:opacity-60">
-                    Accesibilidad
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="uppercase tracking-wider font-medium mb-3">Redes</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="https://www.instagram.com/viogi_"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:opacity-60"
-                  >
-                    Instagram
-                  </a>
-                </li>
-              </ul>
-            </div>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs">
+            <Link
+              href="/pages/shipping-payments-returns"
+              className="underline hover:no-underline transition-all"
+              style={{
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontSize: '11px',
+                fontWeight: 400,
+              }}
+            >
+              ENVIOS
+            </Link>
+            <Link
+              href="/pages/locaciones"
+              className="underline hover:no-underline transition-all"
+              style={{
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontSize: '11px',
+                fontWeight: 400,
+              }}
+            >
+              PUNTOS DE ENTREGA
+            </Link>
+            <Link
+              href="/pages/legal"
+              className="underline hover:no-underline transition-all"
+              style={{
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontSize: '11px',
+                fontWeight: 400,
+              }}
+            >
+              POLÍTICA DE PRIVACIDAD
+            </Link>
+            <Link
+              href="/pages/legal"
+              className="underline hover:no-underline transition-all"
+              style={{
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontSize: '11px',
+                fontWeight: 400,
+              }}
+            >
+              TÉRMINOS DEL SERVICIO
+            </Link>
           </div>
         </div>
       </footer>
