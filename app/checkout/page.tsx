@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/store/cartStore';
+import { PICKUP_POINTS, getPickupPointById } from '@/lib/pickupPoints';
+import { DELIVERY_METHODS } from '@/lib/constants';
 
 interface CheckoutFormData {
   email: string;
   emailNews: boolean;
+  deliveryMethod: 'home' | 'pickup';
   country: string;
   firstName: string;
   lastName: string;
@@ -18,6 +21,9 @@ interface CheckoutFormData {
   state: string;
   zipCode: string;
   phone: string;
+  pickupPointId: string;
+  pickupDate: string;
+  pickupTimeSlot: string;
   saveInfo: boolean;
   mobilePhone: string;
   useShippingAsBilling: boolean;
@@ -32,7 +38,7 @@ interface CheckoutFormData {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart: cartData, openCart } = useCart();
+  const { cart: cartData, openCart, updateShippingCost } = useCart();
   const cart = cartData.items;
   const subtotal = cartData.subtotal;
   const tax = cartData.tax;
@@ -46,6 +52,7 @@ export default function CheckoutPage() {
   const [formData, setFormData] = useState<CheckoutFormData>({
     email: '',
     emailNews: true,
+    deliveryMethod: 'home',
     country: 'MX',
     firstName: '',
     lastName: '',
@@ -55,6 +62,9 @@ export default function CheckoutPage() {
     state: '',
     zipCode: '',
     phone: '',
+    pickupPointId: '',
+    pickupDate: '',
+    pickupTimeSlot: '',
     saveInfo: false,
     mobilePhone: '',
     useShippingAsBilling: true,
@@ -67,6 +77,14 @@ export default function CheckoutPage() {
     nameOnCard: '',
   });
 
+  // Get selected pickup point
+  const selectedPickupPoint = useMemo(() => {
+    if (formData.pickupPointId) {
+      return getPickupPointById(formData.pickupPointId);
+    }
+    return undefined;
+  }, [formData.pickupPointId]);
+
   // Redirect if cart is empty
   useEffect(() => {
     if (cart.length === 0) {
@@ -74,30 +92,53 @@ export default function CheckoutPage() {
     }
   }, [cart, router]);
 
+  // Update shipping cost based on delivery method
+  useEffect(() => {
+    let shippingCost = 0;
+
+    if (formData.deliveryMethod === 'home') {
+      shippingCost = formData.shippingMethod === 'express' ? 25 : 10;
+    } else if (formData.deliveryMethod === 'pickup' && formData.pickupPointId) {
+      const point = getPickupPointById(formData.pickupPointId);
+      shippingCost = point?.additionalCost || 0;
+    }
+
+    updateShippingCost(shippingCost);
+  }, [
+    formData.deliveryMethod,
+    formData.shippingMethod,
+    formData.pickupPointId,
+    updateShippingCost
+  ]);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
 
-    setFormData((prev) => ({
-      ...prev,
+    const updatedFormData = {
+      ...formData,
       [name]: type === 'checkbox' ? checked : value,
-    }));
+    };
 
-    // Show shipping methods after address is filled
+    setFormData(updatedFormData);
+
+    // Show shipping methods based on delivery method
     if (
       name === 'address' ||
       name === 'city' ||
       name === 'state' ||
-      name === 'zipCode'
+      name === 'zipCode' ||
+      name === 'deliveryMethod' ||
+      name === 'pickupPointId'
     ) {
-      const addressComplete =
-        formData.address &&
-        formData.city &&
-        formData.state &&
-        formData.zipCode;
-      setShowShippingMethods(!!addressComplete);
+      const shouldShow =
+        updatedFormData.deliveryMethod === 'home'
+          ? !!(updatedFormData.address && updatedFormData.city && updatedFormData.state && updatedFormData.zipCode)
+          : !!updatedFormData.pickupPointId;
+
+      setShowShippingMethods(shouldShow);
     }
   };
 
@@ -117,6 +158,19 @@ export default function CheckoutPage() {
     if (!formData.agreeToTerms) {
       alert('Debes aceptar los términos y condiciones');
       return;
+    }
+
+    // Validate based on delivery method
+    if (formData.deliveryMethod === 'home') {
+      if (!formData.address || !formData.city || !formData.state || !formData.zipCode) {
+        alert('Por favor completa todos los campos de dirección');
+        return;
+      }
+    } else if (formData.deliveryMethod === 'pickup') {
+      if (!formData.pickupPointId) {
+        alert('Por favor selecciona un punto de recogida');
+        return;
+      }
     }
 
     setIsProcessing(true);
@@ -254,11 +308,63 @@ export default function CheckoutPage() {
                   <h2 className="text-xs uppercase tracking-wide font-bold mb-3">
                     Delivery
                   </h2>
-                  <div className="space-y-2.5">
-                    <div>
-                      <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">
-                        Country/Region
+
+                  {/* Delivery Method Selection */}
+                  <div className="mb-4">
+                    <div className="space-y-2.5">
+                      {/* Radio button: Envío a Domicilio */}
+                      <label className={`flex items-center justify-between p-3 border-2 cursor-pointer transition-colors ${
+                        formData.deliveryMethod === 'home'
+                          ? 'border-black'
+                          : 'border-gray-300 hover:border-black'
+                      }`}>
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            name="deliveryMethod"
+                            value="home"
+                            checked={formData.deliveryMethod === 'home'}
+                            onChange={handleInputChange}
+                            className="w-4 h-4"
+                          />
+                          <div className="ml-2.5">
+                            <span className="text-xs font-medium">Envío a Domicilio</span>
+                            <p className="text-[10px] text-gray-500 mt-0.5">Recibe en tu dirección</p>
+                          </div>
+                        </div>
                       </label>
+
+                      {/* Radio button: Recoger en Punto */}
+                      <label className={`flex items-center justify-between p-3 border-2 cursor-pointer transition-colors ${
+                        formData.deliveryMethod === 'pickup'
+                          ? 'border-black'
+                          : 'border-gray-300 hover:border-black'
+                      }`}>
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            name="deliveryMethod"
+                            value="pickup"
+                            checked={formData.deliveryMethod === 'pickup'}
+                            onChange={handleInputChange}
+                            className="w-4 h-4"
+                          />
+                          <div className="ml-2.5">
+                            <span className="text-xs font-medium">Recoger en Punto</span>
+                            <p className="text-[10px] text-gray-500 mt-0.5">Recoge en tienda o punto autorizado</p>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {formData.deliveryMethod === 'home' && (
+                      <>
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">
+                            Country/Region
+                          </label>
                       <select
                         name="country"
                         value={formData.country}
@@ -354,15 +460,151 @@ export default function CheckoutPage() {
                       />
                     </div>
 
-                    <input
-                      type="tel"
-                      name="phone"
-                      placeholder="PHONE"
-                      required
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
-                    />
+                        <input
+                          type="tel"
+                          name="phone"
+                          placeholder="PHONE"
+                          required
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                        />
+                      </>
+                    )}
+
+                    {formData.deliveryMethod === 'pickup' && (
+                      <>
+                        {/* First Name + Last Name */}
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <input
+                            type="text"
+                            name="firstName"
+                            placeholder="FIRST NAME"
+                            required
+                            value={formData.firstName}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                          />
+                          <input
+                            type="text"
+                            name="lastName"
+                            placeholder="LAST NAME"
+                            required
+                            value={formData.lastName}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                          />
+                        </div>
+
+                        {/* Phone */}
+                        <input
+                          type="tel"
+                          name="phone"
+                          placeholder="PHONE"
+                          required
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                        />
+
+                        {/* Selector de Punto de Recogida */}
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">
+                            Seleccionar Punto de Recogida
+                          </label>
+                          <select
+                            name="pickupPointId"
+                            value={formData.pickupPointId}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black text-sm appearance-none bg-white"
+                            style={{
+                              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                              backgroundRepeat: 'no-repeat',
+                              backgroundPosition: 'right 1rem center',
+                            }}
+                          >
+                            <option value="">SELECCIONA UN PUNTO</option>
+                            <optgroup label="TIENDAS VIOGI">
+                              {PICKUP_POINTS.filter(p => p.type === 'flagship' || p.type === 'retail')
+                                .map(point => (
+                                  <option key={point.id} value={point.id}>
+                                    {point.name} {point.additionalCost > 0 && `(+$${point.additionalCost})`}
+                                  </option>
+                                ))}
+                            </optgroup>
+                            <optgroup label="PUNTOS AUTORIZADOS">
+                              {PICKUP_POINTS.filter(p => p.type === 'partner')
+                                .map(point => (
+                                  <option key={point.id} value={point.id}>
+                                    {point.name} {point.additionalCost > 0 && `(+$${point.additionalCost})`}
+                                  </option>
+                                ))}
+                            </optgroup>
+                          </select>
+
+                          {/* Info Box: Detalles del punto seleccionado */}
+                          {formData.pickupPointId && selectedPickupPoint && (
+                            <div className="mt-2.5 p-3 bg-gray-50 border border-gray-200">
+                              <p className="text-xs font-medium mb-1">{selectedPickupPoint.name}</p>
+                              <p className="text-[10px] text-gray-600 mb-1.5">
+                                {selectedPickupPoint.address}<br />
+                                {selectedPickupPoint.city}, {selectedPickupPoint.state}
+                              </p>
+                              <div className="flex items-center gap-3 text-[10px] text-gray-500">
+                                <span>📍 {selectedPickupPoint.estimatedDays}</span>
+                                <span>🕐 {selectedPickupPoint.availableHours}</span>
+                              </div>
+                              {selectedPickupPoint.additionalCost > 0 && (
+                                <p className="text-[10px] font-medium mt-1.5">
+                                  Costo: ${selectedPickupPoint.additionalCost.toFixed(2)}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Fecha y Horario Preferido (opcional) */}
+                        {formData.pickupPointId && (
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <div>
+                              <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">
+                                Fecha Preferida (Opcional)
+                              </label>
+                              <input
+                                type="date"
+                                name="pickupDate"
+                                value={formData.pickupDate}
+                                onChange={handleInputChange}
+                                min={new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                                className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">
+                                Horario Preferido (Opcional)
+                              </label>
+                              <select
+                                name="pickupTimeSlot"
+                                value={formData.pickupTimeSlot}
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black text-sm appearance-none bg-white"
+                                style={{
+                                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                                  backgroundRepeat: 'no-repeat',
+                                  backgroundPosition: 'right 1rem center',
+                                }}
+                              >
+                                <option value="">CUALQUIER HORARIO</option>
+                                <option value="morning">Mañana (11:00-14:00)</option>
+                                <option value="afternoon">Tarde (14:00-18:00)</option>
+                                <option value="evening">Noche (18:00-20:00)</option>
+                              </select>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -654,16 +896,22 @@ export default function CheckoutPage() {
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-1">
                       <span className="uppercase tracking-wide text-[11px] font-medium text-gray-600">
-                        Shipping
+                        {formData.deliveryMethod === 'home' ? 'Envío' : 'Costo de Punto'}
                       </span>
                       <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <span className="text-[10px] text-gray-400 uppercase tracking-wide">
-                      {showShippingMethods
-                        ? `$${shipping.toFixed(2)}`
-                        : 'Enter shipping address'}
+                      {formData.deliveryMethod === 'home' ? (
+                        showShippingMethods ? `$${shipping.toFixed(2)}` : 'Completa dirección'
+                      ) : (
+                        formData.pickupPointId && selectedPickupPoint
+                          ? selectedPickupPoint.additionalCost > 0
+                            ? `$${selectedPickupPoint.additionalCost.toFixed(2)}`
+                            : 'GRATIS'
+                          : 'Selecciona punto'
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-gray-200">
@@ -736,3 +984,4 @@ export default function CheckoutPage() {
     </div>
   );
 }
+

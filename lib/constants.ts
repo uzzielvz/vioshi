@@ -25,6 +25,17 @@ export const TAX_RATE = 0.1;
 export const STANDARD_SHIPPING_COST = 10;
 export const EXPRESS_SHIPPING_COST = 20;
 
+// Delivery Methods
+export const DELIVERY_METHODS = {
+  HOME: 'home',
+  PICKUP: 'pickup',
+} as const;
+
+export const DELIVERY_METHOD_LABELS = {
+  home: 'Envío a Domicilio',
+  pickup: 'Recoger en Punto',
+} as const;
+
 // Categories
 export const CATEGORIES = {
   ALL: "all",

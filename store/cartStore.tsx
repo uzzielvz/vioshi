@@ -9,6 +9,7 @@ interface CartContextType {
   addItem: (item: CartItem) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
+  updateShippingCost: (cost: number) => void;
   clearCart: () => void;
   itemCount: number;
   isCartOpen: boolean;
@@ -117,6 +118,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const updateShippingCost = (cost: number) => {
+    setCart((prevCart) => {
+      const subtotal = prevCart.subtotal;
+      const tax = prevCart.tax;
+      const shipping = prevCart.items.length > 0 ? cost : 0;
+      const total = subtotal + tax + shipping;
+
+      return {
+        ...prevCart,
+        shipping,
+        total,
+      };
+    });
+  };
+
   const clearCart = () => {
     setCart(initialCart);
   };
@@ -133,6 +149,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         addItem,
         removeItem,
         updateQuantity,
+        updateShippingCost,
         clearCart,
         itemCount,
         isCartOpen,
