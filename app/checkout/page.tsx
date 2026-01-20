@@ -97,7 +97,7 @@ export default function CheckoutPage() {
         formData.city &&
         formData.state &&
         formData.zipCode;
-      setShowShippingMethods(addressComplete);
+      setShowShippingMethods(!!addressComplete);
     }
   };
 
@@ -601,7 +601,7 @@ export default function CheckoutPage() {
                       <div className="relative w-16 h-16 flex-shrink-0 bg-white border border-gray-200 rounded overflow-hidden">
                         <Image
                           src={item.image}
-                          alt={item.name}
+                          alt={item.productName}
                           fill
                           className="object-contain"
                         />

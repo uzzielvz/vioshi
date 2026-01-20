@@ -36,9 +36,9 @@ const archiveCollections: Record<
   },
 };
 
-export default function ArchiveDetailPage({ params }: ArchivePageProps) {
+export default async function ArchiveDetailPage({ params }: ArchivePageProps) {
   const collection = archiveCollections[params.slug];
-  const products = getProducts();
+  const products = await getProducts();
 
   if (!collection) {
     return (

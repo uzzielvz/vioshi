@@ -3,27 +3,51 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductGrid from '@/components/ProductGrid';
-import { getProducts } from '@/lib/products';
+import { getProducts, Product } from '@/lib/products';
 
 function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
   const [searchQuery, setSearchQuery] = useState(query);
-  const products = getProducts();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      setIsLoading(true);
+      const data = await getProducts();
+      setProducts(data);
+      setIsLoading(false);
+    };
+    loadProducts();
+  }, []);
 
   // Filter products based on search query
   const filteredProducts = products.filter((product) => {
     const searchLower = searchQuery.toLowerCase();
     return (
       product.name.toLowerCase().includes(searchLower) ||
-      product.category.toLowerCase().includes(searchLower) ||
-      product.description?.toLowerCase().includes(searchLower)
+      (product.category && product.category.toLowerCase().includes(searchLower)) ||
+      (product.description && product.description.toLowerCase().includes(searchLower))
     );
   });
 
   useEffect(() => {
     setSearchQuery(query);
   }, [query]);
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-white pt-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-gray-300 border-t-black rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-sm uppercase tracking-wider text-gray-600">
+            Cargando productos...
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-white pt-16">

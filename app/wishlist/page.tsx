@@ -1,16 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getProducts } from '@/lib/products';
+import { getProducts, Product } from '@/lib/products';
 
 // Mock wishlist data - in real app this would come from context/store
 const mockWishlistIds = ['1', '2', '3'];
 
 export default function WishlistPage() {
-  const allProducts = getProducts();
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [wishlistIds, setWishlistIds] = useState(mockWishlistIds);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      setIsLoading(true);
+      const data = await getProducts();
+      setAllProducts(data);
+      setIsLoading(false);
+    };
+    loadProducts();
+  }, []);
 
   const wishlistProducts = allProducts.filter((product) =>
     wishlistIds.includes(product.id)
@@ -25,6 +36,19 @@ export default function WishlistPage() {
       setWishlistIds([]);
     }
   };
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-white pt-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-gray-300 border-t-black rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-sm uppercase tracking-wider text-gray-600">
+            Cargando wishlist...
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-white pt-16">
