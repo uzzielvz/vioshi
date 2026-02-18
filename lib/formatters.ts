@@ -1,0 +1,19 @@
+import { Locale } from '@/i18n';
+
+const EXCHANGE_RATE = 17.5; // USD to MXN
+
+export function formatPrice(
+  priceInUSD: number,
+  locale: Locale,
+  showDecimals: boolean = true
+): string {
+  const currency = locale === 'es' ? 'MXN' : 'USD';
+  const price = locale === 'es' ? priceInUSD * EXCHANGE_RATE : priceInUSD;
+
+  return new Intl.NumberFormat(locale === 'es' ? 'es-MX' : 'en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: showDecimals ? 2 : 0,
+    maximumFractionDigits: showDecimals ? 2 : 0,
+  }).format(price);
+}

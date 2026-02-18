@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { CartProvider } from "@/store/cartStore";
-import CartDrawer from "@/components/CartDrawer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,15 +11,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <html lang="es">
-      <body className="antialiased">
-        <CartProvider>
-          {children}
-          <CartDrawer />
-        </CartProvider>
-      </body>
-    </html>
-  );
+  // The [locale]/layout.tsx provides <html> and <body>
+  return children;
 }
-

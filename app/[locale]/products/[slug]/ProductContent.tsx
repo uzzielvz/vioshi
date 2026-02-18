@@ -193,7 +193,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
                 fontWeight: 400
               }}
             >
-              ${product.price.toLocaleString()}
+              ${product.price.toLocaleString('en-US')}
             </p>
 
             {/* Size Selector */}

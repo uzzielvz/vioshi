@@ -101,7 +101,7 @@ export default function CartPage() {
                           className="mt-2"
                           style={{ ...fontStyle, fontSize: '11px' }}
                         >
-                          ${item.price.toLocaleString()} MXN
+                          ${item.price.toLocaleString('en-US')} MXN
                         </p>
                       </div>
 
@@ -164,22 +164,22 @@ export default function CartPage() {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between" style={{ ...fontStyle, fontSize: '11px' }}>
                     <span>Subtotal</span>
-                    <span>${cart.subtotal.toLocaleString()} MXN</span>
+                    <span>${cart.subtotal.toLocaleString('en-US')} MXN</span>
                   </div>
                   <div className="flex justify-between text-gray-500" style={{ ...fontStyle, fontSize: '11px' }}>
                     <span>Shipping</span>
-                    <span>{cart.shipping === 0 ? 'Free' : `$${cart.shipping.toLocaleString()} MXN`}</span>
+                    <span>{cart.shipping === 0 ? 'Free' : `$${cart.shipping.toLocaleString('en-US')} MXN`}</span>
                   </div>
                   <div className="flex justify-between text-gray-500" style={{ ...fontStyle, fontSize: '11px' }}>
                     <span>Tax</span>
-                    <span>${cart.tax.toLocaleString()} MXN</span>
+                    <span>${cart.tax.toLocaleString('en-US')} MXN</span>
                   </div>
                 </div>
 
                 <div className="border-t border-gray-300 pt-4 mb-6">
                   <div className="flex justify-between" style={{ ...fontStyle, fontSize: '12px', fontWeight: 500 }}>
                     <span className="uppercase tracking-wide">Total</span>
-                    <span>${cart.total.toLocaleString()} MXN</span>
+                    <span>${cart.total.toLocaleString('en-US')} MXN</span>
                   </div>
                 </div>
 

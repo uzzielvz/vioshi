@@ -3,43 +3,76 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from 'next-intl';
+import { useLocaleContext } from '@/hooks/useLocaleContext';
 import { useCart } from "@/store/cartStore";
+
+// Pathname sin prefijo de locale para comparaciones (evita hydration mismatch server vs client)
+function getPathnameWithoutLocale(pathname: string): string {
+  return pathname.replace(/^\/[a-z]{2}/, '') || '/';
+}
 
 export default function Header() {
   const pathname = usePathname();
+  const pathnameWithoutLocale = getPathnameWithoutLocale(pathname);
+  const tHeader = useTranslations('header');
+  const tCommon = useTranslations('common');
+  const { locale, currency } = useLocaleContext();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currencyOpen, setCurrencyOpen] = useState(false);
-  const [locale, setLocale] = useState<'es' | 'en'>('es'); // ES/MXN por defecto
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const [mobileSupportOpen, setMobileSupportOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { itemCount, openCart } = useCart();
-  
-  const currency = locale === 'es' ? 'MXN' : 'USD';
-  const language = locale === 'es' ? 'ES' : 'EN';
-  const country = locale === 'es' ? 'MÉXICO' : 'UNITED STATES';
 
-  // Fijar submenú basado en la ruta actual
+  // Evitar hydration mismatch: pathname/locale pueden diferir server vs client al cambiar idioma
   useEffect(() => {
-    if (pathname.startsWith('/collections') || pathname === '/collections/all') {
-      setShopOpen(true);
-      setSupportOpen(false);
-    } else if ((pathname.startsWith('/pages/') && pathname !== '/pages/chapters') || pathname.startsWith('/support')) {
-      setSupportOpen(true);
-      setShopOpen(false);
-    } else {
-      // En otras páginas, cerrar ambos por defecto
-      setShopOpen(false);
-      setSupportOpen(false);
-    }
-  }, [pathname]);
+    setMounted(true);
+  }, []);
 
-  // Verificar si estamos en una página donde el menú debe estar fijo
-  const isShopPage = pathname.startsWith('/collections') || pathname === '/collections/all';
-  const isSupportPage = (pathname.startsWith('/pages/') && pathname !== '/pages/chapters') || pathname.startsWith('/support');
+  const language = locale.toUpperCase();
+  const country = tCommon('country');
+
+  const switchLocale = (newLocale: 'es' | 'en') => {
+    if (newLocale === locale) return;
+    const newPath = `/${newLocale}${pathnameWithoutLocale === '/' ? '' : pathnameWithoutLocale}`;
+    // Full page navigation evita el error removeChild de React al cambiar locale (next-intl + App Router)
+    window.location.href = newPath;
+  };
+
+  // Fijar submenú basado en la ruta actual (solo después de montar para evitar hydration mismatch)
+  useEffect(() => {
+    if (!mounted) return;
+    const isShopRoute = pathnameWithoutLocale.includes('/collections') || pathnameWithoutLocale.endsWith('/collections/all');
+    const isSupportRoute = (pathnameWithoutLocale.includes('/pages/') && !pathnameWithoutLocale.endsWith('/pages/chapters')) || pathnameWithoutLocale.includes('/support');
+    
+    if (isShopRoute) {
+      if (!shopOpen) {
+        setShopOpen(true);
+        setSupportOpen(false);
+      }
+    } else if (isSupportRoute) {
+      if (!supportOpen) {
+        setSupportOpen(true);
+        setShopOpen(false);
+      }
+    } else {
+      if (shopOpen || supportOpen) {
+        setShopOpen(false);
+        setSupportOpen(false);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathnameWithoutLocale, mounted]);
+
+  // Solo usar pathname para estilos/activo después de montar (evita hydration al cambiar idioma)
+  const isShopPage = mounted && (pathnameWithoutLocale.includes('/collections') || pathnameWithoutLocale.endsWith('/collections/all'));
+  const isSupportPage = mounted && ((pathnameWithoutLocale.includes('/pages/') && !pathnameWithoutLocale.endsWith('/pages/chapters')) || pathnameWithoutLocale.includes('/support'));
 
   // Manejar click en SHOP
   const handleShopClick = (e: React.MouseEvent) => {
@@ -98,15 +131,22 @@ export default function Header() {
       className="fixed top-0 left-0 right-0 z-40"
       style={{
         background: (searchOpen || mobileMenuOpen) ? 'white' : 'transparent',
-        borderBottom: 'none'
+        borderBottom: 'none',
+        transition: 'background-color 0.2s ease-in-out'
       }}
     >
       {/* ROW 1 - HEADER PRINCIPAL */}
-      <div className="flex items-center justify-between px-8 h-14" style={{ background: (searchOpen || mobileMenuOpen) ? 'white' : 'transparent' }}>
+      <div 
+        className="flex items-center justify-between px-8 h-14" 
+        style={{ 
+          background: (searchOpen || mobileMenuOpen) ? 'white' : 'transparent',
+          transition: 'background-color 0.2s ease-in-out'
+        }}
+      >
         
         {/* LEFT - LOGO SOLAMENTE */}
-        <Link 
-          href="/" 
+        <Link
+          href={`/${locale}`}
           className="text-lg font-bold text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
           style={{ 
             fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -122,7 +162,7 @@ export default function Header() {
           {/* SHOP */}
           <div>
             <Link
-              href="/collections/all"
+              href={`/${locale}/collections/all`}
               onClick={handleShopClick}
               className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 flex items-center gap-1"
               style={{ 
@@ -132,7 +172,7 @@ export default function Header() {
                 textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
-              SHOP
+              {tHeader('shop')}
               {/* CHEVRON que rota */}
               <svg 
                 className="w-3 h-3 transition-transform duration-200" 
@@ -151,7 +191,7 @@ export default function Header() {
 
           {/* ARCHIVO */}
           <Link 
-            href="/archive" 
+            href={`/${locale}/archive`}
             className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
             style={{ 
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -161,13 +201,13 @@ export default function Header() {
               margin: '0'
             }}
           >
-            ARCHIVO
+            {tHeader('archive')}
           </Link>
 
           {/* SOPORTE */}
           <div>
             <Link
-              href="/pages/customer-support"
+              href={`/${locale}/pages/customer-support`}
               onClick={handleSupportClick}
               className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 flex items-center gap-1"
               style={{ 
@@ -177,7 +217,7 @@ export default function Header() {
                 textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
-              SOPORTE
+              {tHeader('support')}
               {/* CHEVRON que rota */}
               <svg 
                 className="w-3 h-3 transition-transform duration-200" 
@@ -216,7 +256,7 @@ export default function Header() {
               textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
             }}
           >
-            {searchOpen ? 'CERRAR' : 'BUSCAR'}
+            {searchOpen ? tCommon('close') : tCommon('search')}
           </button>
 
           {/* IDIOMA / MONEDA */}
@@ -261,7 +301,7 @@ export default function Header() {
             >
               <button
                 onClick={() => {
-                  setLocale('es');
+                  switchLocale('es');
                   setCurrencyOpen(false);
                 }}
                 className="w-full text-left px-4 py-2 hover:opacity-60 transition-opacity duration-200"
@@ -279,7 +319,7 @@ export default function Header() {
               </button>
               <button
                 onClick={() => {
-                  setLocale('en');
+                  switchLocale('en');
                   setCurrencyOpen(false);
                 }}
                 className="w-full text-left px-4 py-2 hover:opacity-60 transition-opacity duration-200"
@@ -298,6 +338,20 @@ export default function Header() {
             </div>
           )}
 
+          {/* LOG IN */}
+          <Link
+            href={`/${locale}/account`}
+            className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
+            style={{
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              letterSpacing: '0.02em',
+              fontSize: '11px',
+              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+            }}
+          >
+            {tCommon('logIn')}
+          </Link>
+
           {/* BAG */}
           <button
             onClick={openCart}
@@ -309,9 +363,9 @@ export default function Header() {
               textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
             }}
           >
-            {/* Desktop: BAG (1), Mobile: BAG 1 */}
-            <span className="hidden md:inline">BAG {itemCount > 0 && `(${itemCount})`}</span>
-            <span className="inline md:hidden">BAG {itemCount > 0 && itemCount}</span>
+            {/* Desktop: BAG (1), Mobile: BAG 1 - Solo mostrar contador después de montar para evitar hydration mismatch */}
+            <span className="hidden md:inline">{tCommon('bag')} {mounted && itemCount > 0 && `(${itemCount})`}</span>
+            <span className="inline md:hidden">{tCommon('bag')} {mounted && itemCount > 0 && itemCount}</span>
           </button>
 
           {/* MENU - Mobile only */}
@@ -330,7 +384,7 @@ export default function Header() {
               textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
             }}
           >
-            {mobileMenuOpen ? 'CERRAR' : 'MENÚ'}
+            {mobileMenuOpen ? tCommon('close') : tCommon('menu')}
           </button>
         </div>
       </div>
@@ -343,13 +397,14 @@ export default function Header() {
           className="hidden md:flex items-center gap-4 py-3"
           style={{
             background: 'transparent',
-            paddingLeft: '128px'
+            paddingLeft: '128px',
+            transition: 'opacity 0.2s ease-in-out'
           }}
         >
           {shopOpen && (
             <>
               <Link
-                href="/collections/new"
+                href={`/${locale}/collections/new`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -358,15 +413,15 @@ export default function Header() {
                   padding: '0',
                   margin: '0',
                   lineHeight: '1',
-                  color: pathname === '/collections/new' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/new' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/collections/new' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/collections/new') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/new') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/collections/new') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                NUEVO DROP
+                {tHeader('new_drop')}
               </Link>
               <Link
-                href="/collections/hoodie"
+                href={`/${locale}/collections/hoodie`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -375,117 +430,117 @@ export default function Header() {
                   padding: '0',
                   margin: '0',
                   lineHeight: '1',
-                  color: pathname === '/collections/hoodie' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/hoodie' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/collections/hoodie' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/collections/hoodie') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/hoodie') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/collections/hoodie') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                HOODIE
+                {tHeader('hoodie')}
               </Link>
               <Link
-                href="/collections/chamarra"
+                href={`/${locale}/collections/chamarra`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/collections/chamarra' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/chamarra' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/collections/chamarra' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/collections/chamarra') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/chamarra') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/collections/chamarra') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                CHAMARRA
+                {tHeader('jacket')}
               </Link>
               <Link
-                href="/collections/pants"
+                href={`/${locale}/collections/pants`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/collections/pants' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/pants' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/collections/pants' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/collections/pants') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/pants') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/collections/pants') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                PANTS
+                {tHeader('pants')}
               </Link>
               <Link
-                href="/collections/jeans"
+                href={`/${locale}/collections/jeans`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/collections/jeans' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/jeans' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/collections/jeans' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/collections/jeans') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/jeans') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/collections/jeans') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                JEANS
+                {tHeader('jeans')}
               </Link>
               <Link
-                href="/collections/camisas"
+                href={`/${locale}/collections/camisas`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/collections/camisas' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/camisas' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/collections/camisas' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/collections/camisas') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/camisas') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/collections/camisas') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                CAMISAS
+                {tHeader('shirts')}
               </Link>
               <Link
-                href="/collections/playeras"
+                href={`/${locale}/collections/playeras`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/collections/playeras' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/playeras' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/collections/playeras' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/collections/playeras') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/playeras') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/collections/playeras') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                PLAYERAS
+                {tHeader('tees')}
               </Link>
               <Link
-                href="/collections/accesorios"
+                href={`/${locale}/collections/accesorios`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/collections/accesorios' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/accesorios' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/collections/accesorios' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/collections/accesorios') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/accesorios') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/collections/accesorios') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                ACCESORIOS
+                {tHeader('accessories')}
               </Link>
               <Link
-                href="/collections/bolsos"
+                href={`/${locale}/collections/bolsos`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/collections/bolsos' ? '#000' : '#666',
-                  borderBottom: pathname === '/collections/bolsos' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/collections/bolsos' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/collections/bolsos') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/bolsos') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/collections/bolsos') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                BOLSOS
+                {tHeader('bags')}
               </Link>
             </>
           )}
@@ -493,22 +548,22 @@ export default function Header() {
           {supportOpen && (
             <>
               <Link
-                href="/pages/customer-support"
+                href={`/${locale}/pages/customer-support`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/pages/customer-support' ? '#000' : '#666',
-                  borderBottom: pathname === '/pages/customer-support' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/pages/customer-support' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/pages/customer-support') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/customer-support') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/pages/customer-support') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                CUSTOMER SUPPORT
+                {tHeader('customer_support')}
               </Link>
               <Link
-                href="/pages/customer-support#chat"
+                href={`/${locale}/pages/customer-support#chat`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -520,82 +575,82 @@ export default function Header() {
                   textShadow: 'none'
                 }}
               >
-                CHAT
+                {tHeader('chat')}
               </Link>
               <Link
-                href="/pages/locaciones"
+                href={`/${locale}/pages/locaciones`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/pages/locaciones' ? '#000' : '#666',
-                  borderBottom: pathname === '/pages/locaciones' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/pages/locaciones' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/pages/locaciones') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/locaciones') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/pages/locaciones') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                LOCACIONES
+                {tHeader('locations')}
               </Link>
               <Link
-                href="/pages/shipping-payments-returns"
+                href={`/${locale}/pages/shipping-payments-returns`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/pages/shipping-payments-returns' ? '#000' : '#666',
-                  borderBottom: pathname === '/pages/shipping-payments-returns' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/pages/shipping-payments-returns' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/pages/shipping-payments-returns') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/shipping-payments-returns') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/pages/shipping-payments-returns') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                ENVÍOS, PAGOS Y DEVOLUCIONES
+                {tHeader('shipping_payments_returns')}
               </Link>
               <Link
-                href="/pages/size-guide"
+                href={`/${locale}/pages/size-guide`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/pages/size-guide' ? '#000' : '#666',
-                  borderBottom: pathname === '/pages/size-guide' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/pages/size-guide' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/pages/size-guide') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/size-guide') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/pages/size-guide') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                GUÍA DE TALLAS
+                {tHeader('size_guide')}
               </Link>
               <Link
-                href="/pages/legal"
+                href={`/${locale}/pages/legal`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/pages/legal' ? '#000' : '#666',
-                  borderBottom: pathname === '/pages/legal' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/pages/legal' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/pages/legal') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/legal') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/pages/legal') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                LEGAL
+                {tHeader('legal')}
               </Link>
               <Link
-                href="/pages/accessibility"
+                href={`/${locale}/pages/accessibility`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   letterSpacing: '0.02em',
                   fontSize: '11px',
                   lineHeight: '1',
-                  color: pathname === '/pages/accessibility' ? '#000' : '#666',
-                  borderBottom: pathname === '/pages/accessibility' ? '1px solid #000' : '1px solid transparent',
-                  textShadow: pathname === '/pages/accessibility' ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                  color: (mounted && pathnameWithoutLocale === '/pages/accessibility') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/accessibility') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/pages/accessibility') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
                 }}
               >
-                ACCESIBILIDAD
+                {tHeader('accessibility')}
               </Link>
             </>
           )}
@@ -634,7 +689,7 @@ export default function Header() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="SEARCH HERE"
+                placeholder={tHeader('search_placeholder')}
                 className="flex-1 text-black outline-none search-input-placeholder text-[10px] md:text-[11px]"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -705,12 +760,12 @@ export default function Header() {
                   backgroundColor: 'white'
                 }}
               >
-                SHOP
-                <svg 
-                  className="w-3 h-3 transition-transform duration-200" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24" 
+                {tHeader('shop')}
+                <svg
+                  className="w-3 h-3 transition-transform duration-200"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                   strokeWidth={2.5}
                   style={{
                     transform: mobileShopOpen ? 'rotate(90deg)' : 'rotate(0deg)'
@@ -722,7 +777,7 @@ export default function Header() {
               {mobileShopOpen && (
                 <div className="pb-3">
                   <Link
-                    href="/collections/all"
+                    href={`/${locale}/collections/all`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
                     style={{
@@ -734,10 +789,10 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    TODO
+                    {tHeader('all')}
                   </Link>
                   <Link
-                    href="/collections/new"
+                    href={`/${locale}/collections/new`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
                     style={{
@@ -749,13 +804,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    NUEVO DROP
+                    {tHeader('new_drop')}
                   </Link>
-                  <Link 
-                    href="/collections/hoodie" 
+                  <Link
+                    href={`/${locale}/collections/hoodie`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -764,13 +819,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    HOODIE
+                    {tHeader('hoodie')}
                   </Link>
-                  <Link 
-                    href="/collections/chamarra" 
+                  <Link
+                    href={`/${locale}/collections/chamarra`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -779,13 +834,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    CHAMARRA
+                    {tHeader('jacket')}
                   </Link>
-                  <Link 
-                    href="/collections/pants" 
+                  <Link
+                    href={`/${locale}/collections/pants`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -794,13 +849,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    PANTS
+                    {tHeader('pants')}
                   </Link>
-                  <Link 
-                    href="/collections/jeans" 
+                  <Link
+                    href={`/${locale}/collections/jeans`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -809,13 +864,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    JEANS
+                    {tHeader('jeans')}
                   </Link>
-                  <Link 
-                    href="/collections/camisas" 
+                  <Link
+                    href={`/${locale}/collections/camisas`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -824,13 +879,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    CAMISAS
+                    {tHeader('shirts')}
                   </Link>
-                  <Link 
-                    href="/collections/playeras" 
+                  <Link
+                    href={`/${locale}/collections/playeras`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -839,13 +894,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    PLAYERAS
+                    {tHeader('tees')}
                   </Link>
-                  <Link 
-                    href="/collections/accesorios" 
+                  <Link
+                    href={`/${locale}/collections/accesorios`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -854,13 +909,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    ACCESORIOS
+                    {tHeader('accessories')}
                   </Link>
-                  <Link 
-                    href="/collections/bolsos" 
+                  <Link
+                    href={`/${locale}/collections/bolsos`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -869,7 +924,7 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    BOLSOS
+                    {tHeader('bags')}
                   </Link>
                 </div>
               )}
@@ -890,7 +945,7 @@ export default function Header() {
                   backgroundColor: 'white'
                 }}
               >
-                SOPORTE
+                {tHeader('support')}
                 <svg 
                   className="w-3 h-3 transition-transform duration-200" 
                   fill="none" 
@@ -906,11 +961,11 @@ export default function Header() {
               </button>
               {mobileSupportOpen && (
                 <div className="pb-3">
-                  <Link 
-                    href="/pages/customer-support" 
+                  <Link
+                    href={`/${locale}/pages/customer-support`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -919,13 +974,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    CUSTOMER SUPPORT
+                    {tHeader('customer_support')}
                   </Link>
-                  <Link 
-                    href="/pages/customer-support#chat" 
+                  <Link
+                    href={`/${locale}/pages/customer-support#chat`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -934,13 +989,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    CHAT
+                    {tHeader('chat')}
                   </Link>
-                  <Link 
-                    href="/pages/locaciones" 
+                  <Link
+                    href={`/${locale}/pages/locaciones`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -949,13 +1004,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    LOCACIONES
+                    {tHeader('locations')}
                   </Link>
-                  <Link 
-                    href="/pages/shipping-payments-returns" 
+                  <Link
+                    href={`/${locale}/pages/shipping-payments-returns`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -964,13 +1019,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    ENVÍOS, PAGOS Y DEVOLUCIONES
+                    {tHeader('shipping_payments_returns')}
                   </Link>
-                  <Link 
-                    href="/pages/size-guide" 
+                  <Link
+                    href={`/${locale}/pages/size-guide`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -979,13 +1034,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    GUÍA DE TALLAS
+                    {tHeader('size_guide')}
                   </Link>
-                  <Link 
-                    href="/pages/legal" 
+                  <Link
+                    href={`/${locale}/pages/legal`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -994,13 +1049,13 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    LEGAL
+                    {tHeader('legal')}
                   </Link>
-                  <Link 
-                    href="/pages/accessibility" 
+                  <Link
+                    href={`/${locale}/pages/accessibility`}
                     className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{ 
+                    style={{
                       fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                       letterSpacing: '0.02em',
                       fontSize: '11px',
@@ -1009,15 +1064,15 @@ export default function Header() {
                       textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                     }}
                   >
-                    ACCESIBILIDAD
+                    {tHeader('accessibility')}
                   </Link>
                 </div>
               )}
             </div>
 
-            {/* CUENTA */}
+            {/* LOG IN / CUENTA */}
             <Link
-              href="/account"
+              href={`/${locale}/account`}
               className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
               onClick={() => setMobileMenuOpen(false)}
               style={{
@@ -1030,16 +1085,15 @@ export default function Header() {
                 textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
-
-              CUENTA
+              {tCommon('logIn')}
             </Link>
 
             {/* CAPÍTULOS */}
-            <Link 
-              href="/pages/chapters" 
+            <Link
+              href={`/${locale}/pages/chapters`}
               className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
               onClick={() => setMobileMenuOpen(false)}
-              style={{ 
+              style={{
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                 letterSpacing: '0.02em',
                 fontSize: '11px',
@@ -1049,11 +1103,11 @@ export default function Header() {
                 textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
-              CAPÍTULOS
+              {tHeader('chapters')}
             </Link>
             {/* ARCHIVO */}
             <Link 
-              href="/archive" 
+              href={`/${locale}/archive`}
               className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
               onClick={() => setMobileMenuOpen(false)}
               style={{ 
@@ -1066,7 +1120,7 @@ export default function Header() {
                 textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
-              ARCHIVO
+              {tHeader('archive')}
             </Link>
 
             {/* SHIPPING TO - Selector de País/Moneda */}
@@ -1080,7 +1134,7 @@ export default function Header() {
                   textTransform: 'uppercase'
                 }}
               >
-                ENVÍO A: {country} / {currency}
+                {tHeader('shipping_to')} {country} / {currency}
               </p>
               <button
                 onClick={() => setCurrencyOpen(!currencyOpen)}
@@ -1094,7 +1148,7 @@ export default function Header() {
                   textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
                 }}
               >
-                CAMBIAR
+                {tHeader('change')}
               </button>
             </div>
           </nav>
@@ -1103,7 +1157,7 @@ export default function Header() {
           {currencyOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
               <div className="bg-white rounded-lg p-8 max-w-sm w-full mx-4">
-                <h3 
+                <h3
                   className="mb-6"
                   style={{
                     fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -1113,12 +1167,12 @@ export default function Header() {
                     textTransform: 'uppercase'
                   }}
                 >
-                  SELECCIONAR IDIOMA / MONEDA
+                  {tHeader('select_language_currency')}
                 </h3>
                 <div className="space-y-3">
                   <button
                     onClick={() => {
-                      setLocale('es');
+                      switchLocale('es');
                       setCurrencyOpen(false);
                     }}
                     className="w-full text-left p-4 border border-gray-200 rounded hover:opacity-60 transition-opacity duration-200"
@@ -1135,7 +1189,7 @@ export default function Header() {
                   </button>
                   <button
                     onClick={() => {
-                      setLocale('en');
+                      switchLocale('en');
                       setCurrencyOpen(false);
                     }}
                     className="w-full text-left p-4 border border-gray-200 rounded hover:opacity-60 transition-opacity duration-200"
@@ -1162,7 +1216,7 @@ export default function Header() {
                     textTransform: 'uppercase'
                   }}
                 >
-                  CERRAR
+                  {tCommon('close')}
                 </button>
               </div>
             </div>
@@ -1172,3 +1226,4 @@ export default function Header() {
     </header>
   );
 }
+

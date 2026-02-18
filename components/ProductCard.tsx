@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/store/cartStore";
+import { useLocaleContext } from "@/hooks/useLocaleContext";
 import { useState } from "react";
 import { generateId } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ id, name, price, image, slug, soldOut, isNew, size }: ProductCardProps) {
   const { addItem } = useCart();
+  const { locale } = useLocaleContext();
   const [isHovered, setIsHovered] = useState(false);
 
   const handleQuickAdd = (e: React.MouseEvent) => {
@@ -38,7 +40,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
 
   return (
     <div className="group">
-      <Link href={`/products/${slug}`} className="block">
+      <Link href={`/${locale}/products/${slug}`} className="block">
         <div
           className="relative aspect-[3/4] bg-[#F5F5F5] overflow-hidden mb-3"
           onMouseEnter={() => setIsHovered(true)}
@@ -99,7 +101,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
       </Link>
 
       <div className="space-y-1">
-        <Link href={`/products/${slug}`}>
+        <Link href={`/${locale}/products/${slug}`}>
           <h3
             className="uppercase tracking-wide hover:opacity-60 transition-opacity"
             style={{
@@ -130,7 +132,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
             fontWeight: 400
           }}
         >
-          ${price.toLocaleString()}
+          ${price.toLocaleString('en-US')}
         </p>
       </div>
     </div>

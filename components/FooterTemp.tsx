@@ -1,12 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useTranslations } from 'next-intl';
-import { useLocaleContext } from '@/hooks/useLocaleContext';
 
-export default function Footer() {
-  const t = useTranslations('footer');
-  const { locale } = useLocaleContext();
+export default function FooterTemp() {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -24,10 +20,10 @@ export default function Footer() {
               fontWeight: 500
             }}
           >
-            {t('instagram')}
+            Instagram
           </a>
           <Link
-            href={`/${locale}/vender`}
+            href="/es/vender"
             className="text-xs uppercase tracking-wide hover:opacity-60 transition-opacity"
             style={{
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -35,7 +31,7 @@ export default function Footer() {
               fontWeight: 500
             }}
           >
-            {t('sell_with_us')}
+            Quiero Vender con Ustedes
           </Link>
         </div>
         <p
@@ -47,7 +43,7 @@ export default function Footer() {
           }}
           suppressHydrationWarning
         >
-          {t('copyright', { year: currentYear })}
+          © {currentYear} VIOGI
         </p>
       </div>
     </footer>

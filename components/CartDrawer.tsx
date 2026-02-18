@@ -1,11 +1,16 @@
 "use client";
 
 import { useCart } from "@/store/cartStore";
+import { useTranslations } from 'next-intl';
+import { useLocaleContext } from '@/hooks/useLocaleContext';
+import { formatPrice } from '@/lib/formatters';
 import Image from "next/image";
 import Link from "next/link";
 
 export default function CartDrawer() {
   const { cart, isCartOpen, closeCart, updateQuantity, removeItem } = useCart();
+  const t = useTranslations('cart');
+  const { locale } = useLocaleContext();
 
   if (!isCartOpen) return null;
 
@@ -33,7 +38,7 @@ export default function CartDrawer() {
               textTransform: 'uppercase'
             }}
           >
-            SHOPPING BAG
+            {t('title')}
           </h2>
           <button
             onClick={closeCart}
@@ -59,7 +64,7 @@ export default function CartDrawer() {
                 letterSpacing: '0.02em'
               }}
             >
-              Your bag is empty
+              {t('empty')}
             </p>
           ) : (
             <div className="space-y-8">
@@ -112,7 +117,7 @@ export default function CartDrawer() {
                           letterSpacing: '0.02em'
                         }}
                       >
-                        ${item.price}
+                        {formatPrice(item.price, locale)}
                       </p>
                     </div>
 
@@ -176,7 +181,7 @@ export default function CartDrawer() {
                   lineHeight: '1.5'
                 }}
               >
-                TAXES AND SHIPPING CALCULATED AT CHECKOUT.
+                {t('taxes_shipping_note')}
               </p>
               <p
                 style={{
@@ -188,7 +193,7 @@ export default function CartDrawer() {
                   color: '#666'
                 }}
               >
-                FREE STANDARD SHIPPING IN US FOR ORDERS OVER $200 USD. EXCLUSIONS APPLY.
+                {t('free_shipping_note')}
               </p>
             </div>
           )}
@@ -208,7 +213,7 @@ export default function CartDrawer() {
                   textTransform: 'uppercase'
                 }}
               >
-                SUBTOTAL
+                {t('subtotal')}
               </span>
               <span
                 style={{
@@ -218,7 +223,7 @@ export default function CartDrawer() {
                   letterSpacing: '0.02em'
                 }}
               >
-                ${cart.subtotal.toFixed(2)}
+                {formatPrice(cart.subtotal, locale)}
               </span>
             </div>
 
@@ -235,9 +240,9 @@ export default function CartDrawer() {
                   textTransform: 'uppercase'
                 }}
               >
-                CONTINUE SHOPPING
+                {t('continue_shopping')}
               </button>
-              <Link href="/checkout" onClick={closeCart} className="flex-1">
+              <Link href={`/${locale}/checkout`} onClick={closeCart} className="flex-1">
                 <button
                   className="w-full py-4 bg-black text-white hover:opacity-80 transition-opacity duration-200"
                   style={{
@@ -248,7 +253,7 @@ export default function CartDrawer() {
                     textTransform: 'uppercase'
                   }}
                 >
-                  CHECKOUT
+                  {t('checkout')}
                 </button>
               </Link>
             </div>

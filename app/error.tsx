@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/common/Button";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 
+// Root error boundary — cannot use next-intl hooks (no NextIntlClientProvider here)
 export default function Error({
   error,
   reset,
@@ -17,23 +15,47 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
-      <Header />
-      <main className="flex-1 pt-[64px]">
-        <div className="px-6 md:px-8 py-8 md:py-12">
-          <div className="flex flex-col items-center justify-center min-h-[60vh]">
-            <h1 className="text-2xl md:text-3xl font-normal mb-4 tracking-wide uppercase">
+    <html>
+      <body>
+        <div
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+          }}
+        >
+          <div style={{ textAlign: 'center' }}>
+            <p
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                marginBottom: '12px',
+              }}
+            >
               Something went wrong
-            </h1>
-            <p className="text-sm text-gray-600 mb-8">
-              We're sorry, an error occurred. Please try again.
             </p>
-            <Button onClick={reset}>Try Again</Button>
+            <button
+              onClick={reset}
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                textDecoration: 'underline',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Try again
+            </button>
           </div>
         </div>
-      </main>
-      <Footer />
-    </div>
+      </body>
+    </html>
   );
 }
-

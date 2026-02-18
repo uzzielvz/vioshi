@@ -1,30 +1,41 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
-      <Header />
-      <main className="flex-1 pt-[64px]">
-        <div className="px-6 md:px-8 py-8 md:py-12">
-          <div className="flex items-center justify-center min-h-[60vh]">
+    <html>
+      <body>
+        <div className="min-h-screen flex flex-col bg-white">
+          <div className="flex items-center justify-center min-h-screen">
             <div className="text-center">
-              <h1 className="text-2xl md:text-3xl font-normal mb-4 tracking-wide uppercase">
-                404
+              <h1
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                  marginBottom: '12px'
+                }}
+              >
+                404 — Page Not Found
               </h1>
-              <p className="text-sm text-gray-600 mb-8">Page not found</p>
               <Link
-                href="/"
-                className="bg-black text-white px-6 py-3 hover:bg-gray-800 transition-colors inline-block text-sm uppercase tracking-wide"
+                href="/es"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                  textDecoration: 'underline'
+                }}
               >
                 Return Home
               </Link>
             </div>
           </div>
         </div>
-      </main>
-      <Footer />
-    </div>
+      </body>
+    </html>
   );
 }

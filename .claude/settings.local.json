@@ -3,7 +3,20 @@
     "allow": [
       "mcp__playwright",
       "Bash(ls:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(npm install:*)",
+      "Bash(robocopy:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(curl:*)",
+      "Bash(timeout /t 10 /nobreak)",
+      "Bash(cmd //c \"taskkill /F /IM node.exe\")",
+      "Bash(cmd //c \"rmdir /s /q .next\")",
+      "Bash(rd:*)"
     ],
     "deny": []
   }

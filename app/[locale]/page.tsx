@@ -1,16 +1,16 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import ProductGrid from "@/components/ProductGrid";
 import { getProducts } from "@/lib/products";
 import Link from "next/link";
 
-export default async function Home() {
+export default async function Home({
+  params: { locale }
+}: {
+  params: { locale: string };
+}) {
   const products = await getProducts();
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Header />
-      <main className="flex-1 pt-16">
         {/* Hero Section - Ultra Minimal */}
         <section className="flex items-center justify-center py-32 md:py-48 px-8">
           <div className="text-center">
@@ -24,7 +24,7 @@ export default async function Home() {
               VIOGI
             </h1>
             <Link
-              href="/collections/all"
+              href={`/${locale}/collections/all`}
               className="inline-block bg-black text-white px-12 py-4 text-xs uppercase tracking-wide hover:opacity-80 transition-opacity"
               style={{
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -38,12 +38,10 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Products Section */}
-        <section className="px-8 py-16 md:py-24">
-          <ProductGrid products={products} />
-        </section>
-      </main>
-      <Footer />
+      {/* Products Section */}
+      <section className="px-8 py-16 md:py-24">
+        <ProductGrid products={products} />
+      </section>
     </div>
   );
 }
