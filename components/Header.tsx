@@ -144,20 +144,22 @@ export default function Header() {
         }}
       >
         
-        {/* LEFT - LOGO SOLAMENTE */}
-        <Link
-          href={`/${locale}`}
-          className="text-lg font-bold text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap"
-          style={{ 
-            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-            textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-          }}
-        >
-          VIOGI
-        </Link>
-
-        {/* CENTER - NAVEGACIÓN INDEPENDIENTE */}
-        <nav className="hidden md:flex items-center gap-8 absolute left-32" data-nav-menu="true">
+        {/* LEFT - LOGO + ESPACIO MÍNIMO + NAV */}
+        <div className="flex items-center min-w-0">
+          <Link
+            href={`/${locale}`}
+            className="text-lg font-bold text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap shrink-0"
+            style={{ 
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+            }}
+          >
+            VIOGI
+          </Link>
+          {/* Espacio fijo mínimo entre logo y enlaces */}
+          <span className="hidden md:inline-block shrink-0 min-w-[4rem]" aria-hidden />
+          {/* CENTER - NAVEGACIÓN */}
+          <nav className="hidden md:flex items-center gap-8 ml-0" data-nav-menu="true">
           
           {/* SHOP */}
           <div>
@@ -234,6 +236,7 @@ export default function Header() {
             </Link>
           </div>
         </nav>
+        </div>
 
         {/* RIGHT SIDE - TEXT */}
         <div className="flex items-center gap-6">
@@ -1134,7 +1137,7 @@ export default function Header() {
                   textTransform: 'uppercase'
                 }}
               >
-                {tHeader('shipping_to')} {country} / {currency}
+                {tHeader('language')} {country} / {currency}
               </p>
               <button
                 onClick={() => setCurrencyOpen(!currencyOpen)}

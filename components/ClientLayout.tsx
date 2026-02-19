@@ -23,12 +23,13 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   }
 
   const isCheckout = pathname?.includes('/checkout');
+  const isAccount = pathname?.includes('/account');
 
   return (
     <>
       <Header />
       <main className="pt-16">{children}</main>
-      {!isCheckout && <Footer />}
+      {!isCheckout && !isAccount && <Footer />}
       <CartDrawer />
     </>
   );

@@ -4,7 +4,7 @@
     "close": "CERRAR",
     "search": "BUSCAR",
     "menu": "MENÚ",
-    "logIn": "INICIAR SESIÓN",
+    "logIn": "CUENTA",
     "bag": "BAG",
     "remove": "Eliminar",
     "or": "O",
@@ -16,6 +16,7 @@
     "support": "SOPORTE",
     "search_placeholder": "BUSCAR AQUÍ",
     "shipping_to": "ENVÍO A:",
+    "language": "IDIOMA",
     "change": "CAMBIAR",
     "all": "TODO",
     "new_drop": "NUEVO DROP",
@@ -177,6 +178,7 @@
     "password": "Contraseña",
     "email_placeholder": "tu@email.com",
     "submit": "Iniciar Sesión",
+    "login_with_google": "Entrar con Google",
     "forgot_password": "¿Olvidaste tu contraseña?",
     "no_account": "¿No tienes cuenta?",
     "create_account": "Crear Cuenta",
@@ -188,6 +190,10 @@
     "register_subtitle": "Únete a la familia VIOGI",
     "first_name": "NOMBRE",
     "last_name": "APELLIDO",
+    "username": "Usuario",
+    "username_placeholder": "NOMBRE DE USUARIO",
+    "email_placeholder_upper": "EMAIL",
+    "password_placeholder": "CONTRASEÑA",
     "confirm_password": "CONFIRMAR CONTRASEÑA",
     "min_chars": "Mínimo 8 caracteres",
     "newsletter_label": "Quiero recibir novedades, ofertas exclusivas y contenido de VIOGI",
@@ -209,6 +215,9 @@
     "back_to_login": "Volver a Inicio de Sesión",
     "resend": "¿No recibiste el correo? Enviar de nuevo",
     "remember_password": "¿Recordaste tu contraseña?",
-    "error_forgot": "Error al enviar el correo. Intenta de nuevo."
+    "error_forgot": "Error al enviar el correo. Intenta de nuevo.",
+    "join_viogi": "ÚNETE A VIOGI",
+    "terms_full": "AL INICIAR SESIÓN, ACEPTAS NUESTROS TÉRMINOS Y CONDICIONES Y POLÍTICA DE PRIVACIDAD",
+    "register_terms_full": "AL CREAR UNA CUENTA, ACEPTAS NUESTROS TÉRMINOS Y CONDICIONES Y POLÍTICA DE PRIVACIDAD"
   }
 }

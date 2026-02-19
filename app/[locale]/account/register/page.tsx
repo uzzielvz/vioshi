@@ -3,11 +3,24 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useLocaleContext } from '@/hooks/useLocaleContext';
+
+const logoStyle = {
+  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+};
+
+const inputClass =
+  'w-full border border-gray-200 p-2 text-xs focus:outline-none focus:border-black transition-colors placeholder:text-gray-400 placeholder:uppercase placeholder:tracking-wide';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useTranslations('account');
+  const { locale } = useLocaleContext();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
+    username: '',
     firstName: '',
     lastName: '',
     email: '',
@@ -28,7 +41,7 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      alert('Las contraseñas no coinciden');
+      alert(t('passwords_mismatch'));
       return;
     }
 
@@ -36,165 +49,150 @@ export default function RegisterPage() {
 
     try {
       // TODO: Implement registration API call
-      console.log('Registering user:', formData);
       await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Redirect to account page after successful registration
-      router.push('/account');
+      router.push(`/${locale}/account`);
     } catch (error) {
       console.error('Registration error:', error);
-      alert('Error al crear la cuenta. Intenta de nuevo.');
+      alert(t('error_register'));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-white pt-16">
-      <div className="max-w-md mx-auto px-4 py-16">
-        <div className="space-y-8">
-          {/* Header */}
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold uppercase tracking-wider">
-              Crear Cuenta
-            </h1>
-            <p className="text-gray-600 text-sm">
-              Únete a la familia VIOGI
+    <div className="max-w-[320px] mx-auto px-4 md:px-6 py-8 md:py-12 min-h-[calc(100vh-4rem)] flex flex-col">
+      <h1
+        className="text-base font-bold text-black mb-6 self-center uppercase tracking-wide"
+        style={logoStyle}
+      >
+        {t('create_account')}
+      </h1>
+
+      <div className="bg-white border border-gray-200 p-5 flex-1">
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              name="firstName"
+              placeholder={t('first_name')}
+              required
+              value={formData.firstName}
+              onChange={handleChange}
+              className={inputClass}
+            />
+            <input
+              type="text"
+              name="lastName"
+              placeholder={t('last_name')}
+              required
+              value={formData.lastName}
+              onChange={handleChange}
+              className={inputClass}
+            />
+          </div>
+
+          <input
+            type="text"
+            name="username"
+            placeholder={t('username_placeholder')}
+            required
+            value={formData.username}
+            onChange={handleChange}
+            className={inputClass}
+            autoComplete="username"
+          />
+
+          <input
+            type="email"
+            name="email"
+            placeholder={t('email_placeholder_upper')}
+            required
+            value={formData.email}
+            onChange={handleChange}
+            className={inputClass}
+          />
+
+          <div>
+            <input
+              type="password"
+              name="password"
+              placeholder={t('password_placeholder')}
+              required
+              minLength={8}
+              value={formData.password}
+              onChange={handleChange}
+              className={inputClass}
+            />
+            <p className="text-[10px] text-gray-400 mt-0.5">
+              {t('min_chars')}
             </p>
           </div>
 
-          {/* Registration Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <input
-                  type="text"
-                  name="firstName"
-                  placeholder="NOMBRE"
-                  required
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black placeholder:text-gray-400 placeholder:text-xs placeholder:tracking-wider"
-                />
-              </div>
-              <div>
-                <input
-                  type="text"
-                  name="lastName"
-                  placeholder="APELLIDO"
-                  required
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black placeholder:text-gray-400 placeholder:text-xs placeholder:tracking-wider"
-                />
-              </div>
-            </div>
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder={t('confirm_password')}
+            required
+            minLength={8}
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            className={inputClass}
+          />
 
-            <div>
-              <input
-                type="email"
-                name="email"
-                placeholder="EMAIL"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black placeholder:text-gray-400 placeholder:text-xs placeholder:tracking-wider"
-              />
-            </div>
+          <label className="flex items-start cursor-pointer gap-2">
+            <input
+              type="checkbox"
+              name="newsletter"
+              checked={formData.newsletter}
+              onChange={handleChange}
+              className="w-3 h-3 mt-0.5 border border-gray-300 rounded-sm checked:bg-black checked:border-black focus:ring-0 focus:ring-offset-0 focus:outline-none focus:border-black flex-shrink-0"
+            />
+            <span className="text-[10px] text-gray-400">
+              {t('newsletter_label')}
+            </span>
+          </label>
 
-            <div>
-              <input
-                type="password"
-                name="password"
-                placeholder="CONTRASEÑA"
-                required
-                minLength={8}
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black placeholder:text-gray-400 placeholder:text-xs placeholder:tracking-wider"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Mínimo 8 caracteres
-              </p>
-            </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-black text-white py-2 text-xs uppercase tracking-wide hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mt-3"
+          >
+            {isLoading ? t('register_submitting') : t('register_submit')}
+          </button>
+        </form>
 
-            <div>
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="CONFIRMAR CONTRASEÑA"
-                required
-                minLength={8}
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black placeholder:text-gray-400 placeholder:text-xs placeholder:tracking-wider"
-              />
-            </div>
-
-            <div className="pt-2">
-              <label className="flex items-start cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="newsletter"
-                  checked={formData.newsletter}
-                  onChange={handleChange}
-                  className="w-4 h-4 mt-1 border-2 border-gray-300 rounded-sm checked:bg-black checked:border-black focus:ring-0 focus:ring-offset-0"
-                />
-                <span className="ml-3 text-sm">
-                  Quiero recibir novedades, ofertas exclusivas y contenido de
-                  VIOGI
-                </span>
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-black text-white py-4 rounded uppercase tracking-wider font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed mt-6"
-            >
-              {isLoading ? 'Creando Cuenta...' : 'Crear Cuenta'}
-            </button>
-          </form>
-
-          {/* Terms */}
-          <p className="text-xs text-gray-500 text-center">
-            Al crear una cuenta, aceptas nuestros{' '}
-            <Link href="/pages/legal" className="underline">
-              Términos y Condiciones
-            </Link>{' '}
-            y{' '}
-            <Link href="/pages/legal" className="underline">
-              Política de Privacidad
-            </Link>
-            .
+        <div className="mt-5 pt-5 border-t border-gray-200">
+          <p className="text-center text-[10px] uppercase tracking-wide text-gray-500 mb-2">
+            {t('or')}
           </p>
-
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500 uppercase tracking-wider">
-                O
-              </span>
-            </div>
-          </div>
-
-          {/* Login Link */}
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              ¿Ya tienes una cuenta?{' '}
-              <Link
-                href="/account"
-                className="underline font-medium text-black hover:opacity-60 transition-opacity"
-              >
-                Inicia Sesión
-              </Link>
-            </p>
-          </div>
+          <Link
+            href={`/${locale}/account`}
+            className="block w-full border border-black py-2 text-xs uppercase tracking-wide text-center hover:bg-black hover:text-white transition-colors"
+          >
+            {t('sign_in')}
+          </Link>
         </div>
       </div>
-    </main>
+
+      <p
+        className="mt-8 pt-6 text-center text-[10px] uppercase tracking-wide text-gray-600 border-t border-gray-100"
+        style={logoStyle}
+      >
+        {t('register_terms')}{' '}
+        <Link
+          href={`/${locale}/pages/legal`}
+          className="underline hover:text-black"
+        >
+          {t('terms_and_conditions')}
+        </Link>
+        {' '}{t('and')}{' '}
+        <Link
+          href={`/${locale}/pages/legal`}
+          className="underline hover:text-black"
+        >
+          {t('privacy_policy')}
+        </Link>
+      </p>
+    </div>
   );
 }
