@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Header from "./Header";
-import FooterTemp from "./FooterTemp";
+import Footer from "./Footer";
 import CartDrawer from "./CartDrawer";
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
@@ -20,11 +22,13 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const isCheckout = pathname?.includes('/checkout');
+
   return (
     <>
       <Header />
       <main className="pt-16">{children}</main>
-      <FooterTemp />
+      {!isCheckout && <Footer />}
       <CartDrawer />
     </>
   );
