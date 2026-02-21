@@ -55,7 +55,7 @@
   },
   "cart": {
     "title": "SHOPPING BAG",
-    "empty": "Your bag is empty",
+    "empty": "YOU HAVE NO ITEMS IN YOUR SHOPPING BAG.",
     "checkout": "CHECKOUT",
     "continue_shopping": "CONTINUE SHOPPING",
     "subtotal": "SUBTOTAL",
@@ -67,7 +67,7 @@
     "size": "Size",
     "color": "Color",
     "taxes_shipping_note": "TAXES AND SHIPPING CALCULATED AT CHECKOUT.",
-    "free_shipping_note": "FREE STANDARD SHIPPING IN US FOR ORDERS OVER $200 USD. EXCLUSIONS APPLY."
+    "free_shipping_note": "FREE SHIPPING TO ALL MX FOR ORDERS OVER $5,000 MXN. EXCEPTIONS APPLY."
   },
   "checkout": {
     "express_checkout": "Express Checkout",

@@ -56,16 +56,32 @@ export default function CartDrawer() {
         {/* CART ITEMS */}
         <div className="flex-1 overflow-y-auto px-8 py-8">
           {cart.items.length === 0 ? (
-            <p
-              className="text-center text-gray-500 py-12"
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                fontSize: '11px',
-                letterSpacing: '0.02em'
-              }}
-            >
-              {t('empty')}
-            </p>
+            <div className="flex flex-col flex-1">
+              <p
+                className="text-center text-black py-8"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase'
+                }}
+              >
+                {t('empty')}
+              </p>
+              <p
+                className="text-center"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '10px',
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase',
+                  lineHeight: 1.5,
+                  color: '#666'
+                }}
+              >
+                {t('free_shipping_note')}
+              </p>
+            </div>
           ) : (
             <div className="space-y-8">
               {cart.items.map((item) => (
@@ -199,8 +215,25 @@ export default function CartDrawer() {
           )}
         </div>
 
-        {/* FOOTER */}
-        {cart.items.length > 0 && (
+        {/* FOOTER - Empty cart: Continue Shopping | Full cart: Subtotal + buttons */}
+        {cart.items.length === 0 ? (
+          <div className="border-t border-gray-200 px-8 py-6 mt-auto">
+            <Link href={`/${locale}/collections/all`} onClick={closeCart}>
+              <button
+                className="w-full py-4 bg-black text-white hover:opacity-80 transition-opacity duration-200"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  letterSpacing: '0.02em',
+                  textTransform: 'uppercase'
+                }}
+              >
+                {t('continue_shopping')}
+              </button>
+            </Link>
+          </div>
+        ) : (
           <div className="border-t border-gray-200 px-8 py-6">
             {/* SUBTOTAL */}
             <div className="flex items-center justify-between mb-6">

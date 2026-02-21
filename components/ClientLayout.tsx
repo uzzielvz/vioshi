@@ -6,6 +6,11 @@ import Header from "./Header";
 import Footer from "./Footer";
 import CartDrawer from "./CartDrawer";
 
+function getPathWithoutLocale(path: string | null): string {
+  if (!path) return '';
+  return path.replace(/^\/[a-z]{2}(?=\/|$)/, '') || path;
+}
+
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
@@ -22,8 +27,9 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isCheckout = pathname?.includes('/checkout');
-  const isAccount = pathname?.includes('/account');
+  const path = getPathWithoutLocale(pathname);
+  const isCheckout = path?.includes('/checkout');
+  const isAccount = path?.startsWith('/account') || path?.includes('/account');
 
   return (
     <>

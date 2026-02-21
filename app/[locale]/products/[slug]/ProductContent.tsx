@@ -6,6 +6,7 @@ import { useCart } from "@/store/cartStore";
 import { generateId } from "@/lib/utils";
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface ProductContentProps {
   product: Product;
@@ -13,6 +14,7 @@ interface ProductContentProps {
 }
 
 export default function ProductContent({ product, allProducts }: ProductContentProps) {
+  const t = useTranslations("cart");
   const [selectedSize, setSelectedSize] = useState<string>(product.size || "");
   const [isAdding, setIsAdding] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -214,13 +216,17 @@ export default function ProductContent({ product, allProducts }: ProductContentP
             )}
 
             <p
-              className="text-gray-600 mb-8 leading-relaxed text-xs"
+              className="mb-8"
               style={{
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                fontSize: '11px'
+                fontSize: "10px",
+                letterSpacing: "0.02em",
+                textTransform: "uppercase",
+                lineHeight: 1.5,
+                color: "#666",
               }}
             >
-              Free standard shipping in US for orders over $200 USD. Exclusions apply.
+              {t("free_shipping_note")}
             </p>
 
             {/* Collapsible sections */}
@@ -249,29 +255,6 @@ export default function ProductContent({ product, allProducts }: ProductContentP
                 </p>
               </details>
 
-              <details className="group border-b border-gray-200 pb-4">
-                <summary
-                  className="flex justify-between items-center cursor-pointer uppercase tracking-wide list-none"
-                  style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                    fontSize: '11px',
-                    fontWeight: 500,
-                    letterSpacing: '0.05em'
-                  }}
-                >
-                  SIZE GUIDE
-                  <span className="text-xs text-gray-400 font-light">+</span>
-                </summary>
-                <p
-                  className="mt-4 text-gray-600 leading-relaxed"
-                  style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                    fontSize: '11px'
-                  }}
-                >
-                  Consulta nuestra guía de tallas para encontrar el ajuste perfecto.
-                </p>
-              </details>
             </div>
           </div>
 

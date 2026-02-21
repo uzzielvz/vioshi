@@ -55,7 +55,7 @@
   },
   "cart": {
     "title": "CARRITO DE COMPRAS",
-    "empty": "Tu carrito está vacío",
+    "empty": "NO TIENES ARTÍCULOS EN TU BOLSA DE COMPRAS.",
     "checkout": "FINALIZAR COMPRA",
     "continue_shopping": "CONTINUAR COMPRANDO",
     "subtotal": "SUBTOTAL",
@@ -67,7 +67,7 @@
     "size": "Talla",
     "color": "Color",
     "taxes_shipping_note": "IMPUESTOS Y ENVÍO CALCULADOS AL FINALIZAR LA COMPRA.",
-    "free_shipping_note": "ENVÍO ESTÁNDAR GRATIS EN MÉXICO PARA PEDIDOS MAYORES A $3,500 MXN. APLICAN RESTRICCIONES."
+    "free_shipping_note": "ENVÍO GRATIS A TODO MX EN COMPRAS MAYORES A $5000 MXN. SE APLICAN EXCEPCIONES."
   },
   "checkout": {
     "express_checkout": "Pago Rápido",
