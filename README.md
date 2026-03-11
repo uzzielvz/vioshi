@@ -1,6 +1,5 @@
 # VIOGI
 
-Tienda e-commerce de streetwear. Estética minimalista negro/blanco inspirada en Stüssy.
 
 ---
 
