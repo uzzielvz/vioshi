@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -19,6 +19,8 @@ export default function RegisterPage() {
   const t = useTranslations('account');
   const { locale } = useLocaleContext();
   const [isLoading, setIsLoading] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
   const [formData, setFormData] = useState({
     username: '',
     firstName: '',
@@ -50,12 +52,12 @@ export default function RegisterPage() {
     try {
       // TODO: Implement registration API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      router.push(`/${locale}/account`);
+      if (mountedRef.current) router.push(`/${locale}/account`);
     } catch (error) {
       console.error('Registration error:', error);
-      alert(t('error_register'));
+      if (mountedRef.current) alert(t('error_register'));
     } finally {
-      setIsLoading(false);
+      if (mountedRef.current) setIsLoading(false);
     }
   };
 

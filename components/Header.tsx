@@ -52,22 +52,15 @@ export default function Header() {
     const isSupportRoute = (pathnameWithoutLocale.includes('/pages/') && !pathnameWithoutLocale.endsWith('/pages/chapters')) || pathnameWithoutLocale.includes('/support');
     
     if (isShopRoute) {
-      if (!shopOpen) {
-        setShopOpen(true);
-        setSupportOpen(false);
-      }
+      setShopOpen(true);
+      setSupportOpen(false);
     } else if (isSupportRoute) {
-      if (!supportOpen) {
-        setSupportOpen(true);
-        setShopOpen(false);
-      }
+      setSupportOpen(true);
+      setShopOpen(false);
     } else {
-      if (shopOpen || supportOpen) {
-        setShopOpen(false);
-        setSupportOpen(false);
-      }
+      setShopOpen(false);
+      setSupportOpen(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathnameWithoutLocale, mounted]);
 
   // Solo usar pathname para estilos/activo después de montar (evita hydration al cambiar idioma)
