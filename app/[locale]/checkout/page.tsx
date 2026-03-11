@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
@@ -43,7 +43,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const t = useTranslations('checkout');
   const { locale, currency } = useLocaleContext();
-  const { cart: cartData, openCart, closeCart, updateShippingCost } = useCart();
+  const { cart: cartData, closeCart, updateShippingCost } = useCart();
   const cart = cartData.items;
   const subtotal = cartData.subtotal;
   const tax = cartData.tax;
@@ -90,9 +90,13 @@ export default function CheckoutPage() {
     return undefined;
   }, [formData.pickupPointId]);
 
-  // Redirect if cart is empty
+  // Tracks whether a submit is in flight — prevents the empty-cart redirect
+  // from firing while the order is being processed and the cart is cleared
+  const isSubmittingRef = useRef(false);
+
+  // Redirect if cart is empty, but not while an order submit is in progress
   useEffect(() => {
-    if (cart.length === 0) {
+    if (cart.length === 0 && !isSubmittingRef.current) {
       router.push(`/${locale}/cart`);
     }
   }, [cart, router, locale]);
@@ -177,6 +181,7 @@ export default function CheckoutPage() {
       }
     }
 
+    isSubmittingRef.current = true;
     setIsProcessing(true);
 
     try {
@@ -189,6 +194,7 @@ export default function CheckoutPage() {
       // Redirect to success page (to be created)
       router.push(`/${locale}/checkout/success/ORDER123`);
     } catch (error) {
+      isSubmittingRef.current = false;
       console.error('Error processing order:', error);
       alert(t('error_processing'));
     } finally {
@@ -226,12 +232,7 @@ export default function CheckoutPage() {
             <button
               onClick={() => {
                 closeCart();
-                // Regresar a la página anterior y abrir el carrito
-                router.back();
-                // Abrir el carrito después de un delay para que la navegación se complete
-                setTimeout(() => {
-                  openCart();
-                }, 200);
+                router.push(`/${locale}/cart`);
               }}
               className="hover:opacity-60 transition-opacity"
               aria-label={t('back_to_cart_aria')}
