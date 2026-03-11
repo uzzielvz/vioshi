@@ -34,3 +34,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# claude code temp files
+tmpclaude-*
+nul
+research.md
+
