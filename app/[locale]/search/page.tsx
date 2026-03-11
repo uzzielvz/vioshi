@@ -164,7 +164,7 @@ function SearchContent() {
                   Sin Resultados
                 </h2>
                 <p className="text-gray-600">
-                  No encontramos productos que coincidan con "{searchQuery}"
+                  No encontramos productos que coincidan con &quot;{searchQuery}&quot;
                 </p>
               </div>
               <div className="space-y-3">

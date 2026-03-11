@@ -97,24 +97,23 @@ export default function CheckoutPage() {
     }
   }, [cart, router, locale]);
 
-  // Update shipping cost based on delivery method
-  useEffect(() => {
-    let shippingCost = 0;
-
+  // Derive shipping cost from form state — useMemo avoids calling updateShippingCost
+  // on every render; the useEffect only fires when the derived value actually changes
+  const shippingCost = useMemo(() => {
     if (formData.deliveryMethod === 'home') {
-      shippingCost = formData.shippingMethod === 'express' ? 25 : 10;
-    } else if (formData.deliveryMethod === 'pickup' && formData.pickupPointId) {
-      const point = getPickupPointById(formData.pickupPointId);
-      shippingCost = point?.additionalCost || 0;
+      return formData.shippingMethod === 'express' ? 25 : 10;
     }
+    if (formData.deliveryMethod === 'pickup' && formData.pickupPointId) {
+      return getPickupPointById(formData.pickupPointId)?.additionalCost ?? 0;
+    }
+    return 0;
+  }, [formData.deliveryMethod, formData.shippingMethod, formData.pickupPointId]);
 
+  // updateShippingCost is stable (useCallback in cartStore), so this effect only
+  // re-runs when shippingCost changes — no infinite loop
+  useEffect(() => {
     updateShippingCost(shippingCost);
-  }, [
-    formData.deliveryMethod,
-    formData.shippingMethod,
-    formData.pickupPointId,
-    updateShippingCost
-  ]);
+  }, [shippingCost, updateShippingCost]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
