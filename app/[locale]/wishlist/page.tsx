@@ -3,12 +3,21 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
+import { useLocaleContext } from '@/hooks/useLocaleContext';
+import { formatPrice } from '@/lib/formatters';
 import { getProducts, ProductData as Product } from '@/lib/products';
 
-// Mock wishlist data - in real app this would come from context/store
 const mockWishlistIds = ['1', '2', '3'];
 
+const fontStyle = {
+  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+};
+
 export default function WishlistPage() {
+  const t = useTranslations('wishlist');
+  const tProduct = useTranslations('product');
+  const { locale } = useLocaleContext();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [wishlistIds, setWishlistIds] = useState(mockWishlistIds);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,7 +41,7 @@ export default function WishlistPage() {
   };
 
   const handleClear = () => {
-    if (confirm('¿Estás seguro de que quieres vaciar tu wishlist?')) {
+    if (confirm(t('confirm_clear'))) {
       setWishlistIds([]);
     }
   };
@@ -40,108 +49,68 @@ export default function WishlistPage() {
   if (isLoading) {
     return (
       <main className="min-h-screen bg-white pt-16 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-gray-300 border-t-black rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-sm uppercase tracking-wider text-gray-600">
-            Cargando wishlist...
-          </p>
-        </div>
+        <p className="uppercase tracking-wider text-gray-500" style={{ ...fontStyle, fontSize: '11px' }}>
+          {t('loading')}
+        </p>
       </main>
     );
   }
 
   return (
     <main className="min-h-screen bg-white pt-16">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold uppercase tracking-wider">
-            Mi Wishlist
+          <h1 className="uppercase tracking-wide" style={{ ...fontStyle, fontSize: '13px', fontWeight: 500 }}>
+            {t('title')}
           </h1>
           {wishlistProducts.length > 0 && (
             <button
               onClick={handleClear}
-              className="text-sm uppercase tracking-wider text-gray-600 hover:text-red-600 transition-colors underline"
+              className="uppercase tracking-wide text-gray-500 hover:text-black transition-colors underline"
+              style={{ ...fontStyle, fontSize: '11px' }}
             >
-              Vaciar Wishlist
+              {t('clear')}
             </button>
           )}
         </div>
 
-        {/* Empty State */}
         {wishlistProducts.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="max-w-md mx-auto space-y-6">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
-                <svg
-                  className="w-12 h-12 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                  />
-                </svg>
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold uppercase tracking-wider">
-                  Tu Wishlist Está Vacía
-                </h2>
-                <p className="text-gray-600">
-                  Guarda tus productos favoritos para comprarlos más tarde
-                </p>
-              </div>
-              <Link
-                href="/collections/all"
-                className="inline-block bg-black text-white px-8 py-4 rounded uppercase tracking-wider font-medium hover:bg-gray-800 transition-colors"
-              >
-                Explorar Productos
-              </Link>
-            </div>
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <h2 className="uppercase tracking-wide mb-3" style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}>
+              {t('empty_title')}
+            </h2>
+            <p className="text-gray-500 mb-8" style={{ ...fontStyle, fontSize: '11px' }}>
+              {t('empty_subtitle')}
+            </p>
+            <Link
+              href={`/${locale}/collections/all`}
+              className="bg-black text-white px-8 py-3 uppercase tracking-wide hover:bg-gray-800 transition-colors"
+              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
+            >
+              {t('explore')}
+            </Link>
           </div>
         ) : (
           <>
-            {/* Products Count */}
-            <p className="text-sm uppercase tracking-wider text-gray-600 mb-6">
-              {wishlistProducts.length} Producto
-              {wishlistProducts.length !== 1 ? 's' : ''}
+            <p className="uppercase tracking-wide text-gray-500 mb-6" style={{ ...fontStyle, fontSize: '11px' }}>
+              {t('count', { count: wishlistProducts.length })}
             </p>
 
-            {/* Products Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {wishlistProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-black transition-colors"
-                >
-                  {/* Remove Button */}
+                <div key={product.id} className="group relative">
                   <button
                     onClick={() => handleRemove(product.id)}
-                    className="absolute top-3 right-3 z-10 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-red-50 hover:text-red-600 transition-colors"
-                    aria-label="Remover de wishlist"
+                    className="absolute top-3 right-3 z-10 w-7 h-7 bg-white flex items-center justify-center hover:opacity-60 transition-opacity"
+                    aria-label={t('clear')}
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
 
-                  {/* Product Image */}
-                  <Link href={`/products/${product.slug}`}>
-                    <div className="aspect-square bg-gray-100 overflow-hidden relative">
+                  <Link href={`/${locale}/products/${product.slug}`}>
+                    <div className="aspect-[3/4] bg-[#F5F5F5] overflow-hidden relative mb-3">
                       <Image
                         src={product.image}
                         alt={product.name}
@@ -151,34 +120,33 @@ export default function WishlistPage() {
                     </div>
                   </Link>
 
-                  {/* Product Info */}
-                  <div className="p-4">
-                    <Link href={`/products/${product.slug}`}>
-                      <h3 className="font-medium text-sm mb-1 group-hover:underline">
+                  <div className="space-y-1">
+                    <Link href={`/${locale}/products/${product.slug}`}>
+                      <h3 className="uppercase tracking-wide hover:opacity-60 transition-opacity" style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}>
                         {product.name}
                       </h3>
-                      <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
-                        {product.category}
-                      </p>
-                      <p className="font-bold">${product.price.toFixed(2)}</p>
                     </Link>
-
-                    {/* Add to Cart Button */}
-                    <button className="w-full mt-3 bg-black text-white py-2 rounded text-xs uppercase tracking-wider font-medium hover:bg-gray-800 transition-colors">
-                      Añadir a Bolsa
+                    <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
+                      {formatPrice(product.price, locale)}
+                    </p>
+                    <button
+                      className="w-full bg-black text-white py-2 uppercase tracking-wide hover:bg-gray-800 transition-colors mt-2"
+                      style={{ ...fontStyle, fontSize: '10px', fontWeight: 500 }}
+                    >
+                      {tProduct('add_to_cart')}
                     </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Continue Shopping */}
             <div className="mt-12 text-center">
               <Link
-                href="/collections/all"
-                className="inline-block border-2 border-black text-black px-8 py-4 rounded uppercase tracking-wider font-medium hover:bg-black hover:text-white transition-colors"
+                href={`/${locale}/collections/all`}
+                className="uppercase tracking-wide hover:opacity-60 transition-opacity"
+                style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
               >
-                Seguir Comprando
+                ← {t('continue_shopping')}
               </Link>
             </div>
           </>

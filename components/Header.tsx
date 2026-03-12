@@ -559,21 +559,6 @@ export default function Header() {
                 {tHeader('customer_support')}
               </Link>
               <Link
-                href={`/${locale}/pages/customer-support#chat`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: '#666',
-                  borderBottom: '1px solid transparent',
-                  textShadow: 'none'
-                }}
-              >
-                {tHeader('chat')}
-              </Link>
-              <Link
                 href={`/${locale}/pages/locaciones`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
@@ -602,36 +587,6 @@ export default function Header() {
                 }}
               >
                 {tHeader('shipping_payments_returns')}
-              </Link>
-              <Link
-                href={`/${locale}/pages/size-guide`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/pages/size-guide') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/size-guide') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/pages/size-guide') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('size_guide')}
-              </Link>
-              <Link
-                href={`/${locale}/pages/legal`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/pages/legal') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/legal') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/pages/legal') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('legal')}
               </Link>
               <Link
                 href={`/${locale}/pages/accessibility`}

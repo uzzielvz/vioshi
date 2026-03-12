@@ -37,6 +37,17 @@ export default function Footer() {
           >
             {t('sell_with_us')}
           </Link>
+          <Link
+            href={`/${locale}/pages/legal`}
+            className="text-xs uppercase tracking-wide hover:opacity-60 transition-opacity"
+            style={{
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              fontSize: '11px',
+              fontWeight: 500
+            }}
+          >
+            {t('legal')}
+          </Link>
         </div>
         <p
           className="text-xs uppercase tracking-wide"

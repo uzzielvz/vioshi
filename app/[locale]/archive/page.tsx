@@ -1,7 +1,7 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import Link from "next/link";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 
 const archiveEntries = [
   {
@@ -24,98 +24,76 @@ const archiveEntries = [
   },
 ];
 
-export default function ArchivePage() {
+const fontStyle = {
+  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+};
+
+export default async function ArchivePage() {
+  const t = await getTranslations('archive');
+  const locale = await getLocale();
+
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <Header />
-      <main className="flex-1 pt-[64px]">
-        <div className="max-w-4xl mx-auto px-6 md:px-8 py-12 md:py-16">
-          <h1
-            className="text-2xl md:text-3xl font-bold mb-12 tracking-wide uppercase"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '13px',
-              letterSpacing: '0.05em',
-              fontWeight: 800,
-            }}
-          >
-            ARCHIVO
-          </h1>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-4xl mx-auto px-6 md:px-8 py-12 md:py-16">
+        <h1
+          className="mb-12 uppercase tracking-wide"
+          style={{ ...fontStyle, fontSize: '13px', fontWeight: 500 }}
+        >
+          {t('title')}
+        </h1>
 
-          <div className="space-y-16 md:space-y-24">
-            {archiveEntries.map((entry, index) => (
-              <Link
-                key={entry.slug}
-                href={`/archive/${entry.slug}`}
-                className="block group"
-              >
-                {/* Date */}
-                <p
-                  className="text-xs uppercase tracking-wide text-gray-500 mb-4 font-bold"
-                  style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                    fontSize: '11px',
-                    letterSpacing: '0.05em',
-                    fontWeight: 800,
-                  }}
-                >
-                  {entry.date}
-                </p>
-
-                {/* Image */}
-                <div className="relative w-full aspect-[3/4] mb-6 overflow-hidden bg-gray-100">
-                  <Image
-                    src={entry.image}
-                    alt={`Archive entry ${index + 1}`}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 768px) 100vw, 800px"
-                  />
-                </div>
-
-                {/* Description */}
-                <p
-                  className="text-sm leading-relaxed text-gray-700 max-w-2xl uppercase tracking-wide font-bold"
-                  style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                    fontSize: '11px',
-                    letterSpacing: '0.05em',
-                    lineHeight: '1.6',
-                    fontWeight: 800,
-                  }}
-                >
-                  {entry.description}
-                </p>
-              </Link>
-            ))}
-          </div>
-
-          <div className="mt-20 pt-8 border-t border-gray-200">
-            <p
-              className="text-gray-500 text-sm uppercase tracking-wide font-bold"
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                fontSize: '11px',
-                letterSpacing: '0.05em',
-                fontWeight: 800,
-              }}
+        <div className="space-y-16 md:space-y-24">
+          {archiveEntries.map((entry, index) => (
+            <Link
+              key={entry.slug}
+              href={`/${locale}/archive/${entry.slug}`}
+              className="block group"
             >
-              PRÓXIMAMENTE MÁS CONTENIDO DEL ARCHIVO. SIGUE NUESTRO{" "}
-              <a
-                href="https://www.instagram.com/viogi_/?hl=es"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:opacity-60 transition-opacity font-bold"
-                style={{ fontWeight: 800 }}
+              <p
+                className="uppercase tracking-wide text-gray-500 mb-4"
+                style={{ ...fontStyle, fontSize: '11px' }}
               >
-                INSTAGRAM
-              </a>
-              {" "}PARA ACTUALIZACIONES.
-            </p>
-          </div>
+                {entry.date}
+              </p>
+
+              <div className="relative w-full aspect-[3/4] mb-6 overflow-hidden bg-gray-100">
+                <Image
+                  src={entry.image}
+                  alt={`Archive entry ${index + 1}`}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 768px) 100vw, 800px"
+                />
+              </div>
+
+              <p
+                className="uppercase tracking-wide leading-relaxed text-gray-700 max-w-2xl"
+                style={{ ...fontStyle, fontSize: '11px', lineHeight: '1.6' }}
+              >
+                {entry.description}
+              </p>
+            </Link>
+          ))}
         </div>
-      </main>
-      <Footer />
+
+        <div className="mt-20 pt-8 border-t border-gray-200">
+          <p
+            className="text-gray-500 uppercase tracking-wide"
+            style={{ ...fontStyle, fontSize: '11px' }}
+          >
+            {t('coming_soon')}{' '}
+            <a
+              href="https://www.instagram.com/viogi_/?hl=es"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:opacity-60 transition-opacity"
+            >
+              INSTAGRAM
+            </a>
+            {' '}{t('coming_soon_end')}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

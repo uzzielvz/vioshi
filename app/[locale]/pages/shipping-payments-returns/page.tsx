@@ -1,78 +1,145 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import SupportNav from '@/components/SupportNav';
+import { getTranslations } from 'next-intl/server';
 
-export default function ShippingPage() {
+const fontStyle = {
+  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+};
+
+export default async function ShippingPage() {
+  const t = await getTranslations('shipping');
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
-      <Header />
-      <main className="flex-1 pt-[64px]">
-        <div className="max-w-4xl mx-auto px-6 md:px-8 py-12 md:py-16">
-          <h1 className="text-2xl md:text-3xl font-normal mb-8 tracking-wide uppercase">
-            Envíos, Pagos y Devoluciones
-          </h1>
+    <div className="min-h-screen bg-white">
+      <div className="md:hidden">
+        <SupportNav />
+      </div>
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
 
-          <div className="space-y-12">
-            <section>
-              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Envíos</h2>
-              <div className="space-y-4 text-gray-600">
-                <div className="bg-white p-6 border border-gray-200">
-                  <h3 className="font-medium text-black mb-2">Envío Estándar</h3>
-                  <p className="text-sm mb-2">3-7 días hábiles</p>
-                  <p className="text-sm">Gratis en compras mayores a $1,500 MXN</p>
-                  <p className="text-sm">$99 MXN en compras menores</p>
-                </div>
-                <div className="bg-white p-6 border border-gray-200">
-                  <h3 className="font-medium text-black mb-2">Envío Express</h3>
-                  <p className="text-sm mb-2">1-3 días hábiles</p>
-                  <p className="text-sm">$199 MXN</p>
-                </div>
-              </div>
-            </section>
+          {/* Left column: Shipping & Handling */}
+          <div>
+            <h2
+              className="uppercase tracking-wide mb-8 border-b border-gray-200 pb-4"
+              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
+            >
+              {t('shipping_title')}
+            </h2>
 
-            <section>
-              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Métodos de Pago</h2>
-              <ul className="space-y-2 text-gray-600 text-sm">
-                <li>• Tarjetas de crédito y débito (Visa, Mastercard, American Express)</li>
-                <li>• PayPal</li>
-                <li>• Transferencia bancaria</li>
-                <li>• Pago en OXXO</li>
-                <li>• Meses sin intereses (3, 6, 9 y 12 MSI con tarjetas participantes)</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Devoluciones</h2>
-              <div className="space-y-4 text-gray-600 text-sm">
-                <p>
-                  Aceptamos devoluciones dentro de los 30 días posteriores a la compra,
-                  siempre que el producto esté en su estado original con etiquetas.
+            <div className="space-y-8">
+              <div>
+                <p
+                  className="uppercase tracking-wide mb-3"
+                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                >
+                  {t('processing_title')}
                 </p>
-                <div className="bg-white p-6 border border-gray-200">
-                  <h3 className="font-medium text-black mb-2">Proceso de Devolución</h3>
-                  <ol className="list-decimal list-inside space-y-2">
-                    <li>Contacta a nuestro equipo de soporte</li>
-                    <li>Recibirás una guía de envío prepagada</li>
-                    <li>Envía el producto en su empaque original</li>
-                    <li>El reembolso se procesa en 5-10 días hábiles</li>
-                  </ol>
-                </div>
-                <p>
-                  <strong className="text-black">Nota:</strong> Los artículos en oferta solo pueden ser cambiados, no reembolsados.
+                <p style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
+                  {t('processing_body')}
+                </p>
+                <p className="mt-2" style={{ ...fontStyle, fontSize: '11px', color: '#999', lineHeight: '1.7' }}>
+                  {t('processing_note')}
                 </p>
               </div>
-            </section>
 
-            <section>
-              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Cambios</h2>
-              <p className="text-gray-600 text-sm">
-                Si necesitas cambiar tu producto por otra talla o color, el primer cambio es gratuito.
-                Cambios adicionales tienen un costo de envío de $99 MXN.
-              </p>
-            </section>
+              <div>
+                <p
+                  className="uppercase tracking-wide mb-3"
+                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                >
+                  {t('standard_title')}
+                </p>
+                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>{t('standard_time')}</p>
+                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>{t('standard_free')}</p>
+                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>{t('standard_cost')}</p>
+              </div>
+
+              <div>
+                <p
+                  className="uppercase tracking-wide mb-3"
+                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                >
+                  {t('express_title')}
+                </p>
+                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>{t('express_time')}</p>
+                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>{t('express_cost')}</p>
+              </div>
+
+              <div>
+                <p
+                  className="uppercase tracking-wide mb-3"
+                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                >
+                  {t('payment_title')}
+                </p>
+                <ul className="space-y-1">
+                  {([1, 2, 3, 4, 5] as const).map((i) => (
+                    <li key={i} style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
+                      {t(`payment_${i}` as `payment_${typeof i}`)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
+
+          {/* Right column: Return Guidelines */}
+          <div>
+            <h2
+              className="uppercase tracking-wide mb-8 border-b border-gray-200 pb-4"
+              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
+            >
+              {t('returns_title')}
+            </h2>
+
+            <div className="space-y-8">
+              <div>
+                <p
+                  className="uppercase tracking-wide mb-3"
+                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                >
+                  {t('return_policy_title')}
+                </p>
+                <ul className="space-y-2">
+                  {([1, 2, 3, 4, 5, 6, 7] as const).map((i) => (
+                    <li key={i} style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.6' }}>
+                      {t(`return_${i}` as `return_${typeof i}`)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <p
+                  className="uppercase tracking-wide mb-3"
+                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                >
+                  {t('return_process_title')}
+                </p>
+                <ol className="space-y-2">
+                  {([1, 2, 3, 4] as const).map((i) => (
+                    <li key={i} style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
+                      {i}. {t(`return_step_${i}` as `return_step_${typeof i}`)}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              <div>
+                <p
+                  className="uppercase tracking-wide mb-3"
+                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                >
+                  {t('exchanges_title')}
+                </p>
+                <p style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
+                  {t('exchanges_body')}
+                </p>
+              </div>
+            </div>
+          </div>
+
         </div>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 }
