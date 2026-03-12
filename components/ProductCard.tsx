@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/store/cartStore";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
+import { formatPrice } from "@/lib/formatters";
 import { useState } from "react";
 import { generateId } from "@/lib/utils";
 
@@ -133,7 +134,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
             fontWeight: 400
           }}
         >
-          ${price.toLocaleString('en-US')}
+          {formatPrice(price, locale)}
         </p>
       </div>
     </div>
