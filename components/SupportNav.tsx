@@ -13,7 +13,6 @@ const links = [
   { key: 'customer_support', path: '/pages/customer-support' },
   { key: 'shipping_payments_returns', path: '/pages/shipping-payments-returns' },
   { key: 'accessibility', path: '/pages/accessibility' },
-  { key: 'chapters', path: '/pages/chapters' },
   { key: 'locations', path: '/pages/locaciones' },
 ] as const;
 

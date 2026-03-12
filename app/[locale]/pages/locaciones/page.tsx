@@ -1,71 +1,117 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import SupportNav from '@/components/SupportNav';
+import { getTranslations } from 'next-intl/server';
 
-export default function LocacionesPage() {
+const fontStyle = {
+  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+};
+
+export default async function LocacionesPage() {
+  const t = await getTranslations('locaciones');
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
-      <Header />
-      <main className="flex-1 pt-[64px]">
-        <div className="max-w-4xl mx-auto px-6 md:px-8 py-12 md:py-16">
-          <h1 className="text-2xl md:text-3xl font-normal mb-8 tracking-wide uppercase">
-            Locaciones
-          </h1>
+    <div className="min-h-screen bg-white">
+      <div className="md:hidden">
+        <SupportNav />
+      </div>
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
 
-          <div className="space-y-12">
-            <section>
-              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Tienda Flagship</h2>
-              <div className="bg-white p-6 border border-gray-200">
-                <h3 className="font-medium mb-2">VIOGI CDMX</h3>
-                <p className="text-gray-600 text-sm mb-4">
-                  Av. Presidente Masaryk 123<br />
-                  Col. Polanco, Miguel Hidalgo<br />
-                  11560 Ciudad de México, CDMX
-                </p>
-                <p className="text-gray-600 text-sm">
-                  <strong>Horario:</strong><br />
-                  Lunes a Sábado: 11:00 - 20:00<br />
-                  Domingo: 12:00 - 18:00
-                </p>
-              </div>
-            </section>
+          {/* Left: Flagship Store */}
+          <div>
+            <h2
+              className="uppercase tracking-wide mb-8 border-b border-gray-200 pb-4"
+              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
+            >
+              {t('flagship_title')}
+            </h2>
 
-            <section>
-              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Puntos de Venta</h2>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="bg-white p-6 border border-gray-200">
-                  <h3 className="font-medium mb-2">Monterrey</h3>
-                  <p className="text-gray-600 text-sm">
-                    Calzada del Valle 400<br />
-                    Col. Del Valle, San Pedro Garza García<br />
-                    66220 Nuevo León
-                  </p>
-                </div>
-                <div className="bg-white p-6 border border-gray-200">
-                  <h3 className="font-medium mb-2">Guadalajara</h3>
-                  <p className="text-gray-600 text-sm">
-                    Av. México 2500<br />
-                    Col. Ladrón de Guevara<br />
-                    44600 Jalisco
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Stockists</h2>
-              <p className="text-gray-600 mb-4">
-                También puedes encontrar productos VIOGI en tiendas seleccionadas:
+            <div className="space-y-5">
+              <p
+                className="uppercase tracking-wide"
+                style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+              >
+                {t('flagship_name')}
               </p>
-              <ul className="space-y-2 text-gray-600 text-sm">
-                <li>• Tier Zero - CDMX</li>
-                <li>• Lust - Monterrey</li>
-                <li>• Common People - Guadalajara</li>
-              </ul>
-            </section>
+              <p
+                style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7', whiteSpace: 'pre-line' }}
+              >
+                {t('flagship_address')}
+              </p>
+              <div>
+                <p
+                  className="uppercase tracking-wide mb-1"
+                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                >
+                  {t('flagship_hours_label')}
+                </p>
+                <p
+                  style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7', whiteSpace: 'pre-line' }}
+                >
+                  {t('flagship_hours')}
+                </p>
+              </div>
+            </div>
           </div>
+
+          {/* Right: Sales Points */}
+          <div>
+            <h2
+              className="uppercase tracking-wide mb-8 border-b border-gray-200 pb-4"
+              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
+            >
+              {t('sales_points_title')}
+            </h2>
+
+            <div className="space-y-8">
+              <div>
+                <p
+                  className="uppercase tracking-wide mb-2"
+                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                >
+                  {t('monterrey_name')}
+                </p>
+                <p
+                  style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7', whiteSpace: 'pre-line' }}
+                >
+                  {t('monterrey_address')}
+                </p>
+              </div>
+
+              <div>
+                <p
+                  className="uppercase tracking-wide mb-2"
+                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                >
+                  {t('guadalajara_name')}
+                </p>
+                <p
+                  style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7', whiteSpace: 'pre-line' }}
+                >
+                  {t('guadalajara_address')}
+                </p>
+              </div>
+
+              <div>
+                <p
+                  className="uppercase tracking-wide mb-3"
+                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                >
+                  {t('stockists_title')}
+                </p>
+                <p className="mb-2" style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
+                  {t('stockists_note')}
+                </p>
+                <ul className="space-y-1">
+                  <li style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>Tier Zero — CDMX</li>
+                  <li style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>Lust — Monterrey</li>
+                  <li style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>Common People — Guadalajara</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
         </div>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 }

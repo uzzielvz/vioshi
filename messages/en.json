@@ -289,6 +289,43 @@
     "sort_price_desc": "Price: High to Low",
     "archive_note": "This is an archive collection. Products shown may not be available or may have limited stock."
   },
+  "accessibility": {
+    "title": "ACCESSIBILITY",
+    "commitment_title": "OUR COMMITMENT",
+    "commitment_body": "At VIOGI, we are committed to making our website accessible to everyone, including people with disabilities. We continuously work to improve the user experience and apply relevant accessibility standards.",
+    "standards_title": "ACCESSIBILITY STANDARDS",
+    "standards_body": "Our goal is to meet Web Content Accessibility Guidelines (WCAG) 2.1 Level AA.",
+    "standards_1": "Alternative text on images",
+    "standards_2": "Adequate color contrast",
+    "standards_3": "Keyboard navigation",
+    "standards_4": "Semantic content structure",
+    "standards_5": "Accessible forms with clear labels",
+    "features_title": "ACCESSIBILITY FEATURES",
+    "feature_keyboard_title": "Keyboard Navigation",
+    "feature_keyboard_body": "You can navigate the entire site using only your keyboard (Tab, Enter, Escape).",
+    "feature_screen_reader_title": "Screen Readers",
+    "feature_screen_reader_body": "The site is compatible with screen readers such as NVDA, JAWS, and VoiceOver.",
+    "feature_zoom_title": "Zoom",
+    "feature_zoom_body": "The site works correctly with zoom up to 200%.",
+    "feedback_title": "FEEDBACK",
+    "feedback_body": "We value your feedback on the accessibility of our site. If you encounter accessibility barriers or have suggestions for improvement, please contact us:",
+    "feedback_email": "accessibility@viogi.com"
+  },
+  "locaciones": {
+    "title": "LOCATIONS",
+    "flagship_title": "MAIN STORE",
+    "flagship_name": "VIOGI CDMX",
+    "flagship_address": "Av. Presidente Masaryk 123\nCol. Polanco, Miguel Hidalgo\n11560 Ciudad de México, CDMX",
+    "flagship_hours_label": "HOURS",
+    "flagship_hours": "Mon–Sat: 11:00–20:00\nSun: 12:00–18:00",
+    "sales_points_title": "SALES POINTS",
+    "monterrey_name": "Monterrey",
+    "monterrey_address": "Calzada del Valle 400\nCol. Del Valle, San Pedro Garza García\n66220 Nuevo León",
+    "guadalajara_name": "Guadalajara",
+    "guadalajara_address": "Av. México 2500\nCol. Ladrón de Guevara\n44600 Jalisco",
+    "stockists_title": "STOCKISTS",
+    "stockists_note": "You can also find VIOGI products at select stores:"
+  },
   "pages": {
     "home": {
       "title": "VIOGI - Premium Streetwear",

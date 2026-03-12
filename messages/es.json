@@ -289,6 +289,43 @@
     "sort_price_desc": "Precio: Mayor a Menor",
     "archive_note": "Esta es una colección de archivo. Los productos mostrados pueden no estar disponibles o tener stock limitado."
   },
+  "accessibility": {
+    "title": "ACCESIBILIDAD",
+    "commitment_title": "NUESTRO COMPROMISO",
+    "commitment_body": "En VIOGI, estamos comprometidos a hacer que nuestro sitio web sea accesible para todas las personas, incluyendo aquellas con discapacidades. Trabajamos continuamente para mejorar la experiencia de usuario y aplicar los estándares de accesibilidad relevantes.",
+    "standards_title": "ESTÁNDARES DE ACCESIBILIDAD",
+    "standards_body": "Nuestro objetivo es cumplir con las Pautas de Accesibilidad para el Contenido Web (WCAG) 2.1 nivel AA.",
+    "standards_1": "Texto alternativo en imágenes",
+    "standards_2": "Contraste de colores adecuado",
+    "standards_3": "Navegación por teclado",
+    "standards_4": "Estructura semántica del contenido",
+    "standards_5": "Formularios accesibles con etiquetas claras",
+    "features_title": "FUNCIONES DE ACCESIBILIDAD",
+    "feature_keyboard_title": "Navegación por Teclado",
+    "feature_keyboard_body": "Puedes navegar por todo el sitio usando solo el teclado (Tab, Enter, Escape).",
+    "feature_screen_reader_title": "Lectores de Pantalla",
+    "feature_screen_reader_body": "El sitio es compatible con lectores de pantalla como NVDA, JAWS y VoiceOver.",
+    "feature_zoom_title": "Zoom",
+    "feature_zoom_body": "El sitio funciona correctamente con zoom de hasta 200%.",
+    "feedback_title": "RETROALIMENTACIÓN",
+    "feedback_body": "Valoramos tu opinión sobre la accesibilidad de nuestro sitio. Si encuentras barreras de accesibilidad o tienes sugerencias para mejorar, por favor contáctanos:",
+    "feedback_email": "accesibilidad@viogi.com"
+  },
+  "locaciones": {
+    "title": "LOCACIONES",
+    "flagship_title": "TIENDA PRINCIPAL",
+    "flagship_name": "VIOGI CDMX",
+    "flagship_address": "Av. Presidente Masaryk 123\nCol. Polanco, Miguel Hidalgo\n11560 Ciudad de México, CDMX",
+    "flagship_hours_label": "HORARIO",
+    "flagship_hours": "Lunes–Sábado: 11:00–20:00\nDomingo: 12:00–18:00",
+    "sales_points_title": "PUNTOS DE VENTA",
+    "monterrey_name": "Monterrey",
+    "monterrey_address": "Calzada del Valle 400\nCol. Del Valle, San Pedro Garza García\n66220 Nuevo León",
+    "guadalajara_name": "Guadalajara",
+    "guadalajara_address": "Av. México 2500\nCol. Ladrón de Guevara\n44600 Jalisco",
+    "stockists_title": "STOCKISTS",
+    "stockists_note": "También puedes encontrar productos VIOGI en tiendas seleccionadas:"
+  },
   "pages": {
     "home": {
       "title": "VIOGI - Streetwear Premium",
