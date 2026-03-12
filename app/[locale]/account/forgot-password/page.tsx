@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
@@ -11,6 +11,8 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,13 +22,12 @@ export default function ForgotPasswordPage() {
       // TODO: Implement password reset API call
       console.log('Sending reset email to:', email);
       await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      setEmailSent(true);
+      if (mountedRef.current) setEmailSent(true);
     } catch (error) {
       console.error('Password reset error:', error);
-      alert(t('error_forgot'));
+      if (mountedRef.current) alert(t('error_forgot'));
     } finally {
-      setIsLoading(false);
+      if (mountedRef.current) setIsLoading(false);
     }
   };
 

@@ -59,7 +59,7 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
                 Order Confirmed
               </h1>
               <p className="text-gray-600">
-                Thank you for your purchase! We've received your order.
+                Thank you for your purchase! We&apos;ve received your order.
               </p>
             </div>
 
@@ -78,20 +78,20 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
             {/* Order Details */}
             <div className="border-t border-gray-200 pt-8 space-y-4 text-left">
               <h2 className="text-sm uppercase tracking-wider font-medium">
-                What's Next?
+                What&apos;s Next?
               </h2>
               <ul className="space-y-3 text-sm text-gray-600">
                 <li className="flex items-start">
                   <span className="font-bold mr-2">1.</span>
                   <span>
-                    You'll receive a confirmation email with your order details
+                    You&apos;ll receive a confirmation email with your order details
                     shortly.
                   </span>
                 </li>
                 <li className="flex items-start">
                   <span className="font-bold mr-2">2.</span>
                   <span>
-                    We'll send you another email with tracking information once
+                    We&apos;ll send you another email with tracking information once
                     your order ships.
                   </span>
                 </li>

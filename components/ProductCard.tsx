@@ -19,7 +19,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ id, name, price, image, slug, soldOut, isNew, size }: ProductCardProps) {
-  const { addItem } = useCart();
+  const { addItem, openCart } = useCart();
   const { locale } = useLocaleContext();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -36,6 +36,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
       image,
       slug,
     });
+    openCart();
   };
 
   return (

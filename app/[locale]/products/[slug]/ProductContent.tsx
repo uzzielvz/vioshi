@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Product } from "@/lib/products";
 import { useCart } from "@/store/cartStore";
 import { generateId } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
@@ -19,6 +19,13 @@ export default function ProductContent({ product, allProducts }: ProductContentP
   const [isAdding, setIsAdding] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { addItem, openCart } = useCart();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   // Use images array if available, otherwise use single image
   const galleryImages = product.images || [product.image];
@@ -40,7 +47,8 @@ export default function ProductContent({ product, allProducts }: ProductContentP
       size: selectedSize || undefined,
     });
 
-    setTimeout(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
       setIsAdding(false);
       openCart();
     }, 500);

@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function VenderPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -34,12 +36,12 @@ export default function VenderPage() {
       // TODO: Send application to backend
       console.log('Vendor application:', formData);
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      setSubmitted(true);
+      if (mountedRef.current) setSubmitted(true);
     } catch (error) {
       console.error('Error submitting application:', error);
-      alert('Error al enviar la solicitud. Intenta de nuevo.');
+      if (mountedRef.current) alert('Error al enviar la solicitud. Intenta de nuevo.');
     } finally {
-      setIsSubmitting(false);
+      if (mountedRef.current) setIsSubmitting(false);
     }
   };
 

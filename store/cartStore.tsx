@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { Cart, CartItem } from "@/types";
 import { STORAGE_KEYS, TAX_RATE, STANDARD_SHIPPING_COST } from "@/lib/constants";
 
@@ -26,6 +26,17 @@ const initialCart: Cart = {
   shipping: 0,
   total: 0,
 };
+
+// Pure function — no component state, safe to live outside the component
+// prevShipping preserves any custom shipping cost set by checkout
+function calculateTotals(items: CartItem[], prevShipping: number = STANDARD_SHIPPING_COST): Cart {
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const tax = subtotal * TAX_RATE;
+  const shipping = items.length > 0 ? prevShipping : 0;
+  const total = subtotal + tax + shipping;
+
+  return { items, subtotal, tax, shipping, total };
+}
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<Cart>(initialCart);
@@ -54,23 +65,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cart, isInitialized]);
 
-  // Calculate cart totals
-  const calculateTotals = (items: CartItem[]): Cart => {
-    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const tax = subtotal * TAX_RATE;
-    const shipping = items.length > 0 ? STANDARD_SHIPPING_COST : 0;
-    const total = subtotal + tax + shipping;
-
-    return {
-      items,
-      subtotal,
-      tax,
-      shipping,
-      total,
-    };
-  };
-
-  const addItem = (newItem: CartItem) => {
+  const addItem = useCallback((newItem: CartItem) => {
     setCart((prevCart) => {
       const existingItemIndex = prevCart.items.findIndex(
         (item) =>
@@ -93,18 +88,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         updatedItems = [...prevCart.items, newItem];
       }
 
-      return calculateTotals(updatedItems);
+      return calculateTotals(updatedItems, prevCart.shipping);
     });
-  };
+  }, []);
 
-  const removeItem = (itemId: string) => {
+  const removeItem = useCallback((itemId: string) => {
     setCart((prevCart) => {
       const updatedItems = prevCart.items.filter((item) => item.id !== itemId);
-      return calculateTotals(updatedItems);
+      return calculateTotals(updatedItems, prevCart.shipping);
     });
-  };
+  }, []);
 
-  const updateQuantity = (itemId: string, quantity: number) => {
+  const updateQuantity = useCallback((itemId: string, quantity: number) => {
     if (quantity < 1) {
       removeItem(itemId);
       return;
@@ -114,16 +109,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const updatedItems = prevCart.items.map((item) =>
         item.id === itemId ? { ...item, quantity } : item
       );
-      return calculateTotals(updatedItems);
+      return calculateTotals(updatedItems, prevCart.shipping);
     });
-  };
+  }, [removeItem]);
 
-  const updateShippingCost = (cost: number) => {
+  const updateShippingCost = useCallback((cost: number) => {
     setCart((prevCart) => {
-      const subtotal = prevCart.subtotal;
-      const tax = prevCart.tax;
       const shipping = prevCart.items.length > 0 ? cost : 0;
-      const total = subtotal + tax + shipping;
+      const total = prevCart.subtotal + prevCart.tax + shipping;
 
       return {
         ...prevCart,
@@ -131,14 +124,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         total,
       };
     });
-  };
+  }, []);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart(initialCart);
-  };
+  }, []);
 
-  const openCart = () => setIsCartOpen(true);
-  const closeCart = () => setIsCartOpen(false);
+  const openCart = useCallback(() => setIsCartOpen(true), []);
+  const closeCart = useCallback(() => setIsCartOpen(false), []);
 
   const itemCount = cart.items.reduce((count, item) => count + item.quantity, 0);
 

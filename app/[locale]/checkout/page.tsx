@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
@@ -9,7 +9,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/store/cartStore';
 import { PICKUP_POINTS, getPickupPointById } from '@/lib/pickupPoints';
-import { DELIVERY_METHODS } from '@/lib/constants';
+import { DELIVERY_METHODS, EXPRESS_SHIPPING_COST, STANDARD_SHIPPING_COST } from '@/lib/constants';
 
 interface CheckoutFormData {
   email: string;
@@ -43,7 +43,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const t = useTranslations('checkout');
   const { locale, currency } = useLocaleContext();
-  const { cart: cartData, openCart, closeCart, updateShippingCost } = useCart();
+  const { cart: cartData, closeCart, updateShippingCost } = useCart();
   const cart = cartData.items;
   const subtotal = cartData.subtotal;
   const tax = cartData.tax;
@@ -90,31 +90,34 @@ export default function CheckoutPage() {
     return undefined;
   }, [formData.pickupPointId]);
 
-  // Redirect if cart is empty
+  // Tracks whether a submit is in flight — prevents the empty-cart redirect
+  // from firing while the order is being processed and the cart is cleared
+  const isSubmittingRef = useRef(false);
+
+  // Redirect if cart is empty, but not while an order submit is in progress
   useEffect(() => {
-    if (cart.length === 0) {
+    if (cart.length === 0 && !isSubmittingRef.current) {
       router.push(`/${locale}/cart`);
     }
   }, [cart, router, locale]);
 
-  // Update shipping cost based on delivery method
-  useEffect(() => {
-    let shippingCost = 0;
-
+  // Derive shipping cost from form state — useMemo avoids calling updateShippingCost
+  // on every render; the useEffect only fires when the derived value actually changes
+  const shippingCost = useMemo(() => {
     if (formData.deliveryMethod === 'home') {
-      shippingCost = formData.shippingMethod === 'express' ? 25 : 10;
-    } else if (formData.deliveryMethod === 'pickup' && formData.pickupPointId) {
-      const point = getPickupPointById(formData.pickupPointId);
-      shippingCost = point?.additionalCost || 0;
+      return formData.shippingMethod === 'express' ? EXPRESS_SHIPPING_COST : STANDARD_SHIPPING_COST;
     }
+    if (formData.deliveryMethod === 'pickup' && formData.pickupPointId) {
+      return getPickupPointById(formData.pickupPointId)?.additionalCost ?? 0;
+    }
+    return 0;
+  }, [formData.deliveryMethod, formData.shippingMethod, formData.pickupPointId]);
 
+  // updateShippingCost is stable (useCallback in cartStore), so this effect only
+  // re-runs when shippingCost changes — no infinite loop
+  useEffect(() => {
     updateShippingCost(shippingCost);
-  }, [
-    formData.deliveryMethod,
-    formData.shippingMethod,
-    formData.pickupPointId,
-    updateShippingCost
-  ]);
+  }, [shippingCost, updateShippingCost]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -148,12 +151,10 @@ export default function CheckoutPage() {
   };
 
   const handleExpressCheckout = (method: string) => {
-    console.log(`Express checkout with ${method}`);
     // TODO: Implement express checkout integration
   };
 
   const handleApplyDiscount = () => {
-    console.log('Applying discount:', discountCode);
     // TODO: Implement discount code validation
   };
 
@@ -178,11 +179,11 @@ export default function CheckoutPage() {
       }
     }
 
+    isSubmittingRef.current = true;
     setIsProcessing(true);
 
     try {
       // TODO: Send order to backend
-      console.log('Processing order:', { formData, cart, total });
 
       // Simulate processing
       await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -190,6 +191,7 @@ export default function CheckoutPage() {
       // Redirect to success page (to be created)
       router.push(`/${locale}/checkout/success/ORDER123`);
     } catch (error) {
+      isSubmittingRef.current = false;
       console.error('Error processing order:', error);
       alert(t('error_processing'));
     } finally {
@@ -227,12 +229,7 @@ export default function CheckoutPage() {
             <button
               onClick={() => {
                 closeCart();
-                // Regresar a la página anterior y abrir el carrito
-                router.back();
-                // Abrir el carrito después de un delay para que la navegación se complete
-                setTimeout(() => {
-                  openCart();
-                }, 200);
+                router.push(`/${locale}/cart`);
               }}
               className="hover:opacity-60 transition-opacity"
               aria-label={t('back_to_cart_aria')}

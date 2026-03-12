@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
   const [formData, setFormData] = useState({
     firstName: 'Juan',
     lastName: 'Pérez',
@@ -23,11 +25,11 @@ export default function ProfilePage() {
     try {
       // TODO: API call to update profile
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      setIsEditing(false);
+      if (mountedRef.current) setIsEditing(false);
     } catch (error) {
       console.error('Error saving profile:', error);
     } finally {
-      setIsSaving(false);
+      if (mountedRef.current) setIsSaving(false);
     }
   };
 
