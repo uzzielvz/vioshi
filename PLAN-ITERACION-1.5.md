@@ -135,17 +135,29 @@ Los botones Shop Pay, PayPal y G Pay llaman a `handleExpressCheckout()` que est�
 </div>
 ```
 
-**b) Eliminar PayPal del Payment section:**
-La opción de radio PayPal dentro del formulario de pago también se elimina. El campo `paymentMethod` en la interfaz pasa a ser solo `'card'` (o se elimina si no se usa).
+**b) PayPal permanece como opción de pago manual:**
+No se integra la API de PayPal. Al seleccionar PayPal, se muestra un bloque informativo con el enlace `paypal.me/[cuenta]` para que el cliente realice la transferencia por su cuenta. El pedido se registra con estado `pendiente_pago_paypal` hasta confirmar manualmente.
 
-**c) Limpiar `CheckoutFormData`:**
-```tsx
-// Quitar:
-paymentMethod: 'card' | 'paypal';
-
-// O simplificar a:
-paymentMethod: 'card';
+UX al seleccionar PayPal:
 ```
+┌─────────────────────────────────────────────────────┐
+│ ◉ PayPal                                            │
+│                                                     │
+│  Realiza tu pago directamente a nuestra cuenta:     │
+│                                                     │
+│  → paypal.me/viogi                    [Copiar link] │
+│                                                     │
+│  Incluye tu nombre completo en el concepto.         │
+│  Tu pedido se confirmará al recibir el pago.        │
+└─────────────────────────────────────────────────────┘
+```
+
+La cuenta `paypal.me/viogi` se define como constante en `lib/constants.ts`:
+```ts
+export const PAYPAL_ME_LINK = 'https://paypal.me/viogi';
+```
+
+**c) `CheckoutFormData` — se mantiene `paymentMethod: 'card' | 'paypal'`** sin cambios en el tipo.
 
 ---
 
