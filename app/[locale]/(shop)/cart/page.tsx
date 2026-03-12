@@ -3,11 +3,14 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/store/cartStore";
+import { useLocaleContext } from "@/hooks/useLocaleContext";
+import { formatPrice } from "@/lib/formatters";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function CartPage() {
   const { cart, itemCount, removeItem, updateQuantity } = useCart();
+  const { locale } = useLocaleContext();
 
   const fontStyle = {
     fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -101,7 +104,7 @@ export default function CartPage() {
                           className="mt-2"
                           style={{ ...fontStyle, fontSize: '11px' }}
                         >
-                          ${item.price.toLocaleString('en-US')} MXN
+                          {formatPrice(item.price, locale)}
                         </p>
                       </div>
 
@@ -164,22 +167,22 @@ export default function CartPage() {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between" style={{ ...fontStyle, fontSize: '11px' }}>
                     <span>Subtotal</span>
-                    <span>${cart.subtotal.toLocaleString('en-US')} MXN</span>
+                    <span>{formatPrice(cart.subtotal, locale)}</span>
                   </div>
                   <div className="flex justify-between text-gray-500" style={{ ...fontStyle, fontSize: '11px' }}>
                     <span>Shipping</span>
-                    <span>{cart.shipping === 0 ? 'Free' : `$${cart.shipping.toLocaleString('en-US')} MXN`}</span>
+                    <span>{cart.shipping === 0 ? 'Free' : formatPrice(cart.shipping, locale)}</span>
                   </div>
                   <div className="flex justify-between text-gray-500" style={{ ...fontStyle, fontSize: '11px' }}>
                     <span>Tax</span>
-                    <span>${cart.tax.toLocaleString('en-US')} MXN</span>
+                    <span>{formatPrice(cart.tax, locale)}</span>
                   </div>
                 </div>
 
                 <div className="border-t border-gray-300 pt-4 mb-6">
                   <div className="flex justify-between" style={{ ...fontStyle, fontSize: '12px', fontWeight: 500 }}>
                     <span className="uppercase tracking-wide">Total</span>
-                    <span>${cart.total.toLocaleString('en-US')} MXN</span>
+                    <span>{formatPrice(cart.total, locale)}</span>
                   </div>
                 </div>
 

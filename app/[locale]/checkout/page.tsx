@@ -9,7 +9,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/store/cartStore';
 import { PICKUP_POINTS, getPickupPointById } from '@/lib/pickupPoints';
-import { DELIVERY_METHODS } from '@/lib/constants';
+import { DELIVERY_METHODS, EXPRESS_SHIPPING_COST, STANDARD_SHIPPING_COST } from '@/lib/constants';
 
 interface CheckoutFormData {
   email: string;
@@ -105,7 +105,7 @@ export default function CheckoutPage() {
   // on every render; the useEffect only fires when the derived value actually changes
   const shippingCost = useMemo(() => {
     if (formData.deliveryMethod === 'home') {
-      return formData.shippingMethod === 'express' ? 25 : 10;
+      return formData.shippingMethod === 'express' ? EXPRESS_SHIPPING_COST : STANDARD_SHIPPING_COST;
     }
     if (formData.deliveryMethod === 'pickup' && formData.pickupPointId) {
       return getPickupPointById(formData.pickupPointId)?.additionalCost ?? 0;
@@ -151,12 +151,10 @@ export default function CheckoutPage() {
   };
 
   const handleExpressCheckout = (method: string) => {
-    console.log(`Express checkout with ${method}`);
     // TODO: Implement express checkout integration
   };
 
   const handleApplyDiscount = () => {
-    console.log('Applying discount:', discountCode);
     // TODO: Implement discount code validation
   };
 
@@ -186,7 +184,6 @@ export default function CheckoutPage() {
 
     try {
       // TODO: Send order to backend
-      console.log('Processing order:', { formData, cart, total });
 
       // Simulate processing
       await new Promise((resolve) => setTimeout(resolve, 2000));

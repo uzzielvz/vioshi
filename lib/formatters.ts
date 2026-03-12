@@ -1,6 +1,6 @@
 import { Locale } from '@/i18n';
 
-const EXCHANGE_RATE = 17.5; // USD to MXN
+const EXCHANGE_RATE = parseFloat(process.env.NEXT_PUBLIC_USD_MXN_RATE ?? '17.5');
 
 export function formatPrice(
   priceInUSD: number,
