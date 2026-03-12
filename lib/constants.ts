@@ -18,8 +18,8 @@ export const FREE_SHIPPING_THRESHOLD = 100;
 export const CURRENCY = "USD";
 export const CURRENCY_SYMBOL = "$";
 
-// Tax rate (example: 10%)
-export const TAX_RATE = 0.1;
+// Tax rate — IVA México: 16%
+export const TAX_RATE = 0.16;
 
 // Shipping
 export const STANDARD_SHIPPING_COST = 10;
@@ -36,22 +36,20 @@ export const DELIVERY_METHOD_LABELS = {
   pickup: 'Recoger en Punto',
 } as const;
 
-// Categories
+// Categories — aligned with actual product data in lib/products.ts
 export const CATEGORIES = {
   ALL: "all",
-  TEES: "tees",
-  OUTERWEAR: "outerwear",
-  ACCESSORIES: "accessories",
+  PLAYERAS: "playeras",
+  HOODIE: "hoodie",
+  CHAMARRA: "chamarra",
+  CAMISAS: "camisas",
   PANTS: "pants",
+  JEANS: "jeans",
+  ACCESORIOS: "accesorios",
+  BOLSOS: "bolsos",
 } as const;
 
-export const CATEGORY_NAMES: Record<string, string> = {
-  all: "New Arrivals",
-  tees: "Tees",
-  outerwear: "Outerwear",
-  accessories: "Accessories",
-  pants: "Pants",
-};
+export type CategorySlug = typeof CATEGORIES[keyof typeof CATEGORIES];
 
 // Sort options
 export const SORT_OPTIONS = [

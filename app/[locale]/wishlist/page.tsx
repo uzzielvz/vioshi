@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 import { formatPrice } from '@/lib/formatters';
-import { getProducts, Product } from '@/lib/products';
+import { getProducts, ProductData as Product } from '@/lib/products';
 
 const mockWishlistIds = ['1', '2', '3'];
 

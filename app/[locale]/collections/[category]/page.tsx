@@ -1,27 +1,32 @@
 import ProductGrid from "@/components/ProductGrid";
 import { getProducts } from "@/lib/products";
+import { getTranslations } from "next-intl/server";
 
-const categoryNames: Record<string, string> = {
-  all: "All Products",
-  new: "New Drop",
-  hoodie: "Hoodies",
-  chamarra: "Chamarras",
-  pants: "Pants",
-  jeans: "Jeans",
-  camisas: "Camisas",
-  playeras: "Playeras",
-  accesorios: "Accesorios",
-  bolsos: "Bolsos",
+const categoryNames: Record<string, { es: string; en: string }> = {
+  all:        { es: "Todos los Productos", en: "All Products" },
+  new:        { es: "Nuevo Drop",          en: "New Drop" },
+  hoodie:     { es: "Hoodies",             en: "Hoodies" },
+  chamarra:   { es: "Chamarras",           en: "Jackets" },
+  pants:      { es: "Pants",               en: "Pants" },
+  jeans:      { es: "Jeans",               en: "Jeans" },
+  camisas:    { es: "Camisas",             en: "Shirts" },
+  playeras:   { es: "Playeras",            en: "Tees" },
+  accesorios: { es: "Accesorios",          en: "Accessories" },
+  bolsos:     { es: "Bolsos",              en: "Bags" },
 };
 
 export default async function CategoryPage({
   params,
 }: {
-  params: { category: string };
+  params: { category: string; locale: string };
 }) {
-  const category = params.category === "all" ? undefined : params.category;
-  const products = await getProducts(category);
-  const categoryName = categoryNames[params.category] || "Products";
+  const { category, locale } = params;
+  const t = await getTranslations("pages.collections");
+  const products = await getProducts(category === "all" ? undefined : category);
+  const names = categoryNames[category];
+  const categoryName = names
+    ? names[locale as "es" | "en"] ?? names.en
+    : locale === "es" ? "Productos" : "Products";
 
   return (
     <div className="px-4 md:px-8 py-8 md:py-12">
@@ -43,7 +48,7 @@ export default async function CategoryPage({
             fontSize: "11px",
           }}
         >
-          {products.length} {products.length === 1 ? "Product" : "Products"}
+          {t("product_count", { count: products.length })}
         </p>
       </div>
       <ProductGrid products={products} />

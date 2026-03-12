@@ -1,9 +1,11 @@
-export interface Product {
+// ProductData: simplified interface for mock/current data.
+// For DB-backed data (Phase 2+), use the richer Product type from @/types/product.ts
+export interface ProductData {
   id: string;
   name: string;
   price: number;
   image: string;
-  images?: string[]; // Gallery images
+  images?: string[];
   slug: string;
   description?: string;
   category?: string;
@@ -16,8 +18,8 @@ export interface Product {
   };
 }
 
-export async function getProducts(category?: string): Promise<Product[]> {
-  const products: Product[] = [
+export async function getProducts(category?: string): Promise<ProductData[]> {
+  const products: ProductData[] = [
     // PLAYERAS / TEE
     {
       id: "1",
@@ -179,7 +181,7 @@ export async function getProducts(category?: string): Promise<Product[]> {
   return products;
 }
 
-export async function getProductBySlug(slug: string): Promise<Product | null> {
+export async function getProductBySlug(slug: string): Promise<ProductData | null> {
   const products = await getProducts();
   return products.find((p) => p.slug === slug) || null;
 }

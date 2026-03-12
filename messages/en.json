@@ -339,7 +339,8 @@
       "sort_by": "Sort by",
       "price_low_high": "Price: Low to High",
       "price_high_low": "Price: High to Low",
-      "newest": "Newest"
+      "newest": "Newest",
+      "product_count": "{count, plural, one {# product} other {# products}}"
     }
   },
   "account": {

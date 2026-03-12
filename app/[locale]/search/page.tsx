@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductGrid from '@/components/ProductGrid';
-import { getProducts, Product } from '@/lib/products';
+import { getProducts, ProductData as Product } from '@/lib/products';
 
 function SearchContent() {
   const searchParams = useSearchParams();
