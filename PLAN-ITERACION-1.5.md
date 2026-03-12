@@ -179,7 +179,28 @@ El campo `ciudad` genérico del formulario actual no aplica al estándar mexican
 
 ---
 
-### 5.1 Nuevo archivo: `lib/mexico.ts`
+### 5.1 Estrategia: JSON estático de SEPOMEX (sin API key)
+
+**Sin registro, sin token, sin límites, sin red.** Los datos de SEPOMEX son públicos y existen como paquetes npm listos para usar.
+
+```bash
+npm install @zipcodes-mx/data
+```
+
+El paquete expone una función de lookup por CP. Se carga con **dynamic import** para no afectar el bundle inicial del checkout:
+
+```ts
+// Solo se carga en el cliente cuando el usuario escribe el CP
+const { getByZipCode } = await import('@zipcodes-mx/data');
+const results = getByZipCode(cp);
+// results: Array<{ estado, municipio, asentamiento, tipo_asentamiento }>
+```
+
+Si el paquete no está disponible en npm, se usa el fallback: archivo JSON comprimido descargado de [datos.gob.mx](https://datos.gob.mx) (fuente oficial SEPOMEX), importado como asset estático.
+
+---
+
+### 5.2 Nuevo archivo: `lib/mexico.ts`
 
 ```ts
 export interface MexicoCPData {
@@ -188,25 +209,19 @@ export interface MexicoCPData {
   colonias: string[];
 }
 
-export async function fetchCPData(cp: string): Promise<MexicoCPData | null> {
-  if (cp.length !== 5) return null;
+export async function lookupCP(cp: string): Promise<MexicoCPData | null> {
+  if (cp.length !== 5 || !/^\d{5}$/.test(cp)) return null;
 
   try {
-    const res = await fetch(
-      `https://api.copomex.com/query/info_cp/${cp}?token=${process.env.NEXT_PUBLIC_COPOMEX_TOKEN}`
-    );
-    if (!res.ok) return null;
+    const { getByZipCode } = await import('@zipcodes-mx/data');
+    const results = getByZipCode(cp);
 
-    const json = await res.json();
-
-    // La API devuelve un array de asentamientos (colonias).
-    // Cada elemento tiene: response.asentamiento, response.estado, response.municipio
-    if (!Array.isArray(json) || json.length === 0) return null;
+    if (!results || results.length === 0) return null;
 
     return {
-      estado: json[0].response.estado,
-      municipio: json[0].response.municipio,
-      colonias: json.map((item: any) => item.response.asentamiento).sort(),
+      estado: results[0].estado,
+      municipio: results[0].municipio,
+      colonias: results.map((r: any) => r.asentamiento).sort(),
     };
   } catch {
     return null;
@@ -214,16 +229,7 @@ export async function fetchCPData(cp: string): Promise<MexicoCPData | null> {
 }
 ```
 
----
-
-### 5.2 Variable de entorno
-
-```env
-# .env.local
-NEXT_PUBLIC_COPOMEX_TOKEN=test_tokenXXXXXX
-```
-
-> Token gratuito registrándose en [copomex.com](https://copomex.com) — plan free: 1,000 req/día (suficiente para desarrollo y primeras semanas). Para producción: plan pagado o migrar a JSON estático de SEPOMEX.
+> **Sin variables de entorno necesarias.** Se elimina la sección `.env.local` relacionada con Copomex.
 
 ---
 
