@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Product } from "@/lib/products";
+import { ProductData as Product } from "@/lib/products";
 import { useCart } from "@/store/cartStore";
 import { generateId } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";

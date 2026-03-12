@@ -1,3 +1,5 @@
+// Product: rich type for DB-backed data (Phase 2+).
+// For current mock data, see ProductData in lib/products.ts
 export type Product = {
   id: string;
   name: string;

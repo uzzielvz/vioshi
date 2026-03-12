@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getProducts, Product } from '@/lib/products';
+import { getProducts, ProductData as Product } from '@/lib/products';
 
 // Mock wishlist data - in real app this would come from context/store
 const mockWishlistIds = ['1', '2', '3'];
