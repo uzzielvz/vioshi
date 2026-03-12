@@ -1,63 +1,162 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import Link from "next/link";
+'use client';
+
+import { useState } from 'react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import SupportNav from '@/components/SupportNav';
+import { useTranslations } from 'next-intl';
+
+const fontStyle = {
+  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+};
+
+const faqs = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 export default function CustomerSupportPage() {
+  const t = useTranslations('support');
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
-      <main className="flex-1 pt-[64px]">
-        <div className="max-w-4xl mx-auto px-6 md:px-8 py-12 md:py-16">
-          <h1 className="text-2xl md:text-3xl font-normal mb-8 tracking-wide uppercase">
-            Customer Support
-          </h1>
+      <div className="pt-[64px]">
+        <SupportNav />
+      </div>
+      <main className="flex-1">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
 
-          <div className="space-y-12">
-            <section>
-              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Contacto</h2>
-              <p className="text-gray-600 mb-4">
-                Estamos aquí para ayudarte. Puedes contactarnos a través de los siguientes medios:
-              </p>
-              <ul className="space-y-2 text-gray-600">
-                <li>Email: support@viogi.com</li>
-                <li>WhatsApp: +52 55 1234 5678</li>
-                <li>Horario: Lunes a Viernes, 9:00 - 18:00 (CST)</li>
-              </ul>
-            </section>
+            {/* Left column: Contact */}
+            <div>
+              <h2
+                className="uppercase tracking-wide mb-8 border-b border-gray-200 pb-4"
+                style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
+              >
+                {t('contact_title')}
+              </h2>
 
-            <section id="chat">
-              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Chat en Vivo</h2>
-              <p className="text-gray-600 mb-4">
-                Nuestro chat en vivo está disponible durante horario de oficina para responder tus preguntas al instante.
-              </p>
-              <button className="bg-black text-white px-6 py-3 text-sm uppercase tracking-wide hover:opacity-80 transition-opacity">
-                Iniciar Chat
-              </button>
-            </section>
-
-            <section>
-              <h2 className="text-lg font-medium mb-4 uppercase tracking-wide">Preguntas Frecuentes</h2>
-              <div className="space-y-4">
-                <div className="border-b border-gray-200 pb-4">
-                  <h3 className="font-medium mb-2">¿Cuánto tarda mi pedido en llegar?</h3>
-                  <p className="text-gray-600 text-sm">Los envíos dentro de México tardan entre 3-7 días hábiles.</p>
-                </div>
-                <div className="border-b border-gray-200 pb-4">
-                  <h3 className="font-medium mb-2">¿Puedo cambiar o devolver mi producto?</h3>
-                  <p className="text-gray-600 text-sm">Sí, tienes 30 días para cambios y devoluciones. Consulta nuestra política completa.</p>
-                </div>
-                <div className="border-b border-gray-200 pb-4">
-                  <h3 className="font-medium mb-2">¿Cómo sé qué talla elegir?</h3>
-                  <p className="text-gray-600 text-sm">
-                    Consulta nuestra{" "}
-                    <Link href="/pages/size-guide" className="underline hover:opacity-60">
-                      guía de tallas
-                    </Link>
-                    {" "}para encontrar tu talla perfecta.
+              <div className="space-y-8">
+                {/* WhatsApp */}
+                <div>
+                  <p
+                    className="uppercase tracking-wide mb-1"
+                    style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                  >
+                    {t('whatsapp_label')}
+                  </p>
+                  <a
+                    href={`https://wa.me/${t('whatsapp_number').replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-60 transition-opacity"
+                    style={{ ...fontStyle, fontSize: '11px', color: '#666' }}
+                  >
+                    {t('whatsapp_cta')}
+                  </a>
+                  <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
+                    {t('whatsapp_number')}
                   </p>
                 </div>
+
+                {/* Email */}
+                <div>
+                  <p
+                    className="uppercase tracking-wide mb-1"
+                    style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                  >
+                    {t('email_label')}
+                  </p>
+                  <a
+                    href={`mailto:${t('email_value')}`}
+                    className="hover:opacity-60 transition-opacity"
+                    style={{ ...fontStyle, fontSize: '11px', color: '#666' }}
+                  >
+                    {t('email_value')}
+                  </a>
+                </div>
+
+                {/* Hours */}
+                <div>
+                  <p
+                    className="uppercase tracking-wide mb-1"
+                    style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                  >
+                    {t('hours_label')}
+                  </p>
+                  <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
+                    {t('hours_value')}
+                  </p>
+                  <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
+                    {t('hours_note')}
+                  </p>
+                </div>
+
+                {/* Social */}
+                <div className="flex gap-6">
+                  <a
+                    href="https://www.instagram.com/viogi_/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="uppercase tracking-wide hover:opacity-60 transition-opacity"
+                    style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                  >
+                    {t('instagram')}
+                  </a>
+                  <a
+                    href="https://www.tiktok.com/@viogi"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="uppercase tracking-wide hover:opacity-60 transition-opacity"
+                    style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
+                  >
+                    {t('tiktok')}
+                  </a>
+                </div>
               </div>
-            </section>
+            </div>
+
+            {/* Right column: FAQ */}
+            <div>
+              <h2
+                className="uppercase tracking-wide mb-8 border-b border-gray-200 pb-4"
+                style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
+              >
+                {t('faq_title')}
+              </h2>
+
+              <div>
+                {faqs.map((i) => (
+                  <div key={i} className="border-b border-gray-200">
+                    <button
+                      className="w-full flex items-center justify-between py-4 text-left"
+                      onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    >
+                      <span
+                        className="uppercase tracking-wide pr-4"
+                        style={{ ...fontStyle, fontSize: '11px', fontWeight: openFaq === i ? 500 : 400, color: '#000' }}
+                      >
+                        {t(`faq_${i}_q` as `faq_${typeof i}_q`)}
+                      </span>
+                      <span
+                        className="flex-shrink-0 transition-transform duration-200"
+                        style={{ transform: openFaq === i ? 'rotate(45deg)' : 'none', fontSize: '16px', lineHeight: 1 }}
+                      >
+                        +
+                      </span>
+                    </button>
+                    {openFaq === i && (
+                      <p
+                        className="pb-4"
+                        style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.6' }}
+                      >
+                        {t(`faq_${i}_a` as `faq_${typeof i}_a`)}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
         </div>
       </main>
