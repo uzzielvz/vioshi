@@ -56,11 +56,13 @@
   "cart": {
     "title": "SHOPPING BAG",
     "empty": "YOU HAVE NO ITEMS IN YOUR SHOPPING BAG.",
+    "empty_subtitle": "Add some products to get started",
     "checkout": "CHECKOUT",
     "continue_shopping": "CONTINUE SHOPPING",
     "subtotal": "SUBTOTAL",
     "summary": "Summary",
     "shipping": "Shipping",
+    "free": "Free",
     "tax": "Tax",
     "total": "Total",
     "quantity": "Quantity",
@@ -154,7 +156,23 @@
     "description": "Description",
     "details": "Details",
     "shipping_returns": "Shipping & Returns",
-    "size_guide": "Size Guide"
+    "size_guide": "Size Guide",
+    "new": "New",
+    "sold_out": "Sold Out",
+    "quick_add": "Quick Add"
+  },
+  "success": {
+    "confirmed": "Order Confirmed",
+    "thank_you": "Thank you for your purchase! We've received your order.",
+    "order_number": "Order Number",
+    "whats_next": "What's Next?",
+    "step_1": "You'll receive a confirmation email with your order details shortly.",
+    "step_2": "We'll send you another email with tracking information once your order ships.",
+    "step_3": "You can track your order status anytime in your account.",
+    "view_order": "View Order Details",
+    "continue_shopping": "Continue Shopping",
+    "need_help": "Need help?",
+    "contact_support": "Contact our support team"
   },
   "pages": {
     "home": {

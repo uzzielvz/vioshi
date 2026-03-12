@@ -56,11 +56,13 @@
   "cart": {
     "title": "CARRITO DE COMPRAS",
     "empty": "NO TIENES ARTÍCULOS EN TU BOLSA DE COMPRAS.",
+    "empty_subtitle": "Agrega productos para comenzar",
     "checkout": "FINALIZAR COMPRA",
     "continue_shopping": "CONTINUAR COMPRANDO",
     "subtotal": "SUBTOTAL",
     "summary": "Resumen",
     "shipping": "Envío",
+    "free": "Gratis",
     "tax": "Impuestos",
     "total": "Total",
     "quantity": "Cantidad",
@@ -154,7 +156,23 @@
     "description": "Descripción",
     "details": "Detalles",
     "shipping_returns": "Envío y Devoluciones",
-    "size_guide": "Guía de Tallas"
+    "size_guide": "Guía de Tallas",
+    "new": "Nuevo",
+    "sold_out": "Agotado",
+    "quick_add": "Agregar"
+  },
+  "success": {
+    "confirmed": "Pedido Confirmado",
+    "thank_you": "Gracias por tu compra. Hemos recibido tu pedido.",
+    "order_number": "Número de Pedido",
+    "whats_next": "¿Qué sigue?",
+    "step_1": "Recibirás un correo de confirmación con los detalles de tu pedido.",
+    "step_2": "Te enviaremos otro correo con información de rastreo cuando tu pedido sea enviado.",
+    "step_3": "Puedes ver el estado de tu pedido en cualquier momento desde tu cuenta.",
+    "view_order": "Ver Detalles del Pedido",
+    "continue_shopping": "Continuar Comprando",
+    "need_help": "¿Necesitas ayuda?",
+    "contact_support": "Contacta a nuestro equipo de soporte"
   },
   "pages": {
     "home": {

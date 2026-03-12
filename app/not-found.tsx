@@ -20,7 +20,7 @@ export default function NotFound() {
                 404 — Page Not Found
               </h1>
               <Link
-                href="/es"
+                href="/"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                   fontSize: '11px',

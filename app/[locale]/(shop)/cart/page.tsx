@@ -4,13 +4,18 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/store/cartStore";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
+import { useTranslations } from "next-intl";
 import { formatPrice } from "@/lib/formatters";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
   const { cart, itemCount, removeItem, updateQuantity } = useCart();
   const { locale } = useLocaleContext();
+  const t = useTranslations("cart");
+  const tCommon = useTranslations("common");
+  const router = useRouter();
 
   const fontStyle = {
     fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -26,20 +31,20 @@ export default function CartPage() {
               className="uppercase tracking-wide mb-4"
               style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
             >
-              Your Cart is Empty
+              {t("empty")}
             </h1>
             <p
               className="text-gray-500 mb-8"
               style={{ ...fontStyle, fontSize: '12px' }}
             >
-              Add some products to get started
+              {t("empty_subtitle")}
             </p>
             <Link
-              href="/collections/all"
+              href={`/${locale}/collections/all`}
               className="bg-black text-white px-8 py-3 uppercase tracking-wide hover:bg-gray-800 transition-colors"
               style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
             >
-              Continue Shopping
+              {t("continue_shopping")}
             </Link>
           </div>
         </main>
@@ -57,7 +62,7 @@ export default function CartPage() {
             className="uppercase tracking-wide mb-8"
             style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
           >
-            Cart ({itemCount})
+            {t("title")} ({itemCount})
           </h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-16">
@@ -69,7 +74,7 @@ export default function CartPage() {
                     key={item.id}
                     className="py-6 flex gap-4 border-b border-gray-200"
                   >
-                    <Link href={`/products/${item.slug || item.productId}`} className="flex-shrink-0">
+                    <Link href={`/${locale}/products/${item.slug || item.productId}`} className="flex-shrink-0">
                       <div className="relative w-24 h-32 bg-[#F5F5F5]">
                         <Image
                           src={item.image}
@@ -82,7 +87,7 @@ export default function CartPage() {
 
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
-                        <Link href={`/products/${item.slug || item.productId}`}>
+                        <Link href={`/${locale}/products/${item.slug || item.productId}`}>
                           <h3
                             className="uppercase tracking-wide hover:opacity-60 transition-opacity"
                             style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
@@ -95,9 +100,9 @@ export default function CartPage() {
                             className="text-gray-500 mt-1"
                             style={{ ...fontStyle, fontSize: '11px' }}
                           >
-                            {item.size && <span>Size: {item.size}</span>}
+                            {item.size && <span>{t("size")}: {item.size}</span>}
                             {item.color && item.size && <span> / </span>}
-                            {item.color && <span>Color: {item.color}</span>}
+                            {item.color && <span>{t("color")}: {item.color}</span>}
                           </p>
                         )}
                         <p
@@ -137,7 +142,7 @@ export default function CartPage() {
                           className="uppercase tracking-wide hover:opacity-60 transition-opacity"
                           style={{ ...fontStyle, fontSize: '10px', fontWeight: 500 }}
                         >
-                          Remove
+                          {tCommon("remove")}
                         </button>
                       </div>
                     </div>
@@ -146,11 +151,11 @@ export default function CartPage() {
               </div>
 
               <Link
-                href="/collections/all"
+                href={`/${locale}/collections/all`}
                 className="inline-block mt-6 uppercase tracking-wide hover:opacity-60 transition-opacity"
                 style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
               >
-                ← Continue Shopping
+                ← {t("continue_shopping")}
               </Link>
             </div>
 
@@ -161,43 +166,44 @@ export default function CartPage() {
                   className="uppercase tracking-wide mb-6"
                   style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
                 >
-                  Summary
+                  {t("summary")}
                 </h2>
 
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between" style={{ ...fontStyle, fontSize: '11px' }}>
-                    <span>Subtotal</span>
+                    <span>{t("subtotal")}</span>
                     <span>{formatPrice(cart.subtotal, locale)}</span>
                   </div>
                   <div className="flex justify-between text-gray-500" style={{ ...fontStyle, fontSize: '11px' }}>
-                    <span>Shipping</span>
-                    <span>{cart.shipping === 0 ? 'Free' : formatPrice(cart.shipping, locale)}</span>
+                    <span>{t("shipping")}</span>
+                    <span>{cart.shipping === 0 ? t("free") : formatPrice(cart.shipping, locale)}</span>
                   </div>
                   <div className="flex justify-between text-gray-500" style={{ ...fontStyle, fontSize: '11px' }}>
-                    <span>Tax</span>
+                    <span>{t("tax")}</span>
                     <span>{formatPrice(cart.tax, locale)}</span>
                   </div>
                 </div>
 
                 <div className="border-t border-gray-300 pt-4 mb-6">
                   <div className="flex justify-between" style={{ ...fontStyle, fontSize: '12px', fontWeight: 500 }}>
-                    <span className="uppercase tracking-wide">Total</span>
+                    <span className="uppercase tracking-wide">{t("total")}</span>
                     <span>{formatPrice(cart.total, locale)}</span>
                   </div>
                 </div>
 
                 <button
+                  onClick={() => router.push(`/${locale}/checkout`)}
                   className="w-full bg-black text-white py-4 uppercase tracking-wide hover:bg-gray-800 transition-colors"
                   style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
                 >
-                  Checkout
+                  {t("checkout")}
                 </button>
 
                 <p
                   className="text-center text-gray-500 mt-4"
                   style={{ ...fontStyle, fontSize: '10px' }}
                 >
-                  Free shipping on orders over $1,500 MXN
+                  {t("free_shipping_note")}
                 </p>
               </div>
             </div>

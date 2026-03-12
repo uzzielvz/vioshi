@@ -4,8 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/store/cartStore";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { generateId } from "@/lib/utils";
+import { formatPrice } from "@/lib/formatters";
 
 interface ProductCardProps {
   id: string;
@@ -21,6 +23,7 @@ interface ProductCardProps {
 export default function ProductCard({ id, name, price, image, slug, soldOut, isNew, size }: ProductCardProps) {
   const { addItem, openCart } = useCart();
   const { locale } = useLocaleContext();
+  const t = useTranslations("product");
   const [isHovered, setIsHovered] = useState(false);
 
   const handleQuickAdd = (e: React.MouseEvent) => {
@@ -65,7 +68,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
               }}
             >
               <span className="bg-black text-white px-2 py-1 uppercase tracking-wide">
-                New
+                {t("new")}
               </span>
             </div>
           )}
@@ -80,7 +83,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
                   fontWeight: 500
                 }}
               >
-                Sold Out
+                {t("sold_out")}
               </span>
             </div>
           )}
@@ -95,7 +98,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
                 fontWeight: 500
               }}
             >
-              Quick Add
+              {t("quick_add")}
             </button>
           )}
         </div>
@@ -133,7 +136,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
             fontWeight: 400
           }}
         >
-          ${price.toLocaleString('en-US')}
+          {formatPrice(price, locale)}
         </p>
       </div>
     </div>

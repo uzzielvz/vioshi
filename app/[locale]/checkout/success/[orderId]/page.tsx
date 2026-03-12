@@ -3,28 +3,31 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/store/cartStore';
+import { useTranslations } from 'next-intl';
+import { useLocaleContext } from '@/hooks/useLocaleContext';
 
 interface OrderSuccessPageProps {
   params: {
+    locale: string;
     orderId: string;
   };
 }
 
 export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
   const { clearCart } = useCart();
+  const t = useTranslations('success');
+  const { locale } = useLocaleContext();
 
-  // Clear cart on success
   useEffect(() => {
     clearCart();
   }, [clearCart]);
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center h-16">
-            <Link href="/" className="font-logo text-2xl tracking-wider">
+            <Link href={`/${locale}`} className="font-logo text-2xl tracking-wider">
               VIOGI
             </Link>
           </div>
@@ -56,10 +59,10 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
             {/* Success Message */}
             <div className="space-y-2">
               <h1 className="text-3xl font-bold uppercase tracking-wider">
-                Order Confirmed
+                {t('confirmed')}
               </h1>
               <p className="text-gray-600">
-                Thank you for your purchase! We&apos;ve received your order.
+                {t('thank_you')}
               </p>
             </div>
 
@@ -67,7 +70,7 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-wider text-gray-500">
-                  Order Number
+                  {t('order_number')}
                 </p>
                 <p className="text-2xl font-bold tracking-wider">
                   #{params.orderId}
@@ -75,31 +78,23 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
               </div>
             </div>
 
-            {/* Order Details */}
+            {/* What's Next */}
             <div className="border-t border-gray-200 pt-8 space-y-4 text-left">
               <h2 className="text-sm uppercase tracking-wider font-medium">
-                What&apos;s Next?
+                {t('whats_next')}
               </h2>
               <ul className="space-y-3 text-sm text-gray-600">
                 <li className="flex items-start">
                   <span className="font-bold mr-2">1.</span>
-                  <span>
-                    You&apos;ll receive a confirmation email with your order details
-                    shortly.
-                  </span>
+                  <span>{t('step_1')}</span>
                 </li>
                 <li className="flex items-start">
                   <span className="font-bold mr-2">2.</span>
-                  <span>
-                    We&apos;ll send you another email with tracking information once
-                    your order ships.
-                  </span>
+                  <span>{t('step_2')}</span>
                 </li>
                 <li className="flex items-start">
                   <span className="font-bold mr-2">3.</span>
-                  <span>
-                    You can track your order status anytime in your account.
-                  </span>
+                  <span>{t('step_3')}</span>
                 </li>
               </ul>
             </div>
@@ -107,28 +102,28 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
             {/* Actions */}
             <div className="pt-8 space-y-4">
               <Link
-                href="/account/orders"
+                href={`/${locale}/account/orders`}
                 className="block w-full bg-black text-white py-4 rounded uppercase tracking-wider font-medium hover:bg-gray-800 transition-colors text-center"
               >
-                View Order Details
+                {t('view_order')}
               </Link>
               <Link
-                href="/collections/all"
+                href={`/${locale}/collections/all`}
                 className="block w-full border-2 border-black text-black py-4 rounded uppercase tracking-wider font-medium hover:bg-black hover:text-white transition-colors text-center"
               >
-                Continue Shopping
+                {t('continue_shopping')}
               </Link>
             </div>
 
             {/* Support */}
             <div className="pt-8 border-t border-gray-200">
               <p className="text-sm text-gray-600">
-                Need help?{' '}
+                {t('need_help')}{' '}
                 <Link
-                  href="/pages/customer-support"
+                  href={`/${locale}/pages/customer-support`}
                   className="underline font-medium text-black"
                 >
-                  Contact our support team
+                  {t('contact_support')}
                 </Link>
               </p>
             </div>
