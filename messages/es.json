@@ -174,6 +174,32 @@
     "need_help": "¿Necesitas ayuda?",
     "contact_support": "Contacta a nuestro equipo de soporte"
   },
+  "wishlist": {
+    "title": "Wishlist",
+    "loading": "Cargando...",
+    "clear": "Vaciar Wishlist",
+    "empty_title": "Tu Wishlist Está Vacía",
+    "empty_subtitle": "Guarda tus productos favoritos para comprarlos más tarde",
+    "explore": "Explorar Productos",
+    "add_to_bag": "Añadir a Bolsa",
+    "continue_shopping": "Seguir Comprando",
+    "count": "{count} Producto(s)",
+    "confirm_clear": "¿Estás seguro de que quieres vaciar tu wishlist?"
+  },
+  "archive": {
+    "title": "ARCHIVO",
+    "coming_soon": "Próximamente más contenido del archivo. Sigue nuestro",
+    "coming_soon_end": "para actualizaciones.",
+    "back": "Volver al Archivo",
+    "not_found_title": "Colección No Encontrada",
+    "not_found_desc": "La colección que buscas no existe o ha sido archivada.",
+    "products_count": "{count} Productos",
+    "sort_by": "Ordenar por",
+    "sort_newest": "Más reciente",
+    "sort_price_asc": "Precio: Menor a Mayor",
+    "sort_price_desc": "Precio: Mayor a Menor",
+    "archive_note": "Esta es una colección de archivo. Los productos mostrados pueden no estar disponibles o tener stock limitado."
+  },
   "pages": {
     "home": {
       "title": "VIOGI - Streetwear Premium",
