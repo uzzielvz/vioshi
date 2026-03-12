@@ -59,6 +59,9 @@ export const SORT_OPTIONS = [
   { value: "popular", label: "Most Popular" },
 ] as const;
 
+// Payment
+export const PAYPAL_ME_LINK = 'https://paypal.me/viogi';
+
 // Local storage keys
 export const STORAGE_KEYS = {
   CART: "viogi_cart",
