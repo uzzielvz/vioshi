@@ -56,14 +56,6 @@ jobs:
           echo "## TypeScript Results" >> $GITHUB_STEP_SUMMARY
           npx tsc --noEmit 2>&1 | tee typecheck-results.txt || true
 
-      - name: AI Code Review with Claude
-        if: steps.changed-files.outputs.any_changed == 'true'
-        uses: anthropics/anthropic-quickstarts@main
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
 
       - name: Comment PR with review summary
         if: steps.changed-files.outputs.any_changed == 'true'
