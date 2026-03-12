@@ -18,8 +18,8 @@ export const FREE_SHIPPING_THRESHOLD = 100;
 export const CURRENCY = "USD";
 export const CURRENCY_SYMBOL = "$";
 
-// Tax rate (example: 10%)
-export const TAX_RATE = 0.1;
+// Tax rate — IVA México: 16%
+export const TAX_RATE = 0.16;
 
 // Shipping
 export const STANDARD_SHIPPING_COST = 10;
