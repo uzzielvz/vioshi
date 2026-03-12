@@ -9,7 +9,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/store/cartStore';
 import { PICKUP_POINTS, getPickupPointById } from '@/lib/pickupPoints';
-import { DELIVERY_METHODS, EXPRESS_SHIPPING_COST, STANDARD_SHIPPING_COST } from '@/lib/constants';
+import {
+  DELIVERY_METHODS,
+  EXPRESS_SHIPPING_COST,
+  STANDARD_SHIPPING_COST,
+  PAYPAL_ME_LINK,
+} from '@/lib/constants';
+import { lookupCP, type MexicoCPData } from '@/lib/mexico';
 
 interface CheckoutFormData {
   email: string;
@@ -20,7 +26,8 @@ interface CheckoutFormData {
   lastName: string;
   address: string;
   apartment: string;
-  city: string;
+  colonia: string;
+  municipio: string;
   state: string;
   zipCode: string;
   phone: string;
@@ -54,6 +61,12 @@ export default function CheckoutPage() {
   const [showShippingMethods, setShowShippingMethods] = useState(false);
   const [showOrderSummary, setShowOrderSummary] = useState(false);
 
+  // CP lookup state
+  const [cpData, setCpData] = useState<MexicoCPData | null>(null);
+  const [cpLoading, setCpLoading] = useState(false);
+  const [cpError, setCpError] = useState(false);
+  const [paypalCopied, setPaypalCopied] = useState(false);
+
   const [formData, setFormData] = useState<CheckoutFormData>({
     email: '',
     emailNews: true,
@@ -63,7 +76,8 @@ export default function CheckoutPage() {
     lastName: '',
     address: '',
     apartment: '',
-    city: '',
+    colonia: '',
+    municipio: '',
     state: '',
     zipCode: '',
     phone: '',
@@ -82,7 +96,6 @@ export default function CheckoutPage() {
     nameOnCard: '',
   });
 
-  // Get selected pickup point
   const selectedPickupPoint = useMemo(() => {
     if (formData.pickupPointId) {
       return getPickupPointById(formData.pickupPointId);
@@ -90,19 +103,46 @@ export default function CheckoutPage() {
     return undefined;
   }, [formData.pickupPointId]);
 
-  // Tracks whether a submit is in flight — prevents the empty-cart redirect
-  // from firing while the order is being processed and the cart is cleared
   const isSubmittingRef = useRef(false);
 
-  // Redirect if cart is empty, but not while an order submit is in progress
   useEffect(() => {
     if (cart.length === 0 && !isSubmittingRef.current) {
       router.push(`/${locale}/cart`);
     }
   }, [cart, router, locale]);
 
-  // Derive shipping cost from form state — useMemo avoids calling updateShippingCost
-  // on every render; the useEffect only fires when the derived value actually changes
+  // CP → colonia/municipio/estado lookup via SEPOMEX.
+  // Only re-runs when zipCode changes — other formData fields are intentionally excluded
+  // to avoid an infinite loop (the effect itself writes state/municipio/colonia).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (formData.zipCode.length !== 5) {
+      setCpData(null);
+      setCpError(false);
+      setFormData(prev => ({ ...prev, state: '', municipio: '', colonia: '' }));
+      return;
+    }
+
+    setCpLoading(true);
+    setCpError(false);
+
+    lookupCP(formData.zipCode).then((data) => {
+      setCpLoading(false);
+      if (data) {
+        setCpData(data);
+        setFormData(prev => ({
+          ...prev,
+          state: data.estado,
+          municipio: data.municipio,
+          colonia: data.colonias.length === 1 ? data.colonias[0] : '',
+        }));
+      } else {
+        setCpError(true);
+        setCpData(null);
+      }
+    });
+  }, [formData.zipCode]);
+
   const shippingCost = useMemo(() => {
     if (formData.deliveryMethod === 'home') {
       return formData.shippingMethod === 'express' ? EXPRESS_SHIPPING_COST : STANDARD_SHIPPING_COST;
@@ -113,8 +153,6 @@ export default function CheckoutPage() {
     return 0;
   }, [formData.deliveryMethod, formData.shippingMethod, formData.pickupPointId]);
 
-  // updateShippingCost is stable (useCallback in cartStore), so this effect only
-  // re-runs when shippingCost changes — no infinite loop
   useEffect(() => {
     updateShippingCost(shippingCost);
   }, [shippingCost, updateShippingCost]);
@@ -132,10 +170,9 @@ export default function CheckoutPage() {
 
     setFormData(updatedFormData);
 
-    // Show shipping methods based on delivery method
     if (
       name === 'address' ||
-      name === 'city' ||
+      name === 'colonia' ||
       name === 'state' ||
       name === 'zipCode' ||
       name === 'deliveryMethod' ||
@@ -143,19 +180,22 @@ export default function CheckoutPage() {
     ) {
       const shouldShow =
         updatedFormData.deliveryMethod === 'home'
-          ? !!(updatedFormData.address && updatedFormData.city && updatedFormData.state && updatedFormData.zipCode)
+          ? !!(updatedFormData.address && updatedFormData.colonia && updatedFormData.state && updatedFormData.zipCode)
           : !!updatedFormData.pickupPointId;
 
       setShowShippingMethods(shouldShow);
     }
   };
 
-  const handleExpressCheckout = (method: string) => {
-    // TODO: Implement express checkout integration
-  };
-
   const handleApplyDiscount = () => {
     // TODO: Implement discount code validation
+  };
+
+  const handleCopyPaypal = () => {
+    navigator.clipboard.writeText(PAYPAL_ME_LINK).then(() => {
+      setPaypalCopied(true);
+      setTimeout(() => setPaypalCopied(false), 2000);
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -166,9 +206,8 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Validate based on delivery method
     if (formData.deliveryMethod === 'home') {
-      if (!formData.address || !formData.city || !formData.state || !formData.zipCode) {
+      if (!formData.address || !formData.colonia || !formData.state || !formData.zipCode) {
         alert(t('alert_address'));
         return;
       }
@@ -184,11 +223,7 @@ export default function CheckoutPage() {
 
     try {
       // TODO: Send order to backend
-
-      // Simulate processing
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Redirect to success page (to be created)
       router.push(`/${locale}/checkout/success/ORDER123`);
     } catch (error) {
       isSubmittingRef.current = false;
@@ -200,7 +235,7 @@ export default function CheckoutPage() {
   };
 
   if (cart.length === 0) {
-    return null; // Will redirect
+    return null;
   }
 
   return (
@@ -215,7 +250,6 @@ export default function CheckoutPage() {
                 e.preventDefault();
                 e.stopPropagation();
                 closeCart();
-                // Usar window.location para navegación más confiable
                 window.location.href = `/${locale}`;
               }}
               className="text-lg font-bold text-black hover:opacity-60 transition-opacity duration-200 cursor-pointer"
@@ -248,41 +282,6 @@ export default function CheckoutPage() {
             {/* Left Column - Checkout Form */}
             <div className="order-2 lg:order-1 px-4 sm:px-6 lg:px-0 mt-8 lg:mt-0 pb-8 lg:pb-0">
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Express Checkout */}
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-gray-500 mb-3 text-center">
-                    {t('express_checkout')}
-                  </p>
-                  <div className="grid grid-cols-3 gap-2.5 mb-3">
-                    <button
-                      type="button"
-                      onClick={() => handleExpressCheckout('shop')}
-                      className="bg-[#5A31F4] text-white py-2.5 hover:opacity-90 transition-opacity font-medium text-xs"
-                    >
-                      Shop
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleExpressCheckout('paypal')}
-                      className="bg-[#FFC439] text-[#003087] py-2.5 hover:opacity-90 transition-opacity font-medium text-xs"
-                    >
-                      PayPal
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleExpressCheckout('gpay')}
-                      className="bg-black text-white py-2.5 hover:opacity-90 transition-opacity font-medium text-xs"
-                    >
-                      G Pay
-                    </button>
-                  </div>
-                  <div className="relative text-center text-[10px] text-gray-500 uppercase tracking-wide">
-                    <span className="bg-white px-3 relative z-10">{t('or', { ns: 'common' })}</span>
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300"></div>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Contact */}
                 <div>
@@ -326,10 +325,8 @@ export default function CheckoutPage() {
                     {t('delivery')}
                   </h2>
 
-                  {/* Delivery Method Selection */}
                   <div className="mb-4">
                     <div className="space-y-2.5">
-                      {/* Radio button: Envío a Domicilio */}
                       <label className={`flex items-center justify-between p-3 border-2 cursor-pointer transition-colors ${
                         formData.deliveryMethod === 'home'
                           ? 'border-black'
@@ -351,7 +348,6 @@ export default function CheckoutPage() {
                         </div>
                       </label>
 
-                      {/* Radio button: Recoger en Punto */}
                       <label className={`flex items-center justify-between p-3 border-2 cursor-pointer transition-colors ${
                         formData.deliveryMethod === 'pickup'
                           ? 'border-black'
@@ -382,116 +378,22 @@ export default function CheckoutPage() {
                           <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">
                             {t('country_region')}
                           </label>
-                      <select
-                        name="country"
-                        value={formData.country}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black text-sm appearance-none bg-white"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'right 1rem center',
-                        }}
-                      >
-                        <option value="MX">Mexico</option>
-                        <option value="US">United States</option>
-                      </select>
-                    </div>
+                          <select
+                            name="country"
+                            value={formData.country}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black text-sm appearance-none bg-white"
+                            style={{
+                              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                              backgroundRepeat: 'no-repeat',
+                              backgroundPosition: 'right 1rem center',
+                            }}
+                          >
+                            <option value="MX">México</option>
+                            <option value="US">United States</option>
+                          </select>
+                        </div>
 
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <input
-                        type="text"
-                        name="firstName"
-                        placeholder={t('first_name')}
-                        required
-                        value={formData.firstName}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
-                      />
-                      <input
-                        type="text"
-                        name="lastName"
-                        placeholder={t('last_name')}
-                        required
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
-                      />
-                    </div>
-
-                    <input
-                      type="text"
-                      name="address"
-                      placeholder={t('address')}
-                      required
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
-                    />
-
-                    <input
-                      type="text"
-                      name="apartment"
-                      placeholder={t('apartment')}
-                      value={formData.apartment}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
-                    />
-
-                    <div className="grid grid-cols-[1fr_auto_1fr] gap-2.5">
-                      <input
-                        type="text"
-                        name="city"
-                        placeholder={t('city')}
-                        required
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
-                      />
-                      <select
-                        name="state"
-                        value={formData.state}
-                        onChange={handleInputChange}
-                        required
-                        className="w-32 px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black text-sm appearance-none bg-white"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'right 1rem center',
-                        }}
-                      >
-                        <option value="">{t('state')}</option>
-                        <option value="CDMX">CDMX</option>
-                        <option value="Jalisco">Jalisco</option>
-                        <option value="Nuevo León">Nuevo León</option>
-                        {/* Add more states */}
-                      </select>
-                      <input
-                        type="text"
-                        name="zipCode"
-                        placeholder={t('zip_code')}
-                        required
-                        value={formData.zipCode}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
-                      />
-                    </div>
-
-                        <input
-                          type="tel"
-                          name="phone"
-                          placeholder={t('phone')}
-                          required
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
-                        />
-                      </>
-                    )}
-
-                    {formData.deliveryMethod === 'pickup' && (
-                      <>
-                        {/* First Name + Last Name */}
                         <div className="grid grid-cols-2 gap-2.5">
                           <input
                             type="text"
@@ -513,7 +415,163 @@ export default function CheckoutPage() {
                           />
                         </div>
 
-                        {/* Phone */}
+                        <input
+                          type="text"
+                          name="address"
+                          placeholder={t('address')}
+                          required
+                          value={formData.address}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                        />
+
+                        <input
+                          type="text"
+                          name="apartment"
+                          placeholder={t('apartment')}
+                          value={formData.apartment}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                        />
+
+                        {/* CP — dispara lookup SEPOMEX al llegar a 5 dígitos */}
+                        <div className="relative">
+                          <input
+                            type="text"
+                            name="zipCode"
+                            placeholder={t('zip_code')}
+                            required
+                            maxLength={5}
+                            value={formData.zipCode}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                          />
+                          {cpLoading && (
+                            <span className="absolute right-3 top-3 w-3.5 h-3.5 border border-black border-t-transparent rounded-full animate-spin" />
+                          )}
+                        </div>
+
+                        {/* Colonia — dropdown cuando hay datos SEPOMEX */}
+                        {cpData && (
+                          <select
+                            name="colonia"
+                            value={formData.colonia}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black text-sm appearance-none bg-white"
+                            style={{
+                              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                              backgroundRepeat: 'no-repeat',
+                              backgroundPosition: 'right 1rem center',
+                            }}
+                          >
+                            <option value="">{t('select_colonia')}</option>
+                            {cpData.colonias.map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                        )}
+
+                        {/* Fallback colonia — texto libre si CP no encontrado */}
+                        {cpError && (
+                          <input
+                            type="text"
+                            name="colonia"
+                            placeholder={t('colonia')}
+                            required
+                            value={formData.colonia}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                          />
+                        )}
+
+                        {/* Municipio + Estado — readonly, auto-llenados desde CP */}
+                        {cpData && (
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <div>
+                              <label className="block text-[10px] uppercase tracking-wide text-gray-400 mb-1">
+                                {t('municipality')}
+                              </label>
+                              <input
+                                type="text"
+                                value={formData.municipio}
+                                readOnly
+                                tabIndex={-1}
+                                className="w-full px-3 py-2.5 border border-gray-200 bg-gray-50 text-gray-500 text-sm cursor-not-allowed select-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] uppercase tracking-wide text-gray-400 mb-1">
+                                {t('state')}
+                              </label>
+                              <input
+                                type="text"
+                                value={formData.state}
+                                readOnly
+                                tabIndex={-1}
+                                className="w-full px-3 py-2.5 border border-gray-200 bg-gray-50 text-gray-500 text-sm cursor-not-allowed select-none"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Fallback municipio + estado — texto libre si CP no encontrado */}
+                        {cpError && (
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <input
+                              type="text"
+                              name="municipio"
+                              placeholder={t('municipality')}
+                              value={formData.municipio}
+                              onChange={handleInputChange}
+                              className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                            />
+                            <input
+                              type="text"
+                              name="state"
+                              placeholder={t('state')}
+                              value={formData.state}
+                              onChange={handleInputChange}
+                              className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                            />
+                          </div>
+                        )}
+
+                        <input
+                          type="tel"
+                          name="phone"
+                          placeholder={t('phone')}
+                          required
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                        />
+                      </>
+                    )}
+
+                    {formData.deliveryMethod === 'pickup' && (
+                      <>
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <input
+                            type="text"
+                            name="firstName"
+                            placeholder={t('first_name')}
+                            required
+                            value={formData.firstName}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                          />
+                          <input
+                            type="text"
+                            name="lastName"
+                            placeholder={t('last_name')}
+                            required
+                            value={formData.lastName}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                          />
+                        </div>
+
                         <input
                           type="tel"
                           name="phone"
@@ -524,7 +582,6 @@ export default function CheckoutPage() {
                           className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
                         />
 
-                        {/* Selector de Punto de Recogida */}
                         <div>
                           <label className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">
                             {t('select_pickup_point_label')}
@@ -546,7 +603,7 @@ export default function CheckoutPage() {
                               {PICKUP_POINTS.filter(p => p.type === 'flagship' || p.type === 'retail')
                                 .map(point => (
                                   <option key={point.id} value={point.id}>
-                                    {point.name} {point.additionalCost > 0 && `(+$${point.additionalCost})`}
+                                    {point.name} {point.additionalCost > 0 && `(+${formatPrice(point.additionalCost, locale)})`}
                                   </option>
                                 ))}
                             </optgroup>
@@ -554,13 +611,12 @@ export default function CheckoutPage() {
                               {PICKUP_POINTS.filter(p => p.type === 'partner')
                                 .map(point => (
                                   <option key={point.id} value={point.id}>
-                                    {point.name} {point.additionalCost > 0 && `(+$${point.additionalCost})`}
+                                    {point.name} {point.additionalCost > 0 && `(+${formatPrice(point.additionalCost, locale)})`}
                                   </option>
                                 ))}
                             </optgroup>
                           </select>
 
-                          {/* Info Box: Detalles del punto seleccionado */}
                           {formData.pickupPointId && selectedPickupPoint && (
                             <div className="mt-2.5 p-3 bg-gray-50 border border-gray-200">
                               <p className="text-xs font-medium mb-1">{selectedPickupPoint.name}</p>
@@ -569,19 +625,18 @@ export default function CheckoutPage() {
                                 {selectedPickupPoint.city}, {selectedPickupPoint.state}
                               </p>
                               <div className="flex items-center gap-3 text-[10px] text-gray-500">
-                                <span>📍 {selectedPickupPoint.estimatedDays}</span>
-                                <span>🕐 {selectedPickupPoint.availableHours}</span>
+                                <span>{selectedPickupPoint.estimatedDays}</span>
+                                <span>{selectedPickupPoint.availableHours}</span>
                               </div>
                               {selectedPickupPoint.additionalCost > 0 && (
                                 <p className="text-[10px] font-medium mt-1.5">
-                                  {t('cost')} ${selectedPickupPoint.additionalCost.toFixed(2)}
+                                  {t('cost')} {formatPrice(selectedPickupPoint.additionalCost, locale)}
                                 </p>
                               )}
                             </div>
                           )}
                         </div>
 
-                        {/* Fecha y Horario Preferido (opcional) */}
                         {formData.pickupPointId && (
                           <div className="grid grid-cols-2 gap-2.5">
                             <div>
@@ -636,7 +691,9 @@ export default function CheckoutPage() {
                     </p>
                   ) : (
                     <div className="space-y-2.5">
-                      <label className="flex items-center justify-between p-3 border-2 border-black cursor-pointer">
+                      <label className={`flex items-center justify-between p-3 border-2 cursor-pointer transition-colors ${
+                        formData.shippingMethod === 'standard' ? 'border-black' : 'border-gray-300 hover:border-black'
+                      }`}>
                         <div className="flex items-center">
                           <input
                             type="radio"
@@ -650,9 +707,11 @@ export default function CheckoutPage() {
                             {t('shipping_standard')}
                           </span>
                         </div>
-                        <span className="text-xs font-medium">$10.00</span>
+                        <span className="text-xs font-medium">{formatPrice(STANDARD_SHIPPING_COST, locale)}</span>
                       </label>
-                      <label className="flex items-center justify-between p-3 border border-gray-300 cursor-pointer hover:border-black transition-colors">
+                      <label className={`flex items-center justify-between p-3 border-2 cursor-pointer transition-colors ${
+                        formData.shippingMethod === 'express' ? 'border-black' : 'border-gray-300 hover:border-black'
+                      }`}>
                         <div className="flex items-center">
                           <input
                             type="radio"
@@ -666,7 +725,7 @@ export default function CheckoutPage() {
                             {t('shipping_express')}
                           </span>
                         </div>
-                        <span className="text-xs font-medium">$25.00</span>
+                        <span className="text-xs font-medium">{formatPrice(EXPRESS_SHIPPING_COST, locale)}</span>
                       </label>
                     </div>
                   )}
@@ -677,83 +736,128 @@ export default function CheckoutPage() {
                   <h2 className="text-xs uppercase tracking-wide font-bold mb-3">
                     {t('payment')}
                   </h2>
-                  <div className="space-y-2.5">
-                    <input
-                      type="text"
-                      name="cardNumber"
-                      placeholder={t('card_number')}
-                      required={formData.paymentMethod === 'card'}
-                      value={formData.cardNumber}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
-                    />
 
-                    <div className="grid grid-cols-2 gap-2.5">
+                  {/* Payment method selector */}
+                  <div className="space-y-2.5 mb-4">
+                    <label className={`flex items-center p-3 border-2 cursor-pointer transition-colors ${
+                      formData.paymentMethod === 'card' ? 'border-black' : 'border-gray-300 hover:border-black'
+                    }`}>
                       <input
-                        type="text"
-                        name="expirationDate"
-                        placeholder={t('expiration_date')}
-                        required={formData.paymentMethod === 'card'}
-                        value={formData.expirationDate}
+                        type="radio"
+                        name="paymentMethod"
+                        value="card"
+                        checked={formData.paymentMethod === 'card'}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                        className="w-4 h-4"
                       />
-                      <input
-                        type="text"
-                        name="securityCode"
-                        placeholder={t('security_code')}
-                        required={formData.paymentMethod === 'card'}
-                        value={formData.securityCode}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
-                      />
-                    </div>
-
-                    <input
-                      type="text"
-                      name="nameOnCard"
-                      placeholder={t('name_on_card')}
-                      required={formData.paymentMethod === 'card'}
-                      value={formData.nameOnCard}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
-                    />
-
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="useShippingAsBilling"
-                        checked={formData.useShippingAsBilling}
-                        onChange={handleInputChange}
-                        className="w-4 h-4 border-2 border-gray-300 rounded-sm checked:bg-black checked:border-black focus:ring-0 focus:ring-offset-0"
-                      />
-                      <span className="ml-2.5 text-xs">
-                        {t('use_shipping_as_billing')}
+                      <span className="ml-2.5 text-xs font-medium uppercase tracking-wide">
+                        {t('payment_card')}
                       </span>
                     </label>
+                    <label className={`flex items-center p-3 border-2 cursor-pointer transition-colors ${
+                      formData.paymentMethod === 'paypal' ? 'border-black' : 'border-gray-300 hover:border-black'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="paypal"
+                        checked={formData.paymentMethod === 'paypal'}
+                        onChange={handleInputChange}
+                        className="w-4 h-4"
+                      />
+                      <span className="ml-2.5 text-xs font-medium uppercase tracking-wide">
+                        PayPal
+                      </span>
+                    </label>
+                  </div>
 
-                    {/* PayPal Option */}
-                    <div className="pt-2">
-                      <label className="flex items-center justify-between p-3 border border-gray-300 cursor-pointer hover:border-black transition-colors">
-                        <div className="flex items-center">
-                          <input
-                            type="radio"
-                            name="paymentMethod"
-                            value="paypal"
-                            checked={formData.paymentMethod === 'paypal'}
-                            onChange={handleInputChange}
-                            className="w-4 h-4"
-                          />
-                          <span className="ml-2.5 text-xs font-medium">
-                            PayPal
-                          </span>
-                        </div>
-                        <span className="text-lg font-bold text-[#003087]">
-                          PayPal
+                  {/* Card fields */}
+                  {formData.paymentMethod === 'card' && (
+                    <div className="space-y-2.5">
+                      <input
+                        type="text"
+                        name="cardNumber"
+                        placeholder={t('card_number')}
+                        required
+                        value={formData.cardNumber}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                      />
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <input
+                          type="text"
+                          name="expirationDate"
+                          placeholder={t('expiration_date')}
+                          required
+                          value={formData.expirationDate}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                        />
+                        <input
+                          type="text"
+                          name="securityCode"
+                          placeholder={t('security_code')}
+                          required
+                          value={formData.securityCode}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        name="nameOnCard"
+                        placeholder={t('name_on_card')}
+                        required
+                        value={formData.nameOnCard}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2.5 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black placeholder:text-gray-400 placeholder:text-[11px] placeholder:tracking-wide text-sm"
+                      />
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          name="useShippingAsBilling"
+                          checked={formData.useShippingAsBilling}
+                          onChange={handleInputChange}
+                          className="w-4 h-4 border-2 border-gray-300 rounded-sm checked:bg-black checked:border-black focus:ring-0 focus:ring-offset-0"
+                        />
+                        <span className="ml-2.5 text-xs">
+                          {t('use_shipping_as_billing')}
                         </span>
                       </label>
                     </div>
-                  </div>
+                  )}
+
+                  {/* PayPal — link de transferencia manual */}
+                  {formData.paymentMethod === 'paypal' && (
+                    <div className="border border-gray-200 p-4 bg-gray-50 space-y-3">
+                      <p className="text-[11px] text-gray-600 uppercase tracking-wide">
+                        {t('paypal_instructions')}
+                      </p>
+                      <div className="flex items-center justify-between gap-3">
+                        <a
+                          href={PAYPAL_ME_LINK}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-black underline hover:no-underline"
+                        >
+                          {PAYPAL_ME_LINK.replace('https://', '')}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={handleCopyPaypal}
+                          className="text-[10px] uppercase tracking-wide border border-gray-300 px-3 py-1.5 hover:bg-black hover:text-white hover:border-black transition-colors whitespace-nowrap"
+                        >
+                          {paypalCopied ? t('paypal_copied') : t('paypal_copy')}
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-gray-500">
+                        {t('paypal_concept_note')}
+                      </p>
+                      <p className="text-[10px] text-gray-500">
+                        {t('paypal_pending_note')}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Save Information */}
@@ -762,7 +866,7 @@ export default function CheckoutPage() {
                     {t('save_info_title')}
                   </h3>
                   <div className="flex items-center">
-                    <span className="text-xs text-gray-500 mr-2">+1</span>
+                    <span className="text-xs text-gray-500 mr-2">+52</span>
                     <input
                       type="tel"
                       name="mobilePhone"
@@ -798,17 +902,11 @@ export default function CheckoutPage() {
                     />
                     <span className="ml-2.5 text-xs">
                       {t('terms_confirmation')}{' '}
-                      <Link
-                        href={`/${locale}/pages/legal`}
-                        className="underline font-medium"
-                      >
+                      <Link href={`/${locale}/pages/legal`} className="underline font-medium">
                         {t('terms_and_conditions')}
                       </Link>{' '}
                       {t('and')}{' '}
-                      <Link
-                        href={`/${locale}/pages/legal`}
-                        className="underline font-medium"
-                      >
+                      <Link href={`/${locale}/pages/legal`} className="underline font-medium">
                         {t('privacy_policy')}
                       </Link>
                       .
@@ -829,7 +927,7 @@ export default function CheckoutPage() {
 
             {/* Right Column - Order Summary */}
             <div className="order-1 lg:order-2 lg:sticky lg:top-24 lg:h-fit lg:px-0">
-              {/* Toggle button - solo móvil */}
+              {/* Toggle button — solo móvil */}
               <button
                 onClick={() => setShowOrderSummary(!showOrderSummary)}
                 className="lg:hidden w-full flex items-center justify-between px-6 py-3 bg-gray-50 border-b border-gray-200"
@@ -846,23 +944,22 @@ export default function CheckoutPage() {
                     <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
                   </svg>
                 </div>
-                <span className="text-2xl font-bold text-black">${total.toFixed(2)}</span>
+                <span className="text-2xl font-bold text-black">{formatPrice(total, locale)}</span>
               </button>
 
-              {/* Contenido completo - oculto en móvil cuando colapsado */}
               <div className={`${showOrderSummary ? 'block' : 'hidden'} lg:block space-y-6 px-6 py-4 lg:p-0`}>
                 {/* Cart Items */}
                 <div className="space-y-3">
                   {cart.map((item) => (
                     <div key={item.id} className="flex gap-3">
-                      <div className="relative w-16 h-16 flex-shrink-0 bg-white border border-gray-200 rounded overflow-hidden">
+                      <div className="relative w-16 h-16 flex-shrink-0 bg-white border border-gray-200 overflow-hidden">
                         <Image
                           src={item.image}
                           alt={item.productName}
                           fill
                           className="object-contain"
                         />
-                        <div className="absolute top-1 right-1 min-w-[20px] h-5 px-1.5 bg-black text-white rounded flex items-center justify-center text-[10px] font-bold">
+                        <div className="absolute top-1 right-1 min-w-[20px] h-5 px-1.5 bg-black text-white flex items-center justify-center text-[10px] font-bold">
                           {item.quantity}
                         </div>
                       </div>
@@ -876,7 +973,7 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                       <div className="text-xs font-medium">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {formatPrice(item.price * item.quantity, locale)}
                       </div>
                     </div>
                   ))}
@@ -900,13 +997,13 @@ export default function CheckoutPage() {
                   </button>
                 </div>
 
-                {/* Order Summary */}
+                {/* Order Totals */}
                 <div className="space-y-2 pt-4 border-t border-gray-200">
                   <div className="flex justify-between items-center">
                     <span className="uppercase tracking-wide text-[11px] font-medium text-gray-600">
                       {t('subtotal')}
                     </span>
-                    <span className="text-xs font-medium">${subtotal.toFixed(2)}</span>
+                    <span className="text-xs font-medium">{formatPrice(subtotal, locale)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-1">
@@ -919,11 +1016,11 @@ export default function CheckoutPage() {
                     </div>
                     <span className="text-[10px] text-gray-400 uppercase tracking-wide">
                       {formData.deliveryMethod === 'home' ? (
-                        showShippingMethods ? `$${shipping.toFixed(2)}` : t('complete_address')
+                        showShippingMethods ? formatPrice(shipping, locale) : t('complete_address')
                       ) : (
                         formData.pickupPointId && selectedPickupPoint
                           ? selectedPickupPoint.additionalCost > 0
-                            ? `$${selectedPickupPoint.additionalCost.toFixed(2)}`
+                            ? formatPrice(selectedPickupPoint.additionalCost, locale)
                             : t('free')
                           : t('select_point')
                       )}
@@ -931,12 +1028,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                     <span className="uppercase tracking-wide text-sm font-bold">{t('total')}</span>
-                    <div className="text-right flex items-baseline gap-1">
-                      <span className="text-[10px] text-gray-500 uppercase tracking-wide">
-                        {currency}
-                      </span>
-                      <span className="text-2xl font-bold">${total.toFixed(2)}</span>
-                    </div>
+                    <span className="text-2xl font-bold">{formatPrice(total, locale)}</span>
                   </div>
                 </div>
               </div>
@@ -999,4 +1091,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
