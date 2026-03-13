@@ -381,6 +381,8 @@
     "register_terms": "Al crear una cuenta, aceptas nuestros",
     "already_account": "¿Ya tienes una cuenta?",
     "sign_in": "Inicia Sesión",
+    "sign_in_or_create": "Inicia sesión o crea una cuenta",
+    "continue": "Continuar",
     "passwords_mismatch": "Las contraseñas no coinciden",
     "error_register": "Error al crear la cuenta. Intenta de nuevo.",
     "or": "O",

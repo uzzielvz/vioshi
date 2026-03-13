@@ -33,8 +33,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Header />
-      <main className="pt-16">{children}</main>
+      {!isAccount && <Header />}
+      <main className={!isAccount ? 'pt-16' : ''}>{children}</main>
       {!isCheckout && !isAccount && <Footer />}
       <CartDrawer />
     </>
