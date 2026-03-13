@@ -4,6 +4,15 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 
+const FONT: React.CSSProperties = {
+  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+};
+
+const LOGO: React.CSSProperties = {
+  ...FONT,
+  textShadow: '0 0 0.5px rgba(0,0,0,0.8)',
+};
+
 function GoogleLogo() {
   return (
     <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" aria-hidden>
@@ -21,36 +30,21 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div
-        className="bg-gray-50 w-full max-w-sm px-8 py-10"
-        style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }}
-      >
+      <div className="bg-gray-50 w-full max-w-sm px-8 py-10" style={FONT}>
 
-        {/* Logo — idéntico al header */}
-        <div className="text-center mb-6">
-          <span
-            className="text-lg font-bold text-black"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
-            }}
-          >
-            VIOGI
-          </span>
+        {/* Logo */}
+        <div className="text-center mb-7">
+          <span className="text-lg font-bold" style={LOGO}>VIOGI</span>
         </div>
 
         {/* Titles */}
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-0.5">
-          {t('sign_in')}
-        </p>
-        <p className="text-[9px] uppercase tracking-[0.15em] text-gray-400 mb-5">
-          {t('sign_in_or_create')}
-        </p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide mb-0.5">{t('sign_in')}</p>
+        <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-5">{t('sign_in_or_create')}</p>
 
         {/* Continue with Google */}
         <button
           type="button"
-          className="w-full border border-gray-300 py-2.5 text-[9px] uppercase tracking-[0.2em] hover:border-black transition-colors flex items-center justify-center gap-2 mb-4"
+          className="w-full border border-gray-300 py-2.5 text-[11px] uppercase tracking-wide hover:border-black transition-colors flex items-center justify-center gap-2 mb-4"
         >
           <GoogleLogo />
           {t('login_with_google')}
@@ -62,7 +56,7 @@ export default function AccountPage() {
             <div className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center">
-            <span className="px-3 bg-gray-50 text-[8px] text-gray-300 uppercase tracking-[0.3em]">
+            <span className="px-3 bg-gray-50 text-[10px] text-gray-300 uppercase tracking-wide">
               {t('or')}
             </span>
           </div>
@@ -71,40 +65,40 @@ export default function AccountPage() {
         {/* Email */}
         <input
           type="email"
-          placeholder={t('email_placeholder')}
-          className="w-full border border-gray-300 px-3 py-2.5 text-[11px] uppercase tracking-[0.15em] placeholder:text-gray-300 focus:outline-none focus:border-black transition-colors bg-transparent mb-3"
+          placeholder="Email"
+          className="w-full border border-gray-300 px-3 py-2.5 text-[11px] placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors bg-transparent mb-3"
         />
 
         {/* Password */}
         <input
           type="password"
-          placeholder={t('password')}
-          className="w-full border border-gray-300 px-3 py-2.5 text-[11px] uppercase tracking-[0.15em] placeholder:text-gray-300 focus:outline-none focus:border-black transition-colors bg-transparent mb-1"
+          placeholder="Password"
+          className="w-full border border-gray-300 px-3 py-2.5 text-[11px] placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors bg-transparent mb-1"
         />
 
         {/* Forgot password */}
         <div className="flex justify-end mb-4">
           <Link
             href={`/${locale}/account/forgot-password`}
-            className="text-[8px] uppercase tracking-[0.15em] text-gray-300 hover:text-black transition-colors"
+            className="text-[10px] text-gray-400 hover:text-black transition-colors"
           >
             {t('forgot_password')}
           </Link>
         </div>
 
-        {/* Continue button */}
+        {/* Continue */}
         <button
           type="button"
-          className="w-full bg-black text-white py-2.5 text-[11px] uppercase tracking-[0.2em] font-medium hover:opacity-75 transition-opacity mb-5"
+          className="w-full bg-black text-white py-2.5 text-[11px] uppercase tracking-wide font-medium hover:opacity-75 transition-opacity mb-5"
         >
           {t('continue')}
         </button>
 
-        {/* Create account link */}
+        {/* Create account */}
         <div className="text-center">
           <Link
             href={`/${locale}/account/register`}
-            className="text-[8px] uppercase tracking-[0.2em] text-gray-400 hover:text-black transition-colors"
+            className="text-[10px] text-gray-400 hover:text-black transition-colors"
           >
             {t('create_account')}
           </Link>
