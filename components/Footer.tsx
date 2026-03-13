@@ -17,10 +17,10 @@ export default function Footer() {
             href="https://www.instagram.com/viogi_/?hl=es"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs uppercase tracking-wide hover:opacity-60 transition-opacity"
+            className="uppercase tracking-wide hover:opacity-60 transition-opacity"
             style={{
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '11px',
+              fontSize: '10px',
               fontWeight: 500
             }}
           >
@@ -28,32 +28,21 @@ export default function Footer() {
           </a>
           <Link
             href={`/${locale}/vender`}
-            className="text-xs uppercase tracking-wide hover:opacity-60 transition-opacity"
+            className="uppercase tracking-wide hover:opacity-60 transition-opacity"
             style={{
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '11px',
+              fontSize: '10px',
               fontWeight: 500
             }}
           >
             {t('sell_with_us')}
           </Link>
-          <Link
-            href={`/${locale}/pages/legal`}
-            className="text-xs uppercase tracking-wide hover:opacity-60 transition-opacity"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '11px',
-              fontWeight: 500
-            }}
-          >
-            {t('legal')}
-          </Link>
         </div>
         <p
-          className="text-xs uppercase tracking-wide"
+          className="uppercase tracking-wide"
           style={{
             fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-            fontSize: '11px',
+            fontSize: '10px',
             fontWeight: 500
           }}
           suppressHydrationWarning
