@@ -287,7 +287,10 @@ export default function CheckoutPage() {
   if (cart.length === 0) return null;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div
+      className="min-h-screen bg-white"
+      style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }}
+    >
 
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
@@ -296,7 +299,11 @@ export default function CheckoutPage() {
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); closeCart(); window.location.href = `/${locale}`; }}
-              className="text-base font-bold text-black hover:opacity-50 transition-opacity cursor-pointer tracking-wider"
+              className="text-base font-bold text-black hover:opacity-50 transition-opacity cursor-pointer"
+              style={{
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+              }}
             >
               VIOGI
             </button>

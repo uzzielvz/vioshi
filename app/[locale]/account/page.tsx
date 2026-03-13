@@ -21,11 +21,22 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="bg-gray-50 w-full max-w-sm px-8 py-10">
+      <div
+        className="bg-gray-50 w-full max-w-sm px-8 py-10"
+        style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }}
+      >
 
-        {/* Logo */}
+        {/* Logo — idéntico al header */}
         <div className="text-center mb-6">
-          <span className="font-logo text-4xl uppercase tracking-tight">Viogi</span>
+          <span
+            className="text-lg font-bold text-black"
+            style={{
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
+            }}
+          >
+            VIOGI
+          </span>
         </div>
 
         {/* Titles */}
@@ -61,14 +72,14 @@ export default function AccountPage() {
         <input
           type="email"
           placeholder={t('email_placeholder')}
-          className="w-full border border-gray-300 px-3 py-2.5 text-[10px] uppercase tracking-[0.15em] placeholder:text-gray-300 focus:outline-none focus:border-black transition-colors bg-transparent mb-3"
+          className="w-full border border-gray-300 px-3 py-2.5 text-[11px] uppercase tracking-[0.15em] placeholder:text-gray-300 focus:outline-none focus:border-black transition-colors bg-transparent mb-3"
         />
 
         {/* Password */}
         <input
           type="password"
           placeholder={t('password')}
-          className="w-full border border-gray-300 px-3 py-2.5 text-[10px] uppercase tracking-[0.15em] placeholder:text-gray-300 focus:outline-none focus:border-black transition-colors bg-transparent mb-1"
+          className="w-full border border-gray-300 px-3 py-2.5 text-[11px] uppercase tracking-[0.15em] placeholder:text-gray-300 focus:outline-none focus:border-black transition-colors bg-transparent mb-1"
         />
 
         {/* Forgot password */}
@@ -84,7 +95,7 @@ export default function AccountPage() {
         {/* Continue button */}
         <button
           type="button"
-          className="w-full bg-black text-white py-2.5 text-[9px] uppercase tracking-[0.2em] hover:opacity-75 transition-opacity mb-5"
+          className="w-full bg-black text-white py-2.5 text-[11px] uppercase tracking-[0.2em] font-medium hover:opacity-75 transition-opacity mb-5"
         >
           {t('continue')}
         </button>
