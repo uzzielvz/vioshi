@@ -35,12 +35,9 @@ export default function AccountPage() {
     <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-4 py-12">
       {/* Header */}
       <div className="text-center mb-8">
-        <p className="text-[9px] uppercase tracking-[0.3em] text-gray-400 mb-1">
-          Your Account
+        <p className="text-[10px] uppercase tracking-[0.25em] text-gray-400">
+          Log in to Viogi
         </p>
-        <h1 className="font-logo text-5xl sm:text-6xl uppercase tracking-tight leading-none">
-          Log In to Viogi
-        </h1>
       </div>
 
       {/* Form */}
