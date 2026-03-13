@@ -27,103 +27,106 @@ function GoogleLogo() {
   );
 }
 
-const termsStyle = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
-};
-
 export default function AccountPage() {
   const t = useTranslations('account');
   const { locale } = useLocaleContext();
 
   return (
-    <div className="max-w-[320px] mx-auto px-4 md:px-6 py-6 md:py-8 min-h-[calc(100vh-4rem)] flex flex-col">
-      <div className="bg-white border border-gray-200 p-5 flex-1">
-        <div className="space-y-3">
+    <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-4 py-12">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <p className="text-[9px] uppercase tracking-[0.3em] text-gray-400 mb-1">
+          Your Account
+        </p>
+        <h1 className="font-logo text-5xl sm:text-6xl uppercase tracking-tight leading-none">
+          Log In to Viogi
+        </h1>
+      </div>
+
+      {/* Form */}
+      <div className="w-full max-w-[340px] space-y-0">
+        <div className="space-y-5">
           <div>
-            <label className="block text-[10px] uppercase tracking-wide mb-1">
+            <label className="block text-[9px] uppercase tracking-[0.2em] text-gray-500 mb-2">
               {t('email')}
             </label>
             <input
               type="email"
               placeholder={t('email_placeholder')}
-              className="w-full border border-gray-200 p-2 text-xs focus:outline-none focus:border-black transition-colors placeholder:text-gray-400"
+              className="w-full border-b border-gray-300 py-2 text-xs focus:outline-none focus:border-black transition-colors placeholder:text-gray-300 bg-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-[10px] uppercase tracking-wide mb-1">
+            <label className="block text-[9px] uppercase tracking-[0.2em] text-gray-500 mb-2">
               {t('password')}
             </label>
             <input
               type="password"
               placeholder="••••••••"
-              className="w-full border border-gray-200 p-2 text-xs focus:outline-none focus:border-black transition-colors placeholder:text-gray-400"
+              className="w-full border-b border-gray-300 py-2 text-xs focus:outline-none focus:border-black transition-colors placeholder:text-gray-300 bg-transparent"
             />
           </div>
 
-          <button
-            type="button"
-            className="w-full bg-black text-white py-1.5 sm:py-2 text-[10px] sm:text-xs uppercase tracking-wide hover:opacity-80 transition-opacity"
-          >
-            {t('submit')}
-          </button>
-
-          <div className="relative py-2">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="px-2 bg-white text-[10px] text-gray-500 uppercase tracking-wide">
-                {t('or')}
-              </span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="w-full border border-gray-200 py-1.5 sm:py-2 text-[10px] sm:text-xs uppercase tracking-wide hover:border-black transition-colors flex items-center justify-center gap-1.5"
-          >
-            <GoogleLogo />
-            {t('login_with_google')}
-          </button>
-
-          <div className="text-center">
+          <div className="flex justify-end">
             <Link
               href={`/${locale}/account/forgot-password`}
-              className="text-[10px] text-gray-500 hover:text-black transition-colors"
+              className="text-[9px] uppercase tracking-[0.15em] text-gray-400 hover:text-black transition-colors"
             >
               {t('forgot_password')}
             </Link>
           </div>
+
+          <button
+            type="button"
+            className="w-full bg-black text-white py-3 text-[10px] uppercase tracking-[0.2em] hover:opacity-75 transition-opacity"
+          >
+            {t('submit')}
+          </button>
         </div>
 
-        <div className="mt-5 pt-5 border-t border-gray-200">
+        {/* Divider */}
+        <div className="relative py-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-100" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="px-3 bg-white text-[9px] text-gray-300 uppercase tracking-[0.3em]">
+              {t('or')}
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="w-full border border-gray-200 py-3 text-[10px] uppercase tracking-[0.2em] hover:border-black transition-colors flex items-center justify-center gap-2"
+        >
+          <GoogleLogo />
+          {t('login_with_google')}
+        </button>
+
+        {/* Create account */}
+        <div className="mt-8 pt-6 border-t border-gray-100 text-center space-y-3">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-gray-400">
+            New to Viogi?
+          </p>
           <Link
             href={`/${locale}/account/register`}
-            className="block w-full border border-black py-1.5 sm:py-2 text-[10px] sm:text-xs uppercase tracking-wide text-center hover:bg-black hover:text-white transition-colors"
+            className="block w-full border border-black py-3 text-[10px] uppercase tracking-[0.2em] text-center hover:bg-black hover:text-white transition-colors"
           >
             {t('create_account')}
           </Link>
         </div>
       </div>
 
-      <p
-        className="mt-8 pt-6 text-center text-[10px] uppercase tracking-wide text-gray-600 border-t border-gray-100"
-        style={termsStyle}
-      >
+      {/* Terms */}
+      <p className="mt-10 text-center text-[9px] uppercase tracking-[0.15em] text-gray-300 max-w-[280px]">
         {t('terms_intro')}{' '}
-        <Link
-          href={`/${locale}/pages/legal`}
-          className="underline hover:text-black"
-        >
+        <Link href={`/${locale}/pages/legal`} className="underline hover:text-black transition-colors">
           {t('terms_and_conditions')}
         </Link>
         {' '}{t('and')}{' '}
-        <Link
-          href={`/${locale}/pages/legal`}
-          className="underline hover:text-black"
-        >
+        <Link href={`/${locale}/pages/legal`} className="underline hover:text-black transition-colors">
           {t('privacy_policy')}
         </Link>
       </p>
