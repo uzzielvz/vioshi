@@ -366,7 +366,7 @@
     "privacy_policy": "Privacy Policy",
     "and": "and",
     "register_title": "Create Account",
-    "register_subtitle": "Join the VIOGI family",
+    "register_subtitle": "JOIN THE HOME OF THRIFT",
     "first_name": "FIRST NAME",
     "last_name": "LAST NAME",
     "username": "Username",
@@ -399,6 +399,16 @@
     "error_forgot": "Error sending email. Please try again.",
     "join_viogi": "JOIN VIOGI",
     "terms_full": "BY LOGGING IN, YOU ACCEPT OUR TERMS AND CONDITIONS AND PRIVACY POLICY",
-    "register_terms_full": "BY CREATING AN ACCOUNT, YOU ACCEPT OUR TERMS AND CONDITIONS AND PRIVACY POLICY"
+    "register_terms_full": "BY CREATING AN ACCOUNT, YOU ACCEPT OUR TERMS AND CONDITIONS AND PRIVACY POLICY",
+    "archivos_title": "MY FILES",
+    "archivos_subtitle": "Documents and invoices from your orders",
+    "archivos_empty": "No documents available",
+    "archivos_order": "Order",
+    "archivos_date": "Date",
+    "archivos_type": "Type",
+    "archivos_type_invoice": "Invoice",
+    "archivos_type_receipt": "Receipt",
+    "archivos_download": "Download",
+    "archivos_back": "Back to My Account"
   }
 }

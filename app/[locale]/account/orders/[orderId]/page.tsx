@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useLocaleContext } from '@/hooks/useLocaleContext';
 
 interface OrderDetailPageProps {
   params: {
@@ -8,7 +9,6 @@ interface OrderDetailPageProps {
   };
 }
 
-// Mock order data
 const getMockOrder = (orderId: string) => ({
   id: orderId,
   orderNumber: orderId,
@@ -24,7 +24,6 @@ const getMockOrder = (orderId: string) => ({
       color: 'Black',
       quantity: 1,
       price: 1250.0,
-      image: '/products/hoodie-black.jpg',
     },
   ],
   subtotal: 1250.0,
@@ -48,69 +47,66 @@ const getMockOrder = (orderId: string) => ({
   },
 });
 
+const fontStyle: React.CSSProperties = {
+  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+};
+
 export default function OrderDetailPage({ params }: OrderDetailPageProps) {
+  const { locale } = useLocaleContext();
   const order = getMockOrder(params.orderId);
 
   return (
-    <main className="min-h-screen bg-white pt-16">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-white" style={fontStyle}>
+      <div className="max-w-3xl mx-auto px-6 py-10">
+
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 border-b border-gray-200 pb-6">
           <Link
-            href="/account/orders"
-            className="text-sm uppercase tracking-wider text-gray-600 hover:text-black transition-colors inline-flex items-center gap-2"
+            href={`/${locale}/account/orders`}
+            className="inline-flex items-center gap-2 hover:opacity-60 transition-opacity mb-4"
+            style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
             Volver a Mis Pedidos
           </Link>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-4">
-            <h1 className="text-3xl font-bold uppercase tracking-wider">
+          <div className="flex items-center justify-between">
+            <h1 style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#000' }}>
               Pedido #{order.orderNumber}
             </h1>
-            <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-xs font-medium uppercase tracking-wider w-fit">
+            <p style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {order.status}
-            </span>
+            </p>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Order Items */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h2 className="text-sm uppercase tracking-wider font-medium mb-4">
+        <div className="grid lg:grid-cols-3 gap-10">
+          {/* Main */}
+          <div className="lg:col-span-2 space-y-8">
+
+            {/* Products */}
+            <div>
+              <p
+                className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
+                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}
+              >
                 Productos
-              </h2>
+              </p>
               <div className="space-y-4">
                 {order.items.map((item) => (
-                  <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-200 last:border-0 last:pb-0">
-                    <div className="w-24 h-24 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                      <div className="w-full h-full bg-gray-200"></div>
-                    </div>
+                  <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                    <div className="w-20 h-20 bg-gray-100 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="font-medium">{item.name}</h3>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>{item.name}</p>
+                      <p className="mt-1" style={{ fontSize: '10px', color: '#666' }}>
                         {item.size && `Talla: ${item.size}`}
                         {item.color && ` / Color: ${item.color}`}
                       </p>
-                      <p className="text-sm text-gray-500">
-                        Cantidad: {item.quantity}
-                      </p>
+                      <p style={{ fontSize: '10px', color: '#666' }}>Cantidad: {item.quantity}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium">
+                    <div className="text-right flex-shrink-0">
+                      <p style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>
                         ${(item.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
@@ -119,26 +115,32 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
               </div>
             </div>
 
-            {/* Tracking Info */}
+            {/* Tracking */}
             {order.trackingNumber && (
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h2 className="text-sm uppercase tracking-wider font-medium mb-4">
+              <div>
+                <p
+                  className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
+                  style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}
+                >
                   Información de Envío
-                </h2>
+                </p>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs uppercase tracking-wider text-gray-500">
+                    <p className="uppercase tracking-wide" style={{ fontSize: '10px', color: '#999', letterSpacing: '0.05em' }}>
                       Paquetería
                     </p>
-                    <p className="font-medium">{order.carrier}</p>
+                    <p style={{ fontSize: '11px', color: '#000' }}>{order.carrier}</p>
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-wider text-gray-500">
+                    <p className="uppercase tracking-wide" style={{ fontSize: '10px', color: '#999', letterSpacing: '0.05em' }}>
                       Número de Rastreo
                     </p>
-                    <p className="font-mono font-medium">{order.trackingNumber}</p>
+                    <p style={{ fontSize: '11px', color: '#000', fontFamily: 'monospace' }}>{order.trackingNumber}</p>
                   </div>
-                  <button className="w-full mt-4 bg-black text-white py-3 rounded uppercase tracking-wider text-sm font-medium hover:bg-gray-800 transition-colors">
+                  <button
+                    className="w-full mt-2 bg-black text-white py-2.5 uppercase hover:opacity-75 transition-opacity"
+                    style={{ fontSize: '11px', letterSpacing: '0.05em' }}
+                  >
                     Rastrear Paquete
                   </button>
                 </div>
@@ -147,77 +149,85 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Order Summary */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h2 className="text-sm uppercase tracking-wider font-medium mb-4">
+          <div className="space-y-8">
+
+            {/* Summary */}
+            <div>
+              <p
+                className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
+                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}
+              >
                 Resumen
-              </h2>
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${order.subtotal.toFixed(2)}</span>
+              </p>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span style={{ fontSize: '11px', color: '#666' }}>Subtotal</span>
+                  <span style={{ fontSize: '11px', color: '#000' }}>${order.subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Envío</span>
-                  <span className="font-medium">${order.shipping.toFixed(2)}</span>
+                <div className="flex justify-between">
+                  <span style={{ fontSize: '11px', color: '#666' }}>Envío</span>
+                  <span style={{ fontSize: '11px', color: '#000' }}>${order.shipping.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Impuestos</span>
-                  <span className="font-medium">${order.tax.toFixed(2)}</span>
+                <div className="flex justify-between">
+                  <span style={{ fontSize: '11px', color: '#666' }}>Impuestos</span>
+                  <span style={{ fontSize: '11px', color: '#000' }}>${order.tax.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between pt-3 border-t border-gray-200">
-                  <span className="font-medium uppercase tracking-wider">Total</span>
-                  <span className="text-xl font-bold">${order.total.toFixed(2)}</span>
+                <div className="flex justify-between pt-2 border-t border-gray-200 mt-2">
+                  <span className="uppercase tracking-wide" style={{ fontSize: '11px', fontWeight: 600, color: '#000' }}>Total</span>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#000' }}>${order.total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
             {/* Shipping Address */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h2 className="text-sm uppercase tracking-wider font-medium mb-4">
+            <div>
+              <p
+                className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
+                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}
+              >
                 Dirección de Envío
-              </h2>
-              <div className="text-sm space-y-1">
-                <p className="font-medium">{order.shippingAddress.name}</p>
-                <p>{order.shippingAddress.street}</p>
+              </p>
+              <div className="space-y-0.5">
+                <p style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>{order.shippingAddress.name}</p>
+                <p style={{ fontSize: '11px', color: '#666' }}>{order.shippingAddress.street}</p>
                 {order.shippingAddress.apartment && (
-                  <p>{order.shippingAddress.apartment}</p>
+                  <p style={{ fontSize: '11px', color: '#666' }}>{order.shippingAddress.apartment}</p>
                 )}
-                <p>
-                  {order.shippingAddress.city}, {order.shippingAddress.state}{' '}
-                  {order.shippingAddress.zipCode}
+                <p style={{ fontSize: '11px', color: '#666' }}>
+                  {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}
                 </p>
-                <p>{order.shippingAddress.country}</p>
-                <p className="pt-2">{order.shippingAddress.phone}</p>
+                <p style={{ fontSize: '11px', color: '#666' }}>{order.shippingAddress.country}</p>
+                <p className="pt-2" style={{ fontSize: '11px', color: '#666' }}>{order.shippingAddress.phone}</p>
               </div>
             </div>
 
-            {/* Payment Method */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h2 className="text-sm uppercase tracking-wider font-medium mb-4">
+            {/* Payment */}
+            <div>
+              <p
+                className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
+                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}
+              >
                 Método de Pago
-              </h2>
-              <div className="text-sm">
-                <p className="font-medium">{order.paymentMethod.type}</p>
-                <p className="text-gray-600">
-                  {order.paymentMethod.brand} •••• {order.paymentMethod.last4}
-                </p>
-              </div>
+              </p>
+              <p style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>{order.paymentMethod.type}</p>
+              <p style={{ fontSize: '11px', color: '#666' }}>
+                {order.paymentMethod.brand} •••• {order.paymentMethod.last4}
+              </p>
             </div>
 
-            {/* Order Date */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h2 className="text-sm uppercase tracking-wider font-medium mb-2">
+            {/* Date */}
+            <div>
+              <p
+                className="uppercase tracking-wide mb-2 pb-2 border-b border-gray-200"
+                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}
+              >
                 Fecha de Pedido
-              </h2>
-              <p className="text-sm">
+              </p>
+              <p style={{ fontSize: '11px', color: '#666' }}>
                 {new Date(order.date).toLocaleDateString('es-MX', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
                 })}
               </p>
             </div>
@@ -225,18 +235,23 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
         </div>
 
         {/* Actions */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-3">
+        <div className="mt-10 flex flex-col sm:flex-row gap-3 border-t border-gray-200 pt-8">
           <Link
-            href="/pages/customer-support"
-            className="flex-1 border-2 border-black text-black py-3 rounded uppercase tracking-wider text-sm font-medium hover:bg-black hover:text-white transition-colors text-center"
+            href={`/${locale}/pages/customer-support`}
+            className="flex-1 border border-black text-black py-2.5 uppercase hover:bg-black hover:text-white transition-colors text-center"
+            style={{ fontSize: '11px', letterSpacing: '0.05em' }}
           >
             Contactar Soporte
           </Link>
-          <button className="flex-1 border-2 border-gray-300 text-black py-3 rounded uppercase tracking-wider text-sm font-medium hover:border-black transition-colors">
+          <Link
+            href={`/${locale}/account/archivos`}
+            className="flex-1 border border-gray-300 text-black py-2.5 uppercase hover:border-black transition-colors text-center"
+            style={{ fontSize: '11px', letterSpacing: '0.05em' }}
+          >
             Descargar Factura
-          </button>
+          </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

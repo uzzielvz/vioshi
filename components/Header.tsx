@@ -400,23 +400,6 @@ export default function Header() {
           {shopOpen && (
             <>
               <Link
-                href={`/${locale}/collections/new`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  padding: '0',
-                  margin: '0',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/collections/new') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/new') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/collections/new') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('new_drop')}
-              </Link>
-              <Link
                 href={`/${locale}/collections/hoodie`}
                 className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
                 style={{
@@ -603,6 +586,21 @@ export default function Header() {
               >
                 {tHeader('accessibility')}
               </Link>
+              <Link
+                href={`/${locale}/pages/legal`}
+                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  letterSpacing: '0.02em',
+                  fontSize: '11px',
+                  lineHeight: '1',
+                  color: (mounted && pathnameWithoutLocale === '/pages/legal') ? '#000' : '#666',
+                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/legal') ? '1px solid #000' : '1px solid transparent',
+                  textShadow: (mounted && pathnameWithoutLocale === '/pages/legal') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
+                }}
+              >
+                {tHeader('legal')}
+              </Link>
             </>
           )}
         </div>
@@ -741,21 +739,6 @@ export default function Header() {
                     }}
                   >
                     {tHeader('all')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/collections/new`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('new_drop')}
                   </Link>
                   <Link
                     href={`/${locale}/collections/hoodie`}
@@ -926,21 +909,6 @@ export default function Header() {
                     }}
                   >
                     {tHeader('customer_support')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/pages/customer-support#chat`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('chat')}
                   </Link>
                   <Link
                     href={`/${locale}/pages/locaciones`}

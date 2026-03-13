@@ -14,6 +14,7 @@ const links = [
   { key: 'shipping_payments_returns', path: '/pages/shipping-payments-returns' },
   { key: 'accessibility', path: '/pages/accessibility' },
   { key: 'locations', path: '/pages/locaciones' },
+  { key: 'legal', path: '/pages/legal' },
 ] as const;
 
 export default function SupportNav() {

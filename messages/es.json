@@ -366,7 +366,7 @@
     "privacy_policy": "Política de Privacidad",
     "and": "y",
     "register_title": "Crear Cuenta",
-    "register_subtitle": "Únete a la familia VIOGI",
+    "register_subtitle": "ÚNETE AL HOGAR DEL THRIFT",
     "first_name": "NOMBRE",
     "last_name": "APELLIDO",
     "username": "Usuario",
@@ -399,6 +399,16 @@
     "error_forgot": "Error al enviar el correo. Intenta de nuevo.",
     "join_viogi": "ÚNETE A VIOGI",
     "terms_full": "AL INICIAR SESIÓN, ACEPTAS NUESTROS TÉRMINOS Y CONDICIONES Y POLÍTICA DE PRIVACIDAD",
-    "register_terms_full": "AL CREAR UNA CUENTA, ACEPTAS NUESTROS TÉRMINOS Y CONDICIONES Y POLÍTICA DE PRIVACIDAD"
+    "register_terms_full": "AL CREAR UNA CUENTA, ACEPTAS NUESTROS TÉRMINOS Y CONDICIONES Y POLÍTICA DE PRIVACIDAD",
+    "archivos_title": "MIS ARCHIVOS",
+    "archivos_subtitle": "Documentos y facturas de tus pedidos",
+    "archivos_empty": "No tienes documentos disponibles",
+    "archivos_order": "Pedido",
+    "archivos_date": "Fecha",
+    "archivos_type": "Tipo",
+    "archivos_type_invoice": "Factura",
+    "archivos_type_receipt": "Comprobante",
+    "archivos_download": "Descargar",
+    "archivos_back": "Volver a Mi Cuenta"
   }
 }

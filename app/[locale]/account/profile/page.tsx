@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useLocaleContext } from '@/hooks/useLocaleContext';
 
 export default function ProfilePage() {
+  const { locale } = useLocaleContext();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const mountedRef = useRef(true);
@@ -39,7 +41,7 @@ export default function ProfilePage() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            href="/account"
+            href={`/${locale}/account`}
             className="text-sm uppercase tracking-wider text-gray-600 hover:text-black transition-colors inline-flex items-center gap-2"
           >
             <svg
@@ -175,7 +177,7 @@ export default function ProfilePage() {
             Actualiza tu contraseña para mantener tu cuenta segura
           </p>
           <Link
-            href="/account/forgot-password"
+            href={`/${locale}/account/forgot-password`}
             className="inline-block border-2 border-black text-black px-6 py-3 rounded uppercase tracking-wider font-medium hover:bg-black hover:text-white transition-colors text-sm"
           >
             Cambiar Contraseña
@@ -185,7 +187,7 @@ export default function ProfilePage() {
         {/* Quick Links */}
         <div className="grid md:grid-cols-2 gap-4 mt-6">
           <Link
-            href="/account/orders"
+            href={`/${locale}/account/orders`}
             className="bg-white border border-gray-200 rounded-lg p-6 hover:border-black transition-colors"
           >
             <h3 className="text-sm uppercase tracking-wider font-medium mb-2">
@@ -196,7 +198,7 @@ export default function ProfilePage() {
             </p>
           </Link>
           <Link
-            href="/account/addresses"
+            href={`/${locale}/account/addresses`}
             className="bg-white border border-gray-200 rounded-lg p-6 hover:border-black transition-colors"
           >
             <h3 className="text-sm uppercase tracking-wider font-medium mb-2">
