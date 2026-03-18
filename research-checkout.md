@@ -1,224 +1,304 @@
-# Research: Checkout — Bugs, GUI y Estrategia de Pagos
+# Research: Checkout — Bugs, GUI, CP Lookup y Estrategia de Pagos
 
-> Auditoría realizada el 2026-03-12 sobre `app/[locale]/checkout/page.tsx`,
-> `app/[locale]/(shop)/cart/page.tsx`, `components/CartDrawer.tsx`,
-> `store/cartStore.tsx`, `lib/formatters.ts`, `lib/constants.ts`, `lib/pickupPoints.ts`.
-
----
-
-## 1. Bugs Detectados
-
-### B-01 — CRÍTICO: Precios hardcodeados en dólares (el bug que reportaste)
-
-**Archivos:** `app/[locale]/checkout/page.tsx` líneas 849, 879, 909, 922, 926, 938
-
-El checkout importa `formatPrice` y `useLocaleContext`, los usa para algunos elementos,
-pero la mayoría de las cifras se renderizan con template literals `$${amount.toFixed(2)}`.
-Esto hace que en `/es/checkout` el usuario siempre vea dólares sin conversión a MXN.
-
-```tsx
-// ❌ Lo que hay hoy (múltiples líneas)
-<span>${total.toFixed(2)}</span>
-<div>${(item.price * item.quantity).toFixed(2)}</div>
-<span>${subtotal.toFixed(2)}</span>
-`$${shipping.toFixed(2)}`
-`$${selectedPickupPoint.additionalCost.toFixed(2)}`
-
-// ✅ Lo que debe ser
-<span>{formatPrice(total, locale)}</span>
-<div>{formatPrice(item.price * item.quantity, locale)}</div>
-<span>{formatPrice(subtotal, locale)}</span>
-{formatPrice(shipping, locale)}
-{formatPrice(selectedPickupPoint.additionalCost, locale)}
-```
-
-**Impacto:** Usuario en `/es/` ve `$1,200.00` en lugar de `MX$21,000.00`.
-El precio almacenado en cart siempre es USD; `formatPrice` aplica la tasa de cambio
-(`NEXT_PUBLIC_USD_MXN_RATE`, default 17.5) y usa `Intl.NumberFormat` con locale correcto.
+> Última actualización: 2026-03-17
+> Archivos auditados: `app/[locale]/checkout/page.tsx`, `app/[locale]/(shop)/cart/page.tsx`,
+> `components/CartDrawer.tsx`, `store/cartStore.tsx`, `lib/formatters.ts`,
+> `lib/constants.ts`, `lib/pickupPoints.ts`, `lib/mexico.ts`
 
 ---
 
-### B-02 — ALTO: Doble símbolo de moneda en el total
+## 1. Estado Actual del Checkout
 
-**Archivo:** `app/[locale]/checkout/page.tsx` líneas 936–938
+El checkout es un **Client Component** completo con estado local (`useState`). Implementa:
+- Delivery mode: envío a domicilio vs recogida en punto
+- CP lookup automático via SEPOMEX (colonia, municipio, estado)
+- Métodos de pago: tarjeta o PayPal manual
+- Resumen de pedido colapsable en mobile
+- Cálculo de subtotal, IVA (16%) y shipping usando constantes y `formatPrice`
 
-```tsx
-// ❌ Resultado renderizado en /es/: "MXN $450.00"
-<span className="text-[10px] text-gray-500">{currency}</span>   {/* → "MXN" */}
-<span className="text-2xl font-bold">${total.toFixed(2)}</span>  {/* → "$450.00" */}
-```
-
-`{currency}` viene de `useLocaleContext()` → `currencyMap[locale]` → `"MXN"`.
-El `$` literal en el siguiente span lo duplica.
-
-**Fix:** Eliminar el `<span>{currency}</span>` y usar `formatPrice(total, locale)` directamente.
+No tiene backend. El submit ejecuta un delay artificial de 2s y redirige a `/checkout/success/ORDER123`.
 
 ---
 
-### B-03 — ALTO: Costos de envío hardcodeados e inconsistentes
+## 2. Bugs Resueltos
 
-**Archivo:** `app/[locale]/checkout/page.tsx` líneas 653 y 669
+### ✅ B-01 — Precios en dólares en checkout
 
-```tsx
-// ❌ Hardcoded — no respeta locale ni usa las constantes
-<span className="text-xs font-medium">$10.00</span>   {/* Standard */}
-<span className="text-xs font-medium">$25.00</span>   {/* Express */}
-```
+**Archivo:** `app/[locale]/checkout/page.tsx`
+**Estado:** RESUELTO
 
-Doble problema:
-1. No usan `STANDARD_SHIPPING_COST` / `EXPRESS_SHIPPING_COST` de `lib/constants.ts`
-2. **Inconsistencia numérica:** `EXPRESS_SHIPPING_COST = 20` en constants, pero UI muestra `$25.00`
+Todos los displays de precio ahora usan `formatPrice(amount, locale)`:
+- Items del carrito: `formatPrice(item.price * item.quantity, locale)`
+- Subtotal: `formatPrice(subtotal, locale)`
+- Shipping: `formatPrice(shipping, locale)`
+- Total: `formatPrice(total, locale)`
+- Costo de pickup: `formatPrice(selectedPickupPoint.additionalCost, locale)`
 
-**Fix:**
-```tsx
-import { STANDARD_SHIPPING_COST, EXPRESS_SHIPPING_COST } from '@/lib/constants';
-
-{formatPrice(STANDARD_SHIPPING_COST, locale)}  {/* $10 → MX$175 en /es/ */}
-{formatPrice(EXPRESS_SHIPPING_COST, locale)}   {/* $20 → MX$350 en /es/ */}
-```
+En `/es/` muestra `MX$X,XXX.00`. En `/en/` muestra `$XXX.00`.
 
 ---
 
-### B-04 — MEDIO: Costo adicional de pickup hardcodeado
+### ✅ B-02 — Doble símbolo de moneda
 
-**Archivo:** `app/[locale]/checkout/page.tsx` línea 577
+**Estado:** RESUELTO
+
+El span separado `{currency}` ("MXN") fue eliminado. El total usa únicamente
+`formatPrice(total, locale)` que ya incluye el símbolo/prefijo correcto según locale.
+
+---
+
+### ✅ B-03 — Costos de envío hardcodeados e inconsistentes
+
+**Estado:** RESUELTO
+
+Los labels de métodos de envío ahora construyen el precio dinámicamente:
 
 ```tsx
-// ❌
-{t('cost')} ${selectedPickupPoint.additionalCost.toFixed(2)}
+label={`${t('shipping_standard')} — ${formatPrice(STANDARD_SHIPPING_COST, locale)}`}
+label={`${t('shipping_express')} — ${formatPrice(EXPRESS_SHIPPING_COST, locale)}`}
+```
 
-// ✅
+Donde `STANDARD_SHIPPING_COST = 10` y `EXPRESS_SHIPPING_COST = 20` (USD) desde `lib/constants.ts`.
+En `/es/` se convierten a MXN correctamente.
+
+---
+
+### ✅ B-04 — Costo adicional de pickup hardcodeado
+
+**Estado:** RESUELTO
+
+```tsx
+// Selector de puntos
+{point.name}{point.additionalCost > 0 ? ` (+${formatPrice(point.additionalCost, locale)})` : ''}
+
+// Display del punto seleccionado
 {t('cost')} {formatPrice(selectedPickupPoint.additionalCost, locale)}
 ```
 
-Los puntos de pickup en `lib/pickupPoints.ts` tienen `additionalCost` en USD
-(ej. flagship = 0, retail = 50). Deben convertirse igual que todo lo demás.
+---
+
+### ✅ GUI-04 — Página de éxito inexistente
+
+**Estado:** RESUELTO
+
+`app/[locale]/checkout/success/[orderId]/page.tsx` existe. Muestra confirmación
+con número de orden, pasos siguientes y links a cuenta y tienda.
+Limitación actual: el `orderId` es siempre `ORDER123` (hardcodeado en el submit).
 
 ---
 
-### B-05 — MEDIO: Submit falso — sin procesamiento real
+### ✅ GUI-06 — `handleExpressCheckout` crash
 
-**Archivo:** `app/[locale]/checkout/page.tsx` líneas 183–195
+**Estado:** RESUELTO
+
+Los botones de "Express Checkout" fueron eliminados del UI. No hay referencia
+a `handleExpressCheckout` en el código actual. La sección de express checkout
+fue removida completamente.
+
+---
+
+## 3. Bugs Pendientes
+
+### ⏳ B-05 — Submit sin backend real
+
+**Archivo:** `app/[locale]/checkout/page.tsx:277`
+**Severidad:** Bloqueante (Fase 2)
 
 ```tsx
-// TODO: Send order to backend
-await new Promise((resolve) => setTimeout(resolve, 2000)); // fake delay
-router.push(`/${locale}/checkout/success/ORDER123`);       // hardcoded order ID
+// Estado actual
+await new Promise((resolve) => setTimeout(resolve, 2000)); // delay fake
+router.push(`/${locale}/checkout/success/ORDER123`);       // ID hardcodeado
 ```
 
-El checkout completo es una maqueta. No llama a ningún API, no valida la tarjeta,
-no crea orden en base de datos, no envía email. El ID `ORDER123` está hardcodeado.
+El checkout no hace ninguna llamada real:
+- No valida la tarjeta
+- No crea una orden en base de datos
+- No envía email de confirmación
+- No descuenta inventario
+- El número de orden es siempre "ORDER123"
+
+**Fix requerido (Fase 2.3):** Integrar con procesador de pagos (MercadoPago/Stripe),
+crear Order en DB via webhook, y enviar email con Resend.
 
 ---
 
-### B-06 — BAJO: PayPal referenciado para mercado mexicano
+### ⚠️ B-06 — PayPal como método de pago
 
-**Archivo:** `app/[locale]/checkout/page.tsx` línea 35
+**Archivo:** `app/[locale]/checkout/page.tsx`
+**Severidad:** Media — funcional pero no óptimo para México
+**Decisión:** Mantenido temporalmente como link manual
+
+**Estado actual:** PayPal está implementado como "link de pago manual":
 
 ```tsx
-paymentMethod: 'card' | 'paypal';
+// El usuario copia el link o hace click en él
+<a href={PAYPAL_ME_LINK} target="_blank">paypal.me/viogi</a>
+// PAYPAL_ME_LINK = 'https://paypal.me/viogi' en lib/constants.ts
 ```
 
-PayPal tiene muy baja adopción en México (<5% del mercado). El método alternativo
-correcto para VIOGI es **Mercado Pago** (cubre OXXO, QR, wallet, tarjetas bancarias MX).
-Ver Sección 3 para la estrategia completa.
+No es una integración real. El usuario tiene que pagar por su cuenta en PayPal
+y el sistema no verifica el pago. Es un workaround temporal.
+
+**Por qué se mantiene temporalmente:** Permite al equipo operar manualmente
+mientras se desarrolla la integración real.
+
+**Fix definitivo (Fase 2.3):** Reemplazar por MercadoPago como procesador primario
+(ver Sección 5). PayPal tiene <5% de adopción en México.
 
 ---
 
-## 2. Mejoras de GUI
+### ⏳ GUI-01 — Validación con `alert()` nativo
 
-### GUI-01 — Validación inline vs alert()
+**Archivo:** `app/[locale]/checkout/page.tsx`
+**Severidad:** Media — UX regresivo
 
-Actualmente los errores de validación usan `alert()` nativo del browser:
 ```tsx
-alert(t('alert_terms'));
-alert(t('alert_address'));
-alert(t('alert_pickup'));
+// Estado actual — 3 instancias
+if (!formData.agreeTerms) { alert(t('alert_terms')); return; }
+if (!hasValidAddress) { alert(t('alert_address')); return; }
+if (!formData.pickupPointId) { alert(t('alert_pickup')); return; }
 ```
 
-Esto es UX regresivo: bloquea el thread, no tiene estilo de VIOGI, y en móvil
-el alert se ve como sistema operativo. Reemplazar con mensajes de error inline
-debajo de cada campo (estilo Shopify: borde rojo + texto de error pequeño).
+`alert()` bloquea el thread, no tiene estilos de VIOGI, en móvil se ve como
+sistema operativo. Las claves `alert_*` existen en los messages pero se usan
+en el browser native alert.
+
+**Fix sugerido:** Agregar estado de error por campo y mostrar mensajes inline:
+
+```tsx
+const [errors, setErrors] = useState<Record<string, string>>({});
+
+// En lugar de alert():
+setErrors({ terms: t('alert_terms') });
+return;
+
+// En el JSX:
+{errors.terms && <p className="text-red-500 text-[10px] mt-1">{errors.terms}</p>}
+```
 
 ---
 
-### GUI-02 — Campos de tarjeta sin masking
+### ⏳ GUI-02 — Campos de tarjeta sin masking
+
+**Archivo:** `app/[locale]/checkout/page.tsx`
+**Severidad:** Baja
 
 Los campos `cardNumber`, `expirationDate`, `securityCode` son `<input type="text">`
-sin ninguna restricción. El usuario puede escribir cualquier cosa.
+sin restricciones. El usuario puede escribir cualquier cosa, sin guías visuales.
 
-**Mejora:** Aplicar formatting automático:
-- Número de tarjeta: grupos de 4 con espacios `4242 4242 4242 4242`
-- Expiración: auto-slash `12/27`
-- CVV: max 3–4 chars, solo números
-- Detectar tipo de tarjeta (Visa/Mastercard) por prefijo y mostrar ícono
+**Fix sugerido:**
 
-Librería sugerida: `react-payment-inputs` o implementar con `onInput` handlers.
+```tsx
+// Número de tarjeta: auto-espacios cada 4 dígitos
+const formatCardNumber = (value: string) =>
+  value.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+
+// Expiración: auto-slash
+const formatExpiry = (value: string) => {
+  const digits = value.replace(/\D/g, '').slice(0, 4);
+  return digits.length > 2 ? `${digits.slice(0,2)}/${digits.slice(2)}` : digits;
+};
+
+// CVV: solo números, max 4
+const formatCVV = (value: string) => value.replace(/\D/g, '').slice(0, 4);
+```
+
+Librería alternativa: `react-payment-inputs` (evita reinventar la rueda).
 
 ---
 
-### GUI-03 — CTA sticky en móvil
+### ⏳ GUI-03 — Sin CTA sticky en móvil
 
-En mobile el resumen del pedido está colapsado y el botón "Complete Order" queda
-debajo de un form largo. El usuario tiene que hacer scroll hasta el fondo.
+**Archivo:** `app/[locale]/checkout/page.tsx`
+**Severidad:** Baja
 
-**Mejora:** Footer sticky con total + botón en móvil:
+En pantallas pequeñas el botón "Completar Pedido" queda debajo de un formulario largo.
+El usuario no puede ver el total ni el botón sin hacer scroll hasta el fondo.
+
+**Fix sugerido:**
+
 ```tsx
-// Solo visible en mobile, siempre al fondo del viewport
-<div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 lg:hidden">
+{/* Footer sticky — solo en mobile */}
+<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40">
   <div className="flex justify-between items-center mb-3">
-    <span>Total</span>
-    <span>{formatPrice(total, locale)}</span>
+    <span className="text-[10px] uppercase tracking-widest text-gray-400">{t('total')}</span>
+    <span className="text-base font-light">{formatPrice(total, locale)}</span>
   </div>
-  <button type="submit" className="w-full bg-black text-white py-4">
-    {t('complete_order')}
+  <button type="submit" className="w-full bg-black text-white py-3.5 text-[11px] uppercase tracking-widest">
+    {isProcessing ? t('processing') : t('complete_order')}
   </button>
 </div>
 ```
 
 ---
 
-### GUI-04 — Página de éxito inexistente
+### ⏳ GUI-05 — Sin skeleton de hidratación en checkout
 
-`router.push(`/${locale}/checkout/success/ORDER123`)` → la ruta
-`app/[locale]/checkout/success/[orderId]/page.tsx` no existe todavía.
-El usuario ve error 404 después de "completar" la compra.
+**Archivo:** `app/[locale]/checkout/page.tsx`
+**Severidad:** Baja
 
-**Crear:** página mínima de éxito con:
-- Número de orden (cuando sea real)
-- Resumen de artículos comprados
-- Botón "Continue Shopping"
-- Limpieza del carrito (`clearCart()`)
+Cuando el usuario navega directamente a `/checkout` con el carrito vacío,
+el store de localStorage no se hidrata instantáneamente. El checkout renderiza
+brevemente con `cart = []` antes de leer localStorage.
 
----
+**Fix sugerido:**
 
-### GUI-05 — Sin skeleton/loading state en cart del checkout
-
-Cuando el usuario llega al checkout con el carrito vacío (navegación directa),
-el componente hace su primer render con `cart = []` antes de que el store
-de localStorage se hidrate. Aparece el form de checkout vacío brevemente.
-
-**Mejora:** Agregar `isInitialized` guard (igual que en wishlist):
 ```tsx
-const { isInitialized } = useCart();
-if (!isInitialized) return <CheckoutSkeleton />;
+const { cart, isInitialized } = useCart();
+
+if (!isInitialized) {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-pulse text-[10px] uppercase tracking-widest text-gray-400">
+        Cargando...
+      </div>
+    </div>
+  );
+}
 ```
 
 ---
 
-### GUI-06 — Botón de Express Checkout sin funcionalidad
+## 4. Feature: CP Lookup SEPOMEX
 
-```tsx
-// Línea 266
-onClick={() => handleExpressCheckout('paypal')}
+### Descripción
+
+Al escribir el código postal (5 dígitos), el checkout consulta automáticamente
+la API pública de SEPOMEX y rellena colonia, municipio y estado.
+
+### Implementación actual (`lib/mexico.ts`)
+
+```typescript
+export async function lookupCP(cp: string): Promise<MexicoCPData | null>
+// Endpoint: https://api-sepomex.hckdrk.mx/query/info_cp/{cp}?type=JSON
+// Tipo retornado: { estado: string, municipio: string, colonias: string[] }
 ```
 
-`handleExpressCheckout` no existe — causa error en runtime al hacer click.
-Ocultar los botones de express checkout hasta que haya integración real.
+### Flujo en checkout
+
+```
+Usuario escribe CP (5 dígitos)
+  → useEffect detecta cambio
+  → lookupCP(formData.zipCode)
+  → Si retorna datos:
+      - Si 1 colonia: auto-selecciona y muestra como texto
+      - Si >1 colonias: muestra <select> con opciones
+      - municipio y estado: auto-rellenados, read-only
+  → Si retorna null: muestra inputs de texto normales
+```
+
+### Riesgos y mitigaciones
+
+| Riesgo | Mitigación actual |
+|---|---|
+| API caída o sin respuesta | Fallback a inputs manuales (cpData === null) |
+| CP inválido | Validación previa: `/^\d{5}$/.test(cp)` |
+| Respuesta lenta | No hay loading indicator — mejora pendiente |
+| Sin SLA (servicio comunitario) | En producción: considerar cacheo o SEPOMEX oficial |
 
 ---
 
-## 3. Estrategia de Pagos: Stripe + Mercado Pago
+## 5. Estrategia de Pagos: MercadoPago + Stripe
 
 ### Por qué dos procesadores
 
@@ -230,82 +310,94 @@ Ocultar los botones de express checkout hasta que haya integración real.
 | Apple Pay / Google Pay | ✅ | ⚠️ Limitado |
 | Comisión MX (aprox.) | 2.9% + $0.30 USD | 3.29% + $3.00 MXN |
 | Adopción México | Startups tech | E-commerce mainstream |
+| OXXO crítico para ventas fuera CDMX | ❌ | ✅ |
 
-**Conclusión:** Para VIOGI México, Mercado Pago es el procesador primario
-(cubre OXXO que es crítico para ventas fuera de CDMX), Stripe es el secundario
-para clientes con tarjetas internacionales o que prefieren Apple/Google Pay.
-
----
-
-### Arquitectura propuesta
-
-```
-checkout form
-    │
-    ├── paymentMethod === 'card_stripe'
-    │       └── POST /api/checkout/stripe/create-intent
-    │               └── stripe.paymentIntents.create()
-    │                       └── confirmar en client con @stripe/react-stripe-js
-    │
-    ├── paymentMethod === 'card_mp' | 'oxxo' | 'mp_wallet'
-    │       └── POST /api/checkout/mercadopago/create-preference
-    │               └── MP SDK → preference.create()
-    │                       └── redirect a checkout.mercadopago.com.mx
-    │                           o renderizar Brick en modal
-    │
-    └── (ambos) → webhook → /api/webhooks/stripe o /api/webhooks/mercadopago
-                                └── crear Order en DB
-                                └── enviar email (Resend)
-                                └── redirect → /checkout/success/[orderId]
-```
+**Conclusión:** MercadoPago es el procesador primario para VIOGI (cubre OXXO,
+que es crítico para ventas fuera de CDMX y NSE C/D). Stripe es el secundario
+para clientes con tarjetas internacionales o Apple/Google Pay.
 
 ---
 
-### Opciones de UX para Mercado Pago
+### Arquitectura de integración
 
-**Opción A — Redirect (más simple, menos branded)**
 ```
-usuario hace click → backend crea preference → redirect a mercadopago.com.mx → regresa a /success
+checkout/page.tsx (submit)
+    │
+    ├── paymentMethod === 'card'
+    │   ├── opción A: MercadoPago Bricks (tarjetas MX, OXXO, wallet)
+    │   │     └── POST /api/payments/mp/create-preference
+    │   │             └── MP SDK preference.create()
+    │   │                     └── <Payment /> Brick renderiza inline
+    │   │
+    │   └── opción B: Stripe (tarjetas internacionales, Apple/Google Pay)
+    │         └── POST /api/payments/stripe/create-intent
+    │                 └── stripe.paymentIntents.create()
+    │                         └── <PaymentElement /> de @stripe/react-stripe-js
+    │
+    └── (ambos) → webhook confirmación
+              ├── /api/webhooks/stripe
+              └── /api/webhooks/mercadopago
+                      └── crear Order en DB
+                      └── vaciar carrito
+                      └── enviar email (Resend)
+                      └── redirect → /checkout/success/[orderId]
 ```
-Pro: cero código de UI. Contra: rompe el flow, usuario sale del sitio.
 
-**Opción B — MP Bricks (recomendado para VIOGI)**
-```
-usuario elige MP → modal se abre → Brick de MP renderiza dentro → confirma → cierra modal → /success
-```
-MP Bricks es el SDK embebible oficial de Mercado Pago. Mantiene el look del sitio.
+---
+
+### UX recomendada: MercadoPago Bricks
+
+MP Bricks es el SDK embebible de Mercado Pago. Mantiene el diseño del sitio sin
+redirigir al usuario a mercadopago.com.mx.
+
 ```tsx
 // npm install @mercadopago/sdk-react
-import { Payment } from '@mercadopago/sdk-react';
+import { Payment, initMercadoPago } from '@mercadopago/sdk-react';
+
+initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY!);
 
 <Payment
-  initialization={{ amount: total, preferenceId }}
-  customization={{ paymentMethods: { creditCard: 'all', debitCard: 'all', ticket: 'all' } }}
-  onSubmit={async ({ selectedPaymentMethod, formData }) => {
-    // llamar /api/checkout/mercadopago/process
+  initialization={{ amount: totalInMXN, preferenceId }}
+  customization={{
+    paymentMethods: {
+      creditCard: 'all',
+      debitCard: 'all',
+      ticket: 'all',  // OXXO
+      atm: 'all',     // SPEI
+    }
+  }}
+  onSubmit={async ({ formData }) => {
+    await fetch('/api/payments/mp/process', {
+      method: 'POST',
+      body: JSON.stringify({ formData, orderId }),
+    });
   }}
 />
 ```
 
 ---
 
-### Opciones de UX para Stripe
-
-**Stripe Payment Element** — un componente que muestra todos los métodos disponibles
-(tarjeta, Apple Pay, Google Pay) de forma adaptativa según el dispositivo:
+### UX recomendada: Stripe Payment Element
 
 ```tsx
 // npm install @stripe/react-stripe-js @stripe/stripe-js
-import { PaymentElement } from '@stripe/react-stripe-js';
+import { Elements, PaymentElement } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 
-// 1. Backend: crear PaymentIntent y retornar clientSecret
-// 2. Frontend: renderizar dentro de <Elements stripe={stripePromise} options={{ clientSecret }}>
-<PaymentElement />
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
+// 1. Backend: crear PaymentIntent → retornar clientSecret
+// 2. Frontend: envolver en Elements con clientSecret
+<Elements stripe={stripePromise} options={{ clientSecret }}>
+  <PaymentElement />
+  {/* PaymentElement renderiza el método disponible según dispositivo:
+      tarjeta en desktop, Apple Pay en Safari, Google Pay en Chrome */}
+</Elements>
 ```
 
 ---
 
-### Variables de entorno necesarias
+### Variables de entorno requeridas (Fase 2.3)
 
 ```env
 # Stripe
@@ -316,7 +408,6 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 # Mercado Pago
 NEXT_PUBLIC_MP_PUBLIC_KEY=APP_USR-...
 MP_ACCESS_TOKEN=APP_USR-...
-MP_WEBHOOK_SECRET=...
 
 # Tipo de cambio
 NEXT_PUBLIC_USD_MXN_RATE=17.5
@@ -324,36 +415,53 @@ NEXT_PUBLIC_USD_MXN_RATE=17.5
 
 ---
 
-### Secuencia de implementación (dentro de la iteración 2.3 del plan)
+### Secuencia de implementación (Fase 2.3)
 
 ```
-2.3-A  Instalar SDKs: @stripe/react-stripe-js, @mercadopago/sdk-react
-2.3-B  API Routes:
-         /api/checkout/stripe/create-intent   → stripe.paymentIntents.create
-         /api/checkout/mp/create-preference   → MP SDK preference.create
-         /api/webhooks/stripe                 → verificar firma, crear Order
-         /api/webhooks/mercadopago            → verificar firma, crear Order
-2.3-C  UI Checkout: reemplazar form de tarjeta falso con Stripe PaymentElement
-                    agregar sección "Pagar con Mercado Pago" con MP Brick
-2.3-D  Página de éxito real con orderId de DB
-2.3-E  Emails transaccionales con Resend (confirmar pedido + admin)
+2.3-A  Crear proyecto en Stripe + MercadoPago (modo sandbox)
+2.3-B  Variables de entorno en .env.local y Vercel
+
+2.3-C  API Routes:
+         POST /api/payments/mp/create-preference   → MP SDK
+         POST /api/payments/stripe/create-intent   → Stripe SDK
+         POST /api/webhooks/stripe                 → verificar firma, crear Order
+         POST /api/webhooks/mercadopago            → verificar firma, crear Order
+
+2.3-D  UI Checkout:
+         - Agregar tabs "Tarjeta MX (MP)" | "Tarjeta Internacional (Stripe)"
+         - Renderizar Brick o PaymentElement según selección
+         - Eliminar form de tarjeta falso y link de PayPal manual
+
+2.3-E  Página de éxito real:
+         - Recibe orderId real desde webhook
+         - Muestra resumen de la orden desde DB
+         - Llama clearCart() para vaciar el carrito
+
+2.3-F  Emails transaccionales (Resend):
+         - Template: confirmación de orden (nombre, items, total, número)
+         - Disparado desde webhook al confirmar pago
+
+2.3-G  Tests en sandbox:
+         - MP: tarjeta de prueba 5031 7557 3453 0604
+         - Stripe: 4242 4242 4242 4242
+         - OXXO: trigger manual desde MP dashboard
 ```
 
 ---
 
-## Resumen de Prioridades
+## 6. Tabla de Prioridades Actualizada
 
-| # | Bug/Mejora | Severidad | Esfuerzo | Sprint |
+| # | Bug/Mejora | Severidad | Estado | Sprint |
 |---|---|---|---|---|
-| B-01 | Precios en dólares en checkout | 🔴 Crítico | Bajo (20 líneas) | Ahora |
-| B-02 | Doble símbolo de moneda | 🔴 Alto | Mínimo (3 líneas) | Ahora |
-| B-03 | Shipping hardcoded + inconsistente | 🟠 Alto | Bajo | Ahora |
-| B-04 | Pickup cost hardcoded | 🟡 Medio | Mínimo | Ahora |
-| GUI-06 | handleExpressCheckout crash | 🔴 Alto | Mínimo | Ahora |
-| GUI-04 | Página success 404 | 🟠 Alto | Medio | Iteración 1.5 |
-| GUI-01 | Validación inline | 🟡 Medio | Medio | Iteración 1.5 |
-| GUI-02 | Card masking | 🟡 Medio | Medio | Iteración 2.3 |
-| GUI-03 | Sticky CTA móvil | 🟡 Medio | Bajo | Iteración 1.5 |
-| GUI-05 | Hydration skeleton | 🟢 Bajo | Bajo | Iteración 1.5 |
-| B-05 | Submit real (backend) | 🔴 Crítico | Alto | Iteración 2.3 |
-| B-06 | Reemplazar PayPal por MP | 🔴 Alto | Alto | Iteración 2.3 |
+| B-01 | Precios en dólares en checkout | 🔴 Crítico | ✅ Resuelto | — |
+| B-02 | Doble símbolo de moneda | 🔴 Alto | ✅ Resuelto | — |
+| B-03 | Shipping hardcoded + inconsistente | 🟠 Alto | ✅ Resuelto | — |
+| B-04 | Pickup cost hardcodeado | 🟡 Medio | ✅ Resuelto | — |
+| GUI-04 | Página success 404 | 🟠 Alto | ✅ Resuelto | — |
+| GUI-06 | handleExpressCheckout crash | 🔴 Alto | ✅ Resuelto | — |
+| GUI-01 | Validación inline (alert → inline) | 🟡 Medio | ⏳ Pendiente | Antes de lanzamiento |
+| GUI-03 | Sticky CTA móvil | 🟡 Medio | ⏳ Pendiente | Antes de lanzamiento |
+| GUI-02 | Card masking | 🟡 Medio | ⏳ Pendiente | Antes de lanzamiento |
+| GUI-05 | Hydration skeleton | 🟢 Bajo | ⏳ Pendiente | Antes de lanzamiento |
+| B-05 | Submit real (backend) | 🔴 Crítico | ⏳ Pendiente | Fase 2.3 |
+| B-06 | Reemplazar PayPal por MP | 🔴 Alto | ⚠️ Parcial | Fase 2.3 |
