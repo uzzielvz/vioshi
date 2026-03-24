@@ -4,9 +4,11 @@ import Image from "next/image";
 import { ProductData as Product } from "@/lib/products";
 import { useCart } from "@/store/cartStore";
 import { generateId } from "@/lib/utils";
+import { formatPrice } from "@/lib/formatters";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useLocaleContext } from "@/hooks/useLocaleContext";
 
 interface ProductContentProps {
   product: Product;
@@ -14,7 +16,9 @@ interface ProductContentProps {
 }
 
 export default function ProductContent({ product, allProducts }: ProductContentProps) {
-  const t = useTranslations("cart");
+  const tCart = useTranslations("cart");
+  const t = useTranslations("product");
+  const { locale } = useLocaleContext();
   const [selectedSize, setSelectedSize] = useState<string>(product.size || "");
   const [isAdding, setIsAdding] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -54,22 +58,20 @@ export default function ProductContent({ product, allProducts }: ProductContentP
     }, 500);
   };
 
-  const categoryName = product.category === 'new' ? 'NEW ARRIVALS' :
-                       product.category === 'hoodie' ? 'HOODIES' :
-                       product.category === 'chamarra' ? 'CHAMARRAS' :
-                       product.category === 'pants' ? 'PANTS' :
-                       product.category === 'jeans' ? 'JEANS' :
-                       product.category === 'camisas' ? 'CAMISAS' :
-                       product.category === 'playeras' ? 'PLAYERAS' :
-                       product.category === 'accesorios' ? 'ACCESORIOS' :
-                       product.category === 'bolsos' ? 'BOLSOS' : 'SHOP';
+  const CAT_KEYS: Record<string, string> = {
+    new: 'cat_new', hoodie: 'cat_hoodie', chamarra: 'cat_chamarra',
+    pants: 'cat_pants', jeans: 'cat_jeans', camisas: 'cat_camisas',
+    playeras: 'cat_playeras', accesorios: 'cat_accesorios', bolsos: 'cat_bolsos',
+  };
+  const catKey = (CAT_KEYS[product.category || ''] ?? 'cat_default') as Parameters<typeof t>[0];
+  const categoryName = t(catKey);
 
   return (
     <main className="flex-1 pt-16">
       {/* Navigation - Desktop only */}
       <div className="hidden md:flex items-center justify-between px-8 py-4">
         <Link
-          href={`/collections/${product.category || 'all'}`}
+          href={`/${locale}/collections/${product.category || 'all'}`}
           className="flex items-center gap-2 hover:opacity-60 transition-opacity"
           style={{
             fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -79,12 +81,12 @@ export default function ProductContent({ product, allProducts }: ProductContentP
             textTransform: 'uppercase'
           }}
         >
-          <span>{'<'}</span> BACK TO {categoryName}
+          <span>{'<'}</span> {t('back_to')} {categoryName}
         </Link>
 
         {nextProduct && (
           <Link
-            href={`/products/${nextProduct.slug}`}
+            href={`/${locale}/products/${nextProduct.slug}`}
             className="flex items-center gap-2 hover:opacity-60 transition-opacity"
             style={{
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -94,7 +96,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
               textTransform: 'uppercase'
             }}
           >
-            NEXT PRODUCT <span>{'>'}</span>
+            {t('next_product')} <span>{'>'}</span>
           </Link>
         )}
       </div>
@@ -203,7 +205,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
                 fontWeight: 400
               }}
             >
-              ${product.price.toLocaleString('en-US')}
+              {formatPrice(product.price, locale)}
             </p>
 
             {/* Size Selector */}
@@ -234,7 +236,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
                 color: "#666",
               }}
             >
-              {t("free_shipping_note")}
+              {tCart("free_shipping_note")}
             </p>
 
             {/* Collapsible sections */}
@@ -249,7 +251,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
                     letterSpacing: '0.05em'
                   }}
                 >
-                  PRODUCT DETAILS
+                  {t('product_details')}
                   <span className="text-xs text-gray-400 font-light">+</span>
                 </summary>
                 <p
@@ -279,7 +281,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
                   letterSpacing: '0.05em'
                 }}
               >
-                Sold Out
+                {t('sold_out')}
               </button>
             ) : (
               <button
@@ -293,7 +295,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
                   letterSpacing: '0.05em'
                 }}
               >
-                {isAdding ? "ADDING..." : "ADD TO BAG"}
+                {isAdding ? t('adding') : t('add_to_bag')}
               </button>
             )}
           </div>

@@ -12,6 +12,7 @@ export default function VenderPage() {
   const { locale } = useLocaleContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const mountedRef = useRef(true);
   useEffect(() => { return () => { mountedRef.current = false; }; }, []);
   const [formData, setFormData] = useState({
@@ -37,13 +38,12 @@ export default function VenderPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // TODO: Send application to backend
-      console.log('Vendor application:', formData);
+      // TODO: Send application to backend (Phase 2)
       await new Promise((resolve) => setTimeout(resolve, 1500));
       if (mountedRef.current) setSubmitted(true);
     } catch (error) {
       console.error('Error submitting application:', error);
-      if (mountedRef.current) alert('Error al enviar la solicitud. Intenta de nuevo.');
+      if (mountedRef.current) setSubmitError('Error al enviar la solicitud. Intenta de nuevo.');
     } finally {
       if (mountedRef.current) setIsSubmitting(false);
     }
@@ -272,6 +272,9 @@ export default function VenderPage() {
             >
               {isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
             </button>
+            {submitError && (
+              <p className="text-[10px] text-red-500 mt-2">{submitError}</p>
+            )}
           </form>
         </div>
 

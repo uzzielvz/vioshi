@@ -241,10 +241,24 @@ export default function CheckoutPage() {
     updateShippingCost(shippingCost);
   }, [shippingCost, updateShippingCost]);
 
+  const formatCardNumber = (val: string) =>
+    val.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+
+  const formatExpiry = (val: string) => {
+    const digits = val.replace(/\D/g, '').slice(0, 4);
+    return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+  };
+
+  const formatCVV = (val: string) => val.replace(/\D/g, '').slice(0, 4);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    const updatedFormData = { ...formData, [name]: type === 'checkbox' ? checked : value };
+    let formattedValue = value;
+    if (name === 'cardNumber') formattedValue = formatCardNumber(value);
+    if (name === 'expirationDate') formattedValue = formatExpiry(value);
+    if (name === 'securityCode') formattedValue = formatCVV(value);
+    const updatedFormData = { ...formData, [name]: type === 'checkbox' ? checked : formattedValue };
     setFormData(updatedFormData);
 
     if (['address', 'colonia', 'state', 'zipCode', 'deliveryMethod', 'pickupPointId'].includes(name)) {
@@ -354,7 +368,7 @@ export default function CheckoutPage() {
 
             {/* ── Left: Form ─────────────────────────────────────────── */}
             <div className="order-2 lg:order-1 px-6 sm:px-8 lg:px-0 mt-10 lg:mt-0 pb-12 lg:pb-0">
-              <form onSubmit={handleSubmit} className="space-y-10">
+              <form id="checkout-form" onSubmit={handleSubmit} className="space-y-10 pb-24 lg:pb-0">
 
                 {/* 01 Contact */}
                 <section>
@@ -627,10 +641,10 @@ export default function CheckoutPage() {
 
                   {formData.paymentMethod === 'card' && (
                     <div className="space-y-1 pt-4">
-                      <input type="text" name="cardNumber" placeholder={t('card_number')} required value={formData.cardNumber} onChange={handleInputChange} className={INPUT} />
+                      <input type="text" name="cardNumber" placeholder={t('card_number')} required inputMode="numeric" maxLength={19} autoComplete="cc-number" value={formData.cardNumber} onChange={handleInputChange} className={INPUT} />
                       <div className="grid grid-cols-2 gap-x-6">
-                        <input type="text" name="expirationDate" placeholder={t('expiration_date')} required value={formData.expirationDate} onChange={handleInputChange} className={INPUT} />
-                        <input type="text" name="securityCode" placeholder={t('security_code')} required value={formData.securityCode} onChange={handleInputChange} className={INPUT} />
+                        <input type="text" name="expirationDate" placeholder={t('expiration_date')} required inputMode="numeric" maxLength={5} autoComplete="cc-exp" value={formData.expirationDate} onChange={handleInputChange} className={INPUT} />
+                        <input type="text" name="securityCode" placeholder={t('security_code')} required inputMode="numeric" maxLength={4} autoComplete="cc-csc" value={formData.securityCode} onChange={handleInputChange} className={INPUT} />
                       </div>
                       <input type="text" name="nameOnCard" placeholder={t('name_on_card')} required value={formData.nameOnCard} onChange={handleInputChange} className={INPUT} />
                       <label className="flex items-center gap-2.5 pt-3 cursor-pointer">
@@ -813,6 +827,18 @@ export default function CheckoutPage() {
           </div>
         </div>
       </main>
+
+      {/* Mobile sticky submit bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 px-6 py-4">
+        <button
+          type="submit"
+          form="checkout-form"
+          disabled={isProcessing || !formData.agreeToTerms}
+          className="w-full bg-black text-white py-4 text-[12px] uppercase tracking-widest font-medium hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+        >
+          {isProcessing ? t('processing') : t('complete_order')}
+        </button>
+      </div>
 
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8 mt-12">
