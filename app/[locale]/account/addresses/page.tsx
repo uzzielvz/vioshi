@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useLocaleContext } from '@/hooks/useLocaleContext';
 
 interface Address {
   id: string;
@@ -43,6 +44,7 @@ const mockAddresses: Address[] = [
 ];
 
 export default function AddressesPage() {
+  const { locale } = useLocaleContext();
   const [addresses, setAddresses] = useState(mockAddresses);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -67,7 +69,7 @@ export default function AddressesPage() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            href="/account"
+            href={`/${locale}/account`}
             className="text-sm uppercase tracking-wider text-gray-600 hover:text-black transition-colors inline-flex items-center gap-2"
           >
             <svg

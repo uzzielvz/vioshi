@@ -409,6 +409,7 @@
     "archivos_type_invoice": "Factura",
     "archivos_type_receipt": "Comprobante",
     "archivos_download": "Descargar",
-    "archivos_back": "Volver a Mi Cuenta"
+    "archivos_back": "Volver a Mi Cuenta",
+    "back_to_store": "← Volver a la Tienda"
   }
 }

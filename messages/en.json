@@ -409,6 +409,7 @@
     "archivos_type_invoice": "Invoice",
     "archivos_type_receipt": "Receipt",
     "archivos_download": "Download",
-    "archivos_back": "Back to My Account"
+    "archivos_back": "Back to My Account",
+    "back_to_store": "← Back to Store"
   }
 }

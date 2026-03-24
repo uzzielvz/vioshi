@@ -23,6 +23,7 @@ export default function RegisterPage() {
   const t = useTranslations('account');
   const { locale } = useLocaleContext();
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState('');
   const mountedRef = useRef(true);
   useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
@@ -43,14 +44,18 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) { alert(t('passwords_mismatch')); return; }
+    if (formData.password !== formData.confirmPassword) {
+      setFormError(t('passwords_mismatch'));
+      return;
+    }
+    setFormError('');
     setIsLoading(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       if (mountedRef.current) router.push(`/${locale}/account`);
     } catch (error) {
       console.error('Registration error:', error);
-      if (mountedRef.current) alert(t('error_register'));
+      if (mountedRef.current) setFormError(t('error_register'));
     } finally {
       if (mountedRef.current) setIsLoading(false);
     }
@@ -61,8 +66,18 @@ export default function RegisterPage() {
       <div className="bg-gray-50 w-full max-w-sm px-8 py-10" style={FONT}>
 
         {/* Logo */}
-        <div className="text-center mb-7">
+        <div className="text-center mb-3">
           <span className="text-lg font-bold" style={LOGO}>VIOGI</span>
+        </div>
+
+        {/* Back to store */}
+        <div className="text-center mb-5">
+          <Link
+            href={`/${locale}`}
+            className="text-[10px] uppercase tracking-widest text-gray-300 hover:text-black transition-colors"
+          >
+            {t('back_to_store')}
+          </Link>
         </div>
 
         {/* Titles */}
@@ -96,6 +111,10 @@ export default function RegisterPage() {
             <span className="text-[10px] text-gray-400">{t('newsletter_label')}</span>
           </label>
 
+          {formError && (
+            <p className="text-[10px] text-red-500">{formError}</p>
+          )}
+
           <button
             type="submit"
             disabled={isLoading}
@@ -106,13 +125,32 @@ export default function RegisterPage() {
         </form>
 
         {/* Sign in link */}
-        <div className="mt-5 text-center">
+        <div className="mt-5 text-center mb-6">
           <Link
             href={`/${locale}/account`}
             className="text-[10px] text-gray-400 hover:text-black transition-colors"
           >
             {t('already_account')} {t('sign_in')}
           </Link>
+        </div>
+
+        {/* Locale switcher */}
+        <div className="flex items-center justify-center gap-3 pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={() => { if (locale !== 'es') window.location.href = '/es/account/register'; }}
+            className={`text-[10px] uppercase tracking-widest transition-colors ${locale === 'es' ? 'text-black' : 'text-gray-300 hover:text-gray-500'}`}
+          >
+            ES / MXN
+          </button>
+          <span className="text-gray-200 text-[10px]">|</span>
+          <button
+            type="button"
+            onClick={() => { if (locale !== 'en') window.location.href = '/en/account/register'; }}
+            className={`text-[10px] uppercase tracking-widest transition-colors ${locale === 'en' ? 'text-black' : 'text-gray-300 hover:text-gray-500'}`}
+          >
+            EN / USD
+          </button>
         </div>
       </div>
     </div>

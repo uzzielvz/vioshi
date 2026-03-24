@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
+import { useState } from 'react';
 
 const FONT: React.CSSProperties = {
   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -27,14 +28,26 @@ function GoogleLogo() {
 export default function AccountPage() {
   const t = useTranslations('account');
   const { locale } = useLocaleContext();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <div className="bg-gray-50 w-full max-w-sm px-8 py-10" style={FONT}>
 
         {/* Logo */}
-        <div className="text-center mb-7">
+        <div className="text-center mb-3">
           <span className="text-lg font-bold" style={LOGO}>VIOGI</span>
+        </div>
+
+        {/* Back to store */}
+        <div className="text-center mb-5">
+          <Link
+            href={`/${locale}`}
+            className="text-[10px] uppercase tracking-widest text-gray-300 hover:text-black transition-colors"
+          >
+            {t('back_to_store')}
+          </Link>
         </div>
 
         {/* Titles */}
@@ -64,15 +77,25 @@ export default function AccountPage() {
 
         {/* Email */}
         <input
+          id="email"
+          name="email"
           type="email"
+          autoComplete="email"
           placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="w-full border border-gray-300 px-3 py-2.5 text-[11px] placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors bg-transparent mb-3"
         />
 
         {/* Password */}
         <input
+          id="password"
+          name="password"
           type="password"
+          autoComplete="current-password"
           placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="w-full border border-gray-300 px-3 py-2.5 text-[11px] placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors bg-transparent mb-1"
         />
 
@@ -95,13 +118,32 @@ export default function AccountPage() {
         </button>
 
         {/* Create account */}
-        <div className="text-center">
+        <div className="text-center mb-6">
           <Link
             href={`/${locale}/account/register`}
             className="text-[10px] text-gray-400 hover:text-black transition-colors"
           >
             {t('create_account')}
           </Link>
+        </div>
+
+        {/* Locale switcher */}
+        <div className="flex items-center justify-center gap-3 pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={() => { if (locale !== 'es') window.location.href = '/es/account'; }}
+            className={`text-[10px] uppercase tracking-widest transition-colors ${locale === 'es' ? 'text-black' : 'text-gray-300 hover:text-gray-500'}`}
+          >
+            ES / MXN
+          </button>
+          <span className="text-gray-200 text-[10px]">|</span>
+          <button
+            type="button"
+            onClick={() => { if (locale !== 'en') window.location.href = '/en/account'; }}
+            className={`text-[10px] uppercase tracking-widest transition-colors ${locale === 'en' ? 'text-black' : 'text-gray-300 hover:text-gray-500'}`}
+          >
+            EN / USD
+          </button>
         </div>
       </div>
     </div>

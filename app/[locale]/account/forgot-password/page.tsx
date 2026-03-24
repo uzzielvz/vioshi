@@ -11,6 +11,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [formError, setFormError] = useState('');
   const mountedRef = useRef(true);
   useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
@@ -19,13 +20,12 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      // TODO: Implement password reset API call
-      console.log('Sending reset email to:', email);
+      // TODO: Implement password reset API call (Phase 2 — NextAuth)
       await new Promise((resolve) => setTimeout(resolve, 1500));
       if (mountedRef.current) setEmailSent(true);
     } catch (error) {
       console.error('Password reset error:', error);
-      if (mountedRef.current) alert(t('error_forgot'));
+      if (mountedRef.current) setFormError(t('error_forgot'));
     } finally {
       if (mountedRef.current) setIsLoading(false);
     }
@@ -94,6 +94,14 @@ export default function ForgotPasswordPage() {
     <div className="max-w-md mx-auto px-6 md:px-8 py-12 md:py-16">
       <div className="space-y-8">
         <div className="text-center space-y-2">
+          <div className="mb-3">
+            <Link
+              href={`/${locale}`}
+              className="text-[10px] uppercase tracking-widest text-gray-300 hover:text-black transition-colors"
+            >
+              {t('back_to_store')}
+            </Link>
+          </div>
           <h1 className="text-2xl md:text-3xl font-normal uppercase tracking-wide">
             {t('forgot_title')}
           </h1>
@@ -114,6 +122,10 @@ export default function ForgotPasswordPage() {
               className="w-full border border-gray-200 p-3 text-sm focus:outline-none focus:border-black transition-colors placeholder:text-gray-400 placeholder:uppercase placeholder:tracking-wide"
             />
           </div>
+
+          {formError && (
+            <p className="text-[10px] text-red-500">{formError}</p>
+          )}
 
           <button
             type="submit"

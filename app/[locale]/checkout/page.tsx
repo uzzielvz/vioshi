@@ -26,7 +26,7 @@ const INPUT_READONLY =
   'w-full py-3.5 border-b border-gray-100 bg-transparent text-gray-400 text-sm cursor-not-allowed select-none';
 
 const SECTION_LABEL =
-  'text-[9px] uppercase tracking-widest text-gray-400';
+  'text-[11px] uppercase tracking-widest text-black font-medium';
 
 // Custom select — wraps native <select> with a clean chevron
 function CustomSelect({
@@ -118,7 +118,6 @@ interface CheckoutFormData {
   pickupDate: string;
   pickupTimeSlot: string;
   saveInfo: boolean;
-  mobilePhone: string;
   useShippingAsBilling: boolean;
   agreeToTerms: boolean;
   shippingMethod: string;
@@ -150,6 +149,12 @@ export default function CheckoutPage() {
   const [cpLoading, setCpLoading] = useState(false);
   const [cpError, setCpError] = useState(false);
   const [paypalCopied, setPaypalCopied] = useState(false);
+  const [formErrors, setFormErrors] = useState<{
+    terms?: string;
+    address?: string;
+    pickup?: string;
+    general?: string;
+  }>({});
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     email: '',
@@ -169,7 +174,6 @@ export default function CheckoutPage() {
     pickupDate: '',
     pickupTimeSlot: '',
     saveInfo: false,
-    mobilePhone: '',
     useShippingAsBilling: true,
     agreeToTerms: false,
     shippingMethod: 'standard',
@@ -261,14 +265,19 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.agreeToTerms) { alert(t('alert_terms')); return; }
+    const errors: { terms?: string; address?: string; pickup?: string; general?: string } = {};
+    if (!formData.agreeToTerms) errors.terms = t('alert_terms');
     if (formData.deliveryMethod === 'home') {
-      if (!formData.address || !formData.colonia || !formData.state || !formData.zipCode) {
-        alert(t('alert_address')); return;
-      }
+      if (!formData.address || !formData.colonia || !formData.state || !formData.zipCode)
+        errors.address = t('alert_address');
     } else if (formData.deliveryMethod === 'pickup' && !formData.pickupPointId) {
-      alert(t('alert_pickup')); return;
+      errors.pickup = t('alert_pickup');
     }
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
 
     isSubmittingRef.current = true;
     setIsProcessing(true);
@@ -278,7 +287,7 @@ export default function CheckoutPage() {
     } catch (error) {
       isSubmittingRef.current = false;
       console.error('Error processing order:', error);
-      alert(t('error_processing'));
+      setFormErrors({ general: t('error_processing') });
     } finally {
       setIsProcessing(false);
     }
@@ -296,6 +305,7 @@ export default function CheckoutPage() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
+            {/* Logo */}
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); closeCart(); window.location.href = `/${locale}`; }}
@@ -307,15 +317,33 @@ export default function CheckoutPage() {
             >
               VIOGI
             </button>
+            {/* Back to cart */}
             <button
+              type="button"
               onClick={() => { closeCart(); router.push(`/${locale}/cart`); }}
-              className="hover:opacity-50 transition-opacity"
+              className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
               aria-label={t('back_to_cart_aria')}
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
+              ← {t('back_to_cart_aria')}
             </button>
+            {/* Locale switcher */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => { if (locale !== 'es') window.location.href = `/es/checkout`; }}
+                className={`text-[10px] uppercase tracking-widest transition-colors ${locale === 'es' ? 'text-black' : 'text-gray-300 hover:text-gray-500'}`}
+              >
+                ES
+              </button>
+              <span className="text-gray-200 text-[10px]">/</span>
+              <button
+                type="button"
+                onClick={() => { if (locale !== 'en') window.location.href = `/en/checkout`; }}
+                className={`text-[10px] uppercase tracking-widest transition-colors ${locale === 'en' ? 'text-black' : 'text-gray-300 hover:text-gray-500'}`}
+              >
+                EN
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -328,18 +356,23 @@ export default function CheckoutPage() {
             <div className="order-2 lg:order-1 px-6 sm:px-8 lg:px-0 mt-10 lg:mt-0 pb-12 lg:pb-0">
               <form onSubmit={handleSubmit} className="space-y-10">
 
-                {/* Contact */}
+                {/* 01 Contact */}
                 <section>
-                  <div className="flex items-center justify-between mb-6">
-                    <p className={SECTION_LABEL}>{t('contact')}</p>
-                    <Link href="/account" className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
+                  <div className="flex items-center justify-between mb-6 pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <span className="text-[9px] text-gray-300 tracking-widest">01</span>
+                      <p className={SECTION_LABEL}>{t('contact')}</p>
+                    </div>
+                    <Link href={`/${locale}/account`} className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
                       {t('sign_in')}
                     </Link>
                   </div>
                   <div className="space-y-1">
                     <input
+                      id="checkout-email"
                       type="email"
                       name="email"
+                      autoComplete="email"
                       placeholder={t('email_placeholder')}
                       required
                       value={formData.email}
@@ -366,9 +399,12 @@ export default function CheckoutPage() {
                   </div>
                 </section>
 
-                {/* Delivery */}
+                {/* 02 Delivery */}
                 <section>
-                  <p className={`${SECTION_LABEL} mb-6`}>{t('delivery')}</p>
+                  <div className="flex items-center gap-3 mb-6 pt-4 border-t border-gray-100">
+                    <span className="text-[9px] text-gray-300 tracking-widest">02</span>
+                    <p className={SECTION_LABEL}>{t('delivery')}</p>
+                  </div>
 
                   {/* Method selector */}
                   <div className="mb-6">
@@ -461,6 +497,9 @@ export default function CheckoutPage() {
                       )}
 
                       <input type="tel" name="phone" placeholder={t('phone')} required value={formData.phone} onChange={handleInputChange} className={INPUT} />
+                      {formErrors.address && (
+                        <p data-error className="text-[10px] text-red-500 mt-2">{formErrors.address}</p>
+                      )}
                     </div>
                   )}
 
@@ -492,6 +531,9 @@ export default function CheckoutPage() {
                             ))}
                           </optgroup>
                         </CustomSelect>
+                        {formErrors.pickup && (
+                          <p data-error className="text-[10px] text-red-500 mt-2">{formErrors.pickup}</p>
+                        )}
                       </div>
 
                       {formData.pickupPointId && selectedPickupPoint && (
@@ -533,9 +575,12 @@ export default function CheckoutPage() {
                   )}
                 </section>
 
-                {/* Shipping method */}
+                {/* 03 Shipping method */}
                 <section>
-                  <p className={`${SECTION_LABEL} mb-6`}>{t('shipping_method')}</p>
+                  <div className="flex items-center gap-3 mb-6 pt-4 border-t border-gray-100">
+                    <span className="text-[9px] text-gray-300 tracking-widest">03</span>
+                    <p className={SECTION_LABEL}>{t('shipping_method')}</p>
+                  </div>
                   {!showShippingMethods ? (
                     <p className="text-[11px] text-gray-300 tracking-wide">{t('shipping_address_required')}</p>
                   ) : (
@@ -558,9 +603,12 @@ export default function CheckoutPage() {
                   )}
                 </section>
 
-                {/* Payment */}
+                {/* 04 Payment */}
                 <section>
-                  <p className={`${SECTION_LABEL} mb-6`}>{t('payment')}</p>
+                  <div className="flex items-center gap-3 mb-6 pt-4 border-t border-gray-100">
+                    <span className="text-[9px] text-gray-300 tracking-widest">04</span>
+                    <p className={SECTION_LABEL}>{t('payment')}</p>
+                  </div>
 
                   <RadioCard
                     name="paymentMethod"
@@ -625,31 +673,20 @@ export default function CheckoutPage() {
                   )}
                 </section>
 
-                {/* Save info */}
-                <section>
-                  <p className={`${SECTION_LABEL} mb-6`}>{t('save_info_title')}</p>
-                  <div className="flex items-end gap-3">
-                    <span className="text-[11px] text-gray-400 pb-3.5">+52</span>
-                    <input
-                      type="tel"
-                      name="mobilePhone"
-                      placeholder={t('mobile_phone')}
-                      value={formData.mobilePhone}
-                      onChange={handleInputChange}
-                      className={`${INPUT} flex-1`}
-                    />
-                  </div>
-                  <p className="text-[10px] text-gray-300 mt-3 leading-relaxed">
-                    {t('shop_terms_text')}{' '}
-                    <Link href={`/${locale}/pages/legal`} className="underline underline-offset-2">{t('shop_terms_link')}</Link>
-                    {' '}{t('shop_and')}{' '}
-                    <Link href={`/${locale}/pages/legal`} className="underline underline-offset-2">{t('shop_privacy_link')}</Link>
-                    {t('shop_terms_end')}
-                  </p>
-                </section>
-
                 {/* Terms + submit */}
-                <section className="space-y-6">
+                <section className="space-y-5 pt-4 border-t border-gray-100">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" name="saveInfo" checked={formData.saveInfo} onChange={handleInputChange} className="sr-only peer" />
+                    <span className="w-3.5 h-3.5 border border-gray-300 peer-checked:bg-black peer-checked:border-black flex items-center justify-center flex-shrink-0 transition-colors">
+                      {formData.saveInfo && (
+                        <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </span>
+                    <span className="text-[11px] text-gray-400">{t('save_info_title')}</span>
+                  </label>
+
                   <label className="flex items-start gap-2.5 cursor-pointer">
                     <input type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleInputChange} required className="sr-only peer" />
                     <span className="w-3.5 h-3.5 mt-0.5 border border-gray-300 peer-checked:bg-black peer-checked:border-black flex items-center justify-center flex-shrink-0 transition-colors">
@@ -666,11 +703,20 @@ export default function CheckoutPage() {
                       <Link href={`/${locale}/pages/legal`} className="underline underline-offset-2 text-black">{t('privacy_policy')}</Link>.
                     </span>
                   </label>
+                  {formErrors.terms && (
+                    <p data-error className="text-[10px] text-red-500 -mt-3">{formErrors.terms}</p>
+                  )}
+
+                  {formErrors.general && (
+                    <div className="bg-red-50 border border-red-200 px-4 py-3">
+                      <p className="text-[11px] text-red-600">{formErrors.general}</p>
+                    </div>
+                  )}
 
                   <button
                     type="submit"
                     disabled={isProcessing || !formData.agreeToTerms}
-                    className="w-full bg-black text-white py-4 text-[10px] uppercase tracking-widest hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+                    className="w-full bg-black text-white py-4 text-[12px] uppercase tracking-widest font-medium hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
                   >
                     {isProcessing ? t('processing') : t('complete_order')}
                   </button>
@@ -687,7 +733,7 @@ export default function CheckoutPage() {
                 onClick={() => setShowOrderSummary(!showOrderSummary)}
                 className="lg:hidden w-full flex items-center justify-between px-6 py-4 border-b border-gray-100"
               >
-                <span className="text-[9px] uppercase tracking-widest text-gray-400">{t('order_summary')}</span>
+                <span className="text-[11px] uppercase tracking-widest text-gray-500">{t('order_summary')}</span>
                 <div className="flex items-center gap-3">
                   <span className="text-lg font-light">{formatPrice(total, locale)}</span>
                   <svg className={`w-3 h-3 text-gray-400 transition-transform ${showOrderSummary ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -738,11 +784,11 @@ export default function CheckoutPage() {
                 {/* Totals */}
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-[10px] uppercase tracking-widest text-gray-400">{t('subtotal')}</span>
-                    <span className="text-[11px]">{formatPrice(subtotal, locale)}</span>
+                    <span className="text-[11px] uppercase tracking-widest text-gray-500">{t('subtotal')}</span>
+                    <span className="text-[12px]">{formatPrice(subtotal, locale)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[10px] uppercase tracking-widest text-gray-400">
+                    <span className="text-[11px] uppercase tracking-widest text-gray-500">
                       {formData.deliveryMethod === 'home' ? t('shipping_label') : t('pickup_cost_label')}
                     </span>
                     <span className="text-[10px] text-gray-400">
