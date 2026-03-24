@@ -1,6 +1,6 @@
 # VIOGI — Research & Estado del Proyecto
 
-> Última actualización: 2026-03-17
+> Última actualización: 2026-03-23
 
 ---
 
@@ -185,7 +185,7 @@ No necesitan `pt-16` porque ClientLayout ya lo aplica (salvo que sean rutas de a
 
 | ID | Descripción | Estado |
 |---|---|---|
-| GUI-01 | Validación con `alert()` nativo | ⏳ PENDIENTE |
+| GUI-01 | Validación con `alert()` nativo | ✅ RESUELTO — `formErrors` state inline (C-4) |
 | GUI-02 | Campos de tarjeta sin masking | ⏳ PENDIENTE |
 | GUI-03 | CTA sticky en móvil | ⏳ PENDIENTE |
 | GUI-04 | Página de éxito inexistente (404) | ✅ RESUELTO — página existe |
@@ -209,16 +209,17 @@ No necesitan `pt-16` porque ClientLayout ya lo aplica (salvo que sean rutas de a
 
 | ID | Archivo | Descripción | Prioridad |
 |---|---|---|---|
-| T-03 | `lib/products.ts:143` | Path de imagen Jeans tiene espacios — verificar si el archivo físico existe con ese nombre en `/public/products/` | Media |
-| GUI-01 | `checkout/page.tsx` | Validación usa `alert()` nativo — reemplazar con errores inline | Media |
+| T-03 | `lib/products.ts:143` | Path de imagen Jeans tiene espacios — **CONFIRMADO:** el archivo físico sí existe como `JEANS WRANGLER-32x32- 250.png`. Next.js lo sirve correctamente. | Baja |
 | GUI-02 | `checkout/page.tsx` | Campos de tarjeta sin masking | Baja |
 | GUI-03 | `checkout/page.tsx` | Sin CTA sticky en móvil | Baja |
 | GUI-05 | `checkout/page.tsx` | Sin skeleton de hidratación | Baja |
 | I18N-01 | `search/page.tsx` | Algunos labels hardcodeados | Baja |
 | I18N-02 | `products/[slug]/ProductContent.tsx` | Nombre de categoría hardcodeado | Baja |
-| CON-01 | `checkout/page.tsx:277` | `ORDER123` hardcodeado — requiere backend | Bloqueante (Fase 2) |
+| CON-01 | `checkout/page.tsx` | `ORDER123` hardcodeado — requiere backend | Bloqueante (Fase 2) |
 | CON-02 | `checkout/page.tsx` | PayPal es link manual, no integración real | Fase 2 |
 | CON-03 | `pages/chapters/page.tsx` | Contenido placeholder — pendiente integrar a Archive | Baja |
+| CON-04 | `vender/page.tsx` | Form con `console.log` y `alert()` — sin backend | Baja |
+| CON-05 | `account/profile/page.tsx` | TODO: API call comentado | Baja |
 
 ### 5.2 Requieren backend (Fase 2)
 
@@ -235,7 +236,38 @@ No necesitan `pt-16` porque ClientLayout ya lo aplica (salvo que sean rutas de a
 
 ---
 
-## 6. LO QUE ESTÁ BIEN
+## 6. AUDIT C-1→C-5 (2026-03-23)
+
+### Cambios ejecutados
+
+| Iteración | Archivo(s) | Cambio |
+|---|---|---|
+| C-1 | `checkout/page.tsx` | `SECTION_LABEL` 9px→11px negro, secciones numeradas 01-04 con `border-t`, botón submit 10px→12px `font-medium`, resumen de orden 10px gray→11px gray-500, eliminada sección Shop.app (`mobilePhone`), save info → checkbox simple |
+| C-2 | `checkout/page.tsx` | Header: link ← Volver al carrito (texto visible), switcher ES/EN, link sign_in con `/${locale}/account` |
+| C-3 | `account/page.tsx`, `register/page.tsx`, `forgot-password/page.tsx` | Link ← Volver a la tienda, switcher ES/EN con moneda, inputs con `id`/`name`/`autoComplete` en login |
+| C-4 | `checkout/page.tsx`, `register/page.tsx`, `forgot-password/page.tsx` | Todos los `alert()` reemplazados por `formErrors` / `formError` state con renders inline |
+| C-5 | `forgot-password/page.tsx`, `addresses/page.tsx` | `console.log` eliminado, link `/account` hardcodeado corregido a `/${locale}/account` con `useLocaleContext` |
+
+### Hallazgos del audit (C-5)
+
+| Tipo | Ubicación | Detalle |
+|---|---|---|
+| `console.log` | `forgot-password/page.tsx:23` | ✅ Eliminado |
+| `console.log` | `vender/page.tsx:41` | ⏳ Pendiente (CON-04) |
+| `alert()` | `checkout/page.tsx` | ✅ Eliminado |
+| `alert()` | `register/page.tsx` | ✅ Eliminado |
+| `alert()` | `forgot-password/page.tsx` | ✅ Eliminado |
+| `alert()` | `vender/page.tsx:46` | ⏳ Pendiente (CON-04) |
+| Link sin locale | `addresses/page.tsx:70` | ✅ Corregido a `/${locale}/account` |
+| Link sin locale | `not-found.tsx:23` | Aceptable — middleware lo redirige al locale correcto |
+| Imagen con espacios | `lib/products.ts:143` | ✅ Verificado — archivo físico existe en `/public/products/` |
+| `TODO` | `account/profile/page.tsx:28` | ⏳ Pendiente (CON-05) |
+| `TODO` | `checkout/page.tsx` (discount apply) | ⏳ Sin backend — botón Apply sin lógica |
+| `mobilePhone` field | `checkout/page.tsx` | ✅ Eliminado de `CheckoutFormData` e interfaz |
+
+---
+
+## 8. LO QUE ESTÁ BIEN
 
 - Infraestructura i18n sólida (next-intl v4, middleware, messages bien estructurados)
 - `CartStore` correctamente implementado con hidratación y persistencia
@@ -251,7 +283,7 @@ No necesitan `pt-16` porque ClientLayout ya lo aplica (salvo que sean rutas de a
 
 ---
 
-## 7. SISTEMA DE MENSAJES (i18n)
+## 9. SISTEMA DE MENSAJES (i18n)
 
 ### Namespaces actuales en messages/en.json + es.json
 
@@ -276,7 +308,7 @@ No necesitan `pt-16` porque ClientLayout ya lo aplica (salvo que sean rutas de a
 
 ---
 
-## 8. FUNCIONALIDAD `lib/mexico.ts` — CP Lookup
+## 10. FUNCIONALIDAD `lib/mexico.ts` — CP Lookup
 
 Función utilitaria que consulta la API pública de SEPOMEX para autocompletar dirección por CP.
 
@@ -294,7 +326,7 @@ lookupCP(cp: string): Promise<MexicoCPData | null>
 
 ---
 
-## 9. ROADMAP
+## 11. ROADMAP
 
 ### Etapa A — Frontend completo (estado actual: ~90%)
 
@@ -358,7 +390,7 @@ Pendiente:
 
 ---
 
-## 10. REFERENCIAS RÁPIDAS
+## 12. REFERENCIAS RÁPIDAS
 
 ### Patrón correcto para nueva página
 
