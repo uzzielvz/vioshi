@@ -15,7 +15,7 @@ export const MIN_CHECKOUT_AMOUNT = 10;
 export const FREE_SHIPPING_THRESHOLD = 100;
 
 // Currency
-export const CURRENCY = "USD";
+export const CURRENCY = "MXN";
 export const CURRENCY_SYMBOL = "$";
 
 // Tax rate — IVA México: 16%
