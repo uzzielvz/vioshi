@@ -7,8 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 import { formatPrice } from '@/lib/formatters';
 import { getProducts, ProductData as Product } from '@/lib/products';
-
-const mockWishlistIds = ['1', '2', '3'];
+import { STORAGE_KEYS } from '@/lib/constants';
 
 const fontStyle = {
   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -19,8 +18,24 @@ export default function WishlistPage() {
   const tProduct = useTranslations('product');
   const { locale } = useLocaleContext();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [wishlistIds, setWishlistIds] = useState(mockWishlistIds);
+  const [wishlistIds, setWishlistIds] = useState<string[]>([]);
+  const [initialized, setInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Hidratar desde localStorage al montar
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.WISHLIST);
+      if (stored) setWishlistIds(JSON.parse(stored));
+    } catch {}
+    setInitialized(true);
+  }, []);
+
+  // Persistir cada vez que cambia la lista (solo tras hidratación)
+  useEffect(() => {
+    if (!initialized) return;
+    localStorage.setItem(STORAGE_KEYS.WISHLIST, JSON.stringify(wishlistIds));
+  }, [wishlistIds, initialized]);
 
   useEffect(() => {
     const loadProducts = async () => {
