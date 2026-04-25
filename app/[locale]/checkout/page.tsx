@@ -140,7 +140,6 @@ export default function CheckoutPage() {
   const shipping = cartData.shipping;
   const total = cartData.total;
 
-  const [discountCode, setDiscountCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showShippingMethods, setShowShippingMethods] = useState(false);
   const [showOrderSummary, setShowOrderSummary] = useState(false);
@@ -775,24 +774,6 @@ export default function CheckoutPage() {
                       <p className="text-[11px] text-gray-500 flex-shrink-0">{formatPrice(item.price * item.quantity, locale)}</p>
                     </div>
                   ))}
-                </div>
-
-                {/* Discount code */}
-                <div className="flex items-end gap-3 border-b border-gray-100 pb-1">
-                  <input
-                    type="text"
-                    value={discountCode}
-                    onChange={(e) => setDiscountCode(e.target.value)}
-                    placeholder={t('discount_code')}
-                    className={`${INPUT} flex-1`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {/* TODO */}}
-                    className="text-[9px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors pb-3.5 whitespace-nowrap"
-                  >
-                    {t('apply')}
-                  </button>
                 </div>
 
                 {/* Totals */}
