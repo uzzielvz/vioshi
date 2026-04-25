@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 import { useCart } from "@/store/cartStore";
@@ -14,6 +14,7 @@ function getPathnameWithoutLocale(pathname: string): string {
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const pathnameWithoutLocale = getPathnameWithoutLocale(pathname);
   const tHeader = useTranslations('header');
   const tCommon = useTranslations('common');
@@ -620,7 +621,18 @@ export default function Header() {
               borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
             }}
           >
-            <div className="flex items-center gap-4 py-4 px-8 md:px-0" style={{ paddingLeft: '32px', background: 'white' }}>
+            <form
+              className="flex items-center gap-4 py-4 px-8 md:px-0"
+              style={{ paddingLeft: '32px', background: 'white' }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = searchQuery.trim();
+                if (!q) return;
+                setSearchOpen(false);
+                setSearchQuery('');
+                router.push(`/${locale}/search?q=${encodeURIComponent(q)}`);
+              }}
+            >
               {/* LUPA - Mobile: alineada al borde, Desktop: alineada con SHOP */}
               <svg
                 className="w-5 h-5 text-black flex-shrink-0 md:ml-24"
@@ -652,6 +664,7 @@ export default function Header() {
 
               {/* X CERRAR - Grande (oculta en móvil) */}
               <button
+                type="button"
                 onClick={() => {
                   setSearchOpen(false);
                   setSearchQuery("");
@@ -665,7 +678,7 @@ export default function Header() {
               >
                 ×
               </button>
-            </div>
+            </form>
           </div>
 
           {/* OVERLAY GRIS - Click para cerrar con cursor X */}
