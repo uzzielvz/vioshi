@@ -8,6 +8,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'oilvubxpxxzfxlqhsumk.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
 }

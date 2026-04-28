@@ -1,5 +1,8 @@
-// ProductData: simplified interface for mock/current data.
-// For DB-backed data (Phase 2+), use the richer Product type from @/types/product.ts
+import { unstable_cache } from 'next/cache'
+import { createClient } from '@supabase/supabase-js'
+
+// ProductData: simplified interface for current data layer.
+// For the richer DB type see @/types/product.ts
 export interface ProductData {
   id: string;
   name: string;
@@ -18,170 +21,108 @@ export interface ProductData {
   };
 }
 
-export async function getProducts(category?: string): Promise<ProductData[]> {
-  const products: ProductData[] = [
-    // PLAYERAS / TEE
-    {
-      id: "1",
-      name: "TEE STUSSY",
-      price: 200,
-      image: "/products/TEE STUSSY-S-200.png",
-      slug: "tee-stussy-s",
-      category: "playeras",
-      size: "S",
-      description: "Playera Stüssy talla S",
-    },
-    {
-      id: "2",
-      name: "TEE TACTIC STUSSY",
-      price: 190,
-      image: "/products/TEE TACTIC STUSSY-L-190.png",
-      slug: "tee-tactic-stussy-l",
-      category: "playeras",
-      size: "L",
-      description: "Playera Tactic Stüssy talla L",
-    },
-    {
-      id: "3",
-      name: "BENNIE STUSSY",
-      price: 200,
-      image: "/products/BENNIE STUSSY-UNISEX-200.png",
-      slug: "bennie-stussy-unisex",
-      category: "playeras",
-      size: "UNISEX",
-      description: "Playera Bennie Stüssy unisex",
-    },
-
-    // HOODIES
-    {
-      id: "4",
-      name: "HOODIE PLAYBOY",
-      price: 400,
-      image: "/products/HOODIE PLAYBOY-M-400.png",
-      images: [
-        "/products/HOODIE PLAYBOY-M-400.png",
-        "/products/HOODIE PLAYBOY-M-400.png",
-        "/products/HOODIE PLAYBOY-M-400.png",
-      ],
-      slug: "hoodie-playboy-m",
-      category: "hoodie",
-      size: "M",
-      description: "Hoodie Playboy talla M",
-    },
-
-    // CHAMARRAS
-    {
-      id: "5",
-      name: "CHAMARRA ADIDAS FB",
-      price: 500,
-      image: "/products/CHAMARRA ADIDAS FB-L-500.png",
-      slug: "chamarra-adidas-fb-l",
-      category: "chamarra",
-      size: "L",
-      description: "Chamarra Adidas FB talla L",
-    },
-    {
-      id: "6",
-      name: "CHAMARRA ARSENAL NIKE",
-      price: 500,
-      image: "/products/CHAMARRA ARSENAL NIKE-XL-500.png",
-      slug: "chamarra-arsenal-nike-xl",
-      category: "chamarra",
-      size: "XL",
-      description: "Chamarra Arsenal Nike talla XL",
-    },
-    {
-      id: "7",
-      name: "CHAMARRA HALPUTT",
-      price: 400,
-      image: "/products/CHAMARRA HALPUTT-L-400.png",
-      slug: "chamarra-halputt-l",
-      category: "chamarra",
-      size: "L",
-      description: "Chamarra Halputt talla L",
-    },
-    {
-      id: "8",
-      name: "CHAMARRA NIKE SB",
-      price: 700,
-      image: "/products/CHAMARRA NIKE SB-L-700.png",
-      slug: "chamarra-nike-sb-l",
-      category: "chamarra",
-      size: "L",
-      description: "Chamarra Nike SB talla L",
-    },
-
-    // CAMISAS / JERSEY
-    {
-      id: "9",
-      name: "JERSEY INGLATERRA 2002 NIKE",
-      price: 350,
-      image: "/products/JESEY INGLATERRA 2002 NIKE-S-350.png",
-      slug: "jersey-inglaterra-2002-nike-s",
-      category: "camisas",
-      size: "S",
-      description: "Jersey Inglaterra 2002 Nike talla S",
-    },
-
-    // PANTS
-    {
-      id: "10",
-      name: "PANTS NIKE FB",
-      price: 370,
-      image: "/products/PANTS NIKE FB-L-370.png",
-      slug: "pants-nike-fb-l",
-      category: "pants",
-      size: "L",
-      description: "Pants Nike FB talla L",
-    },
-
-    // JEANS
-    {
-      id: "11",
-      name: "JEANS WRANGLER",
-      price: 250,
-      image: "/products/JEANS WRANGLER-32x32- 250.png",
-      slug: "jeans-wrangler-32x32",
-      category: "jeans",
-      size: "32x32",
-      description: "Jeans Wrangler talla 32x32",
-    },
-
-    // ACCESORIOS
-    {
-      id: "12",
-      name: "GORRA SUPREME",
-      price: 500,
-      image: "/products/GORRA SUPREME-500.png",
-      slug: "gorra-supreme",
-      category: "accesorios",
-      description: "Gorra Supreme",
-    },
-
-    // BOLSOS
-    {
-      id: "13",
-      name: "TNF BAG",
-      price: 600,
-      image: "/products/TNFBAG-600.png",
-      slug: "tnf-bag",
-      category: "bolsos",
-      description: "The North Face Bag",
-    },
-  ];
-
-  if (category === "new") {
-    return products.filter((p) => p.isNew || p.category === "new");
-  }
-
-  if (category) {
-    return products.filter((p) => p.category === category);
-  }
-
-  return products;
+type DbProduct = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  price_mxn: string;
+  sold_out: boolean;
+  is_new: boolean;
+  product_images: { url: string; is_primary: boolean; sort_order: number }[];
+  categories: { slug: string } | null;
 }
 
-export async function getProductBySlug(slug: string): Promise<ProductData | null> {
-  const products = await getProducts();
-  return products.find((p) => p.slug === slug) || null;
+// Public client — no cookies needed for catalog reads (anon key, public data)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 }
+
+function rowToProductData(row: DbProduct): ProductData {
+  const sortedImages = [...(row.product_images ?? [])]
+    .sort((a, b) => a.sort_order - b.sort_order)
+
+  const primaryImage = sortedImages.find((img) => img.is_primary)
+  const image = primaryImage?.url ?? sortedImages[0]?.url ?? ''
+  const images = sortedImages.map((img) => img.url)
+
+  return {
+    id:          row.id,
+    name:        row.name,
+    price:       parseFloat(row.price_mxn),
+    image,
+    images:      images.length > 1 ? images : undefined,
+    slug:        row.slug,
+    description: row.description ?? undefined,
+    category:    row.categories?.slug ?? undefined,
+    soldOut:     row.sold_out,
+    isNew:       row.is_new,
+  }
+}
+
+async function fetchProducts(category?: string): Promise<ProductData[]> {
+  const supabase = getSupabase()
+
+  let query = supabase
+    .from('products')
+    .select(`
+      id, slug, name, description, price_mxn, sold_out, is_new,
+      product_images (url, is_primary, sort_order),
+      categories (slug)
+    `)
+    .order('created_at', { ascending: false })
+
+  if (category === 'new') {
+    query = query.eq('is_new', true)
+  }
+
+  const { data, error } = await query
+
+  if (error || !data) return []
+
+  const rows = data as unknown as DbProduct[]
+
+  // Supabase returns all rows with categories null for non-matching joins
+  // — filter client-side when a specific category is requested
+  if (category && category !== 'all' && category !== 'new') {
+    return rows
+      .filter((row) => row.categories?.slug === category)
+      .map(rowToProductData)
+  }
+
+  return rows.map(rowToProductData)
+}
+
+async function fetchProductBySlug(slug: string): Promise<ProductData | null> {
+  const supabase = getSupabase()
+
+  const { data, error } = await supabase
+    .from('products')
+    .select(`
+      id, slug, name, description, price_mxn, sold_out, is_new,
+      product_images (url, is_primary, sort_order),
+      categories (slug)
+    `)
+    .eq('slug', slug)
+    .single()
+
+  if (error || !data) return null
+
+  return rowToProductData(data as unknown as DbProduct)
+}
+
+// Cached with Next.js — revalidate every 60 s, invalidable via revalidateTag('products')
+export const getProducts = unstable_cache(
+  fetchProducts,
+  ['products'],
+  { revalidate: 60, tags: ['products'] }
+)
+
+export const getProductBySlug = unstable_cache(
+  fetchProductBySlug,
+  ['product-by-slug'],
+  { revalidate: 60, tags: ['products'] }
+)
