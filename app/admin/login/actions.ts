@@ -10,8 +10,7 @@ export async function loginAction(
   if (password !== process.env.ADMIN_SECRET) {
     return { error: 'Incorrect password.' }
   }
-  const cookieStore = await cookies()
-  cookieStore.set('admin_token', process.env.ADMIN_SECRET!, {
+  cookies().set('admin_token', process.env.ADMIN_SECRET!, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
