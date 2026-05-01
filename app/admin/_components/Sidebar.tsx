@@ -11,6 +11,7 @@ const navFont = {
 export default function Sidebar() {
   const pathname = usePathname()
   const isProducts = pathname.startsWith('/admin/products')
+  const isPickup   = pathname.startsWith('/admin/pickup-points')
 
   return (
     <aside className="w-60 bg-black flex flex-col min-h-screen px-6 py-8 shrink-0">
@@ -38,6 +39,17 @@ export default function Sidebar() {
         >
           PRODUCTS
           {isProducts && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
+        </Link>
+
+        <Link
+          href="/admin/pickup-points"
+          className={`uppercase tracking-widest transition-colors duration-150 flex items-center gap-2 ${
+            isPickup ? 'text-white' : 'text-white/40 hover:text-white'
+          }`}
+          style={navFont}
+        >
+          PICKUP POINTS
+          {isPickup && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
         </Link>
 
         <span
