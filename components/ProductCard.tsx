@@ -50,13 +50,17 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <Image
-            src={image}
-            alt={name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-          />
+          {image ? (
+            <Image
+              src={image}
+              alt={name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-[#EBEBEB]" />
+          )}
 
           {isNew && !soldOut && (
             <div
