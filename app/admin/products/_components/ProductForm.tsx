@@ -21,7 +21,10 @@ export type AdminProduct = {
   is_new: boolean
   sold_out: boolean
   product_images: ExistingImage[]
+  product_attributes?: { key: string; value: string }[]
 }
+
+const FIXED_ATTRS = ['color', 'marca']
 type FormAction = (
   prevState: { error: string } | null,
   formData: FormData
@@ -83,6 +86,28 @@ export default function ProductForm({
   const [name, setName]               = useState(product?.name ?? '')
   const [slug, setSlug]               = useState(product?.slug ?? '')
   const [slugTouched, setSlugTouched] = useState(!!product)
+
+  // Build initial attrs: fixed keys first, then any extras from DB
+  const initAttrs = (): { key: string; value: string }[] => {
+    const existing = product?.product_attributes ?? []
+    const fixed = FIXED_ATTRS.map(k => ({
+      key: k,
+      value: existing.find(a => a.key === k)?.value ?? '',
+    }))
+    const custom = existing.filter(a => !FIXED_ATTRS.includes(a.key))
+    return [...fixed, ...custom]
+  }
+  const [attrs, setAttrs] = useState<{ key: string; value: string }[]>(initAttrs)
+
+  function addAttr() {
+    setAttrs(prev => [...prev, { key: '', value: '' }])
+  }
+  function removeAttr(i: number) {
+    setAttrs(prev => prev.filter((_, idx) => idx !== i))
+  }
+  function updateAttr(i: number, field: 'key' | 'value', val: string) {
+    setAttrs(prev => prev.map((a, idx) => idx === i ? { ...a, [field]: val } : a))
+  }
 
   useEffect(() => {
     if (!slugTouched) setSlug(toSlug(name))
@@ -204,6 +229,64 @@ export default function ProductForm({
                 className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors resize-none"
                 style={{ ...font, fontSize: '11px' }}
               />
+            </div>
+
+            {/* Características */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <FieldLabel>Características</FieldLabel>
+                <button
+                  type="button"
+                  onClick={addAttr}
+                  className="uppercase tracking-widest text-gray-400 hover:text-black transition-colors flex items-center gap-1"
+                  style={{ ...font, fontSize: '10px' }}
+                >
+                  <span className="text-base leading-none">+</span> Agregar
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                {attrs.map((attr, i) => {
+                  const isFixed = i < FIXED_ATTRS.length
+                  return (
+                    <div key={i} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        name="attr_key"
+                        value={attr.key}
+                        onChange={e => updateAttr(i, 'key', e.target.value)}
+                        placeholder="Característica"
+                        readOnly={isFixed}
+                        className={`w-32 border-b bg-transparent py-2 focus:outline-none transition-colors ${
+                          isFixed
+                            ? 'border-gray-100 text-gray-400 cursor-default'
+                            : 'border-gray-200 focus:border-black'
+                        }`}
+                        style={{ ...font, fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em' }}
+                      />
+                      <input
+                        type="text"
+                        name="attr_value"
+                        value={attr.value}
+                        onChange={e => updateAttr(i, 'value', e.target.value)}
+                        placeholder="Valor"
+                        className="flex-1 border-b border-gray-200 bg-transparent py-2 focus:outline-none focus:border-black transition-colors"
+                        style={{ ...font, fontSize: '11px' }}
+                      />
+                      {!isFixed && (
+                        <button
+                          type="button"
+                          onClick={() => removeAttr(i)}
+                          className="text-gray-300 hover:text-red-500 transition-colors shrink-0"
+                          style={{ fontSize: '16px', lineHeight: 1 }}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
             {/* Checkboxes */}

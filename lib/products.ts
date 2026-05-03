@@ -19,6 +19,7 @@ export interface ProductData {
     size?: string[];
     color?: string[];
   };
+  attributes?: { key: string; value: string }[];
 }
 
 type DbProduct = {
@@ -30,6 +31,7 @@ type DbProduct = {
   sold_out: boolean;
   is_new: boolean;
   product_images: { url: string; is_primary: boolean; sort_order: number }[];
+  product_attributes: { key: string; value: string; sort_order: number }[];
   categories: { slug: string } | null;
 }
 
@@ -49,6 +51,10 @@ function rowToProductData(row: DbProduct): ProductData {
   const image = primaryImage?.url ?? sortedImages[0]?.url ?? ''
   const images = sortedImages.map((img) => img.url)
 
+  const attrs = [...(row.product_attributes ?? [])]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map(({ key, value }) => ({ key, value }))
+
   return {
     id:          row.id,
     name:        row.name,
@@ -60,6 +66,7 @@ function rowToProductData(row: DbProduct): ProductData {
     category:    row.categories?.slug ?? undefined,
     soldOut:     row.sold_out,
     isNew:       row.is_new,
+    attributes:  attrs.length > 0 ? attrs : undefined,
   }
 }
 
@@ -71,6 +78,7 @@ async function fetchProducts(category?: string): Promise<ProductData[]> {
     .select(`
       id, slug, name, description, price_mxn, sold_out, is_new,
       product_images (url, is_primary, sort_order),
+      product_attributes (key, value, sort_order),
       categories (slug)
     `)
     .order('created_at', { ascending: false })
@@ -104,6 +112,7 @@ async function fetchProductBySlug(slug: string): Promise<ProductData | null> {
     .select(`
       id, slug, name, description, price_mxn, sold_out, is_new,
       product_images (url, is_primary, sort_order),
+      product_attributes (key, value, sort_order),
       categories (slug)
     `)
     .eq('slug', slug)

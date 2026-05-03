@@ -37,6 +37,7 @@ export async function createProduct(_prev: ActionState, formData: FormData): Pro
   if (error) return { error: error.message }
 
   await uploadImages(supabase, product.id, formData, 0, false)
+  await saveAttributes(supabase, product.id, formData)
 
   revalidateTag('products')
   redirect('/admin/products')
@@ -98,6 +99,7 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
   const hasPrimary = keptIds.length > 0
 
   await uploadImages(supabase, id, formData, baseOrder, hasPrimary)
+  await saveAttributes(supabase, id, formData)
 
   revalidateTag('products')
   redirect('/admin/products')
@@ -137,5 +139,26 @@ async function uploadImages(
       is_primary: !hasPrimary && i === 0,
       sort_order: baseOrder + i,
     })
+  }
+}
+
+async function saveAttributes(
+  supabase: SupabaseClient,
+  productId: string,
+  formData: FormData
+) {
+  const keys   = formData.getAll('attr_key') as string[]
+  const values = formData.getAll('attr_value') as string[]
+
+  // Delete existing and re-insert (simple replace strategy)
+  await supabase.from('product_attributes').delete().eq('product_id', productId)
+
+  const rows = keys
+    .map((key, i) => ({ key: key.trim(), value: (values[i] ?? '').trim() }))
+    .filter(r => r.key && r.value)
+    .map((r, i) => ({ product_id: productId, key: r.key, value: r.value, sort_order: i }))
+
+  if (rows.length > 0) {
+    await supabase.from('product_attributes').insert(rows)
   }
 }
