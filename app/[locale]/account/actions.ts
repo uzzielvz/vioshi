@@ -30,7 +30,7 @@ export async function signInAction(
   if (error) return { error: 'Credenciales inválidas.' }
 
   revalidatePath('/', 'layout')
-  redirect(`/${locale}/account`)
+  redirect(`/${locale}`)
 }
 
 export async function signUpAction(
@@ -51,7 +51,7 @@ export async function signUpAction(
     email,
     password,
     options: {
-      emailRedirectTo: `${getOrigin()}/auth/callback?next=/${locale}/account`,
+      emailRedirectTo: `${getOrigin()}/auth/callback?next=/${locale}`,
       data: {
         first_name: firstName,
         last_name: lastName,
@@ -78,7 +78,7 @@ export async function signUpAction(
 
   if (data.session) {
     revalidatePath('/', 'layout')
-    redirect(`/${locale}/account`)
+    redirect(`/${locale}`)
   }
 
   return { success: 'Revisa tu correo para confirmar tu cuenta.' }
@@ -134,7 +134,7 @@ export async function signInWithGoogleAction(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${getOrigin()}/auth/callback?next=/${locale}/account`,
+      redirectTo: `${getOrigin()}/auth/callback?next=/${locale}`,
     },
   })
 
