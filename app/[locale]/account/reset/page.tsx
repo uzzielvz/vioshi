@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { Locale } from '@/i18n';
-import ForgotPasswordForm from './_components/ForgotPasswordForm';
+import ResetForm from './_components/ResetForm';
 
-export default async function ForgotPasswordPage({
+export default async function ResetPage({
   params,
 }: {
   params: Promise<{ locale: Locale }>;
@@ -15,10 +15,11 @@ export default async function ForgotPasswordPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Si ya hay sesión, no tiene sentido pedir recuperación
-  if (user) {
-    redirect(`/${locale}/account`);
+  // Sin sesión activa → el link del email expiró o el flujo se rompió.
+  // Mandamos al login.
+  if (!user) {
+    redirect(`/${locale}/account?error=reset_expired`);
   }
 
-  return <ForgotPasswordForm locale={locale} />;
+  return <ResetForm locale={locale} email={user.email ?? ''} />;
 }
