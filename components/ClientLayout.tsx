@@ -11,7 +11,13 @@ function getPathWithoutLocale(path: string | null): string {
   return path.replace(/^\/[a-z]{2}(?=\/|$)/, '') || path;
 }
 
-export function ClientLayout({ children }: { children: React.ReactNode }) {
+export function ClientLayout({
+  children,
+  userEmail,
+}: {
+  children: React.ReactNode;
+  userEmail?: string | null;
+}) {
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
 
@@ -33,7 +39,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {!isAccount && <Header />}
+      {!isAccount && <Header userEmail={userEmail ?? null} />}
       <main className={!isAccount ? 'pt-16' : ''}>{children}</main>
       {!isCheckout && !isAccount && <Footer />}
       <CartDrawer />

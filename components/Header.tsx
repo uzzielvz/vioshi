@@ -12,7 +12,11 @@ function getPathnameWithoutLocale(pathname: string): string {
   return pathname.replace(/^\/[a-z]{2}/, '') || '/';
 }
 
-export default function Header() {
+interface HeaderProps {
+  userEmail?: string | null;
+}
+
+export default function Header({ userEmail = null }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const pathnameWithoutLocale = getPathnameWithoutLocale(pathname);
@@ -335,9 +339,10 @@ export default function Header() {
             </div>
           )}
 
-          {/* LOG IN */}
+          {/* LOG IN / MI CUENTA */}
           <Link
             href={`/${locale}/account`}
+            title={userEmail ?? undefined}
             className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
             style={{
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -346,7 +351,7 @@ export default function Header() {
               textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
             }}
           >
-            {tCommon('logIn')}
+            {userEmail ? tCommon('myAccount') : tCommon('logIn')}
           </Link>
 
           {/* BAG */}
@@ -1002,7 +1007,7 @@ export default function Header() {
               )}
             </div>
 
-            {/* LOG IN / CUENTA */}
+            {/* LOG IN / MI CUENTA */}
             <Link
               href={`/${locale}/account`}
               className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
@@ -1017,7 +1022,7 @@ export default function Header() {
                 textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
-              {tCommon('logIn')}
+              {userEmail ? tCommon('myAccount') : tCommon('logIn')}
             </Link>
 
             {/* CAPÍTULOS */}
