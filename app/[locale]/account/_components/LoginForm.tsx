@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useFormState, useFormStatus } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import type { Locale } from '@/i18n';
-import { signInAction, type AuthState } from '../actions';
+import { signInAction, signInWithGoogleAction, type AuthState } from '../actions';
 
 const FONT: React.CSSProperties = {
   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -62,16 +62,16 @@ export default function LoginForm({ locale }: { locale: Locale }) {
         <p className="text-[11px] font-semibold uppercase tracking-wide mb-0.5">{t('sign_in')}</p>
         <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-5">{t('sign_in_or_create')}</p>
 
-        {/* Google: se cablea en AU-07 */}
-        <button
-          type="button"
-          disabled
-          title="Próximamente"
-          className="w-full border border-gray-300 py-2.5 text-[11px] uppercase tracking-wide flex items-center justify-center gap-2 mb-4 opacity-60 cursor-not-allowed"
-        >
-          <GoogleLogo />
-          {t('login_with_google')}
-        </button>
+        <form action={signInWithGoogleAction}>
+          <input type="hidden" name="locale" value={locale} />
+          <button
+            type="submit"
+            className="w-full border border-gray-300 py-2.5 text-[11px] uppercase tracking-wide hover:border-black transition-colors flex items-center justify-center gap-2 mb-4"
+          >
+            <GoogleLogo />
+            {t('login_with_google')}
+          </button>
+        </form>
 
         <div className="relative mb-4">
           <div className="absolute inset-0 flex items-center">

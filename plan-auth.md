@@ -383,7 +383,7 @@ Secret pegados en Supabase Dashboard).
 | AU-05b | Fix: propagar cookies de sesión en `/auth/callback`       | ✅ Hecho     | `27bf7b4` |
 | AU-06a | Profile conectado a tabla `profiles` (read + update)      | ✅ Hecho     | `2dfe705` |
 | AU-06b | Header dinámico ("MI CUENTA" cuando hay sesión)           | ✅ Hecho     | `a0641c4` |
-| AU-07  | Botón Google OAuth                                        | ⏳ Pendiente | —         |
+| AU-07  | Botón Google OAuth                                        | ✅ Hecho     | (ver `main`) |
 
 ### Notas operativas aprendidas durante la implementación
 
