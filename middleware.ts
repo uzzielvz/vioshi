@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import createIntlMiddleware from 'next-intl/middleware'
 import { locales, defaultLocale } from './i18n'
+import { updateSession } from './lib/supabase/middleware'
 
 const intlMiddleware = createIntlMiddleware({
   locales,
@@ -9,7 +10,7 @@ const intlMiddleware = createIntlMiddleware({
   localeDetection: true,
 })
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (pathname.startsWith('/admin')) {
@@ -21,9 +22,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  return intlMiddleware(request)
+  const intlResponse = intlMiddleware(request)
+  return await updateSession(request, intlResponse)
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|.*\\..*).*)'],
+  matcher: ['/((?!api|auth|_next|.*\\..*).*)'],
 }

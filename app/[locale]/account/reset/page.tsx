@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { Locale } from '@/i18n';
-import RegisterForm from './_components/RegisterForm';
+import ResetForm from './_components/ResetForm';
 
-export default async function RegisterPage({
+export default async function ResetPage({
   params,
 }: {
   params: Promise<{ locale: Locale }>;
@@ -15,10 +15,11 @@ export default async function RegisterPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Si ya hay sesión, no tiene sentido mostrar el form de registro
-  if (user) {
-    redirect(`/${locale}`);
+  // Sin sesión activa → el link del email expiró o el flujo se rompió.
+  // Mandamos al login.
+  if (!user) {
+    redirect(`/${locale}/account?error=reset_expired`);
   }
 
-  return <RegisterForm locale={locale} />;
+  return <ResetForm locale={locale} email={user.email ?? ''} />;
 }

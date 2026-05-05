@@ -1,61 +1,41 @@
-'use client';
-
-import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useLocaleContext } from '@/hooks/useLocaleContext';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import type { Locale } from '@/i18n';
+import ProfileForm from './_components/ProfileForm';
 
-export default function ProfilePage() {
-  const { locale } = useLocaleContext();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const mountedRef = useRef(true);
-  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
-  const [formData, setFormData] = useState({
-    firstName: 'Juan',
-    lastName: 'Pérez',
-    email: 'juan.perez@example.com',
-    phone: '+52 55 1234 5678',
-  });
+export default async function ProfilePage({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}) {
+  const { locale } = await params;
+  const supabase = createClient();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      // TODO: API call to update profile
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      if (mountedRef.current) setIsEditing(false);
-    } catch (error) {
-      console.error('Error saving profile:', error);
-    } finally {
-      if (mountedRef.current) setIsSaving(false);
-    }
-  };
+  if (!user) {
+    redirect(`/${locale}/account`);
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, phone')
+    .eq('id', user.id)
+    .maybeSingle();
 
   return (
     <main className="min-h-screen bg-white pt-16">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
           <Link
             href={`/${locale}/account`}
             className="text-sm uppercase tracking-wider text-gray-600 hover:text-black transition-colors inline-flex items-center gap-2"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Volver a Mi Cuenta
           </Link>
@@ -64,127 +44,27 @@ export default function ProfilePage() {
           </h1>
         </div>
 
-        {/* Profile Form */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 md:p-8">
-          <div className="space-y-6">
-            {/* Personal Information */}
-            <div>
-              <h2 className="text-sm uppercase tracking-wider font-medium mb-4">
-                Información Personal
-              </h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-gray-500 mb-2">
-                    Nombre
-                  </label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black disabled:bg-gray-50 disabled:text-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-gray-500 mb-2">
-                    Apellido
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black disabled:bg-gray-50 disabled:text-gray-500"
-                  />
-                </div>
-              </div>
-            </div>
+        <ProfileForm
+          email={user.email ?? ''}
+          initialName={profile?.name ?? ''}
+          initialPhone={profile?.phone ?? ''}
+        />
 
-            {/* Contact Information */}
-            <div>
-              <h2 className="text-sm uppercase tracking-wider font-medium mb-4">
-                Información de Contacto
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-gray-500 mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black disabled:bg-gray-50 disabled:text-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-gray-500 mb-2">
-                    Teléfono
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black disabled:bg-gray-50 disabled:text-gray-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t border-gray-200">
-              {!isEditing ? (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex-1 bg-black text-white py-3 rounded uppercase tracking-wider font-medium hover:bg-gray-800 transition-colors"
-                >
-                  Editar Perfil
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="flex-1 bg-black text-white py-3 rounded uppercase tracking-wider font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400"
-                  >
-                    {isSaving ? 'Guardando...' : 'Guardar Cambios'}
-                  </button>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    disabled={isSaving}
-                    className="flex-1 border-2 border-black text-black py-3 rounded uppercase tracking-wider font-medium hover:bg-black hover:text-white transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Password Section */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 md:p-8 mt-6">
           <h2 className="text-sm uppercase tracking-wider font-medium mb-4">
             Contraseña
           </h2>
           <p className="text-sm text-gray-600 mb-4">
-            Actualiza tu contraseña para mantener tu cuenta segura
+            Para cambiar tu contraseña te enviaremos un enlace de recuperación a tu correo.
           </p>
           <Link
             href={`/${locale}/account/forgot-password`}
             className="inline-block border-2 border-black text-black px-6 py-3 rounded uppercase tracking-wider font-medium hover:bg-black hover:text-white transition-colors text-sm"
           >
-            Cambiar Contraseña
+            Cambiar contraseña
           </Link>
         </div>
 
-        {/* Quick Links */}
         <div className="grid md:grid-cols-2 gap-4 mt-6">
           <Link
             href={`/${locale}/account/orders`}

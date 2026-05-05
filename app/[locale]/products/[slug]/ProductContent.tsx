@@ -254,15 +254,40 @@ export default function ProductContent({ product, allProducts }: ProductContentP
                   {t('product_details')}
                   <span className="text-xs text-gray-400 font-light">+</span>
                 </summary>
-                <p
-                  className="mt-4 text-gray-600 leading-relaxed"
-                  style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                    fontSize: '11px'
-                  }}
-                >
-                  {product.description || "Premium quality streetwear. Made with attention to detail."}
-                </p>
+                <div className="mt-4 space-y-4">
+                  {product.description && (
+                    <p
+                      className="text-gray-600 leading-relaxed"
+                      style={{
+                        fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                        fontSize: '11px'
+                      }}
+                    >
+                      {product.description}
+                    </p>
+                  )}
+
+                  {product.attributes && product.attributes.length > 0 && (
+                    <dl className="space-y-2 pt-2">
+                      {product.attributes.map(({ key, value }) => (
+                        <div key={key} className="flex gap-4">
+                          <dt
+                            className="uppercase tracking-widest text-gray-400 shrink-0"
+                            style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif", fontSize: '10px', minWidth: '80px' }}
+                          >
+                            {key}
+                          </dt>
+                          <dd
+                            className="text-gray-800"
+                            style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif", fontSize: '11px' }}
+                          >
+                            {value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                </div>
               </details>
 
             </div>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VIOGI — Secciones TMPI (copiar a Word)</title>
+  <style>
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: #111;
+      max-width: 720px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 3rem;
+    }
+    .nota {
+      background: #f4f4f4;
+      padding: 12px 14px;
+      border-left: 4px solid #333;
+      margin: 1.5rem 0;
+      font-size: 11pt;
+    }
+    .donde {
+      color: #444;
+      font-size: 10.5pt;
+      margin: 1.75rem 0 0.5rem;
+      padding: 8px 10px;
+      background: #eef6ff;
+      border-left: 3px solid #2563eb;
+    }
+    h2 {
+      font-size: 13pt;
+      margin: 0.75rem 0 0.5rem;
+      font-weight: bold;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #ccc;
+      margin: 2rem 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5pt;
+      margin: 1rem 0;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #eee;
+    }
+    ul {
+      margin: 0.5rem 0;
+      padding-left: 1.4rem;
+    }
+    p {
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+
+<p class="nota"><strong>Uso:</strong> Copia cada bloque al lugar indicado. Si sigues la numeración sugerida, quedaría como subsecciones de <strong>7. Propuesta de Solución</strong> (ajusta números si tu índice ya usa 7.3, 7.4, etc.).</p>
+
+<hr>
+
+<p class="donde"><strong>Dónde ponerlo:</strong> Dentro de <strong>7. Propuesta de Solución</strong>, <em>después</em> de 7.1 Requerimientos y 7.2 Ciclo de vida / sprints. Si aún no existe, créalo como <strong>7.3 Descripción de objetos y características de estudio</strong>.</p>
+
+<h2>7.3 Descripción de objetos y características de estudio</h2>
+
+<p>En el contexto de este proyecto, el <strong>objeto de estudio</strong> es la <strong>prenda de vestir</strong> representada en una imagen digital (fotografía de catálogo o imagen de consulta subida por el usuario). Cada registro del experimento se asocia a una imagen y, cuando aplica, a su etiqueta de referencia (categoría, color dominante, etc.) en el archivo de metadatos.</p>
+
+<p>Las <strong>características de estudio</strong> son los atributos que el sistema debe extraer, comparar o usar para el <em>matching</em> con el catálogo. Según el enfoque del prototipo, pueden incluir:</p>
+
+<ul>
+  <li><strong>Características de color:</strong> representación en espacio HSV mediante histogramas (por ejemplo, 16 bins por canal), normalizados para comparación entre imágenes.</li>
+  <li><strong>Características de forma:</strong> contornos, momentos espaciales y momentos invariantes de Hu, útiles para distinguir siluetas de prendas.</li>
+  <li><strong>Atributos semánticos (si se usa modelo de visión por API):</strong> tipo de prenda, color principal y secundario, patrón o estilo, según el esquema JSON acordado con el catálogo.</li>
+</ul>
+
+<p>La relación entre objetos y características permite evaluar objetivamente la hipótesis del proyecto (por ejemplo, precisión de categoría ≥ 85% en dataset controlado) y justificar el diseño del pipeline de procesamiento.</p>
+
+<hr>
+
+<p class="donde"><strong>Dónde ponerlo:</strong> Si ya redactaste <strong>7.4 Ambiente controlado</strong>, sustituye o amplía con este texto. Si insertaste el bloque anterior como 7.3, renombra este apartado a <strong>7.5 Ambiente controlado</strong> (o el número que corresponda después de tus etapas del pipeline).</p>
+
+<h2>Ambiente controlado</h2>
+
+<p>Se denomina <strong>ambiente controlado</strong> al conjunto de condiciones fijas que garantizan que las mediciones (precisión, tiempos, estabilidad del JSON o de los descriptores) sean <strong>comparables</strong> entre corridas y versiones del sistema.</p>
+
+<p><strong>Dataset de evaluación (condiciones estrictas):</strong> imágenes de prendas sobre fondo blanco o gris claro uniforme, sin maniquí; iluminación difusa y frontal; resolución mínima acordada (por ejemplo, 512×512 px); formato JPG o PNG con compresión no destructiva. Cada imagen se identifica y documenta en un CSV de metadatos (<em>ground truth</em>).</p>
+
+<p><strong>Imagen de consulta en uso real (condiciones amplias):</strong> el sistema puede aceptar fotos con variaciones de fondo, varias prendas u outfit completo; en ese caso el modelo de visión debe segmentar semánticamente las prendas. Las métricas de evaluación reportadas en el informe deben indicar si corresponden al dataset controlado, a consultas reales o a ambos.</p>
+
+<p><strong>Ambiente de ejecución:</strong> versión de Python, de OpenCV y del sistema operativo; o, si se usa API, modelo y parámetros de configuración documentados, para reproducibilidad.</p>
+
+<hr>
+
+<p class="donde"><strong>Dónde ponerlo:</strong> Después de describir la extracción de características (pipeline) y antes o después del apartado de ambiente, según prefieras el flujo lógico. Sugerencia: <strong>7.6 Matriz de características normalizada</strong>, inmediatamente después de las etapas donde se calculan los descriptores.</p>
+
+<h2>Matriz de características (con el objeto y normalizada)</h2>
+
+<p>La <strong>matriz de características</strong> organiza los datos numéricos del experimento: cada <strong>fila</strong> corresponde a un <strong>objeto</strong> (una imagen del dataset o una consulta); cada <strong>columna</strong> corresponde a un componente del vector de características.</p>
+
+<p>Por ejemplo, si el vector concatena histograma HSV (16+16+16 valores) y siete momentos de Hu, cada fila tendrá dimensiones 1 × <em>d</em>, con <em>d</em> = 55. En notación matricial, si hay <em>n</em> imágenes, la matriz <strong>X</strong> ∈ ℝ<sup><em>n</em>×<em>d</em></sup> concentra todas las muestras para comparación y evaluación.</p>
+
+<p>La <strong>normalización</strong> es necesaria para que magnitudes distintas (por ejemplo, bins de histograma frente a momentos) no dominen la distancia entre vectores. Típicamente se normaliza el histograma a suma 1 (o se usa la norma L1/L2 del vector completo según el criterio del equipo). Los valores normalizados se documentan en el informe para permitir reproducir el experimento.</p>
+
+<hr>
+
+<p class="donde"><strong>Dónde ponerlo:</strong> Sustituye o estructura el bloque <strong>“CICLO DE VIDA DEL PIPELINE / Etapa 1…5”</strong> dentro de <strong>7. Propuesta de Solución</strong>. Sugerencia de título: <strong>7.4 Etapas de la visión artificial y características por etapa</strong> (ajusta el número si ya usaste 7.4 para otra cosa).</p>
+
+<h2>Etapas de la visión artificial y características desarrolladas en cada etapa</h2>
+
+<p>El procesamiento se descompone en etapas secuenciales. En cada una se indica la técnica empleada y las características que aporta al sistema.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Etapa</th>
+      <th>Descripción</th>
+      <th>Características / salida</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1. Adquisición</td>
+      <td>Carga y validación de la imagen (formato, tamaño, resolución mínima).</td>
+      <td>Imagen en memoria lista para procesamiento; metadatos de entrada.</td>
+    </tr>
+    <tr>
+      <td>2. Preprocesamiento</td>
+      <td>Redimensionado, conversión de espacio de color, reducción de ruido.</td>
+      <td>Imagen normalizada para tiempos estables y comparación justa.</td>
+    </tr>
+    <tr>
+      <td>3. Segmentación</td>
+      <td>Aislamiento de la prenda (GrabCut, umbralización adaptativa, etc.).</td>
+      <td>Máscara o región de interés; reducción de influencia del fondo.</td>
+    </tr>
+    <tr>
+      <td>4. Extracción de características</td>
+      <td>Histogramas HSV, momentos de Hu, contornos / bordes si aplica.</td>
+      <td>Vector de características numérico por imagen.</td>
+    </tr>
+    <tr>
+      <td>5. Comparación y decisión</td>
+      <td>Distancia entre vectores (euclidiana, Chi-cuadrado); ranking Top-<em>K</em>.</td>
+      <td>Ítems similares del catálogo; clasificación de categoría; métricas Precision@<em>K</em> / Recall@<em>K</em>.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><em>Nota:</em> Si el prototipo delega la interpretación en una API de visión, las etapas 3–4 se sustituyen por inferencia del modelo (detección de prendas y atributos en JSON); las etapas de adquisición y preprocesamiento siguen siendo necesarias para homogeneizar la entrada.</p>
+
+<hr>
+
+<p class="donde"><strong>Dónde ponerlo:</strong> Nuevo subapartado en <strong>7. Propuesta de Solución</strong>, después de la matriz de características o del dataset. Sugerencia: <strong>7.7 Base de conocimiento</strong>. Complementa lo que ya escribiste sobre CSV y 100–200 imágenes.</p>
+
+<h2>Base de conocimiento</h2>
+
+<p>La <strong>base de conocimiento</strong> del proyecto es el conjunto estructurado de material visual y metadatos que permite entrenar, configurar y evaluar el buscador visual.</p>
+
+<ul>
+  <li><strong>Muestras de imagen:</strong> fotografías de catálogo (fondo neutro) alineadas con las categorías del proyecto (por ejemplo, playeras, pantalones, sudaderas, calzado), con nomenclatura y CSV de etiquetas.</li>
+  <li><strong>Video (opcional):</strong> material complementario para demostración o documentación del flujo (por ejemplo, captura de pantalla del prototipo o secuencia de consultas); no es obligatorio para el núcleo PDI si la asignatura no lo exige.</li>
+  <li><strong>Redacción de características de estudio:</strong> para cada imagen (o clip), documentación escrita de categoría, colores, y criterios de similitud esperada, de forma que el equipo y el evaluador sepan qué respuesta es correcta.</li>
+  <li><strong>Muestras positivas:</strong> pares consulta–ítem del catálogo donde la coincidencia es la esperada según metadatos; sirven para medir aciertos.</li>
+  <li><strong>Muestras negativas:</strong> casos donde el sistema no debe confundir categorías o colores (por ejemplo, prenda oscura vs. clara, o categorías límite); sirven para analizar errores y robustez.</li>
+</ul>
+
+<hr>
+
+<p class="donde"><strong>Dónde ponerlo:</strong> Al final del bloque técnico de la sección 7, antes del cronograma o la bibliografía. Sugerencia: <strong>7.8 Desarrollo del algoritmo principal e hiperparámetros</strong>. Si usas solo OpenCV, lista parámetros de algoritmos; si usas API, documenta parámetros del modelo y del prompt.</p>
+
+<h2>Desarrollo del algoritmo principal e hiperparámetros</h2>
+
+<p>El <strong>algoritmo principal</strong> del prototipo es el que, a partir de la imagen de entrada, produce el ranking de prendas similares y/o la clasificación de categoría. En el enfoque basado en OpenCV, el núcleo suele combinar segmentación, extracción de histograma y momentos, y cálculo de distancia entre vectores.</p>
+
+<p>Los <strong>hiperparámetros</strong> son valores fijados antes de la evaluación (no aprendidos automáticamente en este proyecto). Ejemplos típicos:</p>
+
+<ul>
+  <li>Tamaño de redimensionado (por ejemplo, 256×256 px) y σ del filtro Gaussiano.</li>
+  <li>Número de bins por canal HSV (por ejemplo, 16) y tipo de normalización del histograma.</li>
+  <li>Parámetros de GrabCut (iteraciones, rectángulo inicial) o de umbralización adaptativa.</li>
+  <li>Umbrales de Canny o tamaño de kernel morfológico, si se usan en la segmentación.</li>
+  <li>Tipo de distancia (euclidiana vs. Chi-cuadrado) y valor de <em>K</em> en Top-<em>K</em>.</li>
+</ul>
+
+<p>Si se utiliza un modelo de visión externo (API), se documentan como “hiperparámetros operativos”: identificador del modelo, límites de tokens, temperatura o equivalentes, y versión del prompt estructurado. En el informe se describe el procedimiento de <strong>ajuste</strong>: cómo se eligieron los valores (prueba por validación en el dataset controlado, criterio de tiempo máximo de respuesta, etc.).</p>
+
+</body>
+</html>
