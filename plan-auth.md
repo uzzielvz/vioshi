@@ -374,13 +374,37 @@ Secret pegados en Supabase Dashboard).
 
 | Paso | Descripción | Estado | Commit |
 |---|---|---|---|
-| AU-01 | Middleware Supabase | ✅ Hecho | `9a0e6b3` |
-| AU-02 | Server Actions + OAuth callback | ✅ Hecho | `3e41ddd` |
-| AU-03 | Login + dashboard según sesión | ⏳ Pendiente | — |
-| AU-04 | Registro + trigger `handle_new_user` | ⏳ Pendiente | — |
-| AU-05 | Forgot password + página reset | ⏳ Pendiente | — |
-| AU-06 | Profile real + Header dinámico | ⏳ Pendiente | — |
-| AU-07 | Botón Google OAuth | ⏳ Pendiente | — |
+| AU-01  | Middleware Supabase                                       | ✅ Hecho     | `9a0e6b3` |
+| AU-02  | Server Actions + OAuth callback                           | ✅ Hecho     | `3e41ddd` |
+| AU-03  | Login + dashboard según sesión                            | ✅ Hecho     | `1905ed5` |
+| AU-03b | Fix: redirigir a la tienda tras login/signup              | ✅ Hecho     | `d6d3b43` |
+| AU-04  | Registro + trigger `handle_new_user`                      | ✅ Hecho     | `2db928c` |
+| AU-05  | Forgot password + página reset                            | ✅ Hecho     | `1c8fc91` |
+| AU-05b | Fix: propagar cookies de sesión en `/auth/callback`       | ✅ Hecho     | `27bf7b4` |
+| AU-06a | Profile conectado a tabla `profiles` (read + update)      | ✅ Hecho     | `2dfe705` |
+| AU-06b | Header dinámico ("MI CUENTA" cuando hay sesión)           | ✅ Hecho     | `a0641c4` |
+| AU-07  | Botón Google OAuth                                        | ⏳ Pendiente | —         |
+
+### Notas operativas aprendidas durante la implementación
+
+- **Confirmación de email**: desactivada en Supabase Dashboard durante desarrollo
+  (Authentication → Providers → Email → "Confirm email" OFF). Para producción
+  hay que reactivarla.
+- **Trigger SQL**: `0002_handle_new_user.sql` aplicado manualmente en
+  Supabase SQL Editor. La fila en `public.profiles` se crea automáticamente
+  al crear `auth.users`. Confirmado por pruebas de registro.
+- **Bug del callback OAuth**: el patrón "set cookies + return
+  NextResponse.redirect()" NO propaga las cookies al redirect. Se arregló
+  construyendo el response explícito y pasándolo al cliente Supabase para
+  que aplique las cookies directamente (`AU-05b`). Sin este fix, el flujo
+  de recovery aterrizaba siempre en `?error=reset_expired`.
+- **Botón "Cambiar contraseña" en `/account/profile`**: hoy redirige a
+  `/account/forgot-password`, que a su vez redirige a `/account` si hay
+  sesión (bug menor). En una iteración futura conviene ofrecer un flujo
+  "cambiar password con sesión activa" sin pasar por email.
+- **Mensaje de error genérico**: si Supabase devuelve "email not confirmed",
+  hoy lo mostramos como "Credenciales inválidas." Mejorable cuando se
+  reactive la confirmación de email en producción.
 
 ---
 
