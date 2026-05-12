@@ -383,7 +383,9 @@ Secret pegados en Supabase Dashboard).
 | AU-05b | Fix: propagar cookies de sesión en `/auth/callback`       | ✅ Hecho     | `27bf7b4` |
 | AU-06a | Profile conectado a tabla `profiles` (read + update)      | ✅ Hecho     | `2dfe705` |
 | AU-06b | Header dinámico ("MI CUENTA" cuando hay sesión)           | ✅ Hecho     | `a0641c4` |
-| AU-07  | Botón Google OAuth                                        | ✅ Hecho     | (ver `main`) |
+| AU-07  | Botón Google OAuth (login y registro)                     | ✅ Hecho     | `73ae18d` |
+
+**Módulo Auth: 100% completado y probado.**
 
 ### Notas operativas aprendidas durante la implementación
 
@@ -405,6 +407,21 @@ Secret pegados en Supabase Dashboard).
 - **Mensaje de error genérico**: si Supabase devuelve "email not confirmed",
   hoy lo mostramos como "Credenciales inválidas." Mejorable cuando se
   reactive la confirmación de email en producción.
+- **Bug crítico hallado en AU-07**: durante la integración de Google OAuth,
+  el campo "Client Secret" en Supabase Auth Provider → Google tenía pegado
+  por error el valor de `ADMIN_SECRET` (`punzon123`) en lugar del secret
+  real de Google. Resultado: todos los intentos de OAuth fallaban. Lección:
+  los secretos de admin guard y de OAuth providers son cosas distintas y
+  no se deben mezclar. Verificar con un test E2E real al final de cualquier
+  configuración de OAuth.
+- **Higiene de secretos OAuth**: tras la primera prueba quedó un Client
+  Secret antiguo activo en Google Cloud. Conviene **inhabilitarlo y
+  borrarlo** desde "Additional information" del OAuth Client. Tener
+  múltiples secretos activos aumenta la superficie de ataque sin beneficio.
+- **Copy del botón**: el texto real del botón Google es **"ENTRAR CON
+  GOOGLE"** (viene de `messages/es.json → account.login_with_google`).
+  Si en algún momento añadimos tests E2E, las assertions deben usar este
+  string exacto.
 
 ---
 
