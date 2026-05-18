@@ -450,5 +450,30 @@
     "archivos_download": "Descargar",
     "archivos_back": "Volver a Mi Cuenta",
     "back_to_store": "← Volver a la Tienda"
+  },
+  "visualSearch": {
+    "title": "BÚSQUEDA VISUAL",
+    "subtitle": "Sube una foto de una prenda para encontrar productos similares",
+    "upload_label": "SUBIR IMAGEN",
+    "drag_drop": "Arrastra una imagen aquí",
+    "drag_drop_or": "o haz clic para seleccionar",
+    "supported_formats": "JPEG o PNG · Máx. 10 MB",
+    "analyzing": "ANALIZANDO IMAGEN...",
+    "try_again": "INTENTAR CON OTRA IMAGEN",
+    "result_title": "PRENDA DETECTADA",
+    "confidence_label": "CONFIANZA",
+    "class_playera": "Playera",
+    "class_pantalon": "Pantalón",
+    "class_sudadera": "Sudadera",
+    "class_calzado": "Calzado",
+    "low_confidence_title": "IMAGEN POCO CLARA",
+    "low_confidence_message": "No pudimos clasificar la prenda con suficiente certeza. Intenta con una imagen con fondo neutro y la prenda completamente visible.",
+    "error_format": "Solo se aceptan imágenes JPEG o PNG.",
+    "error_size": "La imagen no debe superar los 10 MB.",
+    "error_service": "El servicio de clasificación no está disponible en este momento. Intenta más tarde.",
+    "error_quality": "La imagen no cumple los requisitos de calidad mínimos (resolución mínima: 100×100 px).",
+    "error_unknown": "Ocurrió un error inesperado. Intenta de nuevo.",
+    "view_category": "VER CATEGORÍA",
+    "probability_distribution": "DISTRIBUCIÓN DE PROBABILIDADES"
   }
 }
