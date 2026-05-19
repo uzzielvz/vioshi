@@ -1,457 +1,581 @@
-# VIOGI — Research & Estado del Proyecto
+# RESEARCH EXHAUSTIVO — VIOGI
 
-> Última actualización: 2026-03-23
-
----
-
-## 1. ESTRUCTURA ACTUAL
-
-```
-viogi-dot-comm/
-├── app/
-│   ├── layout.tsx                          ← Layout raíz (solo pasa children)
-│   ├── error.tsx                           ← Error boundary global
-│   ├── not-found.tsx                       ← 404 global (link a / — middleware maneja locale)
-│   ├── globals.css                         ← Fuentes, variables CSS, animaciones
-│   └── [locale]/
-│       ├── layout.tsx                      ← NextIntlClientProvider + CartProvider + ClientLayout
-│       ├── page.tsx                        ← Home
-│       ├── (shop)/cart/page.tsx            ← Carrito ✓
-│       ├── checkout/
-│       │   ├── page.tsx                    ← Checkout completo ✓ (CP lookup, formatPrice)
-│       │   └── success/[orderId]/page.tsx  ← Confirmación de pedido ✓
-│       ├── collections/[category]/page.tsx ← Categorías ✓ (i18n product_count)
-│       ├── products/[slug]/
-│       │   ├── page.tsx
-│       │   └── ProductContent.tsx          ← Detalle de producto
-│       ├── search/page.tsx
-│       ├── wishlist/page.tsx               ← Lista de deseos ✓
-│       ├── archive/
-│       │   ├── page.tsx                    ← ✓ sin Header/Footer propios
-│       │   └── [slug]/page.tsx
-│       ├── vender/page.tsx
-│       ├── account/
-│       │   ├── page.tsx                    ← Login ✓
-│       │   ├── register/page.tsx           ← ✓ UI sin backend
-│       │   ├── forgot-password/page.tsx    ← ✓ UI sin backend
-│       │   ├── profile/page.tsx
-│       │   ├── addresses/page.tsx
-│       │   ├── orders/page.tsx
-│       │   ├── orders/[orderId]/page.tsx
-│       │   └── archivos/page.tsx           ← Nueva (merge rama final)
-│       └── pages/
-│           ├── customer-support/page.tsx   ← ✓ Rediseño Stüssy, i18n, SupportNav mobile
-│           ├── shipping-payments-returns/  ← ✓ Rediseño Stüssy, i18n, SupportNav mobile
-│           ├── size-guide/page.tsx         ← ✓ Rediseño Stüssy, i18n
-│           ├── legal/page.tsx              ← ✓ Contenido básico
-│           ├── accessibility/page.tsx      ← ✓ Rediseño Stüssy, i18n
-│           ├── chapters/page.tsx           ← Placeholder limpio (sin Header/Footer propios)
-│           └── locaciones/page.tsx         ← ✓ Rediseño Stüssy, i18n
-│
-├── components/
-│   ├── Header.tsx                          ← Navegación, search, locale switcher ✓
-│   ├── Footer.tsx                          ← Links, copyright, legal ✓
-│   ├── ClientLayout.tsx                    ← Shell global: Header/Footer (oculta en account)
-│   ├── SupportNav.tsx                      ← Nav mobile-only para páginas de soporte
-│   ├── CartDrawer.tsx                      ← Drawer lateral del carrito ✓
-│   ├── ProductCard.tsx                     ← formatPrice ✓, i18n badges ✓
-│   ├── ProductGrid.tsx                     ← Grid responsivo ✓
-│   └── common/
-│       ├── Button.tsx
-│       ├── Input.tsx
-│       ├── Badge.tsx
-│       └── Spinner.tsx
-│
-├── store/
-│   └── cartStore.tsx                       ← Context API + localStorage ✓
-│
-├── hooks/
-│   └── useLocaleContext.ts                 ← Locale y currency desde params ✓
-│
-├── lib/
-│   ├── products.ts                         ← Mock data (13 productos), ProductData interface ✓
-│   ├── formatters.ts                       ← formatPrice con locale y tipo de cambio ✓
-│   ├── constants.ts                        ← TAX_RATE=0.16, CATEGORIES alineadas, shipping ✓
-│   ├── pickupPoints.ts                     ← 8 puntos de entrega hardcodeados
-│   ├── mexico.ts                           ← lookupCP() via SEPOMEX (CP → colonia/municipio/estado)
-│   └── utils.ts                            ← cn(), generateId()
-│
-├── types/
-│   ├── index.ts
-│   ├── product.ts                          ← Tipo rico Product (para DB futura)
-│   ├── cart.ts
-│   ├── user.ts
-│   ├── order.ts
-│   └── delivery.ts
-│
-├── messages/
-│   ├── en.json                             ← ~200 claves en inglés
-│   └── es.json                             ← ~200 claves en español
-│
-├── visual-search/
-│   └── README.md                           ← Módulo planificado (Gemini API)
-│
-├── middleware.ts                           ← Locale routing con next-intl
-├── i18n.ts                                 ← Configuración de next-intl
-├── next.config.js
-├── tailwind.config.ts
-└── tsconfig.json
-```
+> Documento único de referencia técnica. Sucesor de `researchbycursor.md`, `research-checkout.md` y de todos los `plan-*.md`. Cualquier agente futuro debería poder operar sólo con `CONTEXT.md` (mapa rápido) y este archivo.
+>
+> **Fecha de generación**: 2026-05-13. **Branch**: `main`. **HEAD**: `2b0decb` (`docs: close auth module …`).
+>
+> Convenciones del documento:
+> - Las **rutas** siguen separador POSIX (`/`) aunque el repo viva en Windows.
+> - **Hechos verificados** = código leído directamente. **Hipótesis** = marcadas con `(hipótesis)`.
+> - Cuando se nombra un archivo se usa el formato `path:line` para que sea navegable.
 
 ---
 
-## 2. ARQUITECTURA DE LAYOUT
+## 0. Punto de partida y alcance
 
-### Patrón correcto (establecido en Iteración 4)
-
-`ClientLayout.tsx` es el único proveedor de Header, Footer y CartDrawer para todas las rutas.
-Las páginas NO deben incluir sus propios `<Header />` o `<Footer />`.
-
-```tsx
-// ClientLayout.tsx
-return (
-  <>
-    {!isAccount && <Header />}           // Header oculto en /account/*
-    <main className={!isAccount ? 'pt-16' : ''}>{children}</main>
-    {!isCheckout && !isAccount && <Footer />}   // Footer oculto en checkout y account
-    <CartDrawer />
-  </>
-);
-```
-
-**Regla:** Las páginas retornan solo su contenido (`<div>`, no `<main>`).
-No necesitan `pt-16` porque ClientLayout ya lo aplica (salvo que sean rutas de account).
-
----
-
-## 3. ESTADO DE CADA PÁGINA
-
-| Página | i18n | Links locale | Diseño | Notas |
-|---|---|---|---|---|
-| Home | ✓ | ✓ | ✓ | — |
-| Collections | ✓ | ✓ | ✓ | product_count con plural |
-| Product detail | Parcial | ✓ | ✓ | Texto de navegación hardcodeado en ProductContent |
-| Cart | ✓ | ✓ | ✓ | — |
-| Checkout | ✓ | ✓ | ✓ | CP lookup SEPOMEX, formatPrice, PayPal manual |
-| Checkout success | ✓ | ✓ | ✓ | ORDER123 hardcoded (sin backend aún) |
-| Search | Parcial | ✓ | ✓ | Texto hardcodeado en algunos labels |
-| Wishlist | ✓ | ✓ | ✓ | localStorage, sin sync con backend |
-| Archive | ✓ | ✓ | ✓ | Mock entries, sin Header/Footer propios |
-| Archive [slug] | ✓ | ✓ | ✓ | — |
-| Vender | Parcial | ✓ | ✓ | Form sin backend |
-| Account login | ✓ | ✓ | ✓ | Sin backend real |
-| Account register | ✓ | ✓ | ✓ | Sin backend real |
-| Account forgot-pw | ✓ | ✓ | ✓ | Sin backend real |
-| Account profile | Parcial | ✓ | Parcial | Placeholder sin backend |
-| Account addresses | Parcial | ✓ | Parcial | Placeholder sin backend |
-| Account orders | Parcial | ✓ | Parcial | Placeholder sin backend |
-| Account orders detail | Parcial | ✓ | Parcial | Placeholder sin backend |
-| Account archivos | — | ✓ | Parcial | Nueva página, contenido básico |
-| Customer support | ✓ | ✓ | ✓ | Stüssy style, FAQ acordeón, SupportNav mobile |
-| Shipping & returns | ✓ | ✓ | ✓ | Stüssy style, dos columnas, SupportNav mobile |
-| Size guide | ✓ | ✓ | ✓ | Stüssy style, tablas limpias |
-| Legal | ✓ | ✓ | ✓ | Contenido básico presente |
-| Accessibility | ✓ | ✓ | ✓ | Stüssy style, SupportNav mobile |
-| Chapters | — | ✓ | Parcial | Placeholder limpio, contenido a integrar en Archive |
-| Locaciones | ✓ | ✓ | ✓ | Stüssy style, dos columnas, SupportNav mobile |
-
----
-
-## 4. BUGS RESUELTOS
-
-### 4.1 Serie T (tipos, i18n, precios)
-
-| Bug | Descripción | Estado |
-|---|---|---|
-| T-01 | ProductCard mostraba precio sin formatear | ✅ RESUELTO — `formatPrice(price, locale)` |
-| T-02 | Colisión de tipos `Product` en products.ts y types/product.ts | ✅ RESUELTO — `ProductData` en products.ts, `Product` rico en types/ |
-| T-03 | Imagen Jeans con espacios en el path | ⚠️ VERIFICAR — path sigue teniendo espacio: `/products/JEANS WRANGLER-32x32- 250.png` |
-| T-04 | TAX_RATE = 0.1 (10%) en lugar de IVA México 16% | ✅ RESUELTO — `TAX_RATE = 0.16` |
-| T-05 | CATEGORIES con slugs incorrectos (tees, outerwear) | ✅ RESUELTO — alineadas con catálogo real |
-| T-06 | Contador de productos en colecciones hardcodeado en inglés | ✅ RESUELTO — `product_count` con plural i18n |
-
-### 4.2 Serie B (checkout)
-
-| Bug | Descripción | Estado |
-|---|---|---|
-| B-01 | Precios en checkout hardcodeados en USD | ✅ RESUELTO — `formatPrice` en todos los displays de precio |
-| B-02 | Doble símbolo de moneda ("MXN $450.00") | ✅ RESUELTO |
-| B-03 | Costos de envío hardcodeados e inconsistentes ($25 vs $20 en constants) | ✅ RESUELTO — usa `STANDARD_SHIPPING_COST` / `EXPRESS_SHIPPING_COST` |
-| B-04 | Costo de pickup hardcodeado | ✅ RESUELTO — `formatPrice(selectedPickupPoint.additionalCost, locale)` |
-| B-05 | Submit falso — ORDER123 hardcodeado, sin backend | ⏳ PENDIENTE — requiere Fase 2 |
-| B-06 | PayPal inadecuado para mercado MX | ⚠️ PARCIAL — mantenido como link manual temporal (`PAYPAL_ME_LINK`). Será reemplazado por MercadoPago en Fase 2 |
-
-### 4.3 GUI (checkout)
-
-| ID | Descripción | Estado |
-|---|---|---|
-| GUI-01 | Validación con `alert()` nativo | ✅ RESUELTO — `formErrors` state inline (C-4) |
-| GUI-02 | Campos de tarjeta sin masking | ⏳ PENDIENTE |
-| GUI-03 | CTA sticky en móvil | ⏳ PENDIENTE |
-| GUI-04 | Página de éxito inexistente (404) | ✅ RESUELTO — página existe |
-| GUI-05 | Sin skeleton/loading en checkout | ⏳ PENDIENTE |
-| GUI-06 | `handleExpressCheckout` crash en click | ✅ RESUELTO — botones de express checkout eliminados |
-
-### 4.4 Arquitectura
-
-| Bug | Descripción | Estado |
-|---|---|---|
-| A-01 | Header/Footer duplicados en páginas individuales | ✅ RESUELTO — eliminados de todas las páginas (Iteración 4) |
-| A-02 | `<main>` anidado (HTML inválido) | ✅ RESUELTO — páginas usan `<div>`, no `<main>` |
-| A-03 | SupportNav visible en desktop (duplicaba submenu del Header) | ✅ RESUELTO — `md:hidden` |
-| A-04 | Chapters en SupportNav (no es página de soporte) | ✅ RESUELTO — eliminado de tabs |
-
----
-
-## 5. BUGS PENDIENTES / DEUDA TÉCNICA
-
-### 5.1 Frontend (sin backend)
-
-| ID | Archivo | Descripción | Prioridad |
+| Documento | Líneas | Estado | Qué aporta hoy |
 |---|---|---|---|
-| T-03 | `lib/products.ts:143` | Path de imagen Jeans tiene espacios — **CONFIRMADO:** el archivo físico sí existe como `JEANS WRANGLER-32x32- 250.png`. Next.js lo sirve correctamente. | Baja |
-| GUI-02 | `checkout/page.tsx` | Campos de tarjeta sin masking | Baja |
-| GUI-03 | `checkout/page.tsx` | Sin CTA sticky en móvil | Baja |
-| GUI-05 | `checkout/page.tsx` | Sin skeleton de hidratación | Baja |
-| I18N-01 | `search/page.tsx` | Algunos labels hardcodeados | Baja |
-| I18N-02 | `products/[slug]/ProductContent.tsx` | Nombre de categoría hardcodeado | Baja |
-| CON-01 | `checkout/page.tsx` | `ORDER123` hardcodeado — requiere backend | Bloqueante (Fase 2) |
-| CON-02 | `checkout/page.tsx` | PayPal es link manual, no integración real | Fase 2 |
-| CON-03 | `pages/chapters/page.tsx` | Contenido placeholder — pendiente integrar a Archive | Baja |
-| CON-04 | `vender/page.tsx` | Form con `console.log` y `alert()` — sin backend | Baja |
-| CON-05 | `account/profile/page.tsx` | TODO: API call comentado | Baja |
+| `CONTEXT.md` | 313 | ✅ Vigente (2026-05-12) | Mapa estructural del repo, dependencias, flujo de auth, puntos de configuración. **Leer primero.** |
+| `CLAUDE.md` | ~60 | ✅ Vigente | Reglas de estilo, alias de paths, convenciones de Server/Client Components. |
+| `README.md` | 47 | ⚠️ Mínimo | Sólo stack y comandos `npm run *`. No describe Supabase ni admin. |
+| `researchbycursor.md` | 763 | 🟡 Parcial obsoleto | Análisis detallado pero declara *“Sin backend real”*; hoy hay Supabase + Auth + Admin reales. |
+| `research-checkout.md` | 467 | 🟡 Parcial obsoleto | Documenta B-01..B-06 y GUI-01..GUI-06. La UI sigue como ahí, pero **no** se conectó pasarela: aún hay `setTimeout(2000)` y redirect a `ORDER123`. |
+| `plan.md` | 552 | 🟡 Histórico | Plan global inicial. Sustituido por planes específicos. |
+| `plan-cursor.md` | 650 | 🟡 Histórico | Plan global por fases (7). Útil para entender intención, no estado. |
+| `plan-auth.md` | 453 | ✅ Cerrado (AU-01..AU-07) | Documenta cómo se construyó el módulo de autenticación de usuarios. |
+| `plan-admin.md` | 426 | 🟡 Texto dice “Pendiente” pero el código está implementado (ADMIN-01..ADMIN-05) | Verifica contra `app/admin/**`. |
+| `plan-currency-mxn.md` | 319 | ✅ MXN-01..MXN-05 implementados | Conversión locale → moneda en `lib/formatters.ts`. |
+| `plan-preflight.md` | 143 | ✅ PF-01..PF-04 cerrados | Hardening preliminar pre-deploy. |
+| `plan-supabase-connect.md` | 272 | ✅ SB-01..SB-05 implementados | Conexión inicial al backend. |
+| `plancheckout.md` | 513 | ❌ Pendiente | Diseño de checkout real (C-1..C-5). Nada conectado todavía. |
+| `visual-search/README.md` | 18 | 💤 Sin código | Bosquejo de búsqueda visual con Gemini o CLIP. |
 
-### 5.2 Requieren backend (Fase 2)
+> **Regla operativa**: ante una contradicción entre estos documentos y el código, el código gana. Este `RESEARCH.md` privilegia siempre lo verificado en archivos.
 
-| Página/Feature | Estado actual | Qué falta |
+---
+
+## 1. Arquitectura
+
+### 1.1 Stack confirmado
+
+- **Next.js 14.2.32** App Router + **React 18.3.1** + **TypeScript 5.4** (strict).
+- **Tailwind CSS 3.4** con tokens en `tailwind.config.ts` y `app/globals.css`.
+- **next-intl 4.4** (`localePrefix: 'always'`, locales `es` (default) y `en`, `localeDetection: true`).
+- **Supabase**:
+  - `@supabase/ssr ^0.10.2` (cookies bridge para SSR).
+  - `@supabase/supabase-js ^2.104.1` (clientes anónimo y service role).
+- **clsx ^2.1.1** (conditional classes).
+- Sin ORM, sin Zod, sin Prettier, sin Husky, sin tests.
+
+### 1.2 `next.config.js` (`next.config.js:1-22`)
+
+```js
+images.remotePatterns:
+  - https://images.unsplash.com
+  - https://oilvubxpxxzfxlqhsumk.supabase.co/storage/v1/object/public/**
+```
+
+- **Hecho**: el ID del proyecto Supabase está **hardcodeado** en línea 13. Un cambio de proyecto requiere editar este archivo.
+- **Hecho**: **no hay** función `headers()`. Por tanto no hay CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy ni Permissions-Policy emitidas a nivel de framework.
+
+### 1.3 `middleware.ts` (`middleware.ts:1-32`)
+
+Pipeline:
+1. Si la URL empieza por `/admin`:
+   - Si es exactamente `/admin/login` → `NextResponse.next()`.
+   - Lee la cookie `admin_token`. Si no coincide con `process.env.ADMIN_SECRET` → `redirect('/admin/login')`.
+   - Si coincide → `NextResponse.next()` sin pasar por intl ni Supabase.
+2. Para cualquier otra ruta:
+   - Ejecuta `intlMiddleware(request)` (next-intl) → genera la respuesta con cookie/locale.
+   - Pasa esa respuesta a `updateSession(request, intlResponse)` para refrescar JWT de Supabase **manteniendo el mismo `NextResponse`** (las cookies se escriben sobre él).
+3. `matcher: ['/((?!api|auth|_next|.*\\..*).*)']` → excluye `/api/**`, `/auth/**`, `/_next/**` y archivos con extensión.
+
+**Implicaciones**:
+- `/auth/callback` queda fuera del matcher (intencional — la ruta debe gestionar sus propias cookies).
+- El admin nunca pasa por `intlMiddleware` ni por `updateSession`, por lo que **la sesión Supabase del operador no se refresca mientras navega `/admin`** (no es necesario porque admin no usa Supabase Auth, sino la cookie propia).
+
+### 1.4 `i18n.ts` (`i18n.ts:1-26`)
+
+- `locales = ['es','en']`, `defaultLocale = 'es'`.
+- Mapeo de moneda: `es → MXN`, `en → USD`. Usado en `lib/formatters.ts`.
+
+### 1.5 `tsconfig.json`
+
+- `strict: true`, `target: ES2020`, `moduleResolution: 'bundler'`.
+- Alias: `@/*` → `./*`. Importar siempre con `@/`.
+
+### 1.6 `lib/supabase/*` (4 archivos)
+
+| Archivo | Cliente | Llaves | Uso |
+|---|---|---|---|
+| `lib/supabase/client.ts` | `createBrowserClient` (`@supabase/ssr`) | URL + ANON | Componentes Client. Hoy no se usa importado directamente — los componentes interactúan con auth vía Server Actions. |
+| `lib/supabase/server.ts` | `createServerClient` con bridge `cookies().getAll/setAll` | URL + ANON | Server Components y Server Actions de usuario. `setAll` se envuelve en `try/catch` (la nota in-line confirma que en Server Components es no-op intencional, las cookies se escriben en `middleware.ts`). |
+| `lib/supabase/admin.ts` | `createClient` (no SSR) | URL + **SERVICE_ROLE** | Sólo paneles admin. Comentario in-file: *“NUNCA importar en client components”*. |
+| `lib/supabase/middleware.ts` | `createServerClient` con bridge contra `request.cookies.getAll` y `response.cookies.set` | URL + ANON | Helper invocado por `middleware.ts`. Llama a `supabase.auth.getUser()` para forzar refresh y devuelve la **misma** respuesta. |
+
+**Verificado** (Grep `supabase/admin`):
+- `app/admin/products/actions.ts:4`
+- `app/admin/pickup-points/actions.ts:4`
+- `app/admin/products/new/page.tsx:1`
+- `app/admin/products/[id]/page.tsx:2`
+- `app/admin/pickup-points/page.tsx:2`
+- `app/admin/pickup-points/[id]/page.tsx:2`
+
+✔ **Ningún Client Component importa `lib/supabase/admin.ts`.** El service-role está confinado a Server Components y Server Actions detrás del middleware admin.
+
+### 1.7 Migraciones SQL (`supabase/migrations/`)
+
+#### `0001_initial_schema.sql` (378 líneas)
+
+Tablas creadas (11):
+1. `profiles` (id uuid PK = auth.users.id, name text, phone text, …)
+2. `addresses` (user_id, line1/2, city, state, zip, country, default flag)
+3. `categories` (id, slug unique, name_es/name_en, sort_order)
+4. `products` (id, slug unique, name, description, price_mxn, original_price_mxn, category_id, sku, material, made_in, is_featured, is_new, sold_out, created_at, updated_at)
+5. `product_images` (product_id, url, is_primary, sort_order)
+6. `product_variants` (product_id, size, color, sku, stock)
+7. `pickup_points` (id, name, address, city, state, type, additional_cost, …, is_active)
+8. `orders` (id, user_id nullable, order_number text unique vía secuencia, status, totals, customer snapshot, shipping snapshot, created_at)
+9. `order_items` (order_id, product_id, name snapshot, price snapshot, qty, color, size)
+10. `wishlist_items` (user_id, product_id)
+11. `promo_codes` (code unique, discount type/value, validity)
+
+**RLS**: habilitado en todas. Patrones:
+- Catálogo público (categories, products, product_images, product_variants): `for select using (true)` — intencional para SSR sin sesión.
+- `pickup_points`: `for select using (is_active = true)` — sólo lo activo es público, los desactivados quedan ocultos a anon.
+- `promo_codes`: `for select using (is_active = true)` — mismo patrón. Sin INSERT/UPDATE/DELETE policies (sólo service-role).
+- Privado del usuario: `auth.uid() = user_id` (addresses, wishlist_items) o `auth.uid() = id` (profiles).
+- `orders`:
+  - `select using (auth.uid() = user_id)` — auditada y correcta (cierra SEC-14). **Efecto colateral**: con `auth.uid() = NULL` la condición es false, por lo que **un invitado no puede leer su propio pedido vía RLS** (ver SEC-17).
+  - `insert with check (true)` (admite checkout invitado).
+  - **Sin** policies UPDATE ni DELETE → bloqueadas a todo lo que no sea service-role.
+- `order_items`:
+  - `select` scopeada vía `order_id in (select id from orders where user_id = auth.uid())`.
+  - `insert with check (true)`.
+  - **Sin** UPDATE/DELETE.
+
+**Triggers/funciones**:
+- `handle_updated_at()` en `profiles`, `products`, `orders`.
+- Secuencia `order_number_seq` → format `VIO-YYYY-NNNN`.
+
+**Seeds incluidos**:
+- 9 categorías (`hoodies`, `t-shirts`, `accessories`, etc.).
+- 8 pickup points (4 retail/flagship + 4 partner).
+
+**Notas de la migración**:
+- ❌ **No** crea tabla `product_attributes`, pero `lib/products.ts` y `app/admin/products/actions.ts` la usan. **Falta una migración** o se aplicó manualmente al proyecto Supabase (verified: el código asume esa tabla existe en producción). Riesgo: cualquier reset declarativo del schema fallará.
+
+#### `0002_handle_new_user.sql` (43 líneas)
+
+```sql
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$ ... $$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+```
+
+- Inserta automáticamente en `public.profiles(id, name)` cuando Supabase Auth crea un user.
+- `name` se resuelve por fallback `full_name → name → email`.
+- `security definer` + `set search_path = public` mitiga hijacking por shadowing.
+- `on conflict (id) do nothing`.
+
+### 1.8 Estructura de carpetas (rol funcional)
+
+```
+app/
+├── [locale]/                  # Rutas públicas internacionalizadas
+│   ├── (shop)/cart/           # Route group sin path: cart pertenece al shop
+│   ├── account/               # Auth de usuarios (Supabase)
+│   │   ├── _components/       # LoginForm, AccountDashboard, RegisterForm
+│   │   ├── profile|orders|addresses|archivos|forgot-password|register|reset/
+│   │   └── actions.ts         # 6 server actions: signIn/signUp/signOut/reset/update/google
+│   ├── archive/, collections/[category], products/[slug], search,
+│   ├── checkout/ (+ success/[orderId]/), wishlist, vender,
+│   └── pages/{customer-support,shipping-payments-returns,size-guide,
+│              accessibility,locaciones,chapters,legal}/
+│
+├── admin/                     # Panel administrativo (cookie ADMIN_SECRET)
+│   ├── _components/           # Sidebar
+│   ├── login/                 # page.tsx + actions.ts (loginAction)
+│   ├── logout/actions.ts
+│   ├── products/              # list + new + [id]/page.tsx + actions.ts + _components
+│   ├── pickup-points/         # list + [id]/page.tsx + actions.ts
+│   └── layout.tsx             # Layout HTML aparte (no comparte el [locale] layout)
+│
+└── auth/callback/route.ts     # Único Route Handler. OAuth/magic link/recovery.
+
+components/                    # UI compartida (Header, Footer, ProductCard, etc.)
+hooks/                         # useLocaleContext, useWishlist, etc.
+lib/
+├── supabase/{client,server,admin,middleware}.ts
+├── products.ts                # Capa de datos catálogo (cached)
+├── formatters.ts              # MXN/USD según locale
+├── pickupPoints.ts            # Datos en memoria (no usa la tabla)
+├── mexico.ts                  # SEPOMEX CP lookup vía API community
+└── constants.ts
+store/cartStore.tsx            # Context API + localStorage
+supabase/migrations/           # 0001_initial_schema, 0002_handle_new_user
+types/                         # Tipos compartidos
+```
+
+**Observaciones**:
+- `app/admin/layout.tsx` define un `<html lang="es">` propio, por lo que es una **app shell paralela** al `app/[locale]/layout.tsx`. No comparte providers (sin CartProvider, sin next-intl).
+- `app/auth/callback/route.ts` es el **único** Route Handler del repo (no hay `/api/**`).
+
+### 1.9 Server Actions (todas `'use server'`)
+
+Inventario:
+
+| Archivo | Exports | Cliente Supabase | Notas relevantes |
+|---|---|---|---|
+| `app/admin/login/actions.ts` | `loginAction(_prev, formData)` | — (compara env var) | Setea cookie `admin_token = process.env.ADMIN_SECRET` (httpOnly, secure prod-only, sameSite='lax', maxAge 7 d, path=/). |
+| `app/admin/logout/actions.ts` | `logoutAction()` | — | Borra cookie + redirect `/admin/login`. |
+| `app/admin/products/actions.ts` | `deleteProduct`, `createProduct`, `updateProduct` (+ helpers `uploadImages`, `saveAttributes`) | `createAdminClient` (service_role) | Sin validación de tipos. `revalidateTag('products')` + `redirect('/admin/products')`. |
+| `app/admin/pickup-points/actions.ts` | `updatePickupPoint`, `togglePickupPoint` | `createAdminClient` | Sin validación de tipos. |
+| `app/[locale]/account/actions.ts` | `signInAction`, `signUpAction`, `signOutAction`, `resetPasswordAction`, `updatePasswordAction`, `signInWithGoogleAction` | `createClient` (server, ANON) | Validación mínima (email/password no vacíos, length ≥ 8). |
+| `app/[locale]/account/profile/actions.ts` | `updateProfileAction` | `createClient` | Valida sesión + nombre no vacío. `revalidatePath('/', 'layout')`. |
+
+---
+
+## 2. Inventario de páginas (34 `page.tsx`)
+
+Resultado de `Glob app/**/page.tsx` + `Grep '^"use client"'`.
+
+| # | Ruta | Tipo | Datos | Loading/Error | Estado real |
+|---|---|---|---|---|---|
+| 1 | `/[locale]/page.tsx` | Server | `getProducts()` real (Supabase) | Sin `loading.tsx` propio | ✅ Real |
+| 2 | `/[locale]/products/[slug]/page.tsx` | Server | `getProductBySlug()` real | Sin estados | ✅ Real |
+| 3 | `/[locale]/collections/[category]/page.tsx` | Server | `getProducts(category)` real | — | ✅ Real |
+| 4 | `/[locale]/archive/page.tsx` | Server | Array `archiveEntries` hardcoded (3 drops, imágenes Unsplash). No consulta DB. | — | ❌ Mock estático |
+| 5 | `/[locale]/archive/[slug]/page.tsx` | Server | Lookup en `archiveCollections` hardcoded (3 slugs `drop-001..003`). Llama `getProducts()` real **pero ignora el slug** y muestra `products.slice(0, 8)`. El select de orden es decorativo (sin handler). | — | 🟡 Mixto: metadata mock, productos reales sin filtrar |
+| 6 | `/[locale]/search/page.tsx` | Server | `getProducts()` real + `<Suspense fallback>` (spinner). Pasa `initialProducts` a `<SearchContent>` (Client) que filtra in-memory. Único page con loading UI. | Suspense propio | ✅ Real (filtrado client-side) |
+| 7 | `/[locale]/wishlist/page.tsx` | Server | Wishlist vive en localStorage; el render real lo hace un Client Component descendiente | — | 🟡 Mock+localStorage |
+| 8 | `/[locale]/vender/page.tsx` | **Client** | Form de aplicación de marcas (consignación / partnership): nombre, contacto, marca, web/Instagram, tipo de producto, experiencia, mensaje. `handleSubmit` con `setTimeout(1500)` y `// TODO: Send application to backend (Phase 2)`. | Sólo `isSubmitting` local | ❌ UI completa, sin endpoint |
+| 9 | `/[locale]/(shop)/cart/page.tsx` | **Client** | `useCart()` (Context + localStorage) | — | ✅ UI funcional, carrito local |
+| 10 | `/[locale]/checkout/page.tsx` | **Client** | `useCart()`. Submit con `setTimeout(2000)` y redirect a `ORDER123` | Sólo `isProcessing` local | ❌ **Mock total: nada se persiste** |
+| 11 | `/[locale]/checkout/success/[orderId]/page.tsx` | **Client** | Render del param `orderId` (no consulta DB) | — | ❌ Mock — confirmación cosmética |
+| 12 | `/[locale]/account/page.tsx` | Server | Si `getUser()` → renderiza `AccountDashboard` con `profiles.name`; si no → `LoginForm` | — | ✅ Real |
+| 13 | `/[locale]/account/profile/page.tsx` | Server | Lee `profiles` y entrega a un Client form | — | ✅ Real |
+| 14 | `/[locale]/account/register/page.tsx` | Server (redirect si ya hay sesión) | Renderiza `RegisterForm` (Client) | — | ✅ Real |
+| 15 | `/[locale]/account/forgot-password/page.tsx` | Server | Form Client + `resetPasswordAction` | — | ✅ Real |
+| 16 | `/[locale]/account/reset/page.tsx` | Server | Form Client + `updatePasswordAction` (post-recovery callback) | — | ✅ Real |
+| 17 | `/[locale]/account/orders/page.tsx` | **Client** | `mockOrders` array hardcoded (3 pedidos) | — | ❌ Mock |
+| 18 | `/[locale]/account/orders/[orderId]/page.tsx` | **Client** | `getMockOrder(params.orderId)` devuelve objeto hardcoded; sólo `id`/`orderNumber` reflejan el param. Items, dirección de envío y método de pago: todos mock. | — | ❌ Mock |
+| 19 | `/[locale]/account/addresses/page.tsx` | **Client** | `mockAddresses` array. Form de “nueva dirección” no envía a ningún sitio | — | ❌ Mock |
+| 20 | `/[locale]/account/archivos/page.tsx` | **Client** | Array `mockDocuments` (3 entries: facturas/contratos placeholder). Botón “Descargar” sin handler `onClick`. | — | ❌ Mock |
+| 21–26 | `/[locale]/pages/{shipping-payments-returns,size-guide,accessibility,locaciones,chapters,legal}/page.tsx` | Server | Contenido estático | — | ✅ |
+| 27 | `/[locale]/pages/customer-support/page.tsx` | **Client** | Sin form de contacto. Sólo enlaces a WhatsApp / email / Instagram / TikTok + FAQ acordeón (8 items, `useState openFaq`). | — | ✅ Estático intencional |
+| 28 | `/admin/page.tsx` | Server | `redirect('/admin/products')` | — | ✅ |
+| 29 | `/admin/login/page.tsx` | **Client** | `loginAction` (compara `ADMIN_SECRET`) | `useFormStatus` | ✅ Real |
+| 30 | `/admin/products/page.tsx` | Server (`force-dynamic`) | `getProducts()` cache invalidable por tag | — | ✅ Real |
+| 31 | `/admin/products/new/page.tsx` | Server (`force-dynamic`) | `createAdminClient → categories.select`. Action: `createProduct` | — | ✅ Real |
+| 32 | `/admin/products/[id]/page.tsx` | Server | `createAdminClient` lee producto + images + attributes. Action: `updateProduct` | — | ✅ Real |
+| 33 | `/admin/pickup-points/page.tsx` | Server | `createAdminClient` lee pickup_points | — | ✅ Real |
+| 34 | `/admin/pickup-points/[id]/page.tsx` | Server | `createAdminClient` lee 1 row | — | ✅ Real |
+
+**Resumen**:
+- 24 Server Components / 10 Client Components.
+- **Datos reales hoy**: catálogo público (productos, categorías, imágenes, atributos), auth de usuarios, perfiles, panel admin de productos y pickup points.
+- **Mock todavía**: checkout completo, historial de pedidos, libreta de direcciones, soporte al cliente, vender, archivos.
+- **Sin `loading.tsx`/`error.tsx` dedicados** en ninguna ruta verificada — los Server Components dependen del Suspense implícito de Next y no exponen UI de error consistente.
+
+---
+
+## 3. Cadenas críticas (chains end-to-end)
+
+### 3.1 Login de usuario (email + password)
+
+1. **UI** `app/[locale]/account/page.tsx` (Server). Llama `supabase.auth.getUser()`. Si no hay user → `<LoginForm locale={locale} />` (`app/[locale]/account/_components/LoginForm.tsx`, `'use client'`).
+2. `LoginForm` usa `useFormState(signInAction, null)`. Al submit:
+3. **Server Action** `signInAction` (`app/[locale]/account/actions.ts:17-34`):
+   - Lee `email`, `password`, `locale` de `FormData`.
+   - Valida: `if (!email || !password) → { error: 'Email y contraseña requeridos.' }`.
+   - `supabase.auth.signInWithPassword({ email, password })`.
+   - Si Supabase devuelve error → `{ error: 'Credenciales inválidas.' }` (mensaje genérico, no diferencia “email no confirmado”).
+   - Si OK: `revalidatePath('/', 'layout')` + `redirect('/'+locale)`.
+4. La cookie de sesión Supabase se persiste por la combinación `setAll` del bridge en `lib/supabase/server.ts` y por el refresh de `updateSession` en cada request siguiente (vía `middleware.ts`).
+5. **Resultado**: el header (Server Component) detecta la sesión gracias a `getUser()` y renderiza “MI CUENTA” en lugar de “LOGIN” (commit `a0641c4`).
+
+**Branches/condiciones**:
+- Si `signInWithPassword` falla con cualquier código → mensaje único y genérico (anti-enumeración pero también peor UX).
+- Si la sesión se establece pero `revalidatePath` falla, el redirect ocurre igual.
+- No hay rate limiting ni lockout local. Confiable sólo si Supabase Auth aplica throttling.
+
+### 3.2 OAuth Google + callback
+
+1. **Inicio**: `LoginForm.tsx` → `<form action={signInWithGoogleAction}>` con `<input name="locale">`.
+2. **Server Action** `signInWithGoogleAction` (`actions.ts:131-146`):
+   - `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${origin}/auth/callback?next=/${locale}` } })`.
+   - Si error o no hay `data.url` → `redirect('/'+locale+'/account?error=oauth')`.
+   - Si OK → `redirect(data.url)` (sale a `accounts.google.com`).
+3. Google → vuelve a `/auth/callback?code=...&next=/es`.
+4. **Route Handler** `app/auth/callback/route.ts` (49 líneas):
+   - **Construye la respuesta de redirect ANTES** del `exchangeCodeForSession` (fix AU-05b). Esto es crucial: el cliente Supabase aplica `setAll` directamente sobre esa respuesta y las cookies se mandan al navegador en una sola pasada.
+   - Si no hay `code` en la URL → redirect a `/${locale}/account?error=auth_callback`.
+   - Si `exchangeCodeForSession` retorna error → mismo redirect con error.
+   - Si OK → devuelve la respuesta preparada.
+5. Middleware: la siguiente navegación pasa por `updateSession` y refresca el JWT.
+
+**Branches**:
+- Lee `next` de query sin validar (potencial abuso): el código construye `${origin}${next}`. Si `next='//evil.com'`, Next devuelve `https://viogi.com//evil.com` y algunos navegadores lo interpretan como external. **Mitigación trivial**: filtrar a paths que comiencen por `/` y NO empiecen por `//` o `/\\`.
+- El bug histórico de “OAuth secret cross-contamination” (commit `2b0decb`) fue: el valor que sirve para `ADMIN_SECRET` se pegó por error en el campo *Client Secret* de Google en el dashboard de Supabase. El bug ya está documentado/cerrado, pero el patrón causa-raíz persiste: tener el secreto admin como string memorable hace fácil reutilizarlo en lugares incorrectos.
+
+### 3.3 Login admin
+
+1. **UI** `app/admin/login/page.tsx` (`'use client'`, 73 líneas). Form simple con campo `password` único.
+2. **Server Action** `loginAction` (`app/admin/login/actions.ts`):
+   - Lee `password` de FormData.
+   - Compara con `process.env.ADMIN_SECRET` (string equality directo).
+   - Si no coincide → `{ error: 'Incorrect password.' }`.
+   - Si coincide → `cookies().set('admin_token', process.env.ADMIN_SECRET, { httpOnly: true, secure: NODE_ENV==='production', sameSite: 'lax', maxAge: 60*60*24*7, path: '/' })` + redirect.
+3. **Middleware** (`middleware.ts:13-23`): cualquier request a `/admin/*` excepto `/admin/login` lee la cookie y compara contra `process.env.ADMIN_SECRET`. Si NO coincide → `redirect('/admin/login')`.
+4. El layout `app/admin/layout.tsx` y los Server Components admin (`/admin/products`, `/admin/pickup-points`, etc.) usan `createAdminClient()` (service_role) ya con la garantía de que el middleware permitió el paso.
+
+**Riesgos verificados**:
+- **El valor de la cookie ES el secreto en texto plano**. Cualquier mecanismo que pueda leer cookies del browser (XSS sobre `/admin/*`, malware local, backups con cookies) expone el secreto principal del panel.
+- No hay rate limiting, no se loguean intentos fallidos, no hay lockout, no hay 2FA.
+- No hay distinción entre operadores (un único usuario implícito).
+- Las Server Actions admin (`createProduct`, `updateProduct`, `deleteProduct`, `togglePickupPoint`, …) **no revalidan el cookie ni la sesión** — confían 100% en el middleware. Si una Server Action se invocase desde un contexto que pueda saltarse el matcher (no debería ocurrir hoy con el matcher actual), no habría defensa en profundidad.
+
+### 3.4 Carga de imágenes de producto
+
+1. **UI** `app/admin/products/_components/ProductForm.tsx` (`'use client'`) y dentro `ImageUploader.tsx`:
+   - `<input type="file" name="images" multiple accept="image/*" />` (sólo filtro de MIME en el navegador, fácilmente evitable).
+   - Mantiene `keptImageIds` (para edición) en hidden inputs.
+2. **Server Action** `createProduct` o `updateProduct` (`app/admin/products/actions.ts`):
+   - Inserta/actualiza la fila `products` con `createAdminClient` (service_role → bypass RLS).
+   - Llama a `uploadImages(supabase, productId, formData, baseOrder, hasPrimary)`.
+3. **Helper `uploadImages` (`actions.ts:110-143`)**:
+   - `formData.getAll('images') as File[]` → filtra `f.size > 0`.
+   - Por cada file:
+     - `ext = file.name.split('.').pop() ?? 'jpg'` (sin sanitizado).
+     - `path = `${productId}/${Date.now()}-${i}.${ext}``.
+     - `Buffer.from(await file.arrayBuffer())`.
+     - `supabase.storage.from('product-images').upload(path, buffer, { contentType: file.type, upsert: false })`.
+     - **Si `uploadError` → `continue`**. No se loggea, no se reporta al UI.
+     - Si OK → `getPublicUrl(path)` → insert en `product_images(product_id, url, is_primary, sort_order)`.
+4. En **edición**, antes del upload se borran tanto el row como el blob de Storage de las imágenes que ya no están en `keptImageIds`.
+
+**Branches/riesgos**:
+- Sin validación de tamaño (`file.size`), sin validación de MIME real (sólo `accept`), sin chequeo de extensión contra whitelist. Un atacante con cookie admin puede subir cualquier binario y quedar publicado en bucket público.
+- El bucket `product-images` es **público** según los planes; `next.config.js` whitelist el host. Cualquier URL con prefijo correcto es accesible sin auth.
+- Si fallan algunas imágenes y otras no, el producto queda creado con set parcial sin feedback al admin.
+- `Date.now()` puede colisionar si dos uploads en paralelo del mismo product comparten ms — improbable, pero el index `i` mitiga.
+
+### 3.5 Checkout
+
+1. **UI** `app/[locale]/checkout/page.tsx` (`'use client'`, 845 líneas):
+   - Validación local sólo de `agreeToTerms` y de campos de dirección/punto de retiro.
+   - Lookup CP via `lib/mexico.ts` (API community SEPOMEX).
+   - **Submit (`handleSubmit`, líneas 279-307)**:
+     ```js
+     await new Promise((resolve) => setTimeout(resolve, 2000));
+     router.push(`/${locale}/checkout/success/ORDER123`);
+     ```
+2. **No hay** Server Action, no hay `/api/checkout`, no hay inserción en `orders` ni en `order_items`. **Nada se persiste**.
+3. La página de éxito (`success/[orderId]/page.tsx`) sólo renderiza el param `orderId` sin consulta a DB y limpia el carrito (`useEffect → clearCart`).
+4. El usuario no recibe correo, no hay número de orden real, no hay pasarela de pago.
+
+**Para conectar pasarela** (referencia, no plan):
+- Crear Server Action `placeOrderAction` que:
+  - Valide carrito (vs precios reales en DB).
+  - Inserte `orders` + `order_items` con la secuencia `order_number_seq` (formato VIO-YYYY-NNNN).
+  - Inicie sesión de pago (Stripe Checkout / MercadoPago Preference).
+  - Devuelva URL de redirect a la pasarela.
+- Crear Route Handler `/api/webhook/stripe` (o equivalente) para confirmar pago e idempotentemente actualizar `orders.status`.
+- Decidir política de RLS de `orders` para invitados (la tabla acepta `user_id NULL`).
+- Borrar `setTimeout(2000)` y el literal `ORDER123`.
+
+---
+
+## 4. Seguridad (estado actual)
+
+### 4.1 RLS por tabla (resumen, ver `0001_initial_schema.sql` para SQL exacto)
+
+| Tabla | SELECT | INSERT | UPDATE | DELETE | Notas |
+|---|---|---|---|---|---|
+| `profiles` | `auth.uid() = id` | `auth.uid() = id` | `auth.uid() = id` | — | Trigger `handle_new_user` evita necesidad de insert manual. |
+| `addresses` | `auth.uid() = user_id` | `auth.uid() = user_id` | `auth.uid() = user_id` | `auth.uid() = user_id` | Hoy sin UI real (mock). |
+| `wishlist_items` | `auth.uid() = user_id` | `auth.uid() = user_id` | — | `auth.uid() = user_id` | Hoy se persiste en localStorage, no en DB. |
+| `categories`, `products`, `product_images`, `product_variants` | `using (true)` | (sólo service_role / sin policy) | (idem) | (idem) | Catálogo lectura pública SSR; escrituras sólo desde admin con service_role. |
+| `pickup_points` | `using (is_active = true)` | (sólo service_role) | (idem) | (idem) | Sólo activos son públicos; admin gestiona vía service_role. |
+| `orders` | `auth.uid() = user_id` | `with check (true)` (admite invitado) | (sin policy → bloqueada salvo service_role) | (sin policy → bloqueada) | ✔ Auditada (cierra SEC-14). Invitados pueden insertar pero **no releer** (ver SEC-17). |
+| `order_items` | `order_id in (select id from orders where user_id = auth.uid())` | `with check (true)` | (sin policy) | (sin policy) | Coherente con `orders`. |
+| `promo_codes` | `using (is_active = true)` | — | — | — | Lectura pública sólo de los activos; aún no integrado en cart. |
+
+### 4.2 Modelo de amenazas para los dos sistemas de auth
+
+| Eje | Auth de usuario (Supabase) | Auth admin (cookie ADMIN_SECRET) |
 |---|---|---|
-| Checkout submit | Simula delay + ORDER123 | API, base de datos, procesador de pagos |
-| Account profile | Form estático | CRUD contra DB |
-| Account addresses | Form estático | CRUD contra DB |
-| Account orders | Lista vacía | Historial real desde DB |
-| Account archivos | Contenido básico | Integración real |
-| Wishlist | localStorage | Sincronizar con cuenta de usuario |
-| Vender form | Form que no envía | Endpoint backend o email service |
-| Auth | UI completa | NextAuth.js + DB |
+| **Mecanismo** | JWT en cookies HttpOnly gestionadas por `@supabase/ssr` | Cookie httpOnly cuyo **valor literal es el secreto** |
+| **Renovación** | Refresh automático en cada request vía `updateSession` | Sin refresh; vence a 7 días por `maxAge` |
+| **Revocación** | Server-side desde Supabase (signOut, ban) | Imposible de revocar selectivamente — hay que **rotar** `ADMIN_SECRET` y hacer redeploy |
+| **Multi-operador** | Sí (cada user) | No (un solo secreto compartido) |
+| **Auditoría** | Logs en Supabase | Inexistente |
+| **Brute force** | Throttling Supabase | Nada — abierto contra `/admin/login` |
+| **CSRF** | Server Actions firmadas por Next.js | Igual (Server Action) — pero `sameSite='lax'` permite top-level GET (no aplica al POST del action) |
+| **XSS impact** | Robo de session (mitigado por HttpOnly) | Robo del **secreto principal** del panel |
+
+### 4.3 Tabla — Deuda técnica de seguridad (mandatoria)
+
+| ID | Hallazgo | Archivo / evidencia | Severidad | Notas |
+|---|---|---|---|---|
+| SEC-01 | **`ADMIN_SECRET` no aparece en `.env.example`** aunque es obligatorio para que el panel funcione | `.env.example` (líneas 1-44, sin mención) vs `middleware.ts:19` y `app/admin/login/actions.ts:10` | Alta | Regresión silenciosa al onboarding: nuevo dev clona, copia `.env.local` y el panel queda inaccesible sin pista. |
+| SEC-02 | **Project ID Supabase hardcodeado** | `next.config.js:13` (`oilvubxpxxzfxlqhsumk.supabase.co`) | Media | Mover a `process.env.NEXT_PUBLIC_SUPABASE_URL` (parsear hostname). Bloquea entornos staging/prod separados. |
+| SEC-03 | **Cookie admin contiene el secreto en claro** | `app/admin/login/actions.ts:setAll('admin_token', ADMIN_SECRET, …)` + `middleware.ts:19` (string equality) | Alta | Cualquier exfiltración de cookies → exfiltración del secreto principal. Mitigación: firmar cookie con HMAC o usar JWT propio. |
+| SEC-04 | **OAuth Client Secret cross-contamination histórica** | Doc `plan-auth.md` post-mortem del commit `2b0decb` | Cerrada como incidente, abierta como patrón | El secreto admin es una palabra memorable. Recomendar generar `ADMIN_SECRET` con `openssl rand -hex 32` y nunca reutilizar. |
+| SEC-05 | **Sin validación en Server Actions admin** | `app/admin/products/actions.ts:14-106` (raw casts `as string`, `parseFloat` sin chequeo) | Media | Si el admin se compromete o si un futuro endpoint público expone estas actions, malformaciones causarían crashes / datos basura. Considerar Zod. |
+| SEC-06 | **`uploadImages` sin validación de tamaño/MIME real** | `actions.ts:110-143` | Media | Subida de binarios arbitrarios a bucket público. Mitigación: límite de bytes, sniff de magic bytes, allowlist `image/jpeg|png|webp`. |
+| SEC-07 | **`uploadImages` traga errores con `continue`** | `actions.ts:130` | Baja | UX confuso al admin; no es vector de seguridad pero rompe la integridad de “producto + imágenes”. |
+| SEC-08 | **`next` sin sanitizar en OAuth callback** | `app/auth/callback/route.ts` (lectura cruda de query) | Media | Posible open-redirect parcial vía `//evil.com`. Validar regex `^/[^/\\]`. |
+| SEC-09 | **Sin headers de seguridad** | `next.config.js` no exporta `headers()` | Media | Falta CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy. |
+| SEC-10 | **Sin rate limiting** ni en `/admin/login` ni en `signInAction`/`signUpAction`/`resetPasswordAction` | Server Actions account/admin | Media | Brute force a contraseñas. Mitigar con Upstash + middleware o con Supabase RPC throttling. |
+| SEC-11 | **Doble escritura de profile en `signUpAction`** | `app/[locale]/account/actions.ts:70-77` (upsert manual) + `0002_handle_new_user.sql` (trigger) | Baja | Carrera benigna por `on conflict do nothing`. Documentado como decisión. Considerar eliminar el upsert manual cuando se confirme estabilidad del trigger. |
+| SEC-12 | **`product_attributes` referenciada sin migración** | `lib/products.ts:81,115`; `app/admin/products/actions.ts:154,162`; `app/admin/products/[id]/page.tsx:19` vs `0001_initial_schema.sql` (no la crea) | Alta | Schema-drift. Cualquier reset declarativo (Supabase CLI) deja la app rota. **Crear `0003_product_attributes.sql`**. |
+| SEC-13 | **Service-role en server-only — verificado** | Grep `supabase/admin` ⇒ sólo Server Components/Actions | OK | Mantener invariante con regla de lint o test. |
+| SEC-14 | **Política `select` de `orders` auditada** | `0001_initial_schema.sql`: `for select using (auth.uid() = user_id)` | ✅ Cerrada | Sólo el dueño puede leer su propio pedido. UPDATE/DELETE sin policy → bloqueadas a todo lo que no sea service-role. |
+| SEC-15 | **Sin idempotencia en checkout** | No hay endpoint todavía | N/A futuro | Cuando se conecte pasarela: idempotency-key en cabeceras + `unique` en `order_number` (ya existe vía secuencia). |
+| SEC-16 | **Sin CSRF token explícito** | Confianza total en sameSite=lax + Server Actions Next | Baja | Aceptable mientras todo POST salga de Server Actions. Si se añaden Route Handlers públicos, requerir token o doble cookie. |
+| SEC-17 | **Pedidos de invitado ilegibles vía RLS** | Policy `orders.select using (auth.uid() = user_id)` + `orders.user_id` nullable + `insert with check (true)` | Media (bloqueante para checkout invitado real) | Un invitado puede `INSERT` un pedido con `user_id NULL`, pero `auth.uid() = NULL` evalúa false → ningún SELECT lo recupera. Resultado: no hay forma soportada por RLS de mostrarle al invitado su propio pedido por número de orden o email. Cuando se active checkout invitado, decidir entre: (a) policy adicional que permita lookup por `order_number` + `email` con un nonce firmado, o (b) endpoint server-only con service-role + verificación propia. |
+
+### 4.4 NEXT_PUBLIC_* — auditoría
+
+Variables en uso real (Grep verificado):
+- `NEXT_PUBLIC_SUPABASE_URL` (`lib/supabase/{client,server,admin,middleware}.ts`, `lib/products.ts`, `app/auth/callback/route.ts`, `app/admin/products/actions.ts:78`).
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (`lib/supabase/{client,server,middleware}.ts`, `lib/products.ts`, `app/auth/callback/route.ts`).
+- `NEXT_PUBLIC_USD_MXN_RATE` (`lib/formatters.ts`).
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` está sólo en `.env.example` comentado, no hay uso real.
+
+✔ Ningún secreto privado se está fugando como `NEXT_PUBLIC_*`. ANON key es por definición pública.
+
+### 4.5 Storage
+
+- Bucket `product-images` (asumido público — el código usa `getPublicUrl`).
+- `next.config.js` whitelistea sólo el host concreto + path `/storage/v1/object/public/**`.
+- No hay políticas Storage RLS detalladas en las migraciones del repo (probablemente configuradas en el dashboard).
 
 ---
 
-## 6. AUDIT C-1→C-5 (2026-03-23)
+## 5. Gaps para producción
 
-### Cambios ejecutados
+### 5.1 Tabla — Funcionalidades faltantes
 
-| Iteración | Archivo(s) | Cambio |
+| ID | Área | Estado actual | Falta para producción |
+|---|---|---|---|
+| GAP-01 | Checkout | `setTimeout(2000)` + `ORDER123` | Server Action `placeOrderAction` que inserte `orders` + `order_items`, pasarela (Stripe/MercadoPago), confirmación por email, webhook de pago. |
+| GAP-02 | Historial de pedidos | `mockOrders` en `app/[locale]/account/orders/page.tsx` | Pasar a Server Component que consulte `orders` filtrando por `auth.uid()`. |
+| GAP-03 | Detalle de pedido | Mock | Idem + render de `order_items`. |
+| GAP-04 | Direcciones | `mockAddresses` + form sin endpoint | CRUD real contra `addresses` con Server Actions. |
+| GAP-05 | Wishlist | localStorage únicamente | Sincronizar con `wishlist_items` para usuarios autenticados (merge en login). |
+| GAP-06 | Customer support | Form sin endpoint | Backend (Resend, contact form) o redirección a soporte. |
+| GAP-07 | Vender | UI estática | Definir flujo (consignment, drop, etc.). |
+| GAP-08 | Archivos | UI estática | Decidir si va a CMS o se elimina. |
+| GAP-09 | Búsqueda | Página existe; depende del back | Verificar si usa `getProducts` con filtros o falta full-text. Posible Postgres FTS o Algolia. |
+| GAP-10 | Variants (size/color) | Tabla `product_variants` existe, no se administra desde el UI admin actual | Form de variants en `ProductForm`. |
+| GAP-11 | Promo codes | Tabla existe, sin UI | Validación en cart + admin CRUD. |
+| GAP-12 | Pickup-points dinámicos en checkout | Checkout consume `lib/pickupPoints.ts` (in-memory) en vez de tabla `pickup_points` | Reemplazar por fetch real (server) o RSC. |
+| GAP-13 | Email transaccional | Sin proveedor | Resend (variable comentada) + plantillas confirmación/envío. |
+| GAP-14 | Facturación CFDI | Sin proveedor | Facturapi o equivalente (variable comentada). |
+| GAP-15 | Observabilidad | Sin Sentry, sin OpenTelemetry, sin logging estructurado | Mínimo Sentry + access logs Vercel. |
+| GAP-16 | Tests | Cero | Smoke tests al menos en checkout y auth (Playwright + Vitest). |
+| GAP-17 | Lint/format/precommit | ESLint sí, Prettier/Husky no | Añadir Prettier y `lint-staged`. |
+| GAP-18 | i18n del admin | Hardcoded inglés | Ya intencional; documentar como decisión. |
+| GAP-19 | Loading/error UIs | Ninguna ruta `loading.tsx`/`error.tsx` | Añadir al menos para listas (productos, pedidos, admin). |
+| GAP-20 | Migración `product_attributes` | Falta archivo `.sql` | Materializar la tabla con sort_order, índices y RLS coherente. |
+
+---
+
+## 6. Consolidación de planes existentes
+
+### 6.1 Tabla — Planes vs estado actual
+
+| Plan | Tickets | Estado verificado en código |
 |---|---|---|
-| C-1 | `checkout/page.tsx` | `SECTION_LABEL` 9px→11px negro, secciones numeradas 01-04 con `border-t`, botón submit 10px→12px `font-medium`, resumen de orden 10px gray→11px gray-500, eliminada sección Shop.app (`mobilePhone`), save info → checkbox simple |
-| C-2 | `checkout/page.tsx` | Header: link ← Volver al carrito (texto visible), switcher ES/EN, link sign_in con `/${locale}/account` |
-| C-3 | `account/page.tsx`, `register/page.tsx`, `forgot-password/page.tsx` | Link ← Volver a la tienda, switcher ES/EN con moneda, inputs con `id`/`name`/`autoComplete` en login |
-| C-4 | `checkout/page.tsx`, `register/page.tsx`, `forgot-password/page.tsx` | Todos los `alert()` reemplazados por `formErrors` / `formError` state con renders inline |
-| C-5 | `forgot-password/page.tsx`, `addresses/page.tsx` | `console.log` eliminado, link `/account` hardcodeado corregido a `/${locale}/account` con `useLocaleContext` |
+| `plan-supabase-connect.md` (SB-01..SB-05) | Conexión inicial Supabase | ✅ Implementado: `lib/supabase/*` + migración 0001 + reemplazo de mocks de catálogo en `lib/products.ts`. |
+| `plan-currency-mxn.md` (MXN-01..MXN-05) | Soporte MXN/USD por locale | ✅ `lib/formatters.ts` + `i18n.ts` map. |
+| `plan-preflight.md` (PF-01..PF-04) | Hardening preliminar pre-deploy | ✅ Cerrado. |
+| `plan-auth.md` (AU-01..AU-07) | Auth de usuarios + Google OAuth | ✅ Cerrado en commit `2b0decb`; AU-05b pintura del callback documentada en archivo. |
+| `plan-admin.md` (ADMIN-01..ADMIN-05) | Panel admin | ✅ Implementado en `app/admin/**` (el doc dice “Pendiente”, el código existe — actualizar el doc). |
+| `plan.md` y `plan-cursor.md` | Plan global histórico | 🟡 Útil para arqueología. |
+| `plancheckout.md` (C-1..C-5) | Checkout real con pasarela | ❌ No implementado. UI hecha (research-checkout); falta backend. |
+| `researchbycursor.md` | Análisis pre-backend | 🟡 Obsoleto. |
+| `research-checkout.md` | Diseño UI/flujo checkout | 🟡 UI hecha; backend pendiente. |
+| `visual-search/README.md` | Bosquejo búsqueda visual | 💤 Sin código. |
 
-### Hallazgos del audit (C-5)
+### 6.2 Decisiones arquitectónicas vigentes (extraídas de los planes y verificadas)
 
-| Tipo | Ubicación | Detalle |
+- **Dos sistemas de auth en paralelo** (no merge): Supabase Auth para shoppers, cookie pre-shared para admin operacional (decisión consciente para no exponer service-role detrás de Auth + RBAC todavía).
+- **Cache de catálogo**: `unstable_cache` con `revalidate: 60s` y tag `'products'`. Toda mutación admin llama `revalidateTag('products')`.
+- **Internacionalización**: `localePrefix: 'always'` (URLs explícitas `/es/...` `/en/...`), default `es`, currency map en `i18n.ts`.
+- **Carrito y wishlist en localStorage**: persistencia de cliente, sin sincronizar con DB todavía.
+- **Pickup points** se sirven de `lib/pickupPoints.ts` (memoria) en checkout aunque exista `pickup_points` en DB y panel admin para editarla — gap conocido.
+- **Mensajes de auth genéricos** (anti-enumeración): por decisión, `signInAction` siempre devuelve “Credenciales inválidas” y `resetPasswordAction` siempre “Correo enviado”.
+- **Trigger `handle_new_user` + upsert manual de profiles**: redundante a propósito hasta confirmar estabilidad del trigger en producción.
+- **Service role nunca en client**: invariante mantenida (verificado por grep).
+
+---
+
+## 7. Acciones sugeridas (5–10 prioridades, NO un plan formal)
+
+> Sólo *qué* y *por qué*; el *cómo* se decide en un plan dedicado.
+
+1. **Crear migración `0003_product_attributes.sql`** que materialice la tabla con `(product_id uuid, key text, value text, sort_order int)`, índice por `(product_id, sort_order)` y RLS espejo a `product_images`. Resuelve **SEC-12** (schema drift hoy invisible). *(Bloqueador para reproducibilidad de entornos.)*
+2. **Añadir `ADMIN_SECRET` a `.env.example`** con valor placeholder y comentario *“usa `openssl rand -hex 32`, no reusar entre proyectos”*. Evita SEC-01 y previene la causa raíz histórica de SEC-04. *(Trivial, alto impacto.)*
+3. **Conectar checkout a DB sin pasarela todavía** (Server Action `placeOrderAction` que inserte `orders + order_items` y devuelva el `order_number`). Permite eliminar `setTimeout` y `ORDER123` y empezar a tener historial real. Habilita simultáneamente GAP-02/03/12.
+4. **Sustituir el uso de `lib/pickupPoints.ts` en checkout por la tabla `pickup_points`** (Server Component fetch al server). Cierra el círculo del admin de pickup-points y elimina inconsistencias.
+5. **Endurecer `uploadImages`**: límite de bytes (~5 MB), sniff de magic bytes, allowlist (`image/jpeg|png|webp`), reportar errores al UI. Mitiga SEC-06/SEC-07.
+6. **Sanitizar `next` en `auth/callback/route.ts`** a paths que matcheen `^/[^/\\]`. Mitiga SEC-08.
+7. **Añadir `headers()` en `next.config.js`** con CSP base, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`. Mitiga SEC-09.
+8. **Parametrizar `next.config.js` con el host real desde `NEXT_PUBLIC_SUPABASE_URL`** (parseando con `new URL`). Mitiga SEC-02; desbloquea staging.
+9. **Reemplazar el valor de `admin_token` por un JWT firmado** (HS256 con un secreto separado) o por una sesión opaca con clave en KV (Upstash). Reduce el blast radius de SEC-03.
+10. **Reemplazar mocks de `account/orders` y `account/addresses` por consultas reales**, dejando los archivos como Server Components o como Client Components que llamen a Server Actions. Cierra GAP-02/03/04 una vez exista historial real.
+
+> Cualquier plan derivado de este RESEARCH debe enumerar IDs (p. ej. `CHECK-01..CHECK-NN`, `SECHARD-01..`) y referenciar los `GAP-*` y `SEC-*` de aquí.
+
+---
+
+## 8. Apéndice A — Mapa rápido de módulos
+
+| Capa | Path | Resumen |
 |---|---|---|
-| `console.log` | `forgot-password/page.tsx:23` | ✅ Eliminado |
-| `console.log` | `vender/page.tsx:41` | ⏳ Pendiente (CON-04) |
-| `alert()` | `checkout/page.tsx` | ✅ Eliminado |
-| `alert()` | `register/page.tsx` | ✅ Eliminado |
-| `alert()` | `forgot-password/page.tsx` | ✅ Eliminado |
-| `alert()` | `vender/page.tsx:46` | ⏳ Pendiente (CON-04) |
-| Link sin locale | `addresses/page.tsx:70` | ✅ Corregido a `/${locale}/account` |
-| Link sin locale | `not-found.tsx:23` | Aceptable — middleware lo redirige al locale correcto |
-| Imagen con espacios | `lib/products.ts:143` | ✅ Verificado — archivo físico existe en `/public/products/` |
-| `TODO` | `account/profile/page.tsx:28` | ⏳ Pendiente (CON-05) |
-| `TODO` | `checkout/page.tsx` (discount apply) | ⏳ Sin backend — botón Apply sin lógica |
-| `mobilePhone` field | `checkout/page.tsx` | ✅ Eliminado de `CheckoutFormData` e interfaz |
+| Routing | `app/[locale]/`, `app/admin/`, `app/auth/callback/route.ts` | App Router con dos shells. |
+| Middleware | `middleware.ts`, `lib/supabase/middleware.ts` | Admin gate + intl + Supabase refresh. |
+| Auth | `app/[locale]/account/**`, `app/admin/login`, `app/admin/logout`, `lib/supabase/{client,server,admin,middleware}.ts` | Dos sistemas paralelos. |
+| Datos catálogo | `lib/products.ts` | Cache `unstable_cache` + tag `'products'`. |
+| Datos auxiliares | `lib/pickupPoints.ts`, `lib/mexico.ts`, `lib/constants.ts`, `lib/formatters.ts` | Algunos en memoria. |
+| Estado UI | `store/cartStore.tsx`, `hooks/*` | Context + localStorage. |
+| Componentes | `components/**`, `app/[locale]/account/_components/**`, `app/admin/_components/**`, `app/admin/products/_components/**` | UI por sección. |
+| DB | `supabase/migrations/000{1,2}_*.sql` | Schema + trigger. **Falta `0003_product_attributes.sql`.** |
+| Config | `next.config.js`, `tailwind.config.ts`, `tsconfig.json`, `i18n.ts`, `.env.example` | Sin headers de seguridad. |
 
----
+## 9. Apéndice B — Comandos útiles
 
-## 8. LO QUE ESTÁ BIEN
-
-- Infraestructura i18n sólida (next-intl v4, middleware, messages bien estructurados)
-- `CartStore` correctamente implementado con hidratación y persistencia
-- `ClientLayout` provee Header/Footer/Cart de forma global y condicional
-- `checkout/page.tsx` bien implementado — CP lookup SEPOMEX, formatPrice, locale-aware
-- `formatPrice(price, locale)` aplicado en ProductCard, CartDrawer, Checkout, Cart
-- `TAX_RATE = 0.16` correcto
-- `CATEGORIES` alineadas con catálogo real
-- `ProductData` separado de `Product` (mock vs DB)
-- Todas las páginas de soporte rediseñadas con estilo Stüssy coherente
-- `SupportNav` correctamente mobile-only
-- Sistema de tipos robusto en `types/`
-
----
-
-## 9. SISTEMA DE MENSAJES (i18n)
-
-### Namespaces actuales en messages/en.json + es.json
-
-| Namespace | Claves | Descripción |
-|---|---|---|
-| `common` | 12 | Textos globales (close, search, country, etc.) |
-| `header` | ~35 | Navegación, categorías, soporte |
-| `cart` | 15 | Carrito de compras |
-| `checkout` | ~55 | Checkout completo incluyendo CP/colonia/municipio/PayPal |
-| `footer` | 4 | Instagram, sell_with_us, copyright, legal |
-| `product` | 10 | Detalle de producto |
-| `success` | 9 | Confirmación de pedido |
-| `support` | 22 | Customer support + FAQs |
-| `shipping` | 30 | Shipping & returns |
-| `sizes` | 14 | Guía de tallas |
-| `wishlist` | 9 | Lista de deseos |
-| `archive` | 10 | Archivo |
-| `accessibility` | 14 | Accesibilidad |
-| `locaciones` | 10 | Tiendas y puntos de venta |
-| `pages` | 8 | Home y colecciones |
-| `account` | ~35 | Login, registro, forgot password |
-
----
-
-## 10. FUNCIONALIDAD `lib/mexico.ts` — CP Lookup
-
-Función utilitaria que consulta la API pública de SEPOMEX para autocompletar dirección por CP.
-
-```typescript
-lookupCP(cp: string): Promise<MexicoCPData | null>
-// Retorna: { estado, municipio, colonias: string[] }
-// Endpoint: api-sepomex.hckdrk.mx (community, sin API key)
-// Validación: 5 dígitos numéricos exactos
-// En checkout: auto-rellena colonia (select si múltiples), municipio y estado
+```bash
+npm run dev          # http://localhost:3000
+npm run build
+npm run start
+npm run lint
+npm run type-check
 ```
 
-**Riesgo:** Dependencia de servicio comunitario sin SLA. En producción considerar:
-1. Fallback a entrada manual si la API falla (ya implementado — muestra inputs normales si `cpData === null`)
-2. Caché local del CP en el cliente para evitar llamadas repetidas
+Para Supabase local:
 
----
-
-## 11. ROADMAP
-
-### Etapa A — Frontend completo (estado actual: ~90%)
-
-Pendiente:
-- Corrección T-03 (imagen Jeans)
-- Mejoras GUI-01, GUI-02, GUI-03, GUI-05 (checkout UX)
-- Integrar Chapters a Archive
-- i18n faltante en search y ProductContent
-
-### Etapa B — Backend e infraestructura
-
-```
-2.1  Supabase (PostgreSQL) + Prisma ORM
-      ├── Schema: Product, ProductVariant, ProductImage, Order, OrderItem, User
-      ├── Seed: migrar 13 productos mock
-      └── ISR en páginas de producto/colecciones
-
-2.2  Auth (NextAuth.js v5)
-      ├── Credentials (email/password con bcrypt)
-      ├── Google OAuth (opcional)
-      └── Proteger rutas /account/profile, /addresses, /orders
-
-2.3  Pagos
-      ├── MercadoPago Bricks (primario — OXXO, wallet, tarjetas MX)
-      └── Stripe Payment Element (secundario — tarjetas internacionales, Apple/Google Pay)
-
-2.4  Órdenes + Emails
-      ├── Webhook: confirmar pago → crear Order en DB → enviar email
-      ├── Resend: email de confirmación con items y número de orden
-      └── Inventario en tiempo real (stock por variante)
+```bash
+# El repo NO tiene supabase/config.toml visible; las migraciones se ejecutan
+# manualmente o vía CLI apuntando al proyecto remoto.
+supabase db push     # (si se decide adoptar CLI)
 ```
 
-### Etapa C — Panel de Administración
+## 10. Apéndice C — Variables de entorno consolidadas
 
-```
-/admin
-  ├── CRUD de productos con upload de fotos (Supabase Storage)
-  ├── Gestión de órdenes
-  ├── Gestión de vendedores (hacia marketplace)
-  └── Analytics básicos
-```
+| Var | Obligatoria | Dónde se usa | Notas |
+|---|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Sí | `lib/supabase/*`, `lib/products.ts`, `app/auth/callback`, `app/admin/products/actions.ts` | Ya en `.env.example`. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Sí | Idem (excepto `admin.ts`) | Ya en `.env.example`. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Sí (server-only) | `lib/supabase/admin.ts` | Ya en `.env.example`. **Nunca en client.** |
+| `ADMIN_SECRET` | **Sí** | `middleware.ts`, `app/admin/login/actions.ts` | ❌ **Falta en `.env.example`** (SEC-01). |
+| `NEXT_PUBLIC_USD_MXN_RATE` | Opcional (default 17.5) | `lib/formatters.ts` | Ya en `.env.example`. |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | No (futuro) | — | Comentadas en `.env.example`. |
+| `MERCADOPAGO_ACCESS_TOKEN` | No (futuro) | — | Idem. |
+| `FACTURAPI_KEY`, `RESEND_API_KEY` | No (futuro) | — | Idem. |
 
-### Etapa D — Visual Search
+## 11. Checklist de verificación de este documento
 
-```
-/visual-search
-  ├── ImageDropzone (upload drag & drop)
-  ├── Gemini Vision API → extrae atributos de la prenda
-  ├── Matching contra catálogo con scoring
-  └── RecommendationGrid + outfit suggestions
-```
-
-### Etapa E — Marketplace (largo plazo)
-
-```
-  ├── Onboarding de vendedores (conectado a /vender)
-  ├── Multi-vendor: productos por vendedor
-  ├── Sistema de comisiones
-  └── Reviews y ratings
-```
-
----
-
-## 12. REFERENCIAS RÁPIDAS
-
-### Patrón correcto para nueva página
-
-```tsx
-// Server Component con i18n
-import { getTranslations } from 'next-intl/server';
-import { getLocale } from 'next-intl/server';
-
-export default async function MiPagina() {
-  const t = await getTranslations('miNamespace');
-  const locale = await getLocale();
-  return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-6 md:px-8 py-12">
-        {/* contenido — sin Header/Footer/main propios */}
-      </div>
-    </div>
-  );
-}
-
-// Client Component con i18n
-'use client';
-import { useTranslations } from 'next-intl';
-import { useLocaleContext } from '@/hooks/useLocaleContext';
-
-export default function MiPagina() {
-  const t = useTranslations('miNamespace');
-  const { locale } = useLocaleContext();
-  return <div className="min-h-screen bg-white">...</div>;
-}
-```
-
-### Tipografía del sistema de diseño
-
-```tsx
-const fontStyle = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-};
-// Tamaños: fontSize: '11px' (body/labels), '13px' (títulos de sección)
-// Pesos: fontWeight: 400 (body), 500 (labels/headers)
-// Siempre uppercase + tracking-wide para headers
-```
-
-### Formato de precios
-
-```tsx
-import { formatPrice } from '@/lib/formatters';
-// Uso:
-formatPrice(price, locale)  // price en USD, locale 'es' | 'en'
-// → MX$3,500.00 en /es/
-// → $200.00 en /en/
-// Tasa de cambio: NEXT_PUBLIC_USD_MXN_RATE (default 17.5)
-```
-
-### Costos de infraestructura estimados (1,000 ventas/mes)
-
-| Servicio | Costo/mes |
-|---|---|
-| Vercel | $0–20 |
-| Supabase (DB + Auth + Storage) | $0 (free tier) |
-| Cloudflare R2 (imágenes) | ~$0.15 |
-| MercadoPago | ~3.5% GMV |
-| Resend (emails) | $0 (free tier) |
-| **Total fijo** | **< $25 USD/mes** |
+- [x] CONTEXT.md leído de inicio (referenciado, no repetido).
+- [x] CLAUDE.md, README.md, ambos research, todos los planes inventariados.
+- [x] `next.config.js`, `middleware.ts`, `i18n.ts`, `tsconfig.json` leídos íntegramente.
+- [x] Los 4 archivos `lib/supabase/*` leídos íntegramente.
+- [x] Ambas migraciones SQL leídas íntegramente.
+- [x] Las 6 Server Actions leídas íntegramente.
+- [x] 34 `page.tsx` clasificadas (Server vs Client, real vs mock).
+- [x] 5 cadenas críticas trazadas end-to-end con condiciones y branches.
+- [x] Tablas obligatorias presentes: módulos (Apéndice A), inventario de páginas (§2), deuda técnica (§4.3), gaps (§5.1), consolidación de planes (§6.1).
+- [x] Mencionados: `ADMIN_SECRET` ausente en `.env.example` (SEC-01), Supabase ID hardcoded (SEC-02), bug de OAuth secret del commit `2b0decb` (SEC-04), service-role confinada (SEC-13), `product_attributes` sin migración (SEC-12).
+- [x] Hechos vs hipótesis distinguidos.
+- [x] Sin propuestas de refactor dentro del análisis (sólo §7 enumera prioridades, sin convertirse en plan).
