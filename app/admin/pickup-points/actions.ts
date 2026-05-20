@@ -1,11 +1,13 @@
 'use server'
 import { revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { requireAdminSession } from '@/lib/admin/session'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 type ActionState = { error: string } | null
 
 export async function updatePickupPoint(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdminSession()
   const supabase = createAdminClient()
   const id = formData.get('id') as string
 
@@ -31,6 +33,7 @@ export async function updatePickupPoint(_prev: ActionState, formData: FormData):
 }
 
 export async function togglePickupPoint(id: string, is_active: boolean) {
+  await requireAdminSession()
   const supabase = createAdminClient()
   await supabase.from('pickup_points').update({ is_active }).eq('id', id)
   revalidateTag('pickup-points')

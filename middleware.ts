@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import createIntlMiddleware from 'next-intl/middleware'
 import { locales, defaultLocale } from './i18n'
+import { verifyAdminSessionToken } from '@/lib/admin/session'
 import { updateSession } from './lib/supabase/middleware'
 
 const intlMiddleware = createIntlMiddleware({
@@ -16,7 +17,7 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/admin')) {
     if (pathname === '/admin/login') return NextResponse.next()
     const token = request.cookies.get('admin_token')?.value
-    if (token !== process.env.ADMIN_SECRET) {
+    if (!(await verifyAdminSessionToken(token))) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
     return NextResponse.next()

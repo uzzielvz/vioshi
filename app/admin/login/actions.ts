@@ -1,6 +1,7 @@
 'use server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { ADMIN_SESSION_MAX_AGE_SEC, createAdminSessionToken } from '@/lib/admin/session'
 
 export async function loginAction(
   _prevState: { error: string } | null,
@@ -10,11 +11,12 @@ export async function loginAction(
   if (password !== process.env.ADMIN_SECRET) {
     return { error: 'Incorrect password.' }
   }
-  cookies().set('admin_token', process.env.ADMIN_SECRET!, {
+  const token = await createAdminSessionToken()
+  cookies().set('admin_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: ADMIN_SESSION_MAX_AGE_SEC,
     path: '/',
   })
   redirect('/admin/products')

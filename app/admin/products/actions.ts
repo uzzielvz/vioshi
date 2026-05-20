@@ -1,17 +1,20 @@
 'use server'
 import { revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { requireAdminSession } from '@/lib/admin/session'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 type ActionState = { error: string } | null
 
 export async function deleteProduct(id: string) {
+  await requireAdminSession()
   const supabase = createAdminClient()
   await supabase.from('products').delete().eq('id', id)
   revalidateTag('products')
 }
 
 export async function createProduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdminSession()
   const supabase = createAdminClient()
 
   const name            = formData.get('name') as string
@@ -44,6 +47,7 @@ export async function createProduct(_prev: ActionState, formData: FormData): Pro
 }
 
 export async function updateProduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdminSession()
   const supabase = createAdminClient()
   const id = formData.get('id') as string
 
