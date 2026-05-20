@@ -86,7 +86,7 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 | 3 | `npm run build` | ✅ Pass | Next.js 14.2.35, 54 páginas estáticas |
 | 4 | Migración `0003` aplicada en Supabase | ☐ Manual | Confirmar en dashboard SQL |
 | 5 | Env vars Vercel (`GEMINI_API_KEY`, `ADMIN_SECRET`, Supabase) | ☐ Manual | Configurar antes de deploy prod |
-| 6 | Push rama a origin | 🔄 En curso | Tras commit PLAN.md |
+| 6 | Push rama a origin | ✅ Hecho | `8745b44` → `origin/feat/visual-search-gemini` |
 | 7 | Merge a `main` | ☐ Pendiente OK humano | **No auto-merge** |
 
 **Pruebas manuales recomendadas post-merge / pre-deploy:**
@@ -348,7 +348,7 @@ Extraídas del Research Consolidado y `CLAUDE.md`:
 |-------|--------|--------|
 | 2026-05-19 | Creación inicial | Basado en RESEARCH-CONSOLIDADO.md Fase 2 |
 | 2026-05-19 | Fase 0 CLN-01..04, CLN-07 completados | Limpieza docs y scripts |
-| 2026-05-19 | CLN-05 checklist pre-merge | build/lint/tsc OK; merge pendiente |
+| 2026-05-19 | CLN-05 push a origin | `feat/visual-search-gemini` @ `8745b44` |
 
 ---
 
