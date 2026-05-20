@@ -6,6 +6,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 VIOGI is a premium streetwear e-commerce website built with Next.js 14 (App Router), React 18, TypeScript, and Tailwind CSS. The design is inspired by Stüssy with a minimalist black/white aesthetic.
 
+## Documentation
+
+Read these before making architectural changes:
+
+| Document | Purpose |
+|----------|---------|
+| [`RESEARCH-CONSOLIDADO.md`](./RESEARCH-CONSOLIDADO.md) | **SSOT** — verified technical facts, risks, architecture |
+| [`PLAN.md`](./PLAN.md) | Living roadmap and prioritized backlog |
+| [`CONTEXT.md`](./CONTEXT.md) | Quick repo map, env vars, key paths |
+
+> `RESEARCH.md` is **historical** (2026-05-13). Do not use it.
+
+**Rule:** If docs contradict code, code wins — then update the docs.
+
 ## Commands
 
 ```bash
@@ -31,7 +45,7 @@ npm run type-check   # Run TypeScript type checking
 - Route groups (parentheses folders) share layouts without affecting URL paths
 
 ### Data Layer
-- **Products**: Currently mock data in `lib/products.ts` with `getProducts()` and `getProductBySlug()` functions
+- **Products**: Supabase-backed via `lib/products.ts` (`getProducts()`, `getProductBySlug()`), cached 60s with tag `products`
 - **Types**: Centralized in `types/` - import from `@/types`
 - **Constants**: App-wide constants in `lib/constants.ts` (tax rates, shipping costs, storage keys)
 

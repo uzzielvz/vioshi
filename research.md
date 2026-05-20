@@ -1,3 +1,15 @@
+> ⚠️ **DOCUMENTO HISTÓRICO — NO USAR COMO REFERENCIA**
+>
+> Este archivo fue generado el **2026-05-13** y está **obsoleto**.
+> **Usar en su lugar:**
+> - [`RESEARCH-CONSOLIDADO.md`](./RESEARCH-CONSOLIDADO.md) — hechos técnicos verificados (SSOT)
+> - [`PLAN.md`](./PLAN.md) — roadmap vivo del proyecto
+> - [`CONTEXT.md`](./CONTEXT.md) — mapa rápido del repo
+>
+> Se conserva solo como registro histórico. Será movido a `docs/archive/` en CLN-07.
+
+---
+
 # RESEARCH EXHAUSTIVO — VIOGI
 
 > Documento único de referencia técnica. Sucesor de `researchbycursor.md`, `research-checkout.md` y de todos los `plan-*.md`. Cualquier agente futuro debería poder operar sólo con `CONTEXT.md` (mapa rápido) y este archivo.
