@@ -140,10 +140,10 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 |---|-------|--------|
 | 1.1 | Migración `0004_product_attributes.sql` + RLS coherente (RLS-01) | ✅ Migración creada (pendiente `db push`) |
 | 1.2 | Verificar DDL real de `product_attributes` en Supabase producción vs migración | ✅ Spike 2026-05-19 |
-| 1.3 | Sanitizar `next` en `app/auth/callback/route.ts` (AUTH-04) | Pendiente |
-| 1.4 | Endurecer admin: cookie firmada o sesión opaca; no almacenar `ADMIN_SECRET` en cookie (AUTH-01) | Pendiente |
-| 1.5 | Re-validación admin en Server Actions (`createProduct`, `deleteProduct`, etc.) (SA-01) | Pendiente |
-| 1.6 | Rate limit `/admin/login` y `/api/visual-search` (AUTH-02, VS-01) | Pendiente |
+| 1.3 | Sanitizar `next` en `app/auth/callback/route.ts` (AUTH-04) | ✅ SEC-02 |
+| 1.4 | Endurecer admin: cookie firmada o sesión opaca; no almacenar `ADMIN_SECRET` en cookie (AUTH-01) | ✅ SEC-03 |
+| 1.5 | Re-validación admin en Server Actions (`createProduct`, `deleteProduct`, etc.) (SA-01) | ✅ SEC-03/04 |
+| 1.6 | Rate limit `/admin/login` y `/api/visual-search` (AUTH-02, VS-01) | ✅ SEC-05 |
 | 1.7 | Restringir exposición pública de `products.embedding` (RLS-02): view o select sin columna | Pendiente |
 | 1.8 | Validación uploads admin: tamaño, MIME, errores visibles (IMG-01, SA-04) | Pendiente |
 | 1.9 | Parametrizar Supabase hostname en `next.config.js` desde env (IMG-03) | Pendiente |
@@ -228,10 +228,10 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | CLN-06 | Archivar rama `feat/visual-search` (FastAPI) | 0 | P2 | S | CLN-05 merge | Tag `archive/feat-visual-search-fastapi`; rama remota borrada | ✅ |
 | CLN-07 | Archivar planes `.md` obsoletos | 0 | P2 | S | — | Raíz limpia o `docs/archive/` | ✅ |
 | SEC-01 | Migración `0004_product_attributes.sql` | 1 | P0 | M | — | Fresh DB + admin attributes OK | ✅ Migración creada |
-| SEC-02 | Sanitizar OAuth `next` param | 1 | P1 | S | — | Rechaza `//evil.com` | Pendiente |
-| SEC-03 | Admin cookie ≠ secreto en claro | 1 | P0 | L | — | Cookie opaca/JWT; secret rotable | Pendiente |
-| SEC-04 | Re-validar admin en Server Actions | 1 | P0 | M | SEC-03 | Actions fallan sin sesión admin válida | Pendiente |
-| SEC-05 | Rate limit admin login + visual-search API | 1 | P0 | M | — | Abuso bloqueado en demo load | Pendiente |
+| SEC-02 | Sanitizar OAuth `next` param | 1 | P1 | S | — | Rechaza `//evil.com` | ✅ |
+| SEC-03 | Admin cookie ≠ secreto en claro | 1 | P0 | L | — | Cookie opaca/JWT; secret rotable | ✅ |
+| SEC-04 | Re-validar admin en Server Actions | 1 | P0 | M | SEC-03 | Actions fallan sin sesión admin válida | ✅ |
+| SEC-05 | Rate limit admin login + visual-search API | 1 | P0 | M | — | Abuso bloqueado en demo load | ✅ |
 | SEC-06 | Ocultar `embedding` de SELECT público | 1 | P1 | M | — | Anon key no devuelve vectores | Pendiente |
 | SEC-07 | Validación uploads (size, MIME, errores UI) | 1 | P1 | M | — | Admin ve error si upload falla | Pendiente |
 | SEC-08 | CI incluye `npm run build` | 1 | P1 | S | — | PR falla si build roto | Pendiente |
@@ -292,11 +292,10 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 
 **Fase 1 — Bugs Críticos y Seguridad** ← **PRÓXIMA**
 
-1. **SEC-03/04:** Endurecer admin auth (cookie firmada + re-validación en Server Actions).
-2. **SEC-05:** Rate limit `/api/visual-search` y `/admin/login`.
-3. **SEC-02:** Sanitizar OAuth `next` param en auth callback.
-4. **SEC-06:** Ocultar columna `embedding` de SELECT público (RLS/view).
-5. **SEC-01 (aplicar):** `supabase db push` o SQL Editor cuando tengas access token.
+1. **SEC-06:** Ocultar columna `embedding` de SELECT público (RLS/view).
+2. **SEC-08:** Añadir `npm run build` al workflow CI.
+3. **SEC-01 (aplicar):** `supabase db push` o SQL Editor para migración `0004`.
+4. **SEC-07:** Validación uploads admin (size, MIME, errores UI).
 
 **Diferido (no bloquea Fase 1):** tareas 0.9 (SQL seeds), 0.10 (`.gitignore`), 0.7 (`client.ts` audit).
 
@@ -378,7 +377,7 @@ Extraídas del Research Consolidado y `CLAUDE.md`:
 | 2026-05-19 | Creación inicial | Basado en RESEARCH-CONSOLIDADO.md Fase 2 |
 | 2026-05-19 | Fase 0 CLN-01..04, CLN-07 completados | Limpieza docs y scripts |
 | 2026-05-19 | Supabase CLI migrations | Link falló sin access token; 0003 ya aplicada manualmente en demo |
-| 2026-05-19 | SEC-01 migración 0004 | `product_attributes` DDL alineado con prod; policy public read |
+| 2026-05-19 | SEC-02 sanitize OAuth next | Rechaza open redirects en auth callback |
 
 ---
 

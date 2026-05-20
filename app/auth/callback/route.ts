@@ -2,6 +2,21 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 /**
+ * OAuth callback redirect target. Only same-origin relative paths are allowed.
+ * Rejects protocol-relative (//), absolute URLs, and backslash tricks.
+ */
+function sanitizeAuthRedirectPath(next: string | null | undefined): string {
+  if (!next) return '/'
+
+  const path = next.trim()
+  if (!path.startsWith('/') || path.startsWith('//')) return '/'
+  if (path.includes('\\') || path.includes('://')) return '/'
+  if (/^https?:/i.test(path)) return '/'
+
+  return path
+}
+
+/**
  * Callback OAuth / magic link / recovery link.
  *
  * Construimos el NextResponse de redirect ANTES del exchange y le pasamos su
@@ -13,7 +28,7 @@ import { createServerClient } from '@supabase/ssr'
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  const next = sanitizeAuthRedirectPath(searchParams.get('next'))
 
   if (!code) {
     return NextResponse.redirect(`${origin}${next}?error=auth_callback`)
