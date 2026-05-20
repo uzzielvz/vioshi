@@ -1,3 +1,6 @@
+> ⚠️ **DOCUMENTO HISTÓRICO** — Archivado en CLN-07. Módulo auth completado (AU-01..AU-07).
+> Docs vivas: [`RESEARCH-CONSOLIDADO.md`](../../RESEARCH-CONSOLIDADO.md) · [`PLAN.md`](../../PLAN.md) · [`README.md`](./README.md)
+
 # VIOGI — Plan: Autenticación de usuarios (Supabase Auth)
 
 > **Creado**: 2026-05-03

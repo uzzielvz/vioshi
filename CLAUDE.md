@@ -16,7 +16,7 @@ Read these before making architectural changes:
 | [`PLAN.md`](./PLAN.md) | Living roadmap and prioritized backlog |
 | [`CONTEXT.md`](./CONTEXT.md) | Quick repo map, env vars, key paths |
 
-> `RESEARCH.md` is **historical** (2026-05-13). Do not use it.
+> `docs/archive/RESEARCH-2026-05-13.md` is **historical** (2026-05-13). Do not use it. See [`docs/archive/README.md`](./docs/archive/README.md).
 
 **Rule:** If docs contradict code, code wins — then update the docs.
 

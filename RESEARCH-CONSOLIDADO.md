@@ -21,7 +21,7 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 3. **Schema drift** — tabla `product_attributes` usada en código **sin migración** en repo.
 4. **Visual search público** — endpoint sin auth ni rate limit; costo Gemini + service role server-side.
 5. **Embeddings expuestos por RLS** — policy `products_public_read` permite `SELECT` de columna `embedding` con anon key.
-6. **Documentación desincronizada** — `RESEARCH.md`, `README.md`, `CONTEXT.md` no reflejan visual search ni segundo Route Handler.
+6. **Documentación desincronizada** — docs archivados en `docs/archive/`; `README.md` y `CONTEXT.md` actualizados en Fase 0 (CLN-01, CLN-07).
 
 **Prioridad inmediata recomendada:** (1) conectar checkout a `orders`/`order_items` sin pasarela, (2) migración `product_attributes`, (3) hardening admin + rate limit visual search, (4) actualizar docs.
 
@@ -42,7 +42,7 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 | **API routes** | `/auth/callback` (GET), `/api/visual-search` (POST) |
 | **Pagos** | No implementados (Stripe/MP solo en `.env.example` comentado) |
 | **Tests** | 0 archivos test; CI solo ESLint + tsc en archivos cambiados de PR |
-| **Docs obsoletos** | `README.md` dice visual search "próximamente"; `RESEARCH.md` fecha 2026-05-13 |
+| **Docs obsoletos** | Históricos en `docs/archive/`; docs vivas: `RESEARCH-CONSOLIDADO.md`, `PLAN.md`, `CONTEXT.md` |
 
 **Estructura raíz:** `app/`, `components/`, `lib/`, `store/`, `hooks/`, `types/`, `messages/`, `scripts/`, `supabase/`, `visual-search/`.
 
@@ -293,7 +293,7 @@ VISUAL SEARCH
 7. **View `products_public`** sin columna `embedding` — o policy column-level si Supabase lo permite.
 8. **Sanitizar `next` en auth callback** — regex `^/[^/\\]`.
 9. **CI: `npm run build`** en PR workflow.
-10. **Consolidar documentación** — reemplazar `RESEARCH.md` por este archivo tras revisión humana.
+10. **Consolidar documentación** — `RESEARCH-CONSOLIDADO.md` es SSOT; research previo archivado en `docs/archive/RESEARCH-2026-05-13.md` (CLN-07).
 
 ---
 

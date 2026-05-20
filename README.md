@@ -12,7 +12,7 @@ E-commerce de streetwear de segunda mano. Next.js 14 + Supabase.
 | [`PLAN.md`](./PLAN.md) | Roadmap vivo y backlog |
 | [`CONTEXT.md`](./CONTEXT.md) | Mapa rápido del repositorio |
 
-> `research.md` es **histórico** (2026-05-13). No usar como referencia.
+> Documentación histórica archivada en [`docs/archive/`](./docs/archive/README.md). No usar como referencia.
 
 ---
 

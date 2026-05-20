@@ -1,3 +1,6 @@
+> ⚠️ **DOCUMENTO HISTÓRICO** — Archivado en CLN-07. Checkout sigue mock; ver [`PLAN.md`](../../PLAN.md) Fase 2.
+> Docs vivas: [`RESEARCH-CONSOLIDADO.md`](../../RESEARCH-CONSOLIDADO.md) · [`README.md`](./README.md)
+
 # Plan: Checkout + Login — Legibilidad, UX y Auditoría
 
 > Creado: 2026-03-17

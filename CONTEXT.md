@@ -4,7 +4,7 @@ Generado: 2026-05-19 (actualizado CLN-01)
 Rama analizada: `feat/visual-search-gemini`
 Último commit: `12f6f77 docs(CLN-02): promote RESEARCH-CONSOLIDADO as SSOT, deprecate RESEARCH.md`
 
-> **Docs vivas:** [`RESEARCH-CONSOLIDADO.md`](./RESEARCH-CONSOLIDADO.md) (SSOT) · [`PLAN.md`](./PLAN.md) (roadmap) · `research.md` es histórico.
+> **Docs vivas:** [`RESEARCH-CONSOLIDADO.md`](./RESEARCH-CONSOLIDADO.md) (SSOT) · [`PLAN.md`](./PLAN.md) (roadmap) · Históricos: [`docs/archive/`](./docs/archive/README.md)
 
 ---
 
@@ -12,11 +12,11 @@ Rama analizada: `feat/visual-search-gemini`
 
 Contenido de la raíz (1 nivel, excluyendo `node_modules/`, `.next/`, `.git/`):
 
-**Carpetas**: `.claude/`, `.github/`, `app/`, `components/`, `hooks/`, `lib/`, `messages/`, `public/`, `scripts/`, `store/`, `supabase/`, `types/`, `visual-search/`.
+**Carpetas**: `.claude/`, `.github/`, `app/`, `components/`, `docs/`, `hooks/`, `lib/`, `messages/`, `public/`, `scripts/`, `store/`, `supabase/`, `types/`, `visual-search/`.
 
-**Archivos clave en raíz**: `.env.example`, `CLAUDE.md`, `CONTEXT.md` (este archivo), `README.md`, `PLAN.md`, `RESEARCH-CONSOLIDADO.md`, `research.md` (histórico), `plan-auth.md`, `plancheckout.md`, `i18n.ts`, `middleware.ts`, `next.config.js`, `package.json`, `tailwind.config.ts`, `tsconfig.json`.
+**Archivos clave en raíz**: `.env.example`, `CLAUDE.md`, `CONTEXT.md` (este archivo), `README.md`, `PLAN.md`, `RESEARCH-CONSOLIDADO.md`, `i18n.ts`, `middleware.ts`, `next.config.js`, `package.json`, `tailwind.config.ts`, `tsconfig.json`.
 
-**Planes históricos** (pendiente archivar en `docs/archive/` — CLN-07): `plan-auth.md`, `plancheckout.md`.
+**Documentación histórica**: [`docs/archive/`](./docs/archive/README.md) — research y planes obsoletos (CLN-07).
 
 **Monorepo**: No. No hay `pnpm-workspace.yaml`, `turbo.json`, `nx.json`, `lerna.json`, `apps/`, ni `packages/`. Es un proyecto Next.js plano.
 
@@ -223,8 +223,7 @@ Contenido de la raíz (1 nivel, excluyendo `node_modules/`, `.next/`, `.git/`):
 | [`CLAUDE.md`](./CLAUDE.md) | Reglas de estilo y convenciones | ✅ Vigente |
 | [`README.md`](./README.md) | Onboarding rápido | ✅ Vigente |
 | [`visual-search/README.md`](./visual-search/README.md) | Módulo búsqueda visual | ✅ Vigente |
-| `research.md` | Research exhaustivo 2026-05-13 | ⚠️ Histórico — no usar |
-| `plan-auth.md`, `plancheckout.md` | Planes por módulo | 🟡 Histórico — archivar CLN-07 |
+| [`docs/archive/README.md`](./docs/archive/README.md) | Índice documentos históricos | ✅ Archivo |
 
 **Comandos slash**: `.claude/commands/audit.md`, `.claude/commands/write-tests.md`.
 
@@ -268,8 +267,7 @@ Declaradas en `.env.example` (no se leyó `.env.local`):
 
 - Existen dos sistemas de autenticación separados: Supabase Auth para `/[locale]/account/*` y cookie `admin_token` validada contra `ADMIN_SECRET` para `/admin/*`.
 - `.env.example` declara `SUPABASE_SERVICE_ROLE_KEY` pero no `ADMIN_SECRET`, aunque ambos son usados por código en `lib/supabase/admin.ts` y `app/admin/login/actions.ts` respectivamente.
-- Documentación consolidada en `RESEARCH-CONSOLIDADO.md` + `PLAN.md`. `research.md` marcado histórico.
-- Planes `plan-auth.md` y `plancheckout.md` pendientes de mover a `docs/archive/` (CLN-07).
+- Documentación consolidada en `RESEARCH-CONSOLIDADO.md` + `PLAN.md`. Históricos en `docs/archive/` (CLN-07).
 - Route Handlers: `app/auth/callback/route.ts` + `app/api/visual-search/route.ts`.
 - No hay carpeta `supabase/functions/` (no se usan Edge Functions de Supabase).
 - No hay archivos de tests de ninguna clase.
@@ -284,7 +282,7 @@ Declaradas en `.env.example` (no se leyó `.env.local`):
 - `app/[locale]/account/page.tsx` actúa como página de login (cuando no hay sesión) y como dashboard (cuando hay sesión); no existe una ruta `/account/login` separada.
 - `app/[locale]/account/orders/page.tsx` y `app/[locale]/account/addresses/page.tsx` existen pero (según commits previos del módulo auth) usan datos mock; no se leyó código aquí para confirmar el estado actual.
 - `app/[locale]/checkout/page.tsx` existe pero no hay archivos `actions.ts` ni `route.ts` asociados a checkout que indiquen integración con pasarela de pagos.
-- En `plan-auth.md` línea 453 se indica "Módulo Auth: 100% completado y probado." (referenciado solo por título; no leído contenido completo).
+- En `docs/archive/plan-auth.md` se indica "Módulo Auth: 100% completado y probado." (referencia histórica).
 
 ---
 
