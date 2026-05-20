@@ -38,7 +38,11 @@ export default function VisualSearchPage() {
       const res = await fetch('/api/visual-search', { method: 'POST', body: formData });
       const data = await res.json();
       if (!res.ok) {
-        setError('No se pudo procesar la imagen.');
+        if (data.error === 'rate_limit' && data.message) {
+          setError(data.message);
+        } else {
+          setError('No se pudo procesar la imagen.');
+        }
       } else {
         setResults(data.results);
         setAiDescription(data.ai_description);
