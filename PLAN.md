@@ -1,8 +1,8 @@
 # PLAN.md - Viogi (Roadmap Vivo)
 
 **Última actualización:** 2026-05-19  
-**Rama actual:** `feat/visual-search-gemini` (canónica Gemini — **pendiente merge a `main`**)  
-**Estado general:** Fase 0 casi cerrada (docs al día, `.env.example` completo, archive listo). Visual search funcional en rama feature. **No production-ready** — checkout mock y hardening Fase 1 pendientes.  
+**Rama actual:** `main` (merge `feat/visual-search-gemini` @ `4dd10ed` — fast-forward)  
+**Estado general:** Fase 0 casi cerrada. Visual search Gemini+pgvector integrado en `main`. **No production-ready** — checkout mock y hardening Fase 1 pendientes.  
 **Fuente de verdad técnica:** `RESEARCH-CONSOLIDADO.md` (2026-05-19)
 
 ---
@@ -67,12 +67,12 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 | 0.5 | Completar `.env.example` (`ADMIN_SECRET`, `GEMINI_API_KEY`) | ✅ CLN-03 |
 | 0.6 | Archivar `scripts/seed-visual-search.ts` → `scripts/legacy/` | ✅ CLN-04 |
 | 0.7 | Auditar `lib/supabase/client.ts` | ⏸ Diferido post-merge |
-| 0.8 | Merge `feat/visual-search-gemini` → `main` | 🔄 CLN-05 (checklist OK, push hecho, merge pendiente OK humano) |
+| 0.8 | Merge `feat/visual-search-gemini` → `main` | ✅ CLN-05 (fast-forward `1813eff..4dd10ed`) |
 | 0.9 | Limpiar productos seed demo (SQL post-demo) | Pendiente |
 | 0.10 | Revisar `.gitignore` (`.next/`, `.playwright-mcp/`) | Pendiente |
 | 0.11 | Archivar planes obsoletos en `docs/archive/` | ✅ CLN-07 |
 
-**Estado actual:** Docs y scripts saneados. Rama canónica verificada (`build` + `type-check` + `lint` OK). Falta merge a `main` y CLN-06 (archivar rama FastAPI legacy).
+**Estado actual:** Docs y scripts saneados. Visual search en `main`. Pendiente: CLN-06 (archivar rama FastAPI legacy), tareas 0.9–0.10.
 
 #### CLN-05 — Checklist pre-merge (`feat/visual-search-gemini` → `main`)
 
@@ -87,7 +87,7 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 | 4 | Migración `0003` aplicada en Supabase | ☐ Manual | Confirmar en dashboard SQL |
 | 5 | Env vars Vercel (`GEMINI_API_KEY`, `ADMIN_SECRET`, Supabase) | ☐ Manual | Configurar antes de deploy prod |
 | 6 | Push rama a origin | ✅ Hecho | `8745b44` → `origin/feat/visual-search-gemini` |
-| 7 | Merge a `main` | ☐ Pendiente OK humano | **No auto-merge** |
+| 7 | Merge a `main` | ✅ Hecho | Fast-forward local + push `origin/main` @ `4dd10ed` |
 
 **Pruebas manuales recomendadas post-merge / pre-deploy:**
 
@@ -197,7 +197,7 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 | CLN-02 | Promover RESEARCH-CONSOLIDADO como SSOT; deprecar research.md | 0 | P0 | S | — | Un solo doc referenciado en CLAUDE.md | ✅ |
 | CLN-03 | Completar `.env.example` (ADMIN_SECRET, GEMINI_API_KEY) | 0 | P0 | S | — | Nuevo dev sabe todas las vars | ✅ |
 | CLN-04 | Archivar `scripts/seed-visual-search.ts` | 0 | P1 | S | — | Solo un script seed canon documentado | ✅ |
-| CLN-05 | Merge `feat/visual-search-gemini` → `main` | 0 | P0 | M | build OK | Push hecho; merge pendiente OK humano | 🔄 |
+| CLN-05 | Merge `feat/visual-search-gemini` → `main` | 0 | P0 | M | build OK | `main` contiene visual search | ✅ |
 | CLN-06 | Archivar rama `feat/visual-search` (FastAPI) | 0 | P2 | S | CLN-05 merge | Una sola rama visual search | Pendiente |
 | CLN-07 | Archivar planes `.md` obsoletos | 0 | P2 | S | — | Raíz limpia o `docs/archive/` | ✅ |
 | SEC-01 | Migración `0004_product_attributes.sql` | 1 | P0 | M | — | Fresh DB + admin attributes OK | Pendiente |
