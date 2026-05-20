@@ -68,7 +68,7 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 | 0.6 | Archivar `scripts/seed-visual-search.ts` → `scripts/legacy/` | ✅ CLN-04 |
 | 0.7 | Auditar `lib/supabase/client.ts` | ⏸ Diferido (post Fase 0) |
 | 0.8 | Merge `feat/visual-search-gemini` → `main` | ✅ CLN-05 |
-| 0.9 | Limpiar productos seed demo (SQL post-demo) | ⏸ Diferido (pre-launch) |
+| 0.9 | Limpiar productos seed demo (SQL post-demo) | 📋 **Listo para ejecutar manualmente** | SQL abajo; correr en Supabase SQL Editor antes de launch público |
 | 0.10 | Revisar `.gitignore` (`.next/`, `.playwright-mcp/`) | ⏸ Diferido (post Fase 0) |
 | 0.11 | Archivar planes obsoletos en `docs/archive/` | ✅ CLN-07 |
 | — | Archivar rama `feat/visual-search` (FastAPI) como tag | ✅ CLN-06 |
@@ -85,7 +85,33 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 | 1 | `npm run type-check` | ✅ Pass | 2026-05-19 |
 | 2 | `npm run lint` | ✅ Pass | Sin warnings |
 | 3 | `npm run build` | ✅ Pass | Next.js 14.2.35, 54 páginas estáticas |
-| 4 | Migración `0003` aplicada en Supabase | ☐ Manual | Confirmar en dashboard SQL |
+| 4 | Migración `0003` aplicada en Supabase | ⚠️ CLI bloqueada | Aplicada manualmente en sesión previa (SQL Editor). `supabase db push` requiere `supabase login` (2026-05-19) |
+
+#### Supabase migrations — intento CLI (2026-05-19)
+
+Migraciones en repo: `0001_initial_schema`, `0002_handle_new_user`, `0003_pgvector_and_embeddings`.
+
+| Comando | Resultado |
+|---------|-----------|
+| `npx supabase link --project-ref oilvubxpxxzfxlqhsumk` | ❌ `Access token not provided. Supply an access token by running supabase login or setting SUPABASE_ACCESS_TOKEN` |
+| `npx supabase migration list` | ❌ `Cannot find project ref. Have you run supabase link?` |
+| `npx supabase db push` | ❌ `Cannot find project ref. Have you run supabase link?` |
+
+**Desbloqueo:** ejecutar `npx supabase login` (browser) o exportar `SUPABASE_ACCESS_TOKEN`, luego repetir link → migration list → db push.
+
+**Alternativa:** pegar `0003_pgvector_and_embeddings.sql` en Supabase Dashboard → SQL Editor (ya hecho en demo).
+
+#### Tarea 0.9 — SQL limpieza seeds (manual, pre-launch)
+
+```sql
+-- Borrar productos demo de visual search (description prefix [seed])
+DELETE FROM product_images
+WHERE product_id IN (SELECT id FROM products WHERE description LIKE '[seed]%');
+
+DELETE FROM products WHERE description LIKE '[seed]%';
+```
+
+Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | 5 | Env vars Vercel (`GEMINI_API_KEY`, `ADMIN_SECRET`, Supabase) | ☐ Manual | Configurar antes de deploy prod |
 | 6 | Push rama a origin | ✅ Hecho | `8745b44` → `origin/feat/visual-search-gemini` |
 | 7 | Merge a `main` | ✅ Hecho | Fast-forward local + push `origin/main` @ `4dd10ed` |
@@ -351,7 +377,8 @@ Extraídas del Research Consolidado y `CLAUDE.md`:
 |-------|--------|--------|
 | 2026-05-19 | Creación inicial | Basado en RESEARCH-CONSOLIDADO.md Fase 2 |
 | 2026-05-19 | Fase 0 CLN-01..04, CLN-07 completados | Limpieza docs y scripts |
-| 2026-05-19 | CLN-06 archivar rama FastAPI | Tag `archive/feat-visual-search-fastapi` @ `dd349ef`; rama remota borrada |
+| 2026-05-19 | Supabase CLI migrations | Link falló sin access token; 0003 ya aplicada manualmente en demo |
+| 2026-05-19 | Tarea 0.9 SQL seeds | Documentada en PLAN; listo para ejecución manual pre-launch |
 
 ---
 
