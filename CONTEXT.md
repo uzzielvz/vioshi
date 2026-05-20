@@ -101,9 +101,9 @@ Contenido de la raíz (1 nivel, excluyendo `node_modules/`, `.next/`, `.git/`):
 - No hay `supabase/seed.sql`, ni `supabase/functions/`, ni `supabase/config.toml`.
 
 **Scripts CLI** (`scripts/`):
-- `seed-real-images.ts` — seed productos demo en Storage + DB.
+- `seed-real-images.ts` — seed productos demo en Storage + DB (canon).
 - `generate-embeddings.ts` — indexación offline con Gemini.
-- `seed-visual-search.ts` — legacy Unsplash (pendiente archivar CLN-04).
+- `legacy/` — scripts obsoletos archivados (ver `scripts/legacy/README.md`).
 
 **Archivos `*.sql` en el repo**: 3 (los listados arriba; sin `*.sql` fuera de `supabase/`).
 
