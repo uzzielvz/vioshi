@@ -2,7 +2,7 @@
 
 **Última actualización:** 2026-05-19  
 **Rama actual:** `main` (merge `feat/visual-search-gemini` @ `4dd10ed` — fast-forward)  
-**Estado general:** Fase 0 casi cerrada. Visual search Gemini+pgvector integrado en `main`. **No production-ready** — checkout mock y hardening Fase 1 pendientes.  
+**Estado general:** Fase 0 **cerrada**. Visual search Gemini+pgvector en `main`. **No production-ready** — checkout mock y hardening Fase 1 pendientes.  
 **Fuente de verdad técnica:** `RESEARCH-CONSOLIDADO.md` (2026-05-19)
 
 ---
@@ -53,7 +53,7 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 
 ## 2. Fases del Proyecto (con estado actual)
 
-### Fase 0: Limpieza y Saneamiento ← **CASI CERRADA** (CLN-05 en curso)
+### Fase 0: Limpieza y Saneamiento ← **CERRADA** ✅
 
 **Objetivo:** Eliminar ruido, alinear documentación con código, reducir confusión para desarrollo posterior. Sin cambios funcionales de negocio.
 
@@ -66,13 +66,14 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 | 0.4 | Actualizar `visual-search/README.md` | ✅ CLN-01 |
 | 0.5 | Completar `.env.example` (`ADMIN_SECRET`, `GEMINI_API_KEY`) | ✅ CLN-03 |
 | 0.6 | Archivar `scripts/seed-visual-search.ts` → `scripts/legacy/` | ✅ CLN-04 |
-| 0.7 | Auditar `lib/supabase/client.ts` | ⏸ Diferido post-merge |
-| 0.8 | Merge `feat/visual-search-gemini` → `main` | ✅ CLN-05 (fast-forward `1813eff..4dd10ed`) |
-| 0.9 | Limpiar productos seed demo (SQL post-demo) | Pendiente |
-| 0.10 | Revisar `.gitignore` (`.next/`, `.playwright-mcp/`) | Pendiente |
+| 0.7 | Auditar `lib/supabase/client.ts` | ⏸ Diferido (post Fase 0) |
+| 0.8 | Merge `feat/visual-search-gemini` → `main` | ✅ CLN-05 |
+| 0.9 | Limpiar productos seed demo (SQL post-demo) | ⏸ Diferido (pre-launch) |
+| 0.10 | Revisar `.gitignore` (`.next/`, `.playwright-mcp/`) | ⏸ Diferido (post Fase 0) |
 | 0.11 | Archivar planes obsoletos en `docs/archive/` | ✅ CLN-07 |
+| — | Archivar rama `feat/visual-search` (FastAPI) como tag | ✅ CLN-06 |
 
-**Estado actual:** Docs y scripts saneados. Visual search en `main`. Pendiente: CLN-06 (archivar rama FastAPI legacy), tareas 0.9–0.10.
+**Estado actual:** Fase 0 cerrada. Rama de trabajo: `main`. Rama canónica visual search: Gemini en `main`. Legacy FastAPI preservada en tag `archive/feat-visual-search-fastapi` (`dd349ef`).
 
 #### CLN-05 — Checklist pre-merge (`feat/visual-search-gemini` → `main`)
 
@@ -155,7 +156,7 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 **Tareas principales:**
 | # | Tarea | Estado |
 |---|-------|--------|
-| 3.1 | Merge `feat/visual-search-gemini` a `main` | 🔄 CLN-05 en curso |
+| 3.1 | Merge `feat/visual-search-gemini` a `main` | ✅ CLN-05 |
 | 3.2 | Unificar prompts Gemini entre endpoint y `generate-embeddings.ts` (VS-04) | Pendiente |
 | 3.3 | Indexación automática de embedding en `createProduct` / `updateProduct` (VS-06) | Pendiente |
 | 3.4 | Integrar UI en `/[locale]/search` o componente reutilizable en catálogo (decisión pendiente) | Pendiente |
@@ -198,7 +199,7 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 | CLN-03 | Completar `.env.example` (ADMIN_SECRET, GEMINI_API_KEY) | 0 | P0 | S | — | Nuevo dev sabe todas las vars | ✅ |
 | CLN-04 | Archivar `scripts/seed-visual-search.ts` | 0 | P1 | S | — | Solo un script seed canon documentado | ✅ |
 | CLN-05 | Merge `feat/visual-search-gemini` → `main` | 0 | P0 | M | build OK | `main` contiene visual search | ✅ |
-| CLN-06 | Archivar rama `feat/visual-search` (FastAPI) | 0 | P2 | S | CLN-05 merge | Una sola rama visual search | Pendiente |
+| CLN-06 | Archivar rama `feat/visual-search` (FastAPI) | 0 | P2 | S | CLN-05 merge | Tag `archive/feat-visual-search-fastapi`; rama remota borrada | ✅ |
 | CLN-07 | Archivar planes `.md` obsoletos | 0 | P2 | S | — | Raíz limpia o `docs/archive/` | ✅ |
 | SEC-01 | Migración `0004_product_attributes.sql` | 1 | P0 | M | — | Fresh DB + admin attributes OK | Pendiente |
 | SEC-02 | Sanitizar OAuth `next` param | 1 | P1 | S | — | Rechaza `//evil.com` | Pendiente |
@@ -263,13 +264,15 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 
 ## 5. Próximos Pasos (Próxima Sesión)
 
-1. **CLN-05 (merge):** Confirmar merge `feat/visual-search-gemini` → `main` (PR o merge local).
-2. **CLN-06:** Archivar rama `origin/feat/visual-search` (FastAPI legacy) tras merge.
-3. **Fase 1 — SEC-01:** Spike DDL `product_attributes` en Supabase dashboard.
-4. **Fase 1 — SEC-03/04:** Endurecer admin auth (cookie ≠ secreto en claro).
-5. **Fase 1 — SEC-05:** Rate limit `/api/visual-search` y `/admin/login`.
+**Fase 1 — Bugs Críticos y Seguridad** ← **PRÓXIMA**
 
-**No hacer aún:** checkout real, pasarela, migración 0004 sin verificar DDL prod.
+1. **SEC-01:** Spike DDL `product_attributes` en Supabase dashboard → migración `0004`.
+2. **SEC-03/04:** Endurecer admin auth (cookie ≠ secreto en claro; re-validación en actions).
+3. **SEC-05:** Rate limit `/api/visual-search` y `/admin/login`.
+4. **SEC-02:** Sanitizar OAuth `next` param en auth callback.
+5. **SEC-06:** Ocultar columna `embedding` de SELECT público (RLS/view).
+
+**Diferido (no bloquea Fase 1):** tareas 0.9 (SQL seeds), 0.10 (`.gitignore`), 0.7 (`client.ts` audit).
 
 ---
 
@@ -348,7 +351,7 @@ Extraídas del Research Consolidado y `CLAUDE.md`:
 |-------|--------|--------|
 | 2026-05-19 | Creación inicial | Basado en RESEARCH-CONSOLIDADO.md Fase 2 |
 | 2026-05-19 | Fase 0 CLN-01..04, CLN-07 completados | Limpieza docs y scripts |
-| 2026-05-19 | CLN-05 push a origin | `feat/visual-search-gemini` @ `8745b44` |
+| 2026-05-19 | CLN-06 archivar rama FastAPI | Tag `archive/feat-visual-search-fastapi` @ `dd349ef`; rama remota borrada |
 
 ---
 
