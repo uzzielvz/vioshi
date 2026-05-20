@@ -89,7 +89,7 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 
 #### Supabase migrations — intento CLI (2026-05-19)
 
-Migraciones en repo: `0001_initial_schema`, `0002_handle_new_user`, `0003_pgvector_and_embeddings`.
+Migraciones en repo: `0001_initial_schema`, `0002_handle_new_user`, `0003_pgvector_and_embeddings`, `0004_product_attributes`, `0005_hide_product_embedding_from_public`.
 
 | Comando | Resultado |
 |---------|-----------|
@@ -144,7 +144,7 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | 1.4 | Endurecer admin: cookie firmada o sesión opaca; no almacenar `ADMIN_SECRET` en cookie (AUTH-01) | ✅ SEC-03 |
 | 1.5 | Re-validación admin en Server Actions (`createProduct`, `deleteProduct`, etc.) (SA-01) | ✅ SEC-03/04 |
 | 1.6 | Rate limit `/admin/login` y `/api/visual-search` (AUTH-02, VS-01) | ✅ SEC-05 |
-| 1.7 | Restringir exposición pública de `products.embedding` (RLS-02): view o select sin columna | Pendiente |
+| 1.7 | Restringir exposición pública de `products.embedding` (RLS-02) | ✅ SEC-06 (migración 0005) |
 | 1.8 | Validación uploads admin: tamaño, MIME, errores visibles (IMG-01, SA-04) | Pendiente |
 | 1.9 | Parametrizar Supabase hostname en `next.config.js` desde env (IMG-03) | Pendiente |
 | 1.10 | Añadir `npm run build` al workflow CI (`.github/workflows/code-review.yml`) | Pendiente |
@@ -232,7 +232,7 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | SEC-03 | Admin cookie ≠ secreto en claro | 1 | P0 | L | — | Cookie opaca/JWT; secret rotable | ✅ |
 | SEC-04 | Re-validar admin en Server Actions | 1 | P0 | M | SEC-03 | Actions fallan sin sesión admin válida | ✅ |
 | SEC-05 | Rate limit admin login + visual-search API | 1 | P0 | M | — | Abuso bloqueado en demo load | ✅ |
-| SEC-06 | Ocultar `embedding` de SELECT público | 1 | P1 | M | — | Anon key no devuelve vectores | Pendiente |
+| SEC-06 | Ocultar `embedding` de SELECT público | 1 | P1 | M | — | Anon key no devuelve vectores | ✅ Migración 0005 |
 | SEC-07 | Validación uploads (size, MIME, errores UI) | 1 | P1 | M | — | Admin ve error si upload falla | Pendiente |
 | SEC-08 | CI incluye `npm run build` | 1 | P1 | S | — | PR falla si build roto | Pendiente |
 | SEC-09 | Parametrizar Supabase URL en next.config | 1 | P2 | S | — | Sin project ID hardcoded | Pendiente |
@@ -282,7 +282,7 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | D-05 | Seeds `[seed]` en prod | Mantener vs borrar post-demo | **Borrar** antes de launch público; catálogo real solo | VS-09 |
 | D-06 | `product_attributes` DDL prod | ¿Existe manualmente? | ✅ Verificado; migración `0004` alineada con prod | SEC-01 |
 | D-07 | Rama FastAPI obsoleta | Delete vs archive | **Archivar** tag `feat/visual-search-legacy` y borrar rama remota tras merge gemini | CLN-06 |
-| D-08 | Embeddings públicos | View vs RPC-only vs column revoke | **View `products_catalog`** sin `embedding` para anon; writes/admin vía service role | SEC-06 |
+| D-08 | Embeddings públicos | View vs RPC-only vs column revoke | **Column REVOKE** en migración `0005` (anon/authenticated) | SEC-06 |
 | D-09 | Rate limit stack | Upstash vs Vercel Edge Middleware vs in-memory | **Upstash** si hay cuenta; si no, middleware Vercel con IP throttle básico | SEC-05 |
 | D-10 | Validación inputs | Zod vs manual | **Zod** en actions nuevas (checkout, admin); no bloquear Fase 0 | DEB-01 |
 
@@ -292,10 +292,10 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 
 **Fase 1 — Bugs Críticos y Seguridad** ← **PRÓXIMA**
 
-1. **SEC-06:** Ocultar columna `embedding` de SELECT público (RLS/view).
-2. **SEC-08:** Añadir `npm run build` al workflow CI.
-3. **SEC-01 (aplicar):** `supabase db push` o SQL Editor para migración `0004`.
-4. **SEC-07:** Validación uploads admin (size, MIME, errores UI).
+1. **SEC-08:** Añadir `npm run build` al workflow CI.
+2. **SEC-01 (aplicar):** `supabase db push` o SQL Editor para migraciones `0004` + `0005`.
+3. **SEC-07:** Validación uploads admin (size, MIME, errores UI).
+4. **SEC-09:** Parametrizar Supabase hostname en `next.config.js`.
 
 **Diferido (no bloquea Fase 1):** tareas 0.9 (SQL seeds), 0.10 (`.gitignore`), 0.7 (`client.ts` audit).
 
@@ -377,7 +377,7 @@ Extraídas del Research Consolidado y `CLAUDE.md`:
 | 2026-05-19 | Creación inicial | Basado en RESEARCH-CONSOLIDADO.md Fase 2 |
 | 2026-05-19 | Fase 0 CLN-01..04, CLN-07 completados | Limpieza docs y scripts |
 | 2026-05-19 | Supabase CLI migrations | Link falló sin access token; 0003 ya aplicada manualmente en demo |
-| 2026-05-19 | SEC-02 sanitize OAuth next | Rechaza open redirects en auth callback |
+| 2026-05-19 | SEC-06 hide embedding | Migración 0005: REVOKE SELECT embedding para anon/authenticated |
 
 ---
 
