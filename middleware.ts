@@ -56,6 +56,8 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/api/visual-search',
+    // Exclude: api routes (webhooks, etc.), auth callback, static files,
+    // visual-search UI, and Next.js internals
     '/((?!api|auth|_next|visual-search|.*\\..*).*)',
   ],
 }
