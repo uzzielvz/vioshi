@@ -2,17 +2,10 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
+import { getAuthOrigin } from '@/lib/auth/getOrigin'
 import { createClient } from '@/lib/supabase/server'
 
 export type AuthState = { error: string } | { success: string } | null
-
-function getOrigin() {
-  const h = headers()
-  const host = h.get('host') ?? 'localhost:3000'
-  const proto = h.get('x-forwarded-proto') ?? (host.includes('localhost') ? 'http' : 'https')
-  return `${proto}://${host}`
-}
 
 export async function signInAction(
   _prev: AuthState,
@@ -51,7 +44,7 @@ export async function signUpAction(
     email,
     password,
     options: {
-      emailRedirectTo: `${getOrigin()}/auth/callback?next=/${locale}`,
+      emailRedirectTo: `${getAuthOrigin()}/auth/callback?next=/${locale}`,
       data: {
         first_name: firstName,
         last_name: lastName,
@@ -103,7 +96,7 @@ export async function resetPasswordAction(
 
   const supabase = createClient()
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${getOrigin()}/auth/callback?next=/${locale}/account/reset`,
+    redirectTo: `${getAuthOrigin()}/auth/callback?next=/${locale}/account/reset`,
   })
 
   if (error) return { error: 'No se pudo enviar el correo de recuperación.' }
@@ -134,7 +127,7 @@ export async function signInWithGoogleAction(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${getOrigin()}/auth/callback?next=/${locale}`,
+      redirectTo: `${getAuthOrigin()}/auth/callback?next=/${locale}`,
     },
   })
 
