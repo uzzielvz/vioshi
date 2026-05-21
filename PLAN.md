@@ -1,8 +1,8 @@
 # PLAN.md - Viogi (Roadmap Vivo)
 
-**Última actualización:** 2026-05-19  
-**Rama actual:** `main` (merge `feat/visual-search-gemini` @ `4dd10ed` — fast-forward)  
-**Estado general:** Fase 0 **cerrada**. Visual search Gemini+pgvector en `main`. **No production-ready** — checkout mock y hardening Fase 1 pendientes.  
+**Última actualización:** 2026-05-21
+**Rama actual:** `feat/checkout-real` (base `main` @ `f846b77`)
+**Estado general:** Fases 0 y 1 **cerradas** ✅. Fase 2 **iniciada** — checkout real en desarrollo.
 **Fuente de verdad técnica:** `RESEARCH-CONSOLIDADO.md` (2026-05-19)
 
 ---
@@ -145,33 +145,36 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | 1.5 | Re-validación admin en Server Actions (`createProduct`, `deleteProduct`, etc.) (SA-01) | ✅ SEC-03/04 |
 | 1.6 | Rate limit `/admin/login` y `/api/visual-search` (AUTH-02, VS-01) | ✅ SEC-05 |
 | 1.7 | Restringir exposición pública de `products.embedding` (RLS-02) | ✅ SEC-06 (migración 0005) |
-| 1.8 | Validación uploads admin: tamaño, MIME, errores visibles (IMG-01, SA-04) | Pendiente |
-| 1.9 | Parametrizar Supabase hostname en `next.config.js` desde env (IMG-03) | Pendiente |
-| 1.10 | Añadir `npm run build` al workflow CI (`.github/workflows/code-review.yml`) | Pendiente |
+| 1.8 | Validación uploads admin: tamaño, MIME, errores visibles (IMG-01, SA-04) | ✅ SEC-07 |
+| 1.9 | Parametrizar Supabase hostname en `next.config.js` desde env (IMG-03) | ✅ SEC-09 |
+| 1.10 | Añadir `npm run build` al workflow CI (`.github/workflows/ci.yml`) | ✅ SEC-08 |
 
-**Estado actual:** SEC-01 migración `0004` creada en repo. Pendiente aplicar en DB + resto de items Fase 1.
+**Estado actual:** Fase 1 **100% cerrada** ✅. Migraciones `0004`/`0005` aplicadas en Supabase prod (manualmente). Deploy en Vercel funcionando. Rama mergeada a `main` @ `f846b77`.
 
 ---
 
-### Fase 2: Checkout Real y Transacciones
+### Fase 2: Checkout Real y Transacciones ← **EN CURSO** 🚧
 
 **Objetivo:** Flujo de compra end-to-end persistido en DB; base para pagos.
 
 **Tareas principales:**
 | # | Tarea | Estado |
 |---|-------|--------|
-| 2.1 | Server Action `placeOrderAction`: insert `orders` + `order_items`, usar `order_number_seq` | Pendiente |
-| 2.2 | Eliminar `setTimeout` + redirect `ORDER123` en checkout (CART-02) | Pendiente |
-| 2.3 | Validación server-side de carrito vs precios actuales en DB (CART-01) | Pendiente |
-| 2.4 | RLS/patrón lookup pedido invitado (RLS-03): email + order_number + token o endpoint service | Pendiente |
-| 2.5 | Página success lee pedido real por `orderId`/`order_number` (CART-04) | Pendiente |
-| 2.6 | Sustituir `lib/pickupPoints.ts` en checkout por fetch `pickup_points` (CART-03) | Pendiente |
-| 2.7 | `/account/orders` y detalle: reemplazar mocks por queries Supabase | Pendiente |
+| 2.1 | Server Action `createPaymentIntentAction`: validar precios, insert `orders`+`order_items`, crear Stripe PaymentIntent | ✅ `app/[locale]/checkout/actions.ts` |
+| 2.2 | Eliminar `setTimeout` + redirect `ORDER123` en checkout (CART-02) | ✅ `checkout/page.tsx` reemplazado |
+| 2.3 | Validación server-side de carrito vs precios actuales en DB (CART-01) | ✅ En `createPaymentIntentAction` |
+| 2.4 | Guest lookup: HMAC token en `orders.guest_token` (migración 0006) | ✅ Migración + generación en action |
+| 2.5 | Página success lee pedido real por `order_number` (CART-04) | ✅ Server Component + ClearCartOnMount |
+| 2.6 | Pickup points validados desde DB en `createPaymentIntentAction` (CART-03) | ✅ Validación server-side en action |
+| 2.7 | `/account/orders` y detalle: reemplazar mocks por queries Supabase | ✅ Server Components + `lib/orders.ts` |
 | 2.8 | `/account/addresses`: CRUD real | Pendiente |
 | 2.9 | Integrar pasarela (MercadoPago o Stripe): preference/checkout session + webhook | Pendiente |
 | 2.10 | Actualizar `orders.payment_status` / `payment_reference` vía webhook | Pendiente |
 
-**Estado actual:** UI checkout completa (~845 líneas client); submit 100% mock. Tablas `orders`/`order_items` existen en schema.
+**Decisión D-01 (pasarela):** Por confirmar — MercadoPago recomendado para audiencia MX.
+**Decisión D-04 (guest lookup):** Server Action con service role + HMAC token en URL success.
+
+**Estado actual:** UI checkout completa (~845 líneas client); submit 100% mock. Tablas `orders`/`order_items` existen en schema. Rama `feat/checkout-real` iniciada 2026-05-21.
 
 ---
 
@@ -233,9 +236,9 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | SEC-04 | Re-validar admin en Server Actions | 1 | P0 | M | SEC-03 | Actions fallan sin sesión admin válida | ✅ |
 | SEC-05 | Rate limit admin login + visual-search API | 1 | P0 | M | — | Abuso bloqueado en demo load | ✅ |
 | SEC-06 | Ocultar `embedding` de SELECT público | 1 | P1 | M | — | Anon key no devuelve vectores | ✅ Migración 0005 |
-| SEC-07 | Validación uploads (size, MIME, errores UI) | 1 | P1 | M | — | Admin ve error si upload falla | Pendiente |
-| SEC-08 | CI incluye `npm run build` | 1 | P1 | S | — | PR falla si build roto | Pendiente |
-| SEC-09 | Parametrizar Supabase URL en next.config | 1 | P2 | S | — | Sin project ID hardcoded | Pendiente |
+| SEC-07 | Validación uploads (size, MIME, errores UI) | 1 | P1 | M | — | Admin ve error si upload falla | ✅ |
+| SEC-08 | CI incluye `npm run build` | 1 | P1 | S | — | PR falla si build roto | ✅ `.github/workflows/ci.yml` |
+| SEC-09 | Parametrizar Supabase URL en next.config | 1 | P2 | S | — | Sin project ID hardcoded | ✅ |
 | CHK-01 | `placeOrderAction` persiste orders + order_items | 2 | P0 | L | SEC-01 | Pedido real en DB post-checkout | Pendiente |
 | CHK-02 | Eliminar mock checkout submit | 2 | P0 | S | CHK-01 | No existe ORDER123 en código | Pendiente |
 | CHK-03 | Validación precios carrito server-side | 2 | P0 | M | CHK-01 | Totales recalculados desde DB | Pendiente |
@@ -290,14 +293,20 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 
 ## 5. Próximos Pasos (Próxima Sesión)
 
-**Fase 1 — Bugs Críticos y Seguridad** ← **PRÓXIMA**
+**Fase 2 — Checkout Real y Transacciones** ← **PRÓXIMA**
 
-1. **SEC-08:** Añadir `npm run build` al workflow CI.
-2. **SEC-01 (aplicar):** `supabase db push` o SQL Editor para migraciones `0004` + `0005`.
-3. **SEC-07:** Validación uploads admin (size, MIME, errores UI).
-4. **SEC-09:** Parametrizar Supabase hostname en `next.config.js`.
+1. **CHK-01:** Server Action `placeOrderAction` — insert `orders` + `order_items`.
+2. **CHK-02:** Eliminar mock checkout (`setTimeout` + `ORDER123`).
+3. **CHK-03:** Validación server-side de precios del carrito vs DB.
+4. **CHK-06:** Pickup points desde `pickup_points` en checkout (sustituir `lib/pickupPoints.ts`).
 
-**Diferido (no bloquea Fase 1):** tareas 0.9 (SQL seeds), 0.10 (`.gitignore`), 0.7 (`client.ts` audit).
+**OAuth producción (no bloquea Fase 2, pero necesario para login en Vercel):**
+1. Vercel: `NEXT_PUBLIC_SITE_URL=https://tu-dominio` (o confiar en `VERCEL_URL` automático).
+2. Supabase → Authentication → URL Configuration: **Site URL** = dominio prod; **Redirect URLs** = `https://tu-dominio/**` + `http://localhost:3000/**`.
+3. Google Cloud Console: redirect URI de Supabase (`https://<project>.supabase.co/auth/v1/callback`) ya configurado.
+4. Código: `getAuthOrigin()` en `lib/auth/getOrigin.ts` (prioridad `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → headers).
+
+**Diferido:** DEB-01 (Zod), DEB-02 (signUp profiles), tareas Fase 4 (headers CSP en PRO-04, distinto de SEC-09 hostname).
 
 ---
 
@@ -378,6 +387,8 @@ Extraídas del Research Consolidado y `CLAUDE.md`:
 | 2026-05-19 | Fase 0 CLN-01..04, CLN-07 completados | Limpieza docs y scripts |
 | 2026-05-19 | Supabase CLI migrations | Link falló sin access token; 0003 ya aplicada manualmente en demo |
 | 2026-05-19 | SEC-06 hide embedding | Migración 0005: REVOKE SELECT embedding para anon/authenticated |
+| 2026-05-21 | Fase 1 cerrada 100% | Deploy prod funcionando; migraciones 0004/0005 aplicadas manualmente |
+| 2026-05-21 | Rama feat/checkout-real iniciada | Fase 2 comienza: placeOrderAction + pickup desde DB + success real |
 
 ---
 
