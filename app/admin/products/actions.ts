@@ -6,6 +6,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 type ActionState = { error: string } | null
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
+type UploadResult = { uploaded: number; errors: string[] }
+
 export async function deleteProduct(id: string) {
   await requireAdminSession()
   const supabase = createAdminClient()
@@ -39,7 +44,10 @@ export async function createProduct(_prev: ActionState, formData: FormData): Pro
 
   if (error) return { error: error.message }
 
-  await uploadImages(supabase, product.id, formData, 0, false)
+  const uploadResult = await uploadImages(supabase, product.id, formData, 0, false)
+  const uploadError = formatUploadErrors(uploadResult)
+  if (uploadError) return { error: uploadError }
+
   await saveAttributes(supabase, product.id, formData)
 
   revalidateTag('products')
@@ -102,7 +110,10 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
   const baseOrder = (remaining?.[0]?.sort_order ?? -1) + 1
   const hasPrimary = keptIds.length > 0
 
-  await uploadImages(supabase, id, formData, baseOrder, hasPrimary)
+  const uploadResult = await uploadImages(supabase, id, formData, baseOrder, hasPrimary)
+  const uploadError = formatUploadErrors(uploadResult)
+  if (uploadError) return { error: uploadError }
+
   await saveAttributes(supabase, id, formData)
 
   revalidateTag('products')
@@ -111,18 +122,38 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
 
 type SupabaseClient = ReturnType<typeof createAdminClient>
 
+function formatUploadErrors(result: UploadResult): string | null {
+  if (result.errors.length === 0) return null
+  if (result.uploaded === 0) {
+    return `No se pudieron subir las imágenes: ${result.errors.join('; ')}`
+  }
+  return `Algunas imágenes no se subieron: ${result.errors.join('; ')}`
+}
+
 async function uploadImages(
   supabase: SupabaseClient,
   productId: string,
   formData: FormData,
   baseOrder: number,
   hasPrimary: boolean
-) {
+): Promise<UploadResult> {
   const files = formData.getAll('images') as File[]
   const validFiles = files.filter(f => f instanceof File && f.size > 0)
+  const errors: string[] = []
+  let uploaded = 0
 
   for (let i = 0; i < validFiles.length; i++) {
     const file = validFiles[i]
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      errors.push(`${file.name}: tipo no permitido (usa JPEG, PNG o WebP)`)
+      continue
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      errors.push(`${file.name}: supera 5 MB`)
+      continue
+    }
+
     const ext  = file.name.split('.').pop() ?? 'jpg'
     const path = `${productId}/${Date.now()}-${i}.${ext}`
     const buffer = Buffer.from(await file.arrayBuffer())
@@ -131,19 +162,31 @@ async function uploadImages(
       .from('product-images')
       .upload(path, buffer, { contentType: file.type, upsert: false })
 
-    if (uploadError) continue
+    if (uploadError) {
+      errors.push(`${file.name}: ${uploadError.message}`)
+      continue
+    }
 
     const { data: { publicUrl } } = supabase.storage
       .from('product-images')
       .getPublicUrl(path)
 
-    await supabase.from('product_images').insert({
+    const { error: insertError } = await supabase.from('product_images').insert({
       product_id: productId,
       url:        publicUrl,
-      is_primary: !hasPrimary && i === 0,
-      sort_order: baseOrder + i,
+      is_primary: !hasPrimary && uploaded === 0,
+      sort_order: baseOrder + uploaded,
     })
+
+    if (insertError) {
+      errors.push(`${file.name}: ${insertError.message}`)
+      continue
+    }
+
+    uploaded++
   }
+
+  return { uploaded, errors }
 }
 
 async function saveAttributes(
