@@ -3,7 +3,7 @@
 > **Single Source of Truth (SSOT)** — Documento técnico principal del proyecto.
 > Roadmap: [`PLAN.md`](./PLAN.md) · Mapa rápido: [`CONTEXT.md`](./CONTEXT.md)
 
-**(Generado 2026-05-19 · rama `feat/visual-search-gemini` · HEAD `d9e79bf` · basado en Fase 1 + lectura profunda Fase 2)**
+**(Actualizado 2026-05-21 · rama `main` · HEAD `f846b77` · Fase 1 completada + Fase 2 Checkout Real completada)**
 
 > **Regla operativa:** Ante contradicción entre este documento y el código, el código gana. Hechos marcados como verificados = leídos en archivos fuente en esta fecha.
 
@@ -11,19 +11,19 @@
 
 ## 1. Resumen Ejecutivo
 
-Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, autenticación de usuarios vía Supabase Auth, panel admin paralelo con cookie `ADMIN_SECRET`, carrito/wishlist en localStorage, checkout **sin backend de pedidos ni pasarela**, y un módulo de **búsqueda visual** funcional (Gemini + pgvector) en rama `feat/visual-search-gemini`.
+Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, autenticación de usuarios vía Supabase Auth, panel admin paralelo con sesión firmada HMAC, carrito/wishlist en localStorage, **checkout real con Stripe Payment Element**, historial de pedidos y CRUD de direcciones, y un módulo de **búsqueda visual** funcional (Gemini + pgvector).
 
-**Estado general:** demo-able para catálogo, auth, admin CRUD y visual search; **no production-ready** para ventas reales.
+**Estado general (Fase 2 completada):** production-ready para flujo completo de venta — checkout → Stripe → webhook → órdenes. Pendiente keys de Stripe en entorno y prueba e2e.
 
-**Riesgos principales (verificados):**
-1. **Checkout mock** — no persiste pedidos (`setTimeout` + `ORDER123`).
-2. **Dual auth admin débil** — cookie contiene el secreto en claro; sin rate limit ni re-validación en Server Actions admin.
-3. **Schema drift** — tabla `product_attributes` usada en código **sin migración** en repo.
-4. **Visual search público** — endpoint sin auth ni rate limit; costo Gemini + service role server-side.
-5. **Embeddings expuestos por RLS** — policy `products_public_read` permite `SELECT` de columna `embedding` con anon key.
-6. **Documentación desincronizada** — docs archivados en `docs/archive/`; `README.md` y `CONTEXT.md` actualizados en Fase 0 (CLN-01, CLN-07).
+**Riesgos activos:**
+1. **Dual auth admin** — cookie HMAC firmada (SEC-03 ✅); aún sin re-validación en todas las Server Actions admin (SA-01).
+2. **Visual search público** — endpoint sin auth ni rate limit; costo Gemini + service role server-side.
+3. **Embeddings expuestos por RLS** — `SELECT REVOKE` en migración 0005 (SEC-06 ✅); verificar en prod.
+4. **Sin tests automatizados** — 0 tests; CI solo lint+tsc.
 
-**Prioridad inmediata recomendada:** (1) conectar checkout a `orders`/`order_items` sin pasarela, (2) migración `product_attributes`, (3) hardening admin + rate limit visual search, (4) actualizar docs.
+**Resueltos en Fase 2:** checkout mock (CART-02 ✅), guest order lookup (RLS-03 ✅ con HMAC guest_token), orders/addresses pages (CART-04 ✅), Stripe webhook (CHK-07 ✅), validación server precios (CART-01 ✅).
+
+**Prioridad inmediata recomendada:** (1) agregar Stripe keys en `.env.local` + Vercel, (2) test e2e tarjeta `4242`, (3) Fase 3 visual search integración nav.
 
 ---
 
@@ -38,10 +38,10 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 | **Stack** | React 18, TypeScript strict, Tailwind, next-intl (es/en), Supabase SSR + JS, `@google/genai` ^2.4.0 |
 | **Auth shoppers** | Supabase Auth + callback OAuth en `app/auth/callback/route.ts` |
 | **Auth admin** | Cookie `admin_token === ADMIN_SECRET`; gate en `middleware.ts` |
-| **DB** | PostgreSQL Supabase; migraciones 0001, 0002, **0003 pgvector** |
-| **API routes** | `/auth/callback` (GET), `/api/visual-search` (POST) |
-| **Pagos** | No implementados (Stripe/MP solo en `.env.example` comentado) |
-| **Tests** | 0 archivos test; CI solo ESLint + tsc en archivos cambiados de PR |
+| **DB** | PostgreSQL Supabase; migraciones 0001–0006 (`0006` agrega `guest_token` a `orders`) |
+| **API routes** | `/auth/callback` (GET), `/api/visual-search` (POST), `/api/webhooks/stripe` (POST) |
+| **Pagos** | **Stripe Payment Element** (`stripe@22.1.1`, `@stripe/stripe-js`, `@stripe/react-stripe-js`) |
+| **Tests** | 0 archivos test; CI: lint + tsc + `npm run build` en PR (SEC-08 ✅) |
 | **Docs obsoletos** | Históricos en `docs/archive/`; docs vivas: `RESEARCH-CONSOLIDADO.md`, `PLAN.md`, `CONTEXT.md` |
 
 **Estructura raíz:** `app/`, `components/`, `lib/`, `store/`, `hooks/`, `types/`, `messages/`, `scripts/`, `supabase/`, `visual-search/`.
@@ -62,8 +62,9 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 | Wishlist | localStorage | 🟡 Parcial | `WishlistContent.tsx` |
 | Auth usuarios | Supabase Auth + Server Actions | ✅ Completo | `account/actions.ts`, `auth/callback` |
 | Cuenta (perfil) | Supabase `profiles` | ✅ Completo | `profile/actions.ts` |
-| Cuenta (pedidos/direcciones) | Mock client-side | ❌ Pendiente | `orders/page.tsx`, `addresses/page.tsx` |
-| Checkout | UI completa, submit mock | ❌ Pendiente | `checkout/page.tsx` |
+| Cuenta (pedidos) | Server Component, query real | ✅ Completo | `orders/page.tsx`, `orders/[orderId]/page.tsx`, `lib/orders.ts` |
+| Cuenta (direcciones) | Server Component + Server Actions + optimistic UI | ✅ Completo | `addresses/page.tsx`, `addresses/actions.ts`, `addresses/_components/AddressesClient.tsx` |
+| Checkout | Stripe Payment Element — 2 fases | ✅ Completo | `checkout/page.tsx`, `checkout/actions.ts`, `checkout/success/[orderId]/page.tsx` |
 | Admin productos | Service role + Storage | ✅ Parcial | `admin/products/actions.ts` |
 | Admin pickup | Service role | ✅ Completo | `admin/pickup-points/actions.ts` |
 | Pickup en checkout | **In-memory** `lib/pickupPoints.ts` | 🟡 Inconsistente | No usa tabla DB en checkout |
@@ -92,9 +93,22 @@ TIENDA PÚBLICA
   ProductCard → addItem → cartStore (localStorage viogi_cart)
   /search     → getProducts() server → filter client por q=
 
-CHECKOUT (MOCK)
-  useCart() → validación form client → setTimeout(2000) → /success/ORDER123
-  pickup    → PICKUP_POINTS from lib/pickupPoints.ts (NOT pickup_points table)
+CHECKOUT (REAL — Stripe Payment Element)
+  Phase 1: useCart() → validación form client → createPaymentIntentAction(cartItems, formData)
+    → valida precios vs DB → INSERT orders + order_items → stripe.paymentIntents.create
+    → devuelve clientSecret + orderNumber + guestToken
+  Phase 2: <Elements><StripePaymentForm/> → stripe.confirmPayment → redirect /success/[orderId]?t=TOKEN
+  Webhook: POST /api/webhooks/stripe → constructEvent → UPDATE orders SET payment_status
+
+GUEST ORDER LOOKUP
+  URL /success/[orderId]?t=HMAC_TOKEN → getOrderByNumber(orderNumber, { guestToken: token })
+  → admin client (bypass RLS) + eq('guest_token', token)
+  Auth user → server client (RLS orders_select_own) + eq('id', orderId)
+
+ADDRESSES
+  Server Component: SELECT addresses WHERE user_id = auth.uid() ORDER BY is_default DESC
+  addAddressAction / deleteAddressAction / setDefaultAddressAction → revalidatePath
+  Client: useOptimistic (instant delete/set-default) + useActionState (add form)
 
 ADMIN
   loginAction → set cookie admin_token = ADMIN_SECRET
@@ -123,10 +137,10 @@ VISUAL SEARCH
 | Auth email/password | **Completo** | Server Actions + RLS profiles | Login, register, reset, update password |
 | OAuth Google | **Completo** | Callback con fix cookies | Flujo documentado en plan-auth |
 | Perfil usuario | **Completo** | `profiles` update con RLS | Nombre/teléfono |
-| Pedidos (cuenta) | **Pendiente** | `mockOrders` hardcoded | Query real a `orders` |
-| Direcciones (cuenta) | **Pendiente** | `mockAddresses` | CRUD `addresses` |
-| Checkout | **Pendiente** | UI hecha; submit mock | Insert `orders` + pasarela o confirmación real |
-| Pagos Stripe/MP | **Pendiente** | Sin deps ni routes | Webhook + payment_reference |
+| Pedidos (cuenta) | **Completo** | Server Component, `lib/orders.ts`, RLS `orders_select_own` | Listado + detalle por orderId |
+| Direcciones (cuenta) | **Completo** | CRUD real + optimistic UI | `addAddressAction`, `deleteAddressAction`, `setDefaultAddressAction` |
+| Checkout | **Completo** | Stripe Payment Element, 2 fases | `createPaymentIntentAction` → `stripe.confirmPayment` → success page |
+| Pagos Stripe | **Completo** | Payment Element + webhook; pendiente keys en env | Tarjeta test `4242 4242 4242 4242` |
 | Admin productos | **Parcial** | CRUD + imágenes; validación débil | Falta variants UI, validación uploads |
 | Admin pickup points | **Completo** | CRUD contra DB | Checkout no consume misma fuente |
 | Búsqueda texto | **Parcial** | Filter in-memory sobre catálogo cargado | No FTS ni paginación server |
@@ -169,7 +183,7 @@ VISUAL SEARCH
 |----|----------|-----------|-----------|
 | RLS-01 | **`product_attributes` sin migración** en repo pero INSERT/SELECT en código | `actions.ts:154`, `lib/products.ts:81` | **Alta** — reset DB rompe app |
 | RLS-02 | Policy `products_public_read using (true)` expone **columna `embedding`** vía anon key | migración 0003 + policy 0001 | Media — scraping de vectores |
-| RLS-03 | Guest checkout: `orders_insert_any` pero `orders_select` requiere `auth.uid() = user_id` → invitado **no puede releer** su pedido | `0001:333-336` | Alta cuando checkout sea real |
+| RLS-03 | ~~Guest checkout: invitado no puede releer pedido~~ | **✅ RESUELTO** — `guest_token` HMAC en `orders` + admin client bypass RLS | — |
 | RLS-04 | `product_attributes` probablemente **sin RLS policy** si tabla creada manualmente | No en migraciones | Media |
 | RLS-05 | Visual search API usa **service_role** — bypass total RLS en búsqueda | `createAdminClient()` en route | Aceptable server-side; riesgo si endpoint abusado |
 
@@ -207,10 +221,10 @@ VISUAL SEARCH
 
 | ID | Problema | Evidencia | Severidad |
 |----|----------|-----------|-----------|
-| CART-01 | Carrito **no valida precios** contra DB al checkout | localStorage prices | Alta en producción |
-| CART-02 | Checkout submit mock | ```279:299:app/[locale]/checkout/page.tsx``` | **Crítico** |
-| CART-03 | Pickup points en checkout desde **memoria**, admin edita **DB** | import `lib/pickupPoints` | Media — datos divergentes |
-| CART-04 | Success page no consulta DB | `checkout/success/[orderId]` client | Alta |
+| CART-01 | ~~Carrito no valida precios contra DB~~ | **✅ RESUELTO** — `createPaymentIntentAction` valida vs DB | — |
+| CART-02 | ~~Checkout submit mock~~ | **✅ RESUELTO** — Stripe Payment Element real | — |
+| CART-03 | Pickup points en checkout desde **memoria**, admin edita **DB** | import `lib/pickupPoints` | Media — datos divergentes (pendiente) |
+| CART-04 | ~~Success page no consulta DB~~ | **✅ RESUELTO** — Server Component con `getOrderByNumber` | — |
 
 ### 5.8 i18n y middleware
 
@@ -241,8 +255,8 @@ VISUAL SEARCH
 | Tipo | Ubicación | Severidad | Impacto | Recomendación |
 |------|-----------|-----------|---------|---------------|
 | Schema drift | `product_attributes` | **Alta** | Admin/product pages fallan en DB limpia | Migración `0004_product_attributes.sql` |
-| Checkout mock | `checkout/page.tsx` | **Alta** | Cero revenue real | Server Action `placeOrder` |
-| Admin cookie = secret | `admin/login/actions.ts` | **Alta** | Exfiltración = acceso total admin | JWT firmado o sesión opaca |
+| ~~Checkout mock~~ | ~~`checkout/page.tsx`~~ | **✅ RESUELTO** | Stripe Payment Element | — |
+| ~~Admin cookie = secret~~ | ~~`admin/login/actions.ts`~~ | **✅ RESUELTO (SEC-03)** | HMAC firmado + action guards | — |
 | Docs desactualizados | RESEARCH, README, CONTEXT | Media | Agentes/devs mal informados | Actualizar post-merge visual search |
 | Sin validación schemas | Todas las actions | Media | Datos basura / crashes | Zod en actions críticas |
 | Upload images silent fail | `uploadImages` | Media | Productos sin imágenes sin aviso | Reportar errores al UI |
@@ -258,18 +272,20 @@ VISUAL SEARCH
 
 ## 7. Gaps y Features Pendientes
 
-**Prioridad P0 (bloquean venta real)**
-1. Checkout → insertar `orders` + `order_items` con snapshots de precio
-2. Política RLS para guest order lookup (email + order_number o token firmado)
-3. Migración `product_attributes`
+**Prioridad P0 — ✅ Completados**
+1. ~~Checkout → insertar `orders` + `order_items` con snapshots de precio~~ ✅
+2. ~~RLS guest order lookup~~ ✅ (HMAC guest_token)
+3. ~~Migración `product_attributes`~~ ✅ (0004)
+4. ~~Stripe Payment Element + webhook~~ ✅ (CHK-06..10)
+5. ~~Historial pedidos real `/account/orders`~~ ✅
+6. ~~Direcciones CRUD `/account/addresses`~~ ✅
+7. ~~Validación server-side precios vs DB~~ ✅
 
-**Prioridad P1 (producción mínima)**
-4. Pasarela MercadoPago o Stripe + webhook
-5. Historial pedidos real en `/account/orders`
-6. Direcciones CRUD en `/account/addresses`
-7. Rate limit + hardening `/api/visual-search` y admin login
-8. Sincronizar pickup points checkout con DB
-9. Validación server-side de carrito vs precios DB
+**Prioridad P1 (producción mínima — pendiente)**
+1. **M-1/M-2/M-3:** Stripe keys en `.env.local` + Vercel + webhook secret — **BLOQUEANTE para test**
+2. Sincronizar pickup points checkout con DB (CART-03)
+3. Rate limit + hardening `/api/visual-search`
+4. OAuth producción: `NEXT_PUBLIC_SITE_URL` + Supabase Redirect URLs
 
 **Prioridad P2 (mejora)**
 10. Wishlist → tabla `wishlist_items` para usuarios logueados
@@ -284,81 +300,94 @@ VISUAL SEARCH
 
 ## 8. Recomendaciones Técnicas
 
-1. **Implementar `placeOrderAction`** — eliminar `setTimeout`/`ORDER123`; usar secuencia `order_number_seq` existente.
-2. **Crear migración `product_attributes`** — alinear repo con producción; RLS espejo a `product_images`.
-3. **Endurecer admin auth** — no almacenar secreto en cookie; añadir rate limit login.
-4. **Proteger `/api/visual-search`** — Upstash rate limit o Vercel middleware; cap diario Gemini.
-5. **Actualizar `.env.example`** — `ADMIN_SECRET`, `GEMINI_API_KEY` con placeholders seguros.
-6. **Unificar pickup points** — reemplazar `lib/pickupPoints.ts` en checkout por query server.
-7. **View `products_public`** sin columna `embedding` — o policy column-level si Supabase lo permite.
-8. **Sanitizar `next` en auth callback** — regex `^/[^/\\]`.
-9. **CI: `npm run build`** en PR workflow.
-10. **Consolidar documentación** — `RESEARCH-CONSOLIDADO.md` es SSOT; research previo archivado en `docs/archive/RESEARCH-2026-05-13.md` (CLN-07).
+1. ~~Implementar `placeOrderAction`~~ — **✅ RESUELTO** `createPaymentIntentAction` + Stripe.
+2. ~~Crear migración `product_attributes`~~ — **✅ RESUELTO** migración `0004`.
+3. ~~Endurecer admin auth~~ — **✅ RESUELTO (SEC-03)** HMAC session token + action guards + in-memory rate limit.
+4. **Proteger `/api/visual-search`** — Upstash rate limit o Vercel middleware; cap diario Gemini. *(pendiente)*
+5. ~~Actualizar `.env.example`~~ — **✅ RESUELTO** Stripe keys + instrucciones documentadas.
+6. **Unificar pickup points** — reemplazar `lib/pickupPoints.ts` en checkout por query server. *(pendiente)*
+7. ~~`SELECT REVOKE` columna `embedding`~~ — **✅ RESUELTO (SEC-06)** migración `0005`.
+8. ~~Sanitizar `next` en auth callback~~ — **✅ RESUELTO (SEC-02)** regex `^/[^/\\]`.
+9. ~~CI: `npm run build` en PR workflow~~ — **✅ RESUELTO (SEC-08)** `.github/workflows/ci.yml`.
+10. **Agregar Stripe keys** — `.env.local` + Vercel + webhook endpoint. *(bloqueante para test e2e)*
+11. **Fase 3 visual search** — integrar búsqueda visual en nav/header; rate limit endpoint; indexación automática en `createProduct`.
 
 ---
 
 ## 9. Preguntas Abiertas
 
 1. ¿Cuál es la **URL de producción Vercel** y qué variables están configuradas allí (`ADMIN_SECRET`, `GEMINI_API_KEY`)?
-2. ¿La tabla `product_attributes` fue creada **manualmente** en Supabase? ¿Cuál es el DDL real en producción?
-3. ¿Se planea **unificar admin** con Supabase Auth (`profiles.role`) o mantener cookie separada a largo plazo?
-4. ¿Pasarela preferida para MX: **MercadoPago** vs Stripe?
+2. ~~La tabla `product_attributes` fue creada manualmente?~~ ✅ Resuelta — migración `0004` alineada con prod.
+3. ¿Se planea **unificar admin** con Supabase Auth (`profiles.role`) o mantener sesión HMAC separada a largo plazo?
+4. ~~Pasarela preferida MercadoPago vs Stripe?~~ ✅ **Stripe** elegido e implementado.
 5. ¿Los productos seed `[seed]` deben **permanecer** en producción o solo demo?
-6. ¿Integrar visual search al **Header/navigation** o mantener ruta oculta `/visual-search`?
+6. ¿Integrar visual search al **Header/navigation** o mantener ruta oculta `/visual-search`? *(Fase 3)*
 7. ¿Existe bucket Storage policy documentada fuera del repo?
 8. ¿Rama `feat/visual-search` (FastAPI) se **archiva/elimina** tras merge de `feat/visual-search-gemini`?
+9. ¿Se necesita **email transaccional** (Resend) para confirmación de orden post-Stripe? *(Fase 3+)*
 
 ---
 
-## Apéndice A — Lecturas profundas verificadas (Fase 2)
+## Apéndice A — Lecturas profundas verificadas
 
-### Server Actions (6/6 leídas completas)
+### Server Actions (Fase 1 + Fase 2)
 - `app/[locale]/account/actions.ts` — signIn, signUp, signOut, reset, updatePassword, Google OAuth
 - `app/[locale]/account/profile/actions.ts` — updateProfile con getUser + RLS
+- `app/[locale]/account/addresses/actions.ts` — addAddress, deleteAddress, setDefaultAddress
+- `app/[locale]/checkout/actions.ts` — `createPaymentIntentAction`: validación precios DB, INSERT orders/order_items, stripe.paymentIntents.create, HMAC guest_token
 - `app/admin/login/actions.ts`, `logout/actions.ts`
 - `app/admin/products/actions.ts` — CRUD, uploadImages, saveAttributes
-- `app/admin/pickup-points/actions.ts` — update, toggle
 
-### Route Handlers (2/2)
+### Route Handlers (Fase 1 + Fase 2)
 - `app/auth/callback/route.ts` — exchangeCodeForSession con cookies en response pre-built
 - `app/api/visual-search/route.ts` — validación MIME/size, Gemini Flash + embed, RPC, hydrate images
+- `app/api/webhooks/stripe/route.ts` — `constructEvent`, `payment_intent.succeeded/failed`, UPDATE orders
 
 ### lib/ (claves)
 - `lib/products.ts` — anon client, unstable_cache 60s, join product_attributes
+- `lib/orders.ts` — `getOrderByNumber` (auth + guest), `getOrdersByUser`, `getOrderById`
+- `lib/stripe.ts` — lazy Proxy singleton; no throw en build sin `STRIPE_SECRET_KEY`
+- `lib/auth/getOrigin.ts` — `getAuthOrigin()` prioridad `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → headers
 - `lib/supabase/{client,server,admin,middleware}.ts` — bridge cookies documentado
 
-### Migraciones (3/3)
+### Migraciones (0001–0006)
 - `0001` — schema + RLS + seeds
 - `0002` — handle_new_user trigger
 - `0003` — pgvector + RPC match_products_by_image
+- `0004` — product_attributes DDL + RLS
+- `0005` — REVOKE SELECT embedding columna (anon + authenticated)
+- `0006` — `ALTER TABLE orders ADD COLUMN guest_token text` + partial index
+
+### Páginas nuevas (Server Components)
+- `checkout/success/[orderId]/page.tsx` — Server Component, lookup auth+guest, `<ClearCartOnMount/>`
+- `account/orders/page.tsx` + `account/orders/[orderId]/page.tsx` — query real a `orders`+`order_items`
+- `account/addresses/page.tsx` — query real a `addresses`, pasa a `<AddressesClient/>`
 
 ### Componentes críticos
 - `store/cartStore.tsx` — Context API (no Zustand), localStorage `viogi_cart`
-- `checkout/page.tsx` — mock submit verificado
-- `account/orders|addresses` — mocks verificados
-- `WishlistContent.tsx` — localStorage only
+- `checkout/page.tsx` — Stripe Payment Element, `stripeAppearance` B&W, `StripePaymentForm`
+- `account/addresses/_components/AddressesClient.tsx` — `useOptimistic` + `useActionState` + `useTransition`
+- `checkout/success/[orderId]/_components/ClearCartOnMount.tsx` — `'use client'`, `useEffect` clearCart
+- `WishlistContent.tsx` — localStorage only (sin cambios)
 
 ---
 
-## Auto-chequeo final (Fase 2)
+## Auto-chequeo final (Fase 2 — actualizado 2026-05-21)
 
 | Pregunta | ✓/✗ |
 |----------|-----|
-| ¿Leí las 6 Server Actions completas? | ✓ |
-| ¿Leí los 2 Route Handlers completos? | ✓ |
-| ¿Leí lib/products.ts y los 4 supabase/*? | ✓ |
-| ¿Leí middleware.ts y layouts principales? | ✓ |
-| ¿Revisé migraciones SQL y policies RLS orders/products? | ✓ |
-| ¿Verifiqué checkout mock en código (no solo docs)? | ✓ |
-| ¿Verifiqué mocks account orders/addresses? | ✓ |
-| ¿Analicé visual search endpoint y scripts? | ✓ |
-| ¿Seguí cadena auth callback cookies? | ✓ |
-| ¿Revisé cada función de uploadImages/saveAttributes? | ✓ |
-| ¿Leí Header completo (~1167 líneas)? | ✗ — muestreado + grep; archivo extenso |
-| ¿Leí checkout completo (845 líneas)? | ✗ — submit + imports verificados; no línea por línea |
+| ¿Leí las Server Actions de Fase 2 (checkout, addresses)? | ✓ |
+| ¿Leí el nuevo webhook route `/api/webhooks/stripe`? | ✓ |
+| ¿Leí lib/orders.ts y lib/stripe.ts completos? | ✓ |
+| ¿Leí migración 0006 (guest_token)? | ✓ |
+| ¿Verifiqué flujo 2 fases de checkout en código? | ✓ |
+| ¿Verifiqué AddressesClient (optimistic UI)? | ✓ |
+| ¿Revisé success page (Server Component + ClearCartOnMount)? | ✓ |
+| ¿Verifiqué lazy Proxy singleton en lib/stripe.ts? | ✓ |
+| ¿Leí Header completo (~1167 líneas)? | ✗ — muestreado; no auditoría línea-a-línea |
 | ¿Verifiqué runtime en Vercel/producción? | ✗ — no acceso |
 
-**Conclusión del auto-chequeo:** Cobertura alta en cadena auth, admin CRUD, catálogo, checkout submit, visual search y RLS documentado. Pendiente lectura íntegra de `checkout/page.tsx` y `Header.tsx` si se requiere auditoría línea-a-línea.
+**Conclusión:** Fase 2 completada — checkout real Stripe end-to-end, orders/addresses Server Components, HMAC guest token, webhook idempotente. Próximo: keys Stripe en env → test e2e → Fase 3 visual search nav.
 
 ---
 

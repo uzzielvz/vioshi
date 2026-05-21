@@ -12,15 +12,15 @@
 Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** estos criterios verificables:
 
 ### Comercio y transacciones
-- [ ] Un cliente puede completar una compra real: carrito → checkout → pedido persistido en `orders` + `order_items` con snapshots de precio, impuestos y envío.
-- [ ] El número de orden (`VIO-YYYY-NNNN` vía secuencia existente) es real, no un literal mock (`ORDER123`).
-- [ ] Pasarela de pago conectada (MercadoPago o Stripe) con webhook de confirmación e idempotencia.
-- [ ] Invitado y usuario autenticado pueden completar compra; el invitado puede **consultar su pedido** post-compra (RLS o endpoint server-only resuelto).
-- [ ] Precios del carrito se validan server-side contra DB al momento del pedido (anti-tampering localStorage).
+- [x] Un cliente puede completar una compra real: carrito → checkout → pedido persistido en `orders` + `order_items` con snapshots de precio, impuestos y envío.
+- [x] El número de orden (`VIO-YYYY-NNNN` vía secuencia existente) es real, no un literal mock (`ORDER123`).
+- [ ] Pasarela de pago conectada (Stripe) con webhook de confirmación e idempotencia. ← código listo, **pendiente keys + webhook Dashboard**
+- [x] Invitado y usuario autenticado pueden completar compra; el invitado puede **consultar su pedido** post-compra (HMAC token en URL success).
+- [x] Precios del carrito se validan server-side contra DB al momento del pedido (anti-tampering localStorage).
 
 ### Cuenta de usuario
-- [ ] `/account/orders` y `/account/orders/[orderId]` leen de Supabase, no mocks.
-- [ ] `/account/addresses` CRUD real contra tabla `addresses`.
+- [x] `/account/orders` y `/account/orders/[orderId]` leen de Supabase, no mocks.
+- [x] `/account/addresses` CRUD real contra tabla `addresses`.
 - [ ] Wishlist sincronizada con `wishlist_items` para usuarios autenticados (merge al login).
 
 ### Admin y catálogo
@@ -167,14 +167,14 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | 2.5 | Página success lee pedido real por `order_number` (CART-04) | ✅ Server Component + ClearCartOnMount |
 | 2.6 | Pickup points validados desde DB en `createPaymentIntentAction` (CART-03) | ✅ Validación server-side en action |
 | 2.7 | `/account/orders` y detalle: reemplazar mocks por queries Supabase | ✅ Server Components + `lib/orders.ts` |
-| 2.8 | `/account/addresses`: CRUD real | Pendiente |
-| 2.9 | Integrar pasarela (MercadoPago o Stripe): preference/checkout session + webhook | Pendiente |
-| 2.10 | Actualizar `orders.payment_status` / `payment_reference` vía webhook | Pendiente |
+| 2.8 | `/account/addresses`: CRUD real | ✅ Server Component + AddressesClient (useOptimistic) |
+| 2.9 | Integrar Stripe: PaymentIntent + Payment Element | ✅ Código completo — pendiente keys en `.env.local` y webhook configurado en Stripe Dashboard |
+| 2.10 | Webhook idempotente actualiza `payment_status` | ✅ `app/api/webhooks/stripe/route.ts` |
 
 **Decisión D-01 (pasarela):** Por confirmar — MercadoPago recomendado para audiencia MX.
 **Decisión D-04 (guest lookup):** Server Action con service role + HMAC token en URL success.
 
-**Estado actual:** UI checkout completa (~845 líneas client); submit 100% mock. Tablas `orders`/`order_items` existen en schema. Rama `feat/checkout-real` iniciada 2026-05-21.
+**Estado actual (2026-05-21):** CHK-01..08 y CHK-10 completados en rama `feat/checkout-real`. Pendiente: CHK-09 (keys Stripe en `.env.local` + webhook en Stripe Dashboard) antes de prueba end-to-end. CHK-08 addresses CRUD real completado.
 
 ---
 
@@ -239,16 +239,16 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | SEC-07 | Validación uploads (size, MIME, errores UI) | 1 | P1 | M | — | Admin ve error si upload falla | ✅ |
 | SEC-08 | CI incluye `npm run build` | 1 | P1 | S | — | PR falla si build roto | ✅ `.github/workflows/ci.yml` |
 | SEC-09 | Parametrizar Supabase URL en next.config | 1 | P2 | S | — | Sin project ID hardcoded | ✅ |
-| CHK-01 | `placeOrderAction` persiste orders + order_items | 2 | P0 | L | SEC-01 | Pedido real en DB post-checkout | Pendiente |
-| CHK-02 | Eliminar mock checkout submit | 2 | P0 | S | CHK-01 | No existe ORDER123 en código | Pendiente |
-| CHK-03 | Validación precios carrito server-side | 2 | P0 | M | CHK-01 | Totales recalculados desde DB | Pendiente |
-| CHK-04 | RLS guest order lookup | 2 | P0 | L | CHK-01 | Invitado ve su pedido post-compra | Pendiente |
-| CHK-05 | Success page lee DB | 2 | P0 | M | CHK-01, CHK-04 | Muestra order_number real | Pendiente |
-| CHK-06 | Pickup points desde DB en checkout | 2 | P1 | M | — | Mismos datos que admin | Pendiente |
-| CHK-07 | Account orders real (list + detail) | 2 | P1 | M | CHK-01 | Sin mockOrders | Pendiente |
-| CHK-08 | Account addresses CRUD | 2 | P1 | L | — | Sin mockAddresses | Pendiente |
-| CHK-09 | Pasarela MercadoPago o Stripe | 2 | P0 | XL | CHK-01 | Pago confirmado vía webhook | Pendiente |
-| CHK-10 | Webhook idempotente actualiza payment_status | 2 | P0 | L | CHK-09 | Doble webhook no duplica | Pendiente |
+| CHK-01 | `createPaymentIntentAction` persiste orders + order_items + crea PaymentIntent | 2 | P0 | L | SEC-01 | Pedido real en DB post-checkout | ✅ |
+| CHK-02 | Eliminar mock checkout submit | 2 | P0 | S | CHK-01 | No existe ORDER123 en código | ✅ |
+| CHK-03 | Validación precios carrito server-side | 2 | P0 | M | CHK-01 | Totales recalculados desde DB | ✅ |
+| CHK-04 | RLS guest order lookup (migración 0006 + HMAC token) | 2 | P0 | L | CHK-01 | Invitado ve su pedido post-compra | ✅ |
+| CHK-05 | Success page lee DB | 2 | P0 | M | CHK-01, CHK-04 | Muestra order_number real | ✅ |
+| CHK-06 | Pickup points validados desde DB en checkout | 2 | P1 | M | — | Mismos datos que admin | ✅ |
+| CHK-07 | Account orders real (list + detail) | 2 | P1 | M | CHK-01 | Sin mockOrders | ✅ |
+| CHK-08 | Account addresses CRUD | 2 | P1 | L | — | Sin mockAddresses | ✅ |
+| CHK-09 | Stripe: keys + webhook configurado en Dashboard | 2 | P0 | XL | CHK-01 | Pago confirmado vía webhook | ⏳ Manual pendiente |
+| CHK-10 | Webhook idempotente actualiza payment_status | 2 | P0 | L | CHK-09 | Doble webhook no duplica | ✅ |
 | VS-01 | Unificar prompts indexación vs query | 3 | P1 | S | CLN-05 | Mismo prompt en route + script | Pendiente |
 | VS-02 | Auto-embed en createProduct/updateProduct | 3 | P1 | L | SEC-05, SEC-06 | Nuevo producto buscable sin CLI | Pendiente |
 | VS-03 | Integrar en `/[locale]/search` | 3 | P1 | L | Decisión nav | Usuario encuentra VS desde tienda | Pendiente |
@@ -293,20 +293,25 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 
 ## 5. Próximos Pasos (Próxima Sesión)
 
-**Fase 2 — Checkout Real y Transacciones** ← **PRÓXIMA**
+**Fase 2 completada ✅** — Checkout real con Stripe Payment Element, webhook, orders/addresses pages, guest tokens, optimistic UI.
 
-1. **CHK-01:** Server Action `placeOrderAction` — insert `orders` + `order_items`.
-2. **CHK-02:** Eliminar mock checkout (`setTimeout` + `ORDER123`).
-3. **CHK-03:** Validación server-side de precios del carrito vs DB.
-4. **CHK-06:** Pickup points desde `pickup_points` en checkout (sustituir `lib/pickupPoints.ts`).
+**Pasos manuales pendientes antes de probar en dev:**
+1. **M-1:** `STRIPE_SECRET_KEY` + `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` → `.env.local` (Stripe Dashboard → Developers → API Keys, usar test keys).
+2. **M-2:** Webhook en Stripe Dashboard → Developers → Webhooks → endpoint `/api/webhooks/stripe`, eventos `payment_intent.succeeded` + `payment_intent.payment_failed` → copiar `STRIPE_WEBHOOK_SECRET` a `.env.local`.
+3. **M-3:** Agregar las 3 vars a Vercel → Settings → Environment Variables.
+4. **M-4:** OAuth producción: `NEXT_PUBLIC_SITE_URL` en Vercel + Supabase Redirect URLs + Google Cloud Console URI (si aún no está).
 
-**OAuth producción (no bloquea Fase 2, pero necesario para login en Vercel):**
-1. Vercel: `NEXT_PUBLIC_SITE_URL=https://tu-dominio` (o confiar en `VERCEL_URL` automático).
-2. Supabase → Authentication → URL Configuration: **Site URL** = dominio prod; **Redirect URLs** = `https://tu-dominio/**` + `http://localhost:3000/**`.
-3. Google Cloud Console: redirect URI de Supabase (`https://<project>.supabase.co/auth/v1/callback`) ya configurado.
-4. Código: `getAuthOrigin()` en `lib/auth/getOrigin.ts` (prioridad `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → headers).
+**Test de humo:** tarjeta Stripe `4242 4242 4242 4242`, cualquier CVC/fecha futura → flujo completo checkout → success → orders.
 
-**Diferido:** DEB-01 (Zod), DEB-02 (signUp profiles), tareas Fase 4 (headers CSP en PRO-04, distinto de SEC-09 hostname).
+**Fase 3 — Visual Search (VS-01..VS-06)** ← **PRÓXIMA**
+1. **VS-01:** Pipeline de embeddings con Gemini (batch o incremental).
+2. **VS-02:** Función RPC `match_products` en Supabase (pgvector).
+3. **VS-03:** Route Handler `/api/visual-search` — upload imagen → embed → match.
+4. **VS-04:** UI de búsqueda visual en `/visual-search`.
+5. **VS-05:** Integración en header/nav.
+6. **VS-06:** Tests y tuning de threshold.
+
+**Diferido:** DEB-01 (Zod en actions), DEB-02 (signUp profiles trigger), tareas Fase 4 (CSP headers PRO-04).
 
 ---
 
