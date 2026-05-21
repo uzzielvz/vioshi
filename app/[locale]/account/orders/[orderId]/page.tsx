@@ -1,59 +1,52 @@
-'use client';
-
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { useLocaleContext } from '@/hooks/useLocaleContext';
+import { createClient } from '@/lib/supabase/server';
+import { getOrderById } from '@/lib/orders';
 
-interface OrderDetailPageProps {
-  params: {
-    orderId: string;
-  };
+interface Props {
+  params: { locale: string; orderId: string };
 }
-
-const getMockOrder = (orderId: string) => ({
-  id: orderId,
-  orderNumber: orderId,
-  date: '2026-01-10',
-  status: 'Entregado',
-  trackingNumber: 'FX123456789MX',
-  carrier: 'FedEx',
-  items: [
-    {
-      id: '1',
-      name: 'Hoodie Classic Black',
-      size: 'L',
-      color: 'Black',
-      quantity: 1,
-      price: 1250.0,
-    },
-  ],
-  subtotal: 1250.0,
-  tax: 125.0,
-  shipping: 10.0,
-  total: 1385.0,
-  shippingAddress: {
-    name: 'Juan Pérez',
-    street: 'Av. Insurgentes Sur 1234',
-    apartment: 'Depto 301',
-    city: 'Ciudad de México',
-    state: 'CDMX',
-    zipCode: '03100',
-    country: 'México',
-    phone: '+52 55 1234 5678',
-  },
-  paymentMethod: {
-    type: 'Tarjeta de crédito',
-    last4: '4242',
-    brand: 'Visa',
-  },
-});
 
 const fontStyle: React.CSSProperties = {
   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
 };
 
-export default function OrderDetailPage({ params }: OrderDetailPageProps) {
-  const { locale } = useLocaleContext();
-  const order = getMockOrder(params.orderId);
+const STATUS_LABELS: Record<string, string> = {
+  pending:    'Pendiente',
+  processing: 'En proceso',
+  shipped:    'Enviado',
+  delivered:  'Entregado',
+  cancelled:  'Cancelado',
+};
+
+const DELIVERY_LABELS: Record<string, string> = {
+  home:   'Envío a domicilio',
+  pickup: 'Recoger en punto',
+};
+
+const SHIPPING_LABELS: Record<string, string> = {
+  standard: 'Estándar',
+  express:  'Express (2-3 días)',
+};
+
+export default async function OrderDetailPage({ params }: Props) {
+  const { locale, orderId } = params;
+
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect(`/${locale}/account`);
+  }
+
+  const order = await getOrderById(orderId);
+  if (!order) notFound();
+
+  const formattedDate = new Date(order.created_at).toLocaleDateString('es-MX', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
     <div className="min-h-screen bg-white" style={fontStyle}>
@@ -73,41 +66,50 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           </Link>
           <div className="flex items-center justify-between">
             <h1 style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#000' }}>
-              Pedido #{order.orderNumber}
+              Pedido #{order.order_number}
             </h1>
             <p style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              {order.status}
+              {STATUS_LABELS[order.status] ?? order.status}
             </p>
           </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-10">
+
           {/* Main */}
           <div className="lg:col-span-2 space-y-8">
 
             {/* Products */}
             <div>
-              <p
-                className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
-                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}
-              >
+              <p className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
+                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>
                 Productos
               </p>
               <div className="space-y-4">
-                {order.items.map((item) => (
+                {order.order_items.map((item) => (
                   <div key={item.id} className="flex gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                    <div className="w-20 h-20 bg-gray-100 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>{item.name}</p>
+                    {item.product_image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.product_image}
+                        alt={item.product_name}
+                        className="w-20 h-20 object-contain bg-gray-50 flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-gray-100 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>{item.product_name}</p>
                       <p className="mt-1" style={{ fontSize: '10px', color: '#666' }}>
-                        {item.size && `Talla: ${item.size}`}
-                        {item.color && ` / Color: ${item.color}`}
+                        {[item.size && `Talla: ${item.size}`, item.color && `Color: ${item.color}`]
+                          .filter(Boolean)
+                          .join(' / ')}
                       </p>
                       <p style={{ fontSize: '10px', color: '#666' }}>Cantidad: {item.quantity}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>
-                        ${(item.price * item.quantity).toFixed(2)}
+                        ${Number(item.total_price_mxn).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -116,33 +118,19 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
             </div>
 
             {/* Tracking */}
-            {order.trackingNumber && (
+            {order.tracking_number && (
               <div>
-                <p
-                  className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
-                  style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
+                <p className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
+                  style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>
                   Información de Envío
                 </p>
-                <div className="space-y-3">
-                  <div>
-                    <p className="uppercase tracking-wide" style={{ fontSize: '10px', color: '#999', letterSpacing: '0.05em' }}>
-                      Paquetería
-                    </p>
-                    <p style={{ fontSize: '11px', color: '#000' }}>{order.carrier}</p>
-                  </div>
-                  <div>
-                    <p className="uppercase tracking-wide" style={{ fontSize: '10px', color: '#999', letterSpacing: '0.05em' }}>
-                      Número de Rastreo
-                    </p>
-                    <p style={{ fontSize: '11px', color: '#000', fontFamily: 'monospace' }}>{order.trackingNumber}</p>
-                  </div>
-                  <button
-                    className="w-full mt-2 bg-black text-white py-2.5 uppercase hover:opacity-75 transition-opacity"
-                    style={{ fontSize: '11px', letterSpacing: '0.05em' }}
-                  >
-                    Rastrear Paquete
-                  </button>
+                <div className="space-y-2">
+                  <p style={{ fontSize: '10px', color: '#999' }} className="uppercase tracking-wide">
+                    Número de Rastreo
+                  </p>
+                  <p style={{ fontSize: '11px', color: '#000', fontFamily: 'monospace' }}>
+                    {order.tracking_number}
+                  </p>
                 </div>
               </div>
             )}
@@ -153,83 +141,69 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
             {/* Summary */}
             <div>
-              <p
-                className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
-                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}
-              >
+              <p className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
+                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>
                 Resumen
               </p>
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span style={{ fontSize: '11px', color: '#666' }}>Subtotal</span>
-                  <span style={{ fontSize: '11px', color: '#000' }}>${order.subtotal.toFixed(2)}</span>
+                  <span style={{ fontSize: '11px', color: '#000' }}>${Number(order.subtotal_mxn).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span style={{ fontSize: '11px', color: '#666' }}>Envío</span>
-                  <span style={{ fontSize: '11px', color: '#000' }}>${order.shipping.toFixed(2)}</span>
+                  <span style={{ fontSize: '11px', color: '#000' }}>${Number(order.shipping_mxn).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ fontSize: '11px', color: '#666' }}>Impuestos</span>
-                  <span style={{ fontSize: '11px', color: '#000' }}>${order.tax.toFixed(2)}</span>
+                  <span style={{ fontSize: '11px', color: '#666' }}>IVA</span>
+                  <span style={{ fontSize: '11px', color: '#000' }}>${Number(order.tax_mxn).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-gray-200 mt-2">
                   <span className="uppercase tracking-wide" style={{ fontSize: '11px', fontWeight: 600, color: '#000' }}>Total</span>
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#000' }}>${order.total.toFixed(2)}</span>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#000' }}>
+                    ${Number(order.total_mxn).toFixed(2)} MXN
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Shipping Address */}
+            {/* Delivery info */}
             <div>
-              <p
-                className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
-                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}
-              >
-                Dirección de Envío
+              <p className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
+                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>
+                Entrega
               </p>
-              <div className="space-y-0.5">
-                <p style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>{order.shippingAddress.name}</p>
-                <p style={{ fontSize: '11px', color: '#666' }}>{order.shippingAddress.street}</p>
-                {order.shippingAddress.apartment && (
-                  <p style={{ fontSize: '11px', color: '#666' }}>{order.shippingAddress.apartment}</p>
-                )}
-                <p style={{ fontSize: '11px', color: '#666' }}>
-                  {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}
+              <div className="space-y-1">
+                <p style={{ fontSize: '11px', color: '#000' }}>
+                  {DELIVERY_LABELS[order.delivery_method] ?? order.delivery_method}
                 </p>
-                <p style={{ fontSize: '11px', color: '#666' }}>{order.shippingAddress.country}</p>
-                <p className="pt-2" style={{ fontSize: '11px', color: '#666' }}>{order.shippingAddress.phone}</p>
+                {order.delivery_method === 'home' && order.shipping_method && (
+                  <p style={{ fontSize: '10px', color: '#666' }}>
+                    {SHIPPING_LABELS[order.shipping_method] ?? order.shipping_method}
+                  </p>
+                )}
+                {order.delivery_method === 'pickup' && order.pickup_point_id && (
+                  <p style={{ fontSize: '10px', color: '#666' }}>Punto: {order.pickup_point_id}</p>
+                )}
               </div>
-            </div>
-
-            {/* Payment */}
-            <div>
-              <p
-                className="uppercase tracking-wide mb-4 pb-2 border-b border-gray-200"
-                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}
-              >
-                Método de Pago
-              </p>
-              <p style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>{order.paymentMethod.type}</p>
-              <p style={{ fontSize: '11px', color: '#666' }}>
-                {order.paymentMethod.brand} •••• {order.paymentMethod.last4}
-              </p>
             </div>
 
             {/* Date */}
             <div>
-              <p
-                className="uppercase tracking-wide mb-2 pb-2 border-b border-gray-200"
-                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}
-              >
+              <p className="uppercase tracking-wide mb-2 pb-2 border-b border-gray-200"
+                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>
                 Fecha de Pedido
               </p>
-              <p style={{ fontSize: '11px', color: '#666' }}>
-                {new Date(order.date).toLocaleDateString('es-MX', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+              <p style={{ fontSize: '11px', color: '#666' }}>{formattedDate}</p>
+            </div>
+
+            {/* Email */}
+            <div>
+              <p className="uppercase tracking-wide mb-2 pb-2 border-b border-gray-200"
+                style={{ fontSize: '11px', fontWeight: 500, color: '#000' }}>
+                Contacto
               </p>
+              <p style={{ fontSize: '11px', color: '#666' }}>{order.email}</p>
             </div>
           </div>
         </div>
@@ -243,14 +217,8 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
           >
             Contactar Soporte
           </Link>
-          <Link
-            href={`/${locale}/account/archivos`}
-            className="flex-1 border border-gray-300 text-black py-2.5 uppercase hover:border-black transition-colors text-center"
-            style={{ fontSize: '11px', letterSpacing: '0.05em' }}
-          >
-            Descargar Factura
-          </Link>
         </div>
+
       </div>
     </div>
   );

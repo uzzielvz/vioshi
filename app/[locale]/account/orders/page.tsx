@@ -1,39 +1,35 @@
-'use client';
-
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { useLocaleContext } from '@/hooks/useLocaleContext';
+import { createClient } from '@/lib/supabase/server';
+import { getOrdersByUser } from '@/lib/orders';
 
-const mockOrders = [
-  {
-    id: 'ORDER001',
-    date: '2026-01-10',
-    status: 'Entregado',
-    total: 1250.0,
-    items: [{ name: 'Hoodie Classic Black', quantity: 1, price: 1250.0 }],
-  },
-  {
-    id: 'ORDER002',
-    date: '2026-01-05',
-    status: 'En tránsito',
-    total: 2800.0,
-    trackingNumber: 'FX123456789MX',
-    items: [{ name: 'Chamarra Bomber', quantity: 1, price: 2800.0 }],
-  },
-  {
-    id: 'ORDER003',
-    date: '2025-12-28',
-    status: 'Procesando',
-    total: 850.0,
-    items: [{ name: 'Playera Oversized', quantity: 2, price: 425.0 }],
-  },
-];
+interface Props {
+  params: { locale: string };
+}
 
 const fontStyle: React.CSSProperties = {
   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
 };
 
-export default function OrdersPage() {
-  const { locale } = useLocaleContext();
+const STATUS_LABELS: Record<string, string> = {
+  pending:    'Pendiente',
+  processing: 'En proceso',
+  shipped:    'Enviado',
+  delivered:  'Entregado',
+  cancelled:  'Cancelado',
+};
+
+export default async function OrdersPage({ params }: Props) {
+  const { locale } = params;
+
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect(`/${locale}/account`);
+  }
+
+  const orders = await getOrdersByUser();
 
   return (
     <div className="min-h-screen bg-white" style={fontStyle}>
@@ -56,8 +52,7 @@ export default function OrdersPage() {
           </h1>
         </div>
 
-        {/* Orders */}
-        {mockOrders.length === 0 ? (
+        {orders.length === 0 ? (
           <div className="py-16 text-center">
             <p style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               No tienes pedidos
@@ -75,42 +70,47 @@ export default function OrdersPage() {
           </div>
         ) : (
           <div>
-            {mockOrders.map((order) => (
-              <Link
-                key={order.id}
-                href={`/${locale}/account/orders/${order.id}`}
-                className="flex items-start justify-between border-b border-gray-200 py-5 hover:opacity-60 transition-opacity"
-              >
-                <div className="space-y-1.5">
-                  <p style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#000' }}>
-                    #{order.id}
-                  </p>
-                  <p style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {new Date(order.date).toLocaleDateString('es-MX', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </p>
-                  <p style={{ fontSize: '10px', color: '#999', letterSpacing: '0.02em' }}>
-                    {order.items.map((i) => i.name).join(', ')}
-                  </p>
-                  {order.trackingNumber && (
-                    <p style={{ fontSize: '10px', color: '#999', fontFamily: 'monospace', textTransform: 'uppercase' }}>
-                      Rastreo: {order.trackingNumber}
+            {orders.map((order) => {
+              const itemNames = order.order_items.map((i) => i.product_name).join(', ');
+              const formattedDate = new Date(order.created_at).toLocaleDateString('es-MX', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              });
+
+              return (
+                <Link
+                  key={order.id}
+                  href={`/${locale}/account/orders/${order.id}`}
+                  className="flex items-start justify-between border-b border-gray-200 py-5 hover:opacity-60 transition-opacity"
+                >
+                  <div className="space-y-1.5 min-w-0 pr-4">
+                    <p style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#000' }}>
+                      #{order.order_number}
                     </p>
-                  )}
-                </div>
-                <div className="text-right space-y-1.5 flex-shrink-0 ml-4">
-                  <p style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#000' }}>
-                    ${order.total.toFixed(2)}
-                  </p>
-                  <p style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {order.status}
-                  </p>
-                </div>
-              </Link>
-            ))}
+                    <p style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {formattedDate}
+                    </p>
+                    <p style={{ fontSize: '10px', color: '#999' }} className="truncate">
+                      {itemNames}
+                    </p>
+                    {order.tracking_number && (
+                      <p style={{ fontSize: '10px', color: '#999', fontFamily: 'monospace', textTransform: 'uppercase' }}>
+                        Rastreo: {order.tracking_number}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right space-y-1.5 flex-shrink-0">
+                    <p style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#000' }}>
+                      ${Number(order.total_mxn).toFixed(2)}
+                    </p>
+                    <p style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {STATUS_LABELS[order.status] ?? order.status}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>
