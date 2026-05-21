@@ -152,7 +152,13 @@
     "alert_terms": "You must accept the terms and conditions",
     "alert_address": "Please complete all address fields",
     "alert_pickup": "Please select a pickup point",
-    "error_processing": "Error processing order. Please try again."
+    "error_processing": "Error processing order. Please try again.",
+    "continue_to_payment": "Continue to Payment",
+    "back_to_details": "← Back to details",
+    "payment_enter_details": "Complete the steps above to continue to payment.",
+    "error_price_changed": "Some product prices have changed. Please reload the page and try again.",
+    "error_pickup_unavailable": "The selected pickup point is not currently available.",
+    "pay": "Pay"
   },
   "footer": {
     "instagram": "Instagram",

@@ -13,9 +13,127 @@ import {
   DELIVERY_METHODS,
   EXPRESS_SHIPPING_COST,
   STANDARD_SHIPPING_COST,
-  PAYPAL_ME_LINK,
 } from '@/lib/constants';
 import { lookupCP, type MexicoCPData } from '@/lib/mexico';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { createPaymentIntentAction } from './actions';
+
+// ─── Stripe setup ────────────────────────────────────────────────────────────
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
+// Appearance matching Viogi's minimal B&W aesthetic
+const stripeAppearance: Parameters<typeof loadStripe>[1] extends undefined
+  ? never
+  : import('@stripe/stripe-js').Appearance = {
+  theme: 'stripe',
+  variables: {
+    colorPrimary: '#000000',
+    colorBackground: '#ffffff',
+    colorText: '#000000',
+    colorDanger: '#ef4444',
+    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+    borderRadius: '0px',
+    fontSizeBase: '14px',
+    spacingUnit: '4px',
+  },
+  rules: {
+    '.Input': {
+      border: 'none',
+      borderBottom: '1px solid #e5e7eb',
+      boxShadow: 'none',
+      padding: '14px 0',
+    },
+    '.Input:focus': {
+      borderBottom: '1px solid #000000',
+      boxShadow: 'none',
+      outline: 'none',
+    },
+    '.Label': {
+      fontSize: '9px',
+      textTransform: 'uppercase',
+      letterSpacing: '0.1em',
+      color: '#9ca3af',
+      marginBottom: '8px',
+    },
+    '.Tab': { border: '1px solid #e5e7eb', boxShadow: 'none' },
+    '.Tab--selected': { border: '1px solid #000000', boxShadow: 'none' },
+  },
+};
+
+// ─── Stripe payment confirmation form (must be inside <Elements>) ─────────────
+
+function StripePaymentForm({
+  orderNumber,
+  guestToken,
+  locale,
+  total,
+  onBack,
+}: {
+  orderNumber: string;
+  guestToken: string;
+  locale: string;
+  total: number;
+  onBack: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const t = useTranslations('checkout');
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [stripeError, setStripeError] = useState<string | null>(null);
+
+  const handleConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setIsConfirming(true);
+    setStripeError(null);
+
+    const returnUrl = `${window.location.origin}/${locale}/checkout/success/${orderNumber}?t=${guestToken}`;
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: { return_url: returnUrl },
+    });
+
+    // confirmPayment only returns here on error — success redirects automatically
+    if (error) {
+      setStripeError(error.message ?? t('error_processing'));
+      setIsConfirming(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleConfirm} className="space-y-6">
+      <PaymentElement options={{ layout: 'tabs' }} />
+      {stripeError && (
+        <div className="bg-red-50 border border-red-200 px-4 py-3">
+          <p className="text-[11px] text-red-600">{stripeError}</p>
+        </div>
+      )}
+      <div className="space-y-3 pt-2">
+        <button
+          type="submit"
+          disabled={!stripe || !elements || isConfirming}
+          className="w-full bg-black text-white py-4 text-[12px] uppercase tracking-widest font-medium hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+        >
+          {isConfirming
+            ? t('processing')
+            : `${t('pay')} ${formatPrice(total, locale as 'es' | 'en')}`}
+        </button>
+        <button
+          type="button"
+          onClick={onBack}
+          disabled={isConfirming}
+          className="w-full text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors py-2 disabled:cursor-not-allowed"
+        >
+          {t('back_to_details')}
+        </button>
+      </div>
+    </form>
+  );
+}
 
 // ─── Shared primitive styles ────────────────────────────────────────────────
 
@@ -118,14 +236,8 @@ interface CheckoutFormData {
   pickupDate: string;
   pickupTimeSlot: string;
   saveInfo: boolean;
-  useShippingAsBilling: boolean;
   agreeToTerms: boolean;
   shippingMethod: string;
-  paymentMethod: 'card' | 'paypal';
-  cardNumber: string;
-  expirationDate: string;
-  securityCode: string;
-  nameOnCard: string;
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────────
@@ -144,10 +256,14 @@ export default function CheckoutPage() {
   const [showShippingMethods, setShowShippingMethods] = useState(false);
   const [showOrderSummary, setShowOrderSummary] = useState(false);
 
+  // Stripe payment state
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [pendingOrderNumber, setPendingOrderNumber] = useState<string | null>(null);
+  const [pendingGuestToken, setPendingGuestToken] = useState<string | null>(null);
+
   const [cpData, setCpData] = useState<MexicoCPData | null>(null);
   const [cpLoading, setCpLoading] = useState(false);
   const [cpError, setCpError] = useState(false);
-  const [paypalCopied, setPaypalCopied] = useState(false);
   const [formErrors, setFormErrors] = useState<{
     terms?: string;
     address?: string;
@@ -173,14 +289,8 @@ export default function CheckoutPage() {
     pickupDate: '',
     pickupTimeSlot: '',
     saveInfo: false,
-    useShippingAsBilling: true,
     agreeToTerms: false,
     shippingMethod: 'standard',
-    paymentMethod: 'card',
-    cardNumber: '',
-    expirationDate: '',
-    securityCode: '',
-    nameOnCard: '',
   });
 
   const selectedPickupPoint = useMemo(
@@ -240,24 +350,10 @@ export default function CheckoutPage() {
     updateShippingCost(shippingCost);
   }, [shippingCost, updateShippingCost]);
 
-  const formatCardNumber = (val: string) =>
-    val.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
-
-  const formatExpiry = (val: string) => {
-    const digits = val.replace(/\D/g, '').slice(0, 4);
-    return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
-  };
-
-  const formatCVV = (val: string) => val.replace(/\D/g, '').slice(0, 4);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    let formattedValue = value;
-    if (name === 'cardNumber') formattedValue = formatCardNumber(value);
-    if (name === 'expirationDate') formattedValue = formatExpiry(value);
-    if (name === 'securityCode') formattedValue = formatCVV(value);
-    const updatedFormData = { ...formData, [name]: type === 'checkbox' ? checked : formattedValue };
+    const updatedFormData = { ...formData, [name]: type === 'checkbox' ? checked : value };
     setFormData(updatedFormData);
 
     if (['address', 'colonia', 'state', 'zipCode', 'deliveryMethod', 'pickupPointId'].includes(name)) {
@@ -267,13 +363,6 @@ export default function CheckoutPage() {
           : !!updatedFormData.pickupPointId;
       setShowShippingMethods(shouldShow);
     }
-  };
-
-  const handleCopyPaypal = () => {
-    navigator.clipboard.writeText(PAYPAL_ME_LINK).then(() => {
-      setPaypalCopied(true);
-      setTimeout(() => setPaypalCopied(false), 2000);
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -291,15 +380,45 @@ export default function CheckoutPage() {
       return;
     }
     setFormErrors({});
-
-    isSubmittingRef.current = true;
     setIsProcessing(true);
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      router.push(`/${locale}/checkout/success/ORDER123`);
-    } catch (error) {
-      isSubmittingRef.current = false;
-      console.error('Error processing order:', error);
+      const result = await createPaymentIntentAction(cart, {
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        deliveryMethod: formData.deliveryMethod,
+        country: formData.country,
+        address: formData.address,
+        apartment: formData.apartment,
+        colonia: formData.colonia,
+        municipio: formData.municipio,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        shippingMethod: formData.shippingMethod as 'standard' | 'express',
+        pickupPointId: formData.pickupPointId,
+        pickupDate: formData.pickupDate,
+        pickupTimeSlot: formData.pickupTimeSlot as 'morning' | 'afternoon' | 'evening' | '',
+      });
+
+      if (!result.success) {
+        const errorMsg =
+          result.error === 'price_changed'
+            ? t('error_price_changed')
+            : result.error === 'pickup_inactive'
+            ? t('error_pickup_unavailable')
+            : t('error_processing');
+        setFormErrors({ general: errorMsg });
+        return;
+      }
+
+      isSubmittingRef.current = true;
+      setClientSecret(result.clientSecret);
+      setPendingOrderNumber(result.orderNumber);
+      setPendingGuestToken(result.guestToken);
+    } catch (err) {
+      console.error('[checkout] handleSubmit error:', err);
       setFormErrors({ general: t('error_processing') });
     } finally {
       setIsProcessing(false);
@@ -623,71 +742,33 @@ export default function CheckoutPage() {
                     <p className={SECTION_LABEL}>{t('payment')}</p>
                   </div>
 
-                  <RadioCard
-                    name="paymentMethod"
-                    value="card"
-                    checked={formData.paymentMethod === 'card'}
-                    onChange={handleInputChange}
-                    label={t('payment_card')}
-                  />
-                  <RadioCard
-                    name="paymentMethod"
-                    value="paypal"
-                    checked={formData.paymentMethod === 'paypal'}
-                    onChange={handleInputChange}
-                    label="PayPal"
-                  />
-
-                  {formData.paymentMethod === 'card' && (
-                    <div className="space-y-1 pt-4">
-                      <input type="text" name="cardNumber" placeholder={t('card_number')} required inputMode="numeric" maxLength={19} autoComplete="cc-number" value={formData.cardNumber} onChange={handleInputChange} className={INPUT} />
-                      <div className="grid grid-cols-2 gap-x-6">
-                        <input type="text" name="expirationDate" placeholder={t('expiration_date')} required inputMode="numeric" maxLength={5} autoComplete="cc-exp" value={formData.expirationDate} onChange={handleInputChange} className={INPUT} />
-                        <input type="text" name="securityCode" placeholder={t('security_code')} required inputMode="numeric" maxLength={4} autoComplete="cc-csc" value={formData.securityCode} onChange={handleInputChange} className={INPUT} />
-                      </div>
-                      <input type="text" name="nameOnCard" placeholder={t('name_on_card')} required value={formData.nameOnCard} onChange={handleInputChange} className={INPUT} />
-                      <label className="flex items-center gap-2.5 pt-3 cursor-pointer">
-                        <input type="checkbox" name="useShippingAsBilling" checked={formData.useShippingAsBilling} onChange={handleInputChange} className="sr-only peer" />
-                        <span className="w-3.5 h-3.5 border border-gray-300 peer-checked:bg-black peer-checked:border-black flex items-center justify-center flex-shrink-0 transition-colors">
-                          {formData.useShippingAsBilling && (
-                            <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </span>
-                        <span className="text-[11px] text-gray-400">{t('use_shipping_as_billing')}</span>
-                      </label>
-                    </div>
-                  )}
-
-                  {formData.paymentMethod === 'paypal' && (
-                    <div className="pt-4 space-y-3">
-                      <p className="text-[10px] text-gray-400 uppercase tracking-widest">{t('paypal_instructions')}</p>
-                      <div className="flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
-                        <a
-                          href={PAYPAL_ME_LINK}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-black underline underline-offset-2 hover:no-underline transition-all"
-                        >
-                          {PAYPAL_ME_LINK.replace('https://', '')}
-                        </a>
-                        <button
-                          type="button"
-                          onClick={handleCopyPaypal}
-                          className="text-[9px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors whitespace-nowrap"
-                        >
-                          {paypalCopied ? t('paypal_copied') : t('paypal_copy')}
-                        </button>
-                      </div>
-                      <p className="text-[10px] text-gray-300">{t('paypal_concept_note')}</p>
-                      <p className="text-[10px] text-gray-300">{t('paypal_pending_note')}</p>
-                    </div>
+                  {clientSecret ? (
+                    <Elements
+                      stripe={stripePromise}
+                      options={{ clientSecret, appearance: stripeAppearance }}
+                    >
+                      <StripePaymentForm
+                        orderNumber={pendingOrderNumber!}
+                        guestToken={pendingGuestToken!}
+                        locale={locale}
+                        total={total}
+                        onBack={() => {
+                          setClientSecret(null);
+                          setPendingOrderNumber(null);
+                          setPendingGuestToken(null);
+                          isSubmittingRef.current = false;
+                        }}
+                      />
+                    </Elements>
+                  ) : (
+                    <p className="text-[11px] text-gray-300 tracking-wide">
+                      {t('payment_enter_details')}
+                    </p>
                   )}
                 </section>
 
-                {/* Terms + submit */}
-                <section className="space-y-5 pt-4 border-t border-gray-100">
+                {/* Terms + submit — only shown before Stripe payment step */}
+                {!clientSecret && <section className="space-y-5 pt-4 border-t border-gray-100">
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <input type="checkbox" name="saveInfo" checked={formData.saveInfo} onChange={handleInputChange} className="sr-only peer" />
                     <span className="w-3.5 h-3.5 border border-gray-300 peer-checked:bg-black peer-checked:border-black flex items-center justify-center flex-shrink-0 transition-colors">
@@ -731,9 +812,9 @@ export default function CheckoutPage() {
                     disabled={isProcessing || !formData.agreeToTerms}
                     className="w-full bg-black text-white py-4 text-[12px] uppercase tracking-widest font-medium hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
                   >
-                    {isProcessing ? t('processing') : t('complete_order')}
+                    {isProcessing ? t('processing') : t('continue_to_payment')}
                   </button>
-                </section>
+                </section>}
 
               </form>
             </div>
@@ -809,17 +890,19 @@ export default function CheckoutPage() {
         </div>
       </main>
 
-      {/* Mobile sticky submit bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 px-6 py-4">
-        <button
-          type="submit"
-          form="checkout-form"
-          disabled={isProcessing || !formData.agreeToTerms}
-          className="w-full bg-black text-white py-4 text-[12px] uppercase tracking-widest font-medium hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
-        >
-          {isProcessing ? t('processing') : t('complete_order')}
-        </button>
-      </div>
+      {/* Mobile sticky submit bar — hidden once Stripe Payment Element is shown */}
+      {!clientSecret && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 px-6 py-4">
+          <button
+            type="submit"
+            form="checkout-form"
+            disabled={isProcessing || !formData.agreeToTerms}
+            className="w-full bg-black text-white py-4 text-[12px] uppercase tracking-widest font-medium hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+          >
+            {isProcessing ? t('processing') : t('continue_to_payment')}
+          </button>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8 mt-12">

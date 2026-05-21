@@ -152,7 +152,13 @@
     "alert_terms": "Debes aceptar los términos y condiciones",
     "alert_address": "Por favor completa todos los campos de dirección",
     "alert_pickup": "Por favor selecciona un punto de recogida",
-    "error_processing": "Error al procesar el pedido. Intenta de nuevo."
+    "error_processing": "Error al procesar el pedido. Intenta de nuevo.",
+    "continue_to_payment": "Continuar al Pago",
+    "back_to_details": "← Volver a los detalles",
+    "payment_enter_details": "Completa los pasos anteriores para continuar al pago.",
+    "error_price_changed": "Los precios de algunos productos cambiaron. Por favor recarga la página e intenta de nuevo.",
+    "error_pickup_unavailable": "El punto de recogida seleccionado no está disponible actualmente.",
+    "pay": "Pagar"
   },
   "footer": {
     "instagram": "Instagram",
