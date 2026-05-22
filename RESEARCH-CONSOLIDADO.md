@@ -140,7 +140,7 @@ VISUAL SEARCH
 | Pedidos (cuenta) | **Completo** | Server Component, `lib/orders.ts`, RLS `orders_select_own` | Listado + detalle por orderId |
 | Direcciones (cuenta) | **Completo** | CRUD real + optimistic UI | `addAddressAction`, `deleteAddressAction`, `setDefaultAddressAction` |
 | Checkout | **Completo** | Stripe Payment Element, 2 fases | `createPaymentIntentAction` → `stripe.confirmPayment` → success page |
-| Pagos Stripe | **Completo** | Payment Element + webhook; pendiente keys en env | Tarjeta test `4242 4242 4242 4242` |
+| Pagos Stripe | **Código completo; E2E pendiente** | Payment Element, `/checkout/return`, webhook; keys en `.env.local` | Tarjeta test `4242 4242 4242 4242`; verificar `succeeded` |
 | Admin productos | **Parcial** | CRUD + imágenes; validación débil | Falta variants UI, validación uploads |
 | Admin pickup points | **Completo** | CRUD contra DB | Checkout no consume misma fuente |
 | Búsqueda texto | **Parcial** | Filter in-memory sobre catálogo cargado | No FTS ni paginación server |

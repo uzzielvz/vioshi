@@ -1,6 +1,7 @@
 'use server';
 
 import { createHmac } from 'crypto';
+import { reconcileCartItems } from '@/lib/cart/reconcile';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
 import { TAX_RATE, STANDARD_SHIPPING_COST, EXPRESS_SHIPPING_COST } from '@/lib/constants';
@@ -35,6 +36,7 @@ export type PlaceOrderResult =
   | {
       success: true;
       clientSecret: string;
+      paymentIntentId: string;
       orderNumber: string;
       orderId: string;
       guestToken: string;
@@ -51,7 +53,23 @@ export type PlaceOrderResult =
       message?: string;
     };
 
-// ─── Action ──────────────────────────────────────────────────────────────────
+// ─── Actions ─────────────────────────────────────────────────────────────────
+
+/** Sync cart lines from DB (fixes stale localStorage slug ids / old prices). */
+export async function syncCartFromDbAction(
+  cartItems: CartItem[]
+): Promise<{ items: CartItem[] } | { error: string }> {
+  if (cartItems.length === 0) return { items: [] };
+
+  const supabase = createAdminClient();
+  const reconciled = await reconcileCartItems(supabase, cartItems);
+
+  if (!reconciled.ok) {
+    return { error: reconciled.message };
+  }
+
+  return { items: reconciled.items };
+}
 
 export async function createPaymentIntentAction(
   cartItems: CartItem[],
@@ -63,6 +81,13 @@ export async function createPaymentIntentAction(
 
   const supabase = createAdminClient();
 
+  const reconciled = await reconcileCartItems(supabase, cartItems);
+  if (!reconciled.ok) {
+    console.error('[checkout] reconcile failed:', reconciled.message);
+    return { success: false, error: 'price_changed', message: reconciled.message };
+  }
+  cartItems = reconciled.items;
+
   // ── 1. Validate cart prices against DB ─────────────────────────────────────
   const productIds = cartItems.map((i) => i.productId);
   const { data: dbProducts, error: productsError } = await supabase
@@ -71,6 +96,7 @@ export async function createPaymentIntentAction(
     .in('id', productIds);
 
   if (productsError || !dbProducts) {
+    console.error('[checkout] products query failed:', productsError?.message);
     return { success: false, error: 'internal_error', message: productsError?.message };
   }
 
@@ -222,6 +248,7 @@ export async function createPaymentIntentAction(
   return {
     success: true,
     clientSecret: paymentIntent.client_secret!,
+    paymentIntentId: paymentIntent.id,
     orderNumber: order.order_number,
     orderId: order.id,
     guestToken,

@@ -1,12 +1,20 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getOrderByNumber } from '@/lib/orders';
+import {
+  getGuestOrderByPaymentIntent,
+  getOrderByNumber,
+  getOrderByPaymentReference,
+} from '@/lib/orders';
 import { createClient } from '@/lib/supabase/server';
 import ClearCartOnMount from './_components/ClearCartOnMount';
 
 interface Props {
   params: { locale: string; orderId: string };
-  searchParams: { t?: string };
+  searchParams: {
+    t?: string;
+    payment_intent?: string;
+    redirect_status?: string;
+  };
 }
 
 const fontStyle = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" };
@@ -27,17 +35,26 @@ const PAYMENT_STATUS_LABELS: Record<string, string> = {
 };
 
 export default async function OrderSuccessPage({ params, searchParams }: Props) {
-  const { locale, orderId: orderNumber } = params;
+  const { locale, orderId: orderNumberParam } = params;
+  const orderNumber = decodeURIComponent(orderNumberParam);
   const guestToken = searchParams.t ?? null;
+  const paymentIntentId = searchParams.payment_intent ?? null;
 
   // Resolve current user (may be null for guests)
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const order = await getOrderByNumber(orderNumber, {
-    userId: user?.id ?? null,
-    guestToken,
-  });
+  const lookupOpts = { userId: user?.id ?? null, guestToken };
+
+  let order =
+    (await getOrderByNumber(orderNumber, lookupOpts)) ??
+    (paymentIntentId
+      ? user
+        ? await getOrderByPaymentReference(paymentIntentId, { userId: user.id })
+        : guestToken
+          ? await getOrderByPaymentReference(paymentIntentId, { guestToken })
+          : await getGuestOrderByPaymentIntent(paymentIntentId)
+      : null);
 
   if (!order) notFound();
 

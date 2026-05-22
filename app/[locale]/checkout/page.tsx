@@ -17,7 +17,7 @@ import {
 import { lookupCP, type MexicoCPData } from '@/lib/mexico';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { createPaymentIntentAction } from './actions';
+import { createPaymentIntentAction, syncCartFromDbAction } from './actions';
 
 // ─── Stripe setup ────────────────────────────────────────────────────────────
 
@@ -67,12 +67,14 @@ const stripeAppearance: Parameters<typeof loadStripe>[1] extends undefined
 function StripePaymentForm({
   orderNumber,
   guestToken,
+  email,
   locale,
   total,
   onBack,
 }: {
   orderNumber: string;
   guestToken: string;
+  email: string;
   locale: string;
   total: number;
   onBack: () => void;
@@ -90,18 +92,40 @@ function StripePaymentForm({
     setIsConfirming(true);
     setStripeError(null);
 
-    const returnUrl = `${window.location.origin}/${locale}/checkout/success/${orderNumber}?t=${guestToken}`;
+    // Stripe return URL must be a simple stable path (no dynamic order segments)
+    const returnUrl = `${window.location.origin}/${locale}/checkout/return`;
+
+    sessionStorage.setItem('viogi_checkout_payment', '1');
+    sessionStorage.setItem(
+      'viogi_pending_order',
+      JSON.stringify({ orderNumber, guestToken })
+    );
+
+    const { error: submitError } = await elements.submit();
+    if (submitError) {
+      sessionStorage.removeItem('viogi_checkout_payment');
+      setStripeError(submitError.message ?? t('error_processing'));
+      setIsConfirming(false);
+      return;
+    }
 
     const { error } = await stripe.confirmPayment({
       elements,
-      confirmParams: { return_url: returnUrl },
+      confirmParams: {
+        return_url: returnUrl,
+        receipt_email: email || undefined,
+      },
     });
 
-    // confirmPayment only returns here on error — success redirects automatically
     if (error) {
+      sessionStorage.removeItem('viogi_checkout_payment');
       setStripeError(error.message ?? t('error_processing'));
       setIsConfirming(false);
+      return;
     }
+
+    // 4242 without 3DS: no full-page redirect from Stripe — go to return handler
+    window.location.assign(`${returnUrl}?redirect_status=succeeded`);
   };
 
   return (
@@ -246,7 +270,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const t = useTranslations('checkout');
   const { locale } = useLocaleContext();
-  const { cart: cartData, closeCart, updateShippingCost } = useCart();
+  const { cart: cartData, closeCart, updateShippingCost, replaceItems } = useCart();
   const cart = cartData.items;
   const subtotal = cartData.subtotal;
   const shipping = cartData.shipping;
@@ -270,6 +294,26 @@ export default function CheckoutPage() {
     pickup?: string;
     general?: string;
   }>({});
+
+  // Fix stale localStorage cart (slug ids / old prices) before checkout submit
+  useEffect(() => {
+    if (cart.length === 0) return;
+
+    let cancelled = false;
+    syncCartFromDbAction(cart).then((result) => {
+      if (cancelled || 'error' in result) return;
+      const changed = result.items.some(
+        (item, i) =>
+          item.productId !== cart[i]?.productId ||
+          Math.abs(item.price - (cart[i]?.price ?? 0)) > 0.01
+      );
+      if (changed) replaceItems(result.items);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cart, replaceItems]);
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     email: '',
@@ -300,11 +344,20 @@ export default function CheckoutPage() {
 
   const isSubmittingRef = useRef(false);
 
+  const paymentStepActive = Boolean(clientSecret || pendingOrderNumber);
+
   useEffect(() => {
+    if (paymentStepActive) return;
+    if (
+      typeof window !== 'undefined' &&
+      sessionStorage.getItem('viogi_checkout_payment') === '1'
+    ) {
+      return;
+    }
     if (cart.length === 0 && !isSubmittingRef.current) {
       router.push(`/${locale}/cart`);
     }
-  }, [cart, router, locale]);
+  }, [cart, router, locale, paymentStepActive]);
 
   // CP → colonia/municipio/estado lookup via SEPOMEX.
   // Only re-runs when zipCode changes — other formData fields are intentionally excluded
@@ -404,16 +457,31 @@ export default function CheckoutPage() {
 
       if (!result.success) {
         const errorMsg =
-          result.error === 'price_changed'
+          result.error === 'price_changed' && result.message
+            ? result.message
+            : result.error === 'price_changed'
             ? t('error_price_changed')
             : result.error === 'pickup_inactive'
             ? t('error_pickup_unavailable')
+            : result.error === 'stripe_error' && result.message
+            ? result.message
+            : result.message
+            ? result.message
             : t('error_processing');
         setFormErrors({ general: errorMsg });
         return;
       }
 
       isSubmittingRef.current = true;
+      sessionStorage.setItem('viogi_checkout_payment', '1');
+      sessionStorage.setItem(
+        'viogi_pending_order',
+        JSON.stringify({
+          orderNumber: result.orderNumber,
+          guestToken: result.guestToken,
+          paymentIntentId: result.paymentIntentId,
+        })
+      );
       setClientSecret(result.clientSecret);
       setPendingOrderNumber(result.orderNumber);
       setPendingGuestToken(result.guestToken);
@@ -750,6 +818,7 @@ export default function CheckoutPage() {
                       <StripePaymentForm
                         orderNumber={pendingOrderNumber!}
                         guestToken={pendingGuestToken!}
+                        email={formData.email}
                         locale={locale}
                         total={total}
                         onBack={() => {

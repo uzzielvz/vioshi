@@ -1,27 +1,20 @@
+
 import Stripe from 'stripe';
 
-// Lazy singleton — instantiated on first use, not at module evaluation time.
-// This lets the Next.js build succeed without STRIPE_SECRET_KEY set,
-// while still throwing at runtime if it is missing when actually called.
-// Never import this file in Client Components; it uses the secret key.
-let _stripe: Stripe | null = null;
+const secretKey = process.env.STRIPE_SECRET_KEY;
 
-export function getStripe(): Stripe {
-  if (!_stripe) {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error('Missing env var: STRIPE_SECRET_KEY');
-    }
-    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2026-04-22.dahlia',
-      typescript: true,
-    });
-  }
-  return _stripe;
+if (!secretKey) {
+  throw new Error('Missing env var: STRIPE_SECRET_KEY');
 }
 
-// Convenience re-export for callers that prefer `stripe.foo()` syntax.
-export const stripe = new Proxy({} as Stripe, {
-  get(_target, prop) {
-    return (getStripe() as unknown as Record<string | symbol, unknown>)[prop];
-  },
+if (secretKey.startsWith('pk_')) {
+  throw new Error(
+    'STRIPE_SECRET_KEY must be sk_test_... or sk_live_..., not the publishable pk_ key'
+  );
+}
+
+// Singleton — reused across hot-reloads in dev and across requests in prod.
+// Never import this file in Client Components; it uses the secret key.
+export const stripe = new Stripe(secretKey, {
+  typescript: true,
 });

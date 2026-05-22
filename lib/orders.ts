@@ -77,6 +77,49 @@ export async function getOrderByNumber(
   return null;
 }
 
+/** Guest/authenticated lookup after Stripe redirect (payment_intent in query string). */
+export async function getOrderByPaymentReference(
+  paymentIntentId: string,
+  options: { userId?: string | null; guestToken?: string | null }
+): Promise<OrderRow | null> {
+  if (options.userId) {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('orders')
+      .select(ORDER_SELECT)
+      .eq('payment_reference', paymentIntentId)
+      .single();
+    return (data as OrderRow) ?? null;
+  }
+
+  if (options.guestToken) {
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from('orders')
+      .select(ORDER_SELECT)
+      .eq('payment_reference', paymentIntentId)
+      .eq('guest_token', options.guestToken)
+      .single();
+    return (data as OrderRow) ?? null;
+  }
+
+  return null;
+}
+
+/** Guest order lookup via Stripe redirect (?payment_intent=pi_...) when token query is missing. */
+export async function getGuestOrderByPaymentIntent(
+  paymentIntentId: string
+): Promise<OrderRow | null> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from('orders')
+    .select(ORDER_SELECT)
+    .eq('payment_reference', paymentIntentId)
+    .is('user_id', null)
+    .single();
+  return (data as OrderRow) ?? null;
+}
+
 /**
  * Fetch all orders for an authenticated user, newest first.
  * Uses the server client so RLS limits results to that user's orders.

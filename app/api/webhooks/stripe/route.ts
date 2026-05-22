@@ -36,6 +36,10 @@ export async function POST(req: NextRequest) {
   // Each handler is idempotent: UPDATE ... WHERE payment_reference = X
   // is a no-op if the row is already in the target state.
 
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[webhook] event:', event.type, (event.data.object as { id?: string }).id);
+  }
+
   switch (event.type) {
     case 'payment_intent.succeeded': {
       const intent = event.data.object as Stripe.PaymentIntent;

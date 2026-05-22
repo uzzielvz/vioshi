@@ -8,6 +8,8 @@ import { useCart } from '@/store/cartStore';
 export default function ClearCartOnMount() {
   const { clearCart } = useCart();
   useEffect(() => {
+    sessionStorage.removeItem('viogi_checkout_payment');
+    sessionStorage.removeItem('viogi_pending_order');
     clearCart();
   }, [clearCart]);
   return null;
