@@ -3,7 +3,7 @@
 > **Single Source of Truth (SSOT)** — Documento técnico principal del proyecto.
 > Roadmap: [`PLAN.md`](./PLAN.md) · Mapa rápido: [`CONTEXT.md`](./CONTEXT.md)
 
-**(Actualizado 2026-05-21 · rama `main` · HEAD `f846b77` · Fase 1 completada + Fase 2 Checkout Real completada)**
+**(Actualizado 2026-05-22 · rama `feat/checkout-real` · merge pendiente a `main` · Fase 2 Checkout Real cerrada + E2E Stripe validado en local)**
 
 > **Regla operativa:** Ante contradicción entre este documento y el código, el código gana. Hechos marcados como verificados = leídos en archivos fuente en esta fecha.
 
@@ -13,7 +13,7 @@
 
 Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, autenticación de usuarios vía Supabase Auth, panel admin paralelo con sesión firmada HMAC, carrito/wishlist en localStorage, **checkout real con Stripe Payment Element**, historial de pedidos y CRUD de direcciones, y un módulo de **búsqueda visual** funcional (Gemini + pgvector).
 
-**Estado general (Fase 2 completada):** production-ready para flujo completo de venta — checkout → Stripe → webhook → órdenes. Pendiente keys de Stripe en entorno y prueba e2e.
+**Estado general (Fase 2 completada):** flujo checkout → Stripe Payment Element → `/checkout/return` → success → webhook validado en **local**. Post-merge: keys + webhook en Vercel prod (`vioshi.vercel.app`).
 
 **Riesgos activos:**
 1. **Dual auth admin** — cookie HMAC firmada (SEC-03 ✅); aún sin re-validación en todas las Server Actions admin (SA-01).
@@ -23,7 +23,7 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 
 **Resueltos en Fase 2:** checkout mock (CART-02 ✅), guest order lookup (RLS-03 ✅ con HMAC guest_token), orders/addresses pages (CART-04 ✅), Stripe webhook (CHK-07 ✅), validación server precios (CART-01 ✅).
 
-**Prioridad inmediata recomendada:** (1) agregar Stripe keys en `.env.local` + Vercel, (2) test e2e tarjeta `4242`, (3) Fase 3 visual search integración nav.
+**Prioridad inmediata post-merge:** (1) merge `feat/checkout-real` → `main`, (2) migración `0006` + env Stripe en Vercel + webhook prod, (3) smoke checkout en prod con `4242`.
 
 ---
 
@@ -140,7 +140,7 @@ VISUAL SEARCH
 | Pedidos (cuenta) | **Completo** | Server Component, `lib/orders.ts`, RLS `orders_select_own` | Listado + detalle por orderId |
 | Direcciones (cuenta) | **Completo** | CRUD real + optimistic UI | `addAddressAction`, `deleteAddressAction`, `setDefaultAddressAction` |
 | Checkout | **Completo** | Stripe Payment Element, 2 fases | `createPaymentIntentAction` → `stripe.confirmPayment` → success page |
-| Pagos Stripe | **Código completo; E2E pendiente** | Payment Element, `/checkout/return`, webhook; keys en `.env.local` | Tarjeta test `4242 4242 4242 4242`; verificar `succeeded` |
+| Pagos Stripe | **Completo (local E2E)** | Payment Element, `/checkout/return`, webhook, `lib/cart/reconcile` | Prod: keys Vercel + webhook `vioshi.vercel.app` |
 | Admin productos | **Parcial** | CRUD + imágenes; validación débil | Falta variants UI, validación uploads |
 | Admin pickup points | **Completo** | CRUD contra DB | Checkout no consume misma fuente |
 | Búsqueda texto | **Parcial** | Filter in-memory sobre catálogo cargado | No FTS ni paginación server |
@@ -281,9 +281,9 @@ VISUAL SEARCH
 6. ~~Direcciones CRUD `/account/addresses`~~ ✅
 7. ~~Validación server-side precios vs DB~~ ✅
 
-**Prioridad P1 (producción mínima — pendiente)**
-1. **M-1/M-2/M-3:** Stripe keys en `.env.local` + Vercel + webhook secret — **BLOQUEANTE para test**
-2. Sincronizar pickup points checkout con DB (CART-03)
+**Prioridad P1 (producción mínima — post-merge)**
+1. **PRO-05:** Stripe keys + `STRIPE_WEBHOOK_SECRET` en Vercel; migración `0006` en Supabase prod
+2. Sincronizar pickup points checkout con DB (CART-03 UI)
 3. Rate limit + hardening `/api/visual-search`
 4. OAuth producción: `NEXT_PUBLIC_SITE_URL` + Supabase Redirect URLs
 
@@ -309,8 +309,9 @@ VISUAL SEARCH
 7. ~~`SELECT REVOKE` columna `embedding`~~ — **✅ RESUELTO (SEC-06)** migración `0005`.
 8. ~~Sanitizar `next` en auth callback~~ — **✅ RESUELTO (SEC-02)** regex `^/[^/\\]`.
 9. ~~CI: `npm run build` en PR workflow~~ — **✅ RESUELTO (SEC-08)** `.github/workflows/ci.yml`.
-10. **Agregar Stripe keys** — `.env.local` + Vercel + webhook endpoint. *(bloqueante para test e2e)*
-11. **Fase 3 visual search** — integrar búsqueda visual en nav/header; rate limit endpoint; indexación automática en `createProduct`.
+10. ~~E2E Stripe local~~ — **✅ RESUELTO** (fix form anidado en checkout; `payment_intent.succeeded`).
+11. **Deploy prod** — Vercel env + webhook Stripe + smoke `4242` en `vioshi.vercel.app`.
+12. **Fase 3 visual search** — integrar búsqueda visual en nav/header; rate limit endpoint; indexación automática en `createProduct`.
 
 ---
 

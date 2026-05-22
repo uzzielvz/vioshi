@@ -1,8 +1,8 @@
 # PLAN.md - Viogi (Roadmap Vivo)
 
 **Última actualización:** 2026-05-22
-**Rama actual:** `feat/checkout-real` (base `main` @ `f846b77`) — **sin merge a `main`**
-**Estado general:** Fases 0 y 1 **cerradas** ✅. Fase 2 **código completo** en rama; **CHK-09 E2E en depuración** (Pay no redirige a success aún).
+**Rama actual:** `feat/checkout-real` (base `main` @ `f846b77`) — **lista para merge**
+**Estado general:** Fases 0, 1 y 2 **cerradas en código** ✅. Pendiente post-merge: env Stripe en Vercel + migración `0006` en prod si falta.
 **Fuente de verdad técnica:** `RESEARCH-CONSOLIDADO.md` (2026-05-19)
 
 ---
@@ -14,7 +14,7 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 ### Comercio y transacciones
 - [x] Un cliente puede completar una compra real: carrito → checkout → pedido persistido en `orders` + `order_items` con snapshots de precio, impuestos y envío.
 - [x] El número de orden (`VIO-YYYY-NNNN` vía secuencia existente) es real, no un literal mock (`ORDER123`).
-- [ ] Pasarela de pago conectada (Stripe) con webhook de confirmación e idempotencia. ← código listo; keys en `.env.local` ✅; **flujo Pay → success pendiente de validar** (mañana)
+- [x] Pasarela de pago conectada (Stripe) con webhook de confirmación e idempotencia. ← E2E validado en local; **Vercel: configurar keys + webhook prod**
 - [x] Invitado y usuario autenticado pueden completar compra; el invitado puede **consultar su pedido** post-compra (HMAC token en URL success).
 - [x] Precios del carrito se validan server-side contra DB al momento del pedido (anti-tampering localStorage).
 
@@ -42,8 +42,9 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 - [ ] Variables de entorno configuradas en Vercel producción.
 
 ### Documentación
-- [ ] `RESEARCH-CONSOLIDADO.md` (o sucesor) y `PLAN.md` reflejan el estado real del código.
-- [ ] `README.md`, `CONTEXT.md`, `visual-search/README.md` actualizados.
+- [x] `RESEARCH-CONSOLIDADO.md` (o sucesor) y `PLAN.md` reflejan el estado real del código.
+- [x] `README.md`, `CONTEXT.md` actualizados (checkout Stripe).
+- [ ] `visual-search/README.md` actualizado si cambia integración nav.
 - [ ] Planes históricos obsoletos archivados o referenciados explícitamente como históricos.
 
 ### Fuera de alcance para "cerrado v1" (post-launch)
@@ -125,7 +126,7 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | Admin login | `/admin/login` | Cookie `admin_token` con `ADMIN_SECRET` |
 | Admin CRUD | `/admin/products` | Crear/editar producto + imagen |
 | Auth | `/es/account` | Login email + Google OAuth |
-| Checkout | `/es/checkout` | UI OK; submit sigue mock (esperado) |
+| Checkout | `/es/checkout` | Stripe Payment Element → `/checkout/return` → success; tarjeta test `4242` |
 
 **Commits en rama vs `main`:** 11 (5× Fase 0 docs + 6× visual search feature desde `155ed14`).
 
@@ -153,7 +154,7 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 
 ---
 
-### Fase 2: Checkout Real y Transacciones ← **EN CURSO** (E2E pago mañana) 🚧
+### Fase 2: Checkout Real y Transacciones ← **CERRADA** ✅
 
 **Objetivo:** Flujo de compra end-to-end persistido en DB; base para pagos.
 
@@ -168,13 +169,14 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | 2.6 | Pickup points validados desde DB en `createPaymentIntentAction` (CART-03) | ✅ Validación server-side en action |
 | 2.7 | `/account/orders` y detalle: reemplazar mocks por queries Supabase | ✅ Server Components + `lib/orders.ts` |
 | 2.8 | `/account/addresses`: CRUD real | ✅ Server Component + AddressesClient (useOptimistic) |
-| 2.9 | Integrar Stripe: PaymentIntent + Payment Element | ✅ + `/checkout/return`, `elements.submit`, reconcile carrito |
+| 2.9 | Integrar Stripe: PaymentIntent + Payment Element | ✅ `/checkout/return`, `elements.submit`, reconcile carrito, fix form anidado |
 | 2.10 | Webhook idempotente actualiza `payment_status` | ✅ `app/api/webhooks/stripe/route.ts` |
+| 2.11 | Herramientas debug Stripe (dev) | ✅ `npm run stripe:listen`, `stripe:check-pi`, `/api/dev/stripe-payment-status` |
 
-**Decisión D-01 (pasarela):** Stripe elegido para Fase 2 (Payment Element). MercadoPago sigue recomendado para audiencia MX a futuro.
+**Decisión D-01 (pasarela):** Stripe elegido para Fase 2 (Payment Element). MercadoPago diferido.
 **Decisión D-04 (guest lookup):** HMAC `guest_token` + fallback `payment_intent` en success page.
 
-**Estado actual (2026-05-22):** CHK-01..08 y CHK-10 en rama. CHK-09: keys test en `.env.local` (orden `sk_`/`pk_` corregido); `stripe listen` local OK para `created`; **`payment_intent.succeeded` y redirect a success aún no verificados** — depurar mañana (un solo Continue, pestaña Card, Fast Refresh).
+**Estado actual (2026-05-22):** CHK-01..10 completados. E2E local OK (`payment_intent.succeeded`, success page). **Known gap:** UI pickup en checkout sigue leyendo `lib/pickupPoints.ts`; validación server usa DB (`CHK-06` parcial UI).
 
 ---
 
@@ -247,7 +249,7 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | CHK-06 | Pickup points validados desde DB en checkout | 2 | P1 | M | — | Mismos datos que admin | ✅ |
 | CHK-07 | Account orders real (list + detail) | 2 | P1 | M | CHK-01 | Sin mockOrders | ✅ |
 | CHK-08 | Account addresses CRUD | 2 | P1 | L | — | Sin mockAddresses | ✅ |
-| CHK-09 | Stripe: keys + E2E pago (Pay → return → success → webhook) | 2 | P0 | XL | CHK-01 | Pago confirmado vía webhook | ⏳ Keys local ✅; E2E mañana |
+| CHK-09 | Stripe: keys + E2E pago (Pay → return → success → webhook) | 2 | P0 | XL | CHK-01 | Pago confirmado vía webhook | ✅ Local |
 | CHK-10 | Webhook idempotente actualiza payment_status | 2 | P0 | L | CHK-09 | Doble webhook no duplica | ✅ |
 | VS-01 | Unificar prompts indexación vs query | 3 | P1 | S | CLN-05 | Mismo prompt en route + script | Pendiente |
 | VS-02 | Auto-embed en createProduct/updateProduct | 3 | P1 | L | SEC-05, SEC-06 | Nuevo producto buscable sin CLI | Pendiente |
@@ -278,7 +280,7 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 
 | # | Pregunta | Opciones | Recomendación (basada en Research) | Impacto |
 |---|----------|----------|-----------------------------------|---------|
-| D-01 | Pasarela MX | MercadoPago vs Stripe | **MercadoPago** primero (audiencia MX, `.env.example` ya menciona MP; checkout UI tiene flujo PayPal manual hoy) | CHK-09 |
+| D-01 | Pasarela MX | MercadoPago vs Stripe | **Stripe** implementado (Fase 2); MercadoPago diferido | CHK-09 ✅ |
 | D-02 | Admin auth largo plazo | Cookie ADMIN_SECRET vs Supabase Auth + `profiles.role` | **Corto plazo:** cookie firmada (SEC-03). **Largo plazo:** migrar a Supabase role check | SEC-03, SEC-04 |
 | D-03 | Visual search en nav | Link Header vs ruta oculta `/visual-search` | **Demo:** oculta. **Producción:** integrar en `/[locale]/search` como tab/modo (VS-03) | VS-03, I18N-01 |
 | D-04 | Guest order lookup | RLS extra vs Server Action con service role + token | **Server Action** con `order_number` + email + HMAC token en URL success (evita RLS complejo) | CHK-04 |
@@ -291,26 +293,18 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 
 ---
 
-## 5. Próximos Pasos (Próxima Sesión — mañana)
+## 5. Próximos Pasos (Post-merge)
 
-**Rama:** seguir en `feat/checkout-real` hasta cerrar CHK-09; luego merge a `main`.
+**Merge `feat/checkout-real` → `main`** (build + lint OK en rama).
 
-**CHK-09 — Cerrar pago E2E (prioridad):**
-1. `stripe listen --forward-to localhost:3000/api/webhooks/stripe` + `npm run dev`.
-2. Un solo **Continue to payment**; pestaña **Card**; `4242 4242 4242 4242`.
-3. Verificar URL: `/en/checkout/return` → `/en/checkout/success/VIO-…` y `payment_intent.succeeded` en CLI.
-4. F12 Network: si falla, capturar error de `confirmPayment` / `elements.submit`.
-5. Vercel: `sk_` en `STRIPE_SECRET_KEY`, `pk_` en `NEXT_PUBLIC_*`, `STRIPE_WEBHOOK_SECRET` prod, redeploy.
+**Checklist Vercel / Supabase (manual):**
+1. SQL: aplicar `supabase/migrations/0006_orders_guest_token.sql` si no está en prod.
+2. Vercel env: `STRIPE_SECRET_KEY` (`sk_…`), `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (`pk_…`), `STRIPE_WEBHOOK_SECRET` (`whsec_…`).
+3. Stripe Dashboard → Webhook prod: `https://vioshi.vercel.app/api/webhooks/stripe` (`payment_intent.succeeded`, `payment_intent.payment_failed`).
+4. `NEXT_PUBLIC_SITE_URL=https://vioshi.vercel.app` + Supabase OAuth redirect URLs.
+5. Smoke prod: checkout con `4242…` → success → pedido `payment_status=completed` en Supabase.
 
-**Después de CHK-09:** merge `feat/checkout-real` → `main`; M-4 OAuth (`vioshi.vercel.app`); Fase 3 VS polish o Fase 4 deploy.
-
-**Fase 3 — Visual Search (VS-01..VS-06)** — ya en `main`; pulido opcional
-1. **VS-01:** Pipeline de embeddings con Gemini (batch o incremental).
-2. **VS-02:** Función RPC `match_products` en Supabase (pgvector).
-3. **VS-03:** Route Handler `/api/visual-search` — upload imagen → embed → match.
-4. **VS-04:** UI de búsqueda visual en `/visual-search`.
-5. **VS-05:** Integración en header/nav.
-6. **VS-06:** Tests y tuning de threshold.
+**Siguiente fase:** Fase 4 deploy/pulido (PRO-05 env Vercel); CHK-06 UI pickup desde DB; Fase 3 VS integración nav (opcional).
 
 **Diferido:** DEB-01 (Zod en actions), DEB-02 (signUp profiles trigger), tareas Fase 4 (CSP headers PRO-04).
 
@@ -368,7 +362,7 @@ Extraídas del Research Consolidado y `CLAUDE.md`:
 ### Decisiones tomadas
 | Fecha | Decisión | Responsable | Notas |
 |-------|----------|-------------|-------|
-| | Pasarela: MP / Stripe / otro: _______ | | |
+| 2026-05-22 | Pasarela: **Stripe** (Payment Element) | — | E2E local OK; MercadoPago diferido |
 | | Visual search en nav: sí / no / solo search: _______ | | |
 | | Admin auth: cookie firmada / Supabase role: _______ | | |
 | | Seeds demo en prod: mantener / borrar: _______ | | |
@@ -383,7 +377,7 @@ Extraídas del Research Consolidado y `CLAUDE.md`:
 
 ### Notas de sesión
 ```
-2026-05-22 — feat/checkout-real: Stripe keys corregidas (sk/pk invertidos). Payment Element abre; Pay vuelve a /checkout sin succeeded. Añadidos: /checkout/return, lib/cart/reconcile, elements.submit, sessionStorage viogi_pending_order. Pendiente E2E mañana.
+2026-05-22 — feat/checkout-real: E2E Stripe OK. Fix crítico: formulario Pay anidado dentro del form checkout (disparaba createPaymentIntent otra vez). Añadidos /checkout/return, reconcile carrito, debug dev.
 ```
 
 ### Cambios al PLAN
@@ -395,7 +389,7 @@ Extraídas del Research Consolidado y `CLAUDE.md`:
 | 2026-05-19 | SEC-06 hide embedding | Migración 0005: REVOKE SELECT embedding para anon/authenticated |
 | 2026-05-21 | Fase 1 cerrada 100% | Deploy prod funcionando; migraciones 0004/0005 aplicadas manualmente |
 | 2026-05-21 | Rama feat/checkout-real iniciada | Fase 2 comienza: placeOrderAction + pickup desde DB + success real |
-| 2026-05-22 | Checkout Stripe hardening WIP | return page, cart reconcile, elements.submit; CHK-09 E2E pendiente |
+| 2026-05-22 | Fase 2 cerrada; merge-ready | E2E local OK; fix form anidado; return page + reconcile carrito |
 
 ---
 

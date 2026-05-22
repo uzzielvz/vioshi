@@ -18,6 +18,10 @@ import { lookupCP, type MexicoCPData } from '@/lib/mexico';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { createPaymentIntentAction, syncCartFromDbAction } from './actions';
+import {
+  formatStripeClientError,
+  logCheckoutDebug,
+} from '@/lib/stripe/formatPaymentError';
 
 // ─── Stripe setup ────────────────────────────────────────────────────────────
 
@@ -67,6 +71,8 @@ const stripeAppearance: Parameters<typeof loadStripe>[1] extends undefined
 function StripePaymentForm({
   orderNumber,
   guestToken,
+  paymentIntentId,
+  clientSecret,
   email,
   locale,
   total,
@@ -74,6 +80,8 @@ function StripePaymentForm({
 }: {
   orderNumber: string;
   guestToken: string;
+  paymentIntentId: string;
+  clientSecret: string;
   email: string;
   locale: string;
   total: number;
@@ -84,30 +92,43 @@ function StripePaymentForm({
   const t = useTranslations('checkout');
   const [isConfirming, setIsConfirming] = useState(false);
   const [stripeError, setStripeError] = useState<string | null>(null);
+  const [lastPiStatus, setLastPiStatus] = useState<string | null>(null);
+  const isDev = process.env.NODE_ENV === 'development';
 
-  const handleConfirm = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
+  const handleConfirm = async () => {
+    if (!stripe || !elements) {
+      setStripeError('Stripe aún no cargó. Espera un segundo y vuelve a intentar.');
+      logCheckoutDebug('Pay blocked: stripe or elements null', {
+        stripe: !!stripe,
+        elements: !!elements,
+      });
+      return;
+    }
 
     setIsConfirming(true);
     setStripeError(null);
+    setLastPiStatus(null);
 
-    // Stripe return URL must be a simple stable path (no dynamic order segments)
     const returnUrl = `${window.location.origin}/${locale}/checkout/return`;
 
     sessionStorage.setItem('viogi_checkout_payment', '1');
     sessionStorage.setItem(
       'viogi_pending_order',
-      JSON.stringify({ orderNumber, guestToken })
+      JSON.stringify({ orderNumber, guestToken, paymentIntentId })
     );
+
+    logCheckoutDebug('1. Pay clicked', { orderNumber, paymentIntentId, returnUrl });
 
     const { error: submitError } = await elements.submit();
     if (submitError) {
       sessionStorage.removeItem('viogi_checkout_payment');
-      setStripeError(submitError.message ?? t('error_processing'));
+      const msg = formatStripeClientError(submitError);
+      logCheckoutDebug('2. elements.submit FAILED', submitError);
+      setStripeError(msg);
       setIsConfirming(false);
       return;
     }
+    logCheckoutDebug('2. elements.submit OK');
 
     const { error } = await stripe.confirmPayment({
       elements,
@@ -119,26 +140,77 @@ function StripePaymentForm({
 
     if (error) {
       sessionStorage.removeItem('viogi_checkout_payment');
-      setStripeError(error.message ?? t('error_processing'));
+      logCheckoutDebug('3. confirmPayment FAILED', error);
+      setStripeError(formatStripeClientError(error));
       setIsConfirming(false);
       return;
     }
+    logCheckoutDebug('3. confirmPayment returned (no client error)');
 
-    // 4242 without 3DS: no full-page redirect from Stripe — go to return handler
-    window.location.assign(`${returnUrl}?redirect_status=succeeded`);
+    const { paymentIntent } = await stripe.retrievePaymentIntent(clientSecret);
+    const status = paymentIntent?.status ?? 'unknown';
+    setLastPiStatus(status);
+    logCheckoutDebug('4. retrievePaymentIntent', {
+      id: paymentIntent?.id,
+      status,
+    });
+
+    if (status === 'succeeded') {
+      window.location.assign(
+        `${returnUrl}?redirect_status=succeeded&payment_intent=${paymentIntentId}`
+      );
+      return;
+    }
+
+    if (status === 'processing') {
+      window.location.assign(
+        `${returnUrl}?redirect_status=succeeded&payment_intent=${paymentIntentId}`
+      );
+      return;
+    }
+
+    sessionStorage.removeItem('viogi_checkout_payment');
+    setStripeError(
+      `Pago no completado. Estado en Stripe: "${status}". Abre Dashboard → Payments o ejecuta: node scripts/stripe-check-pi.mjs ${paymentIntentId}`
+    );
+    setIsConfirming(false);
   };
 
   return (
-    <form onSubmit={handleConfirm} className="space-y-6">
+    <div className="space-y-6">
+      {isDev && (
+        <div className="bg-gray-50 border border-gray-200 px-3 py-2 space-y-1 font-mono text-[10px] text-gray-600 break-all">
+          <p>
+            <span className="text-gray-400">order</span> {orderNumber}
+          </p>
+          <p>
+            <span className="text-gray-400">pi</span> {paymentIntentId}
+          </p>
+          {lastPiStatus && (
+            <p>
+              <span className="text-gray-400">status</span> {lastPiStatus}
+            </p>
+          )}
+          <a
+            href={`/api/dev/stripe-payment-status?pi=${paymentIntentId}`}
+            target="_blank"
+            rel="noreferrer"
+            className="underline text-black"
+          >
+            Ver JSON en Stripe API
+          </a>
+        </div>
+      )}
       <PaymentElement options={{ layout: 'tabs' }} />
       {stripeError && (
         <div className="bg-red-50 border border-red-200 px-4 py-3">
-          <p className="text-[11px] text-red-600">{stripeError}</p>
+          <p className="text-[11px] text-red-600 whitespace-pre-wrap">{stripeError}</p>
         </div>
       )}
       <div className="space-y-3 pt-2">
         <button
-          type="submit"
+          type="button"
+          onClick={handleConfirm}
           disabled={!stripe || !elements || isConfirming}
           className="w-full bg-black text-white py-4 text-[12px] uppercase tracking-widest font-medium hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
         >
@@ -155,7 +227,7 @@ function StripePaymentForm({
           {t('back_to_details')}
         </button>
       </div>
-    </form>
+    </div>
   );
 }
 
@@ -284,6 +356,9 @@ export default function CheckoutPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [pendingOrderNumber, setPendingOrderNumber] = useState<string | null>(null);
   const [pendingGuestToken, setPendingGuestToken] = useState<string | null>(null);
+  const [pendingPaymentIntentId, setPendingPaymentIntentId] = useState<string | null>(
+    null
+  );
 
   const [cpData, setCpData] = useState<MexicoCPData | null>(null);
   const [cpLoading, setCpLoading] = useState(false);
@@ -485,6 +560,11 @@ export default function CheckoutPage() {
       setClientSecret(result.clientSecret);
       setPendingOrderNumber(result.orderNumber);
       setPendingGuestToken(result.guestToken);
+      setPendingPaymentIntentId(result.paymentIntentId);
+      logCheckoutDebug('PaymentIntent created', {
+        orderNumber: result.orderNumber,
+        paymentIntentId: result.paymentIntentId,
+      });
     } catch (err) {
       console.error('[checkout] handleSubmit error:', err);
       setFormErrors({ general: t('error_processing') });
@@ -812,12 +892,15 @@ export default function CheckoutPage() {
 
                   {clientSecret ? (
                     <Elements
+                      key={clientSecret}
                       stripe={stripePromise}
                       options={{ clientSecret, appearance: stripeAppearance }}
                     >
                       <StripePaymentForm
                         orderNumber={pendingOrderNumber!}
                         guestToken={pendingGuestToken!}
+                        paymentIntentId={pendingPaymentIntentId!}
+                        clientSecret={clientSecret}
                         email={formData.email}
                         locale={locale}
                         total={total}
@@ -825,6 +908,7 @@ export default function CheckoutPage() {
                           setClientSecret(null);
                           setPendingOrderNumber(null);
                           setPendingGuestToken(null);
+                          setPendingPaymentIntentId(null);
                           isSubmittingRef.current = false;
                         }}
                       />

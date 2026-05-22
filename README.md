@@ -24,6 +24,7 @@ E-commerce de streetwear de segunda mano. Next.js 14 + Supabase.
 - next-intl (es / en)
 - Supabase (PostgreSQL + Auth + Storage + pgvector)
 - `@google/genai` (búsqueda visual)
+- Stripe Payment Element (checkout)
 - Context API + localStorage (carrito / wishlist)
 
 ## Comandos
@@ -33,6 +34,8 @@ npm run dev          # Desarrollo (http://localhost:3000)
 npm run build        # Build producción
 npm run lint         # ESLint
 npm run type-check   # TypeScript
+npm run stripe:listen   # Webhooks Stripe → localhost (requiere Stripe CLI)
+npm run stripe:check-pi -- pi_xxx   # Estado de un PaymentIntent (debug)
 ```
 
 ## Estructura
@@ -46,7 +49,7 @@ components/             # Componentes UI
 store/                  # Carrito (Context API)
 lib/                    # Productos, Supabase, utilidades
 scripts/                # Seed catálogo + generación embeddings
-supabase/migrations/    # Schema SQL (0001–0003)
+supabase/migrations/    # Schema SQL (0001–0006)
 messages/               # Traducciones (en.json, es.json)
 types/                  # Tipos TypeScript
 visual-search/          # Docs del módulo visual search
@@ -56,7 +59,7 @@ visual-search/          # Docs del módulo visual search
 
 - Catálogo de productos (Supabase) con filtrado por categoría
 - Carrito con persistencia en localStorage
-- Checkout UI (submit aún mock — ver `PLAN.md` Fase 2)
+- Checkout real (Stripe Payment Element → pedido en Supabase + webhook)
 - Cuentas de usuario (Supabase Auth: email + Google OAuth)
 - Panel admin — CRUD productos, imágenes, pickup points
 - **Búsqueda visual** (Gemini + pgvector) — [`/visual-search`](http://localhost:3000/visual-search)

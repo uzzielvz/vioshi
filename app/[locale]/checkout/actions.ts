@@ -216,8 +216,8 @@ export async function createPaymentIntentAction(
         order_number: order.order_number,
         customer_email: formData.email,
       },
-      // Lets Stripe show the most relevant payment methods for MX customers.
-      automatic_payment_methods: { enabled: true },
+      // Card-only in v1 — fewer moving parts while debugging E2E (re-enable automatic_payment_methods later).
+      payment_method_types: ['card'],
     });
   } catch (stripeError) {
     // Roll back the order to avoid orphaned pending rows

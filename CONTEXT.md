@@ -119,13 +119,16 @@ Contenido de la raíz (1 nivel, excluyendo `node_modules/`, `.next/`, `.git/`):
 - `STRIPE_WEBHOOK_SECRET`
 - `MERCADOPAGO_ACCESS_TOKEN`
 
-**Archivos en el repo con `stripe`, `mercadopago`, `mp-`, `payment`, `checkout`, `webhook` en la ruta o nombre**:
-- `app/[locale]/checkout/page.tsx` — Server Component (no leído cuerpo).
-- `app/[locale]/checkout/success/[orderId]/page.tsx` — Server Component.
-- `app/[locale]/pages/shipping-payments-returns/page.tsx` — página informativa.
-- (No hay archivos con `stripe`, `mercadopago`, `mp-`, `webhook` en nombre ni ruta.)
+**Archivos de pagos (Stripe — activos en `feat/checkout-real`)**:
+- `app/[locale]/checkout/page.tsx` — Client; Payment Element + `createPaymentIntentAction`
+- `app/[locale]/checkout/actions.ts` — Server Actions: PaymentIntent, validación precios
+- `app/[locale]/checkout/return/page.tsx` — Retorno post-`confirmPayment`
+- `app/[locale]/checkout/success/[orderId]/page.tsx` — Success + guest token
+- `app/api/webhooks/stripe/route.ts` — Webhook `payment_intent.*`
+- `lib/stripe.ts`, `lib/stripe/formatPaymentError.ts`
+- `app/api/dev/stripe-payment-status/route.ts` — Solo desarrollo (estado PI)
 
-**Stubs vs activos**: el directorio `app/[locale]/checkout/` tiene contenido (no leído en detalle). No existen archivos `payment*`, `stripe*`, `mercadopago*` ni carpetas `webhooks/`. La integración de pasarela de pagos en código es **no encontrada**.
+**MercadoPago**: mencionado en `.env.example`; no implementado.
 
 ---
 
@@ -281,7 +284,7 @@ Declaradas en `.env.example` (no se leyó `.env.local`):
 - HEAD actual en rama feature: `12f6f77` (docs CLN-02). Visual search funcional desde commits `155ed14`–`fff3607`.
 - `app/[locale]/account/page.tsx` actúa como página de login (cuando no hay sesión) y como dashboard (cuando hay sesión); no existe una ruta `/account/login` separada.
 - `app/[locale]/account/orders/page.tsx` y `app/[locale]/account/addresses/page.tsx` existen pero (según commits previos del módulo auth) usan datos mock; no se leyó código aquí para confirmar el estado actual.
-- `app/[locale]/checkout/page.tsx` existe pero no hay archivos `actions.ts` ni `route.ts` asociados a checkout que indiquen integración con pasarela de pagos.
+- Checkout: `actions.ts` + Stripe + webhook; ver sección Pagos arriba.
 - En `docs/archive/plan-auth.md` se indica "Módulo Auth: 100% completado y probado." (referencia histórica).
 
 ---
