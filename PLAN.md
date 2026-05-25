@@ -188,16 +188,15 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | # | Tarea | Estado |
 |---|-------|--------|
 | 3.1 | Merge `feat/visual-search-gemini` a `main` | ✅ CLN-05 |
-| 3.2 | Unificar prompts Gemini entre endpoint y `generate-embeddings.ts` (VS-04) | Pendiente |
-| 3.3 | Indexación automática de embedding en `createProduct` / `updateProduct` (VS-06) | Pendiente |
-| 3.4 | Integrar UI en `/[locale]/search` o componente reutilizable en catálogo (decisión pendiente) | Pendiente |
-| 3.5 | Opcional: captura cámara móvil (`capture="environment"`) | Pendiente |
-| 3.6 | Retunar índice IVFFlat cuando catálogo >100 productos (VS-05) | Pendiente |
-| 3.7 | Evaluar latencia: cache por hash de imagen, loading UX dedicado | Pendiente |
-| 3.8 | Decidir visibilidad nav: link en Header vs ruta oculta (pregunta abierta #6) | Pendiente |
-| 3.9 | Limpieza seeds `[seed]` en producción si aplica | Pendiente |
+| 3.2 | Link "VISUAL SEARCH" en Header desktop + mobile menu | ✅ VS-05 |
+| 3.3 | Rate limit 5 req/IP/min en `/api/visual-search` | ✅ VS-06 |
+| 3.4 | **Panel búsqueda visual en barra del Header** — ícono cámara junto a la X; bottom sheet mobile (cámara auto + subir archivo); modal desktop; animación pulso mientras busca; resultados inline con grid catálogo | ← **PRÓXIMO** |
+| 3.5 | Unificar prompts Gemini entre endpoint y `generate-embeddings.ts` (VS-01) | Pendiente |
+| 3.6 | Indexación automática de embedding en `createProduct` / `updateProduct` (VS-02) | Pendiente |
+| 3.7 | Retunar índice IVFFlat cuando catálogo >100 productos | Pendiente |
+| 3.8 | Limpieza seeds `[seed]` en producción si aplica | Pendiente |
 
-**Estado actual:** Funcional en rama feature — endpoint, UI `/visual-search`, scripts CLI, migración 0003, 10 productos indexados demo.
+**Estado actual:** Link en Header ✅, rate limit ✅. Próximo: panel visual integrado en barra de búsqueda (3.4).
 
 ---
 
@@ -282,7 +281,7 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 |---|----------|----------|-----------------------------------|---------|
 | D-01 | Pasarela MX | MercadoPago vs Stripe | **Stripe** implementado (Fase 2); MercadoPago diferido | CHK-09 ✅ |
 | D-02 | Admin auth largo plazo | Cookie ADMIN_SECRET vs Supabase Auth + `profiles.role` | **Corto plazo:** cookie firmada (SEC-03). **Largo plazo:** migrar a Supabase role check | SEC-03, SEC-04 |
-| D-03 | Visual search en nav | Link Header vs ruta oculta `/visual-search` | **Demo:** oculta. **Producción:** integrar en `/[locale]/search` como tab/modo (VS-03) | VS-03, I18N-01 |
+| D-03 | Visual search en nav | Link Header vs panel integrado | **Decisión:** ícono cámara en barra de búsqueda → panel bottom sheet (mobile) / modal (desktop) con resultados inline. Link texto en Header como fallback visible. | VS-05 ✅ |
 | D-04 | Guest order lookup | RLS extra vs Server Action con service role + token | **Server Action** con `order_number` + email + HMAC token en URL success (evita RLS complejo) | CHK-04 |
 | D-05 | Seeds `[seed]` en prod | Mantener vs borrar post-demo | **Borrar** antes de launch público; catálogo real solo | VS-09 |
 | D-06 | `product_attributes` DDL prod | ¿Existe manualmente? | ✅ Verificado; migración `0004` alineada con prod | SEC-01 |
