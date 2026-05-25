@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 import { useCart } from "@/store/cartStore";
+import VisualSearchPanel from "@/components/VisualSearchPanel";
 
 // Pathname sin prefijo de locale para comparaciones (evita hydration mismatch server vs client)
 function getPathnameWithoutLocale(pathname: string): string {
@@ -33,6 +34,8 @@ export default function Header({ userEmail = null }: HeaderProps) {
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const [mobileSupportOpen, setMobileSupportOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [vsFile, setVsFile] = useState<File | null>(null);
+  const vsInputRef = useRef<HTMLInputElement>(null);
   const { itemCount, openCart } = useCart();
 
   // Evitar hydration mismatch: pathname/locale pueden diferir server vs client al cambiar idioma
@@ -258,6 +261,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
               if (searchOpen) {
                 setSearchOpen(false);
                 setSearchQuery("");
+                setVsFile(null);
               } else {
                 setSearchOpen(true);
                 setMobileMenuOpen(false); // Cerrar menú móvil al abrir búsqueda
@@ -681,12 +685,41 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 autoFocus
               />
 
+              {/* ÍCONO CÁMARA - Búsqueda visual */}
+              <button
+                type="button"
+                onClick={() => vsInputRef.current?.click()}
+                className="flex-shrink-0 text-black hover:opacity-60 transition-opacity duration-200"
+                title="Buscar por imagen"
+                aria-label="Búsqueda visual"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </button>
+
+              {/* Input de imagen oculto */}
+              <input
+                ref={vsInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setVsFile(f);
+                  // Reset input so same file can be re-selected
+                  e.target.value = '';
+                }}
+              />
+
               {/* X CERRAR - Grande (oculta en móvil) */}
               <button
                 type="button"
                 onClick={() => {
                   setSearchOpen(false);
                   setSearchQuery("");
+                  setVsFile(null);
                 }}
                 className="hidden md:block text-black hover:opacity-60 transition-opacity duration-200 flex-shrink-0 mr-6"
                 style={{
@@ -698,6 +731,15 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 ×
               </button>
             </form>
+
+            {/* Panel de búsqueda visual */}
+            {vsFile && (
+              <VisualSearchPanel
+                locale={locale}
+                file={vsFile}
+                onClose={() => setVsFile(null)}
+              />
+            )}
           </div>
 
           {/* OVERLAY GRIS - Click para cerrar con cursor X */}
@@ -705,6 +747,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
             onClick={() => {
               setSearchOpen(false);
               setSearchQuery("");
+              setVsFile(null);
             }}
             className="fixed inset-0 search-overlay-cursor"
             style={{
