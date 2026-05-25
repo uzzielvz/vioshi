@@ -38,5 +38,10 @@ next-env.d.ts
 tmpclaude-*
 nul
 research.md
-
 planbasedinresearch.md
+
+# IDE / agent tools
+.agents/
+.claude/
+.windsurf/
+skills-lock.json
