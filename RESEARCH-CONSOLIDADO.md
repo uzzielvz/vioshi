@@ -13,7 +13,7 @@
 
 Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, autenticación de usuarios vía Supabase Auth, panel admin paralelo con sesión firmada HMAC, carrito/wishlist en localStorage, **checkout real con Stripe Payment Element**, historial de pedidos y CRUD de direcciones, y un módulo de **búsqueda visual** funcional (Gemini + pgvector).
 
-**Estado general (Fase 2 completada):** flujo checkout → Stripe Payment Element → `/checkout/return` → success → webhook validado en **local**. Post-merge: keys + webhook en Vercel prod (`vioshi.vercel.app`).
+**Estado general (Fase 2 completada):** flujo checkout → Stripe Payment Element → success → webhook validado en **prod** (`vioshi.vercel.app`). Smoke test `4242` exitoso.
 
 **Riesgos activos:**
 1. **Dual auth admin** — cookie HMAC firmada (SEC-03 ✅); aún sin re-validación en todas las Server Actions admin (SA-01).
@@ -23,7 +23,7 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 
 **Resueltos en Fase 2:** checkout mock (CART-02 ✅), guest order lookup (RLS-03 ✅ con HMAC guest_token), orders/addresses pages (CART-04 ✅), Stripe webhook (CHK-07 ✅), validación server precios (CART-01 ✅).
 
-**Prioridad inmediata post-merge:** (1) merge `feat/checkout-real` → `main`, (2) migración `0006` + env Stripe en Vercel + webhook prod, (3) smoke checkout en prod con `4242`.
+**Prioridad inmediata:** Fase 3 Visual Search — integración en nav/header, rate limit endpoint, indexación automática.
 
 ---
 
@@ -347,7 +347,7 @@ VISUAL SEARCH
 ### lib/ (claves)
 - `lib/products.ts` — anon client, unstable_cache 60s, join product_attributes
 - `lib/orders.ts` — `getOrderByNumber` (auth + guest), `getOrdersByUser`, `getOrderById`
-- `lib/stripe.ts` — lazy Proxy singleton; no throw en build sin `STRIPE_SECRET_KEY`
+- `lib/stripe.ts` — singleton directo; valida que la key no sea `pk_` por error; throws en runtime si falta la env var
 - `lib/auth/getOrigin.ts` — `getAuthOrigin()` prioridad `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → headers
 - `lib/supabase/{client,server,admin,middleware}.ts` — bridge cookies documentado
 

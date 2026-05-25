@@ -295,16 +295,14 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 
 ## 5. Próximos Pasos (Post-merge)
 
-**Merge `feat/checkout-real` → `main`** (build + lint OK en rama).
+**Checklist Vercel / Supabase — ✅ COMPLETADO**
+1. ✅ SQL: migración `0006_orders_guest_token.sql` aplicada en prod.
+2. ✅ Vercel env: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` configuradas.
+3. ✅ Stripe Dashboard → Webhook prod: `https://vioshi.vercel.app/api/webhooks/stripe` (`payment_intent.succeeded`). Nota: `payment_intent.payment_failed` no disponible en nuevo UI de Stripe Event Destinations — fallo de pago se maneja client-side vía `stripe.confirmPayment()`.
+4. ⏳ `NEXT_PUBLIC_SITE_URL=https://vioshi.vercel.app` + Supabase OAuth redirect URLs (no bloquea ventas).
+5. ✅ Smoke prod: checkout con `4242…` → success → pedido `payment_status=completed` validado.
 
-**Checklist Vercel / Supabase (manual):**
-1. SQL: aplicar `supabase/migrations/0006_orders_guest_token.sql` si no está en prod.
-2. Vercel env: `STRIPE_SECRET_KEY` (`sk_…`), `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (`pk_…`), `STRIPE_WEBHOOK_SECRET` (`whsec_…`).
-3. Stripe Dashboard → Webhook prod: `https://vioshi.vercel.app/api/webhooks/stripe` (`payment_intent.succeeded`, `payment_intent.payment_failed`).
-4. `NEXT_PUBLIC_SITE_URL=https://vioshi.vercel.app` + Supabase OAuth redirect URLs.
-5. Smoke prod: checkout con `4242…` → success → pedido `payment_status=completed` en Supabase.
-
-**Siguiente fase:** Fase 4 deploy/pulido (PRO-05 env Vercel); CHK-06 UI pickup desde DB; Fase 3 VS integración nav (opcional).
+**Siguiente fase: Fase 3 — Visual Search integración nav (VS-01..VS-06)**
 
 **Diferido:** DEB-01 (Zod en actions), DEB-02 (signUp profiles trigger), tareas Fase 4 (CSP headers PRO-04).
 
