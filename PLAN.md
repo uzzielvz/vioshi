@@ -29,7 +29,8 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 - [ ] Variantes de producto administrables (tabla `product_variants` ya existe).
 
 ### Búsqueda visual (integración producción)
-- [ ] Visual search accesible desde flujo de tienda (no solo ruta oculta `/visual-search`).
+- [x] Visual search accesible desde flujo de tienda — ícono cámara en barra de búsqueda + link en nav (VS-07 ✅).
+- [ ] Búsqueda de texto rediseñada — panel inline estilo Nike/Adidas con sort + filtro (PRO-11).
 - [ ] Embeddings se generan automáticamente al crear/actualizar producto en admin.
 - [ ] Endpoint protegido contra abuso (rate limit) y costos Gemini acotados.
 - [ ] Columna `embedding` no expuesta públicamente vía anon key.
@@ -190,13 +191,14 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | 3.1 | Merge `feat/visual-search-gemini` a `main` | ✅ CLN-05 |
 | 3.2 | Link "VISUAL SEARCH" en Header desktop + mobile menu | ✅ VS-05 |
 | 3.3 | Rate limit 5 req/IP/min en `/api/visual-search` | ✅ VS-06 |
-| 3.4 | **Panel búsqueda visual en barra del Header** — ícono cámara junto a la X; bottom sheet mobile (cámara auto + subir archivo); modal desktop; animación pulso mientras busca; resultados inline con grid catálogo | ← **PRÓXIMO** |
-| 3.5 | Unificar prompts Gemini entre endpoint y `generate-embeddings.ts` (VS-01) | Pendiente |
-| 3.6 | Indexación automática de embedding en `createProduct` / `updateProduct` (VS-02) | Pendiente |
-| 3.7 | Retunar índice IVFFlat cuando catálogo >100 productos | Pendiente |
-| 3.8 | Limpieza seeds `[seed]` en producción si aplica | Pendiente |
+| 3.4 | **Panel búsqueda visual en barra del Header** — ícono cámara junto a la X; bottom sheet mobile (cámara auto + subir archivo); modal desktop; animación pulso mientras busca; resultados inline con grid catálogo | ✅ VS-07 |
+| 3.5 | **Búsqueda de texto rediseñada** — panel inline estilo Nike/Adidas; resultados como vista catálogo filtrada; sort (precio ↑↓, nuevo) + filtro por categoría (chips); API route `/api/search` server-side ilike; estética Viogi minimalista | ← **PRÓXIMO** |
+| 3.6 | Unificar prompts Gemini entre endpoint y `generate-embeddings.ts` (VS-01) | Pendiente |
+| 3.7 | Indexación automática de embedding en `createProduct` / `updateProduct` (VS-02) | Pendiente |
+| 3.8 | Retunar índice IVFFlat cuando catálogo >100 productos | Pendiente |
+| 3.9 | Limpieza seeds `[seed]` en producción si aplica | Pendiente |
 
-**Estado actual:** Link en Header ✅, rate limit ✅. Próximo: panel visual integrado en barra de búsqueda (3.4).
+**Estado actual:** VS panel ✅. Próximo: búsqueda texto rediseñada (3.5).
 
 ---
 
@@ -266,7 +268,7 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | PRO-08 | Promo codes UI + cart validation | 4 | P2 | L | CHK-01 | Código descuento aplicable | Pendiente |
 | PRO-09 | Formulario vender backend | 4 | P2 | M | — | POST persiste aplicación | Pendiente |
 | PRO-10 | Tests smoke (auth, checkout) | 4 | P2 | XL | CHK-01 | Al menos 1 e2e Playwright | Pendiente |
-| PRO-11 | Búsqueda texto FTS/paginación server | 4 | P2 | L | — | No carga catálogo completo client | Pendiente |
+| PRO-11 | Búsqueda texto rediseñada — panel inline Nike/Adidas style, API ilike, sort+filtro, estética Viogi | 3 | P1 | M | — | Resultados inline sin redirect; sort/filtro funcionales | ← PRÓXIMO |
 | DEB-01 | Zod en Server Actions críticas | 1 | P2 | L | — | Inputs invalidos rechazados tipados | Pendiente |
 | DEB-02 | Eliminar upsert redundante signUpAction profiles | 1 | P2 | S | — | Solo trigger 0002 crea profile | Pendiente |
 | DEB-03 | Refactor Header (1100+ líneas) | 4 | P2 | XL | — | Componentes extraídos | Pendiente |
