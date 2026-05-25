@@ -347,7 +347,7 @@ VISUAL SEARCH
 ### lib/ (claves)
 - `lib/products.ts` — anon client, unstable_cache 60s, join product_attributes
 - `lib/orders.ts` — `getOrderByNumber` (auth + guest), `getOrdersByUser`, `getOrderById`
-- `lib/stripe.ts` — singleton directo; valida que la key no sea `pk_` por error; throws en runtime si falta la env var
+- `lib/stripe.ts` — lazy singleton via `getStripe()`; valida que la key no sea `pk_` por error; throws solo cuando se usa si falta la env var (evita romper build en CI)
 - `lib/auth/getOrigin.ts` — `getAuthOrigin()` prioridad `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → headers
 - `lib/supabase/{client,server,admin,middleware}.ts` — bridge cookies documentado
 
@@ -384,7 +384,7 @@ VISUAL SEARCH
 | ¿Verifiqué flujo 2 fases de checkout en código? | ✓ |
 | ¿Verifiqué AddressesClient (optimistic UI)? | ✓ |
 | ¿Revisé success page (Server Component + ClearCartOnMount)? | ✓ |
-| ¿Verifiqué lazy Proxy singleton en lib/stripe.ts? | ✓ |
+| ¿Verifiqué lazy singleton (`getStripe()`) en lib/stripe.ts? | ✓ |
 | ¿Leí Header completo (~1167 líneas)? | ✗ — muestreado; no auditoría línea-a-línea |
 | ¿Verifiqué runtime en Vercel/producción? | ✗ — no acceso |
 

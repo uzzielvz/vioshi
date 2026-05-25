@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 
 /** Dev-only: inspect PaymentIntent status in Stripe (source of truth). */
 export async function GET(req: NextRequest) {
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const intent = await stripe.paymentIntents.retrieve(piId);
+    const intent = await getStripe().paymentIntents.retrieve(piId);
     return NextResponse.json({
       id: intent.id,
       status: intent.status,

@@ -3,7 +3,7 @@
 import { createHmac } from 'crypto';
 import { reconcileCartItems } from '@/lib/cart/reconcile';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { stripe } from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 import { TAX_RATE, STANDARD_SHIPPING_COST, EXPRESS_SHIPPING_COST } from '@/lib/constants';
 import type { CartItem } from '@/types';
 
@@ -208,7 +208,7 @@ export async function createPaymentIntentAction(
 
   let paymentIntent;
   try {
-    paymentIntent = await stripe.paymentIntents.create({
+    paymentIntent = await getStripe().paymentIntents.create({
       amount: amountCentavos,
       currency: 'mxn',
       metadata: {

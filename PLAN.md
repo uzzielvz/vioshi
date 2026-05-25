@@ -38,7 +38,7 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 - [ ] Admin auth endurecido (cookie no contiene secreto en claro; rate limit login).
 - [ ] OAuth callback sanitiza parámetro `next` (anti open-redirect).
 - [ ] `.env.example` completo (`ADMIN_SECRET`, `GEMINI_API_KEY`, etc.).
-- [ ] CI ejecuta `npm run build` en PRs.
+- [ ] CI ejecuta `npm run build` en PRs. (Mejorado: `lib/stripe.ts` ahora es lazy → build no requiere STRIPE_SECRET_KEY)
 - [ ] Variables de entorno configuradas en Vercel producción.
 
 ### Documentación
