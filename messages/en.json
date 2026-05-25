@@ -3,6 +3,7 @@
     "currency": "USD",
     "close": "CLOSE",
     "search": "SEARCH",
+    "visual_search": "VISUAL SEARCH",
     "menu": "MENU",
     "logIn": "ACCOUNT",
     "myAccount": "MY ACCOUNT",

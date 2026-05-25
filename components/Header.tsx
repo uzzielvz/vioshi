@@ -238,8 +238,22 @@ export default function Header({ userEmail = null }: HeaderProps) {
 
         {/* RIGHT SIDE - TEXT */}
         <div className="flex items-center gap-6">
+          {/* VISUAL SEARCH - Desktop only */}
+          <Link
+            href="/visual-search"
+            className="hidden md:inline text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
+            style={{
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              letterSpacing: '0.02em',
+              fontSize: '11px',
+              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+            }}
+          >
+            {tCommon('visual_search')}
+          </Link>
+
           {/* BUSCAR / CERRAR */}
-          <button 
+          <button
             onClick={() => {
               if (searchOpen) {
                 setSearchOpen(false);
@@ -250,7 +264,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
               }
             }}
             className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
-            style={{ 
+            style={{
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
               letterSpacing: '0.02em',
               fontSize: '11px',
@@ -1043,11 +1057,11 @@ export default function Header({ userEmail = null }: HeaderProps) {
               {tHeader('chapters')}
             </Link>
             {/* ARCHIVO */}
-            <Link 
+            <Link
               href={`/${locale}/archive`}
               className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
               onClick={() => setMobileMenuOpen(false)}
-              style={{ 
+              style={{
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                 letterSpacing: '0.02em',
                 fontSize: '11px',
@@ -1058,6 +1072,24 @@ export default function Header({ userEmail = null }: HeaderProps) {
               }}
             >
               {tHeader('archive')}
+            </Link>
+
+            {/* VISUAL SEARCH */}
+            <Link
+              href="/visual-search"
+              className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                letterSpacing: '0.02em',
+                fontSize: '11px',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                borderColor: 'rgba(0, 0, 0, 0.08)',
+                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
+              }}
+            >
+              {tCommon('visual_search')}
             </Link>
 
             {/* SHIPPING TO - Selector de País/Moneda */}
