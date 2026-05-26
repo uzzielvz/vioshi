@@ -14,6 +14,12 @@ export interface ProductData {
   category?: string;
   soldOut?: boolean;
   isNew?: boolean;
+  brand?: {
+    id: string;
+    name: string;
+    slug: string;
+    logo_url: string | null;
+  };
   size?: string;
   variants?: {
     size?: string[];
@@ -30,9 +36,11 @@ type DbProduct = {
   price_mxn: string;
   sold_out: boolean;
   is_new: boolean;
+  brand_id: string | null;
   product_images: { url: string; is_primary: boolean; sort_order: number }[];
   product_attributes: { key: string; value: string; sort_order: number }[];
   categories: { slug: string } | null;
+  brands: { id: string; name: string; slug: string; logo_url: string | null } | null;
 }
 
 // Public client — no cookies needed for catalog reads (anon key, public data)
@@ -66,6 +74,14 @@ function rowToProductData(row: DbProduct): ProductData {
     category:    row.categories?.slug ?? undefined,
     soldOut:     row.sold_out,
     isNew:       row.is_new,
+    brand: row.brands
+      ? {
+          id: row.brands.id,
+          name: row.brands.name,
+          slug: row.brands.slug,
+          logo_url: row.brands.logo_url,
+        }
+      : undefined,
     attributes:  attrs.length > 0 ? attrs : undefined,
   }
 }
@@ -76,10 +92,11 @@ async function fetchProducts(category?: string): Promise<ProductData[]> {
   let query = supabase
     .from('products')
     .select(`
-      id, slug, name, description, price_mxn, sold_out, is_new,
+      id, slug, name, description, price_mxn, sold_out, is_new, brand_id,
       product_images (url, is_primary, sort_order),
       product_attributes (key, value, sort_order),
-      categories (slug)
+      categories (slug),
+      brands (id, name, slug, logo_url)
     `)
     .order('created_at', { ascending: false })
 
@@ -110,10 +127,11 @@ async function fetchProductBySlug(slug: string): Promise<ProductData | null> {
   const { data, error } = await supabase
     .from('products')
     .select(`
-      id, slug, name, description, price_mxn, sold_out, is_new,
+      id, slug, name, description, price_mxn, sold_out, is_new, brand_id,
       product_images (url, is_primary, sort_order),
       product_attributes (key, value, sort_order),
-      categories (slug)
+      categories (slug),
+      brands (id, name, slug, logo_url)
     `)
     .eq('slug', slug)
     .single()
