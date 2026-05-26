@@ -105,28 +105,21 @@ export default function SearchContent({ initialProducts }: { initialProducts: Pr
         </h1>
       </div>
 
-      {/* Línea minimalista: SHOWING N RESULTS · FILTER · ORDER BY */}
-      <div className="text-center mb-8 md:mb-10 flex items-center justify-center gap-3 flex-wrap">
+      {/* Línea minimalista post-PRO-12: contador izq + botón FILTRAR subrayado der (unificado) */}
+      <div
+        className="flex items-center justify-between mb-8 md:mb-10 pb-4 border-b"
+        style={{ borderColor: 'rgba(0,0,0,0.08)' }}
+      >
         <span style={{ ...labelStyle, fontWeight: 400, color: '#999' }}>
           {t('showing_results', { count: products.length })}
         </span>
-        <span style={{ ...labelStyle, fontWeight: 400, color: '#999' }}>·</span>
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          style={{ ...labelStyle, fontWeight: 400, color: '#999' }}
-          className="hover:text-black transition-colors duration-200"
+          style={{ ...labelStyle, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: '4px' }}
+          className="hover:opacity-60 transition-opacity"
         >
           {t('filter')}
-        </button>
-        <span style={{ ...labelStyle, fontWeight: 400, color: '#999' }}>·</span>
-        <button
-          type="button"
-          onClick={() => setDrawerOpen(true)}
-          style={{ ...labelStyle, fontWeight: 400, color: '#999' }}
-          className="hover:text-black transition-colors duration-200"
-        >
-          {t('order_by')}
         </button>
       </div>
 
