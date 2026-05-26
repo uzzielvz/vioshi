@@ -27,9 +27,9 @@ export function ClientLayout({
 
   if (!mounted) {
     return (
-      <>
-        <main className="pt-16 min-h-screen">{children}</main>
-      </>
+      <div className="flex flex-col min-h-screen">
+        <main className="pt-16 flex-1">{children}</main>
+      </div>
     );
   }
 
@@ -38,11 +38,11 @@ export function ClientLayout({
   const isAccount = path?.startsWith('/account') || path?.includes('/account');
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       {!isAccount && <Header userEmail={userEmail ?? null} />}
-      <main className={!isAccount ? 'pt-16' : ''}>{children}</main>
+      <main className={`flex-1 ${!isAccount ? 'pt-16' : ''}`}>{children}</main>
       {!isCheckout && !isAccount && <Footer />}
       <CartDrawer />
-    </>
+    </div>
   );
 }
