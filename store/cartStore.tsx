@@ -18,7 +18,7 @@ interface CartContextType {
   closeCart: () => void;
 }
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+export const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const initialCart: Cart = {
   items: [],

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import ProductGrid from '@/components/ProductGrid';
 import SearchFilterDrawer, { type SortKey } from '@/components/SearchFilterDrawer';
 import type { ProductData } from '@/lib/products';
+import { CartProvider } from '@/store/cartStore';
 
 interface VSResult {
   id: string;
@@ -89,40 +90,42 @@ export default function VisualSearchResults({
   };
 
   return (
-    <div className="px-4 md:px-8 py-8 md:py-12">
-      {/* Title — mirrors search but with visual search iconography */}
-      <div className="flex items-center gap-3 mb-6 md:mb-8">
-        <span style={{ ...labelStyle, fontSize: '16px' }}>🔍</span>
-        <h1 style={labelStyle}>{t('visual_title')}</h1>
-      </div>
+    <CartProvider>
+      <div className="px-4 md:px-8 py-8 md:py-12">
+        {/* Title — mirrors search but with visual search iconography */}
+        <div className="flex items-center gap-3 mb-6 md:mb-8">
+          <span style={{ ...labelStyle, fontSize: '16px' }}>🔍</span>
+          <h1 style={labelStyle}>{t('visual_title')}</h1>
+        </div>
 
-      {/* Identical post-PRO-12 title row: counter + single FILTRAR */}
-      <div
-        className="flex items-center justify-between mb-8 md:mb-10 pb-4 border-b"
-        style={{ borderColor: 'rgba(0,0,0,0.08)' }}
-      >
-        <span style={{ ...labelStyle, fontWeight: 400, color: '#999' }}>
-          {t('showing_results', { count: products.length })}
-        </span>
-        <button
-          type="button"
-          onClick={() => setDrawerOpen(true)}
-          style={{ ...labelStyle, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: '4px' }}
-          className="hover:opacity-60 transition-opacity"
+        {/* Identical post-PRO-12 title row: counter + single FILTRAR */}
+        <div
+          className="flex items-center justify-between mb-8 md:mb-10 pb-4 border-b"
+          style={{ borderColor: 'rgba(0,0,0,0.08)' }}
         >
-          {t('filter')}
-        </button>
+          <span style={{ ...labelStyle, fontWeight: 400, color: '#999' }}>
+            {t('showing_results', { count: products.length })}
+          </span>
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            style={{ ...labelStyle, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: '4px' }}
+            className="hover:opacity-60 transition-opacity"
+          >
+            {t('filter')}
+          </button>
+        </div>
+
+        <ProductGrid products={products} />
+
+        <SearchFilterDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          sort={sort}
+          category={category}
+          onChange={handleDrawerChange}
+        />
       </div>
-
-      <ProductGrid products={products} />
-
-      <SearchFilterDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        sort={sort}
-        category={category}
-        onChange={handleDrawerChange}
-      />
-    </div>
+    </CartProvider>
   );
 }
