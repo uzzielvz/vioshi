@@ -85,7 +85,7 @@ export default function SearchContent({ initialProducts }: { initialProducts: Pr
   };
 
   return (
-    <div className="px-4 md:px-8 py-8 md:py-12 pt-20 md:pt-24">
+    <div className="px-4 md:px-8 py-8 md:py-12">
       {/* Título con ícono de lupa (estilo catálogo Stüssy) */}
       <div className="flex items-center gap-3 mb-6 md:mb-8">
         <svg
