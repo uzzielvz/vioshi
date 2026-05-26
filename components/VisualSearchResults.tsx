@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import ProductGrid from '@/components/ProductGrid';
 import SearchFilterDrawer, { type SortKey } from '@/components/SearchFilterDrawer';
 import type { ProductData } from '@/lib/products';
-import { CartProvider } from '@/store/cartStore';
 
 interface VSResult {
   id: string;
@@ -19,23 +18,19 @@ interface VSResult {
 interface VisualSearchResultsProps {
   /** Results already sorted by similarity desc from the API */
   results: VSResult[];
-  /** Default 'es' because /visual-search lives outside i18n prefix */
-  locale?: string;
 }
 
 /**
- * VisualSearchResults (VS-09)
+ * VisualSearchResults (VS-09 / VS-10)
  * Renders the API results using the exact same post-PRO-12 layout as /search:
  * - Title row with visual_title + left counter + single right FILTRAR (underlined)
  * - ProductGrid
  * - SearchFilterDrawer (client-side sort + category filter over the small result set)
  *
  * No URL param sync (transient results). Empty state delegated to ProductGrid.
+ * CartProvider + NextIntlClientProvider are inherited from the [locale] layout shell.
  */
-export default function VisualSearchResults({
-  results,
-  locale = 'es',
-}: VisualSearchResultsProps) {
+export default function VisualSearchResults({ results }: VisualSearchResultsProps) {
   const t = useTranslations('search');
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -76,9 +71,9 @@ export default function VisualSearchResults({
     return sorted;
   }, [baseProducts, sort, category]);
 
-  function handleDrawerChange(next: { sort?: SortKey; category?: string }) {
-    if (next.sort !== undefined) setSort(next.sort);
-    if (next.category !== undefined) setCategory(next.category);
+  function handleDrawerChange(next: { sort: SortKey; category: string }) {
+    setSort(next.sort);
+    setCategory(next.category);
   }
 
   const labelStyle: React.CSSProperties = {
@@ -90,41 +85,39 @@ export default function VisualSearchResults({
   };
 
   return (
-    <CartProvider>
-      <div className="px-4 md:px-8 py-8 md:py-12">
-        {/* Title for visual search results (no emoji per request) */}
-        <div className="mb-6 md:mb-8">
-          <h1 style={labelStyle}>{t('visual_title')}</h1>
-        </div>
-
-        {/* Identical post-PRO-12 title row: counter + single FILTRAR */}
-        <div
-          className="flex items-center justify-between mb-8 md:mb-10 pb-4 border-b"
-          style={{ borderColor: 'rgba(0,0,0,0.08)' }}
-        >
-          <span style={{ ...labelStyle, fontWeight: 400, color: '#999' }}>
-            {t('showing_results', { count: products.length })}
-          </span>
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(true)}
-            style={{ ...labelStyle, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: '4px' }}
-            className="hover:opacity-60 transition-opacity"
-          >
-            {t('filter')}
-          </button>
-        </div>
-
-        <ProductGrid products={products} />
-
-        <SearchFilterDrawer
-          open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-          sort={sort}
-          category={category}
-          onChange={handleDrawerChange}
-        />
+    <div className="px-4 md:px-8 py-8 md:py-12">
+      {/* Title for visual search results (no emoji per request) */}
+      <div className="mb-6 md:mb-8">
+        <h1 style={labelStyle}>{t('visual_title')}</h1>
       </div>
-    </CartProvider>
+
+      {/* Identical post-PRO-12 title row: counter + single FILTRAR */}
+      <div
+        className="flex items-center justify-between mb-8 md:mb-10 pb-4 border-b"
+        style={{ borderColor: 'rgba(0,0,0,0.08)' }}
+      >
+        <span style={{ ...labelStyle, fontWeight: 400, color: '#999' }}>
+          {t('showing_results', { count: products.length })}
+        </span>
+        <button
+          type="button"
+          onClick={() => setDrawerOpen(true)}
+          style={{ ...labelStyle, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: '4px' }}
+          className="hover:opacity-60 transition-opacity"
+        >
+          {t('filter')}
+        </button>
+      </div>
+
+      <ProductGrid products={products} />
+
+      <SearchFilterDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        sort={sort}
+        category={category}
+        onChange={handleDrawerChange}
+      />
+    </div>
   );
 }
