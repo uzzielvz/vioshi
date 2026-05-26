@@ -69,7 +69,7 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 | Admin pickup | Service role | ✅ Completo | `admin/pickup-points/actions.ts` |
 | Pickup en checkout | **In-memory** `lib/pickupPoints.ts` | 🟡 Inconsistente | No usa tabla DB en checkout |
 | Visual search | Gemini + pgvector RPC | ✅ Demo (rama feature) | `api/visual-search`, scripts CLI |
-| Búsqueda texto | Panel inline Nike/Adidas, `/api/search` ilike, sort+filtro | 🔴 Rediseño pendiente (PRO-11) | `search/SearchContent.tsx`, nuevo `api/search/route.ts`, `SearchPanel.tsx` |
+| Búsqueda texto | Panel inline Nike/Adidas, `/api/search` ilike, sort+filtro | ✅ Resuelto (PRO-11) | `search/SearchContent.tsx`, `api/search/route.ts`, `SearchPanel.tsx` |
 | Pagos | Stripe Payment Element + webhook | ✅ Completo | `checkout/actions.ts`, `api/webhooks/stripe` |
 
 ### 3.2 Diagrama textual de flujos
@@ -143,7 +143,7 @@ VISUAL SEARCH
 | Pagos Stripe | **Completo (local E2E)** | Payment Element, `/checkout/return`, webhook, `lib/cart/reconcile` | Prod: keys Vercel + webhook `vioshi.vercel.app` |
 | Admin productos | **Parcial** | CRUD + imágenes; validación débil | Falta variants UI, validación uploads |
 | Admin pickup points | **Completo** | CRUD contra DB | Checkout no consume misma fuente |
-| Búsqueda texto | **Rediseño pendiente** | Panel inline Nike/Adidas; API ilike; sort+filtro categoría | `/api/search` + `SearchPanel.tsx` + `SearchContent.tsx` rediseñados |
+| Búsqueda texto | **Completo** | Panel inline Nike/Adidas; API ilike; sort+filtro categoría (PRO-11) | `/api/search/route.ts` + `components/SearchPanel.tsx` + `search/SearchContent.tsx` |
 | **Visual search** | **Parcial** | Funcional en demo; sin integración nav | Endpoint + UI + indexación CLI |
 | Vender (consignación) | **Pendiente** | `setTimeout` + TODO | Backend formulario |
 | Archive | **Parcial** | Metadata mock; productos reales slice | Drops reales en DB |
