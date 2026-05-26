@@ -6,7 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 import { useCart } from "@/store/cartStore";
-import VisualSearchPanel from "@/components/VisualSearchPanel";
+// VisualSearchPanel removed (VS-09): inline panel replaced by full-screen /visual-search route
+// File handoff across layout shells uses sessionStorage (see handoffToVisualSearch)
 
 // Pathname sin prefijo de locale para comparaciones (evita hydration mismatch server vs client)
 function getPathnameWithoutLocale(pathname: string): string {
@@ -35,7 +36,9 @@ export default function Header({ userEmail = null }: HeaderProps) {
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const [mobileSupportOpen, setMobileSupportOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [vsFile, setVsFile] = useState<File | null>(null);
+  // vsFile local state + VisualSearchPanel removed (VS-08/VS-09).
+  // Camera selection now hands off via sessionStorage to the standalone /visual-search shell
+  // (React Context cannot cross [locale] layout vs visual-search/layout per RESEARCH §3.2 shells).
   const vsInputRef = useRef<HTMLInputElement>(null);
   const { itemCount, openCart } = useCart();
 
@@ -262,7 +265,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
               if (searchOpen) {
                 setSearchOpen(false);
                 setSearchQuery("");
-                setVsFile(null);
+                // vsFile state removed; any pending storage cleared by target page on consumption
               } else {
                 setSearchOpen(true);
                 setMobileMenuOpen(false); // Cerrar menú móvil al abrir búsqueda
@@ -706,7 +709,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 </button>
               )}
 
-              {/* ÍCONO CÁMARA - Búsqueda visual */}
+              {/* ÍCONO CÁMARA - Búsqueda visual (ahora navega a flujo full-screen) */}
               <button
                 type="button"
                 onClick={() => vsInputRef.current?.click()}
@@ -720,15 +723,39 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 </svg>
               </button>
 
-              {/* Input de imagen oculto */}
+              {/* Input de imagen oculto - VS-08: handoff a /visual-search (no context por shells separados) */}
               <input
                 ref={vsInputRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 className="hidden"
-                onChange={(e) => {
+                onChange={async (e) => {
                   const f = e.target.files?.[0];
-                  if (f) setVsFile(f);
+                  if (f) {
+                    // Cross-shell handoff: store as dataURL + metadata in sessionStorage.
+                    // /visual-search page (standalone layout shell) will reconstruct File on mount.
+                    // Reason: React Context from VisualSearchProvider (in ClientLayout) cannot
+                    // bridge [locale] shell <-> /visual-search shell (see RESEARCH §3.2 "Dos shells HTML").
+                    try {
+                      const dataUrl = await new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result as string);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(f);
+                      });
+                      const payload = JSON.stringify({
+                        name: f.name,
+                        type: f.type,
+                        dataUrl,
+                      });
+                      sessionStorage.setItem('__viogi_vs_pending', payload);
+                    } catch {
+                      // Fallback: still navigate; page will show its own upload UI
+                    }
+                    setSearchOpen(false);
+                    setSearchQuery('');
+                    router.push('/visual-search');
+                  }
                   // Reset input so same file can be re-selected
                   e.target.value = '';
                 }}
@@ -740,7 +767,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 onClick={() => {
                   setSearchOpen(false);
                   setSearchQuery("");
-                  setVsFile(null);
+                  // No vsFile to clear (handoff via storage consumed by target page or GC'd)
                 }}
                 className="hidden md:block text-black hover:opacity-60 transition-opacity duration-200 flex-shrink-0 mr-6"
                 style={{
@@ -752,15 +779,6 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 ×
               </button>
             </form>
-
-            {/* Panel de búsqueda visual */}
-            {vsFile && (
-              <VisualSearchPanel
-                locale={locale}
-                file={vsFile}
-                onClose={() => setVsFile(null)}
-              />
-            )}
           </div>
 
           {/* OVERLAY GRIS - Click para cerrar con cursor X */}
@@ -768,7 +786,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
             onClick={() => {
               setSearchOpen(false);
               setSearchQuery("");
-              setVsFile(null);
+              // No vsFile state to clear (storage handoff is one-shot consumed on /visual-search mount)
             }}
             className="fixed inset-0 search-overlay-cursor"
             style={{
