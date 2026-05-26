@@ -99,16 +99,25 @@ export default function VisualSearchPage() {
           signal: controller.signal,
         });
 
-        const data = await res.json();
+        let data: any = {};
+        try {
+          data = await res.json();
+        } catch {
+          // Response was not JSON (e.g. HTML error page in dev)
+          data = {};
+        }
 
         if (!res.ok) {
           if (res.status === 429) {
-            const msg = data?.message || t('analyzing'); // reuse generic if needed
+            const msg = data?.message || 'Demasiadas búsquedas. Intenta más tarde.';
             setError(msg);
             setIsLoading(false);
             return;
           }
-          setError('No se pudo procesar la imagen.');
+
+          // Show server-provided error when available
+          const serverMsg = data?.message || data?.error;
+          setError(serverMsg ? `Error del servidor: ${serverMsg}` : 'No se pudo procesar la imagen.');
           setIsLoading(false);
           return;
         }
@@ -129,8 +138,16 @@ export default function VisualSearchPage() {
         }, 1200);
       } catch (e: any) {
         if (e?.name === 'AbortError') return;
+
+        console.error('Visual search fetch error:', e);
+
         if (!cancelled) {
-          setError('Error de conexión.');
+          // Distinguish real network error from other failures
+          setError(
+            navigator.onLine
+              ? 'Error de conexión con el servidor. Revisa tu GEMINI_API_KEY y los logs del servidor.'
+              : 'Sin conexión a internet.'
+          );
           setIsLoading(false);
         }
       }
