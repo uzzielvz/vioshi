@@ -3,7 +3,7 @@
 > **Single Source of Truth (SSOT)** — Documento técnico principal del proyecto.
 > Roadmap: [`PLAN.md`](./PLAN.md) · Mapa rápido: [`CONTEXT.md`](./CONTEXT.md)
 
-**(Actualizado 2026-05-22 · rama `feat/checkout-real` · merge pendiente a `main` · Fase 2 Checkout Real cerrada + E2E Stripe validado en local)**
+**(Actualizado 2026-05-27 · Brands pilot iniciado · BR-01..06 en backlog · Fase 2 y 3 cerradas)**
 
 > **Regla operativa:** Ante contradicción entre este documento y el código, el código gana. Hechos marcados como verificados = leídos en archivos fuente en esta fecha.
 
@@ -66,7 +66,8 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 | Cuenta (direcciones) | Server Component + Server Actions + optimistic UI | ✅ Completo | `addresses/page.tsx`, `addresses/actions.ts`, `addresses/_components/AddressesClient.tsx` |
 | Checkout | Stripe Payment Element — 2 fases | ✅ Completo | `checkout/page.tsx`, `checkout/actions.ts`, `checkout/success/[orderId]/page.tsx` |
 | Admin productos | Service role + Storage | ✅ Parcial | `admin/products/actions.ts` |
-| Admin pickup | Service role | ✅ Completo | `admin/pickup-points/actions.ts` |
+| Admin pickup points | Service role | ✅ Completo | `admin/pickup-points/actions.ts` |
+| **Admin brands (pilot)** | Service role + Storage `brand-logos` | 🟡 **En desarrollo (BR-01..05)** | Nueva entidad con logo gestionable desde admin + filtro por marca |
 | Pickup en checkout | **In-memory** `lib/pickupPoints.ts` | 🟡 Inconsistente | No usa tabla DB en checkout |
 | Visual search | Gemini + pgvector RPC | ✅ Integrado (VS-08/09/10) | `app/[locale]/visual-search/page.tsx`, `components/{VisualSearchAnalyzer,VisualSearchResults}.tsx`, Header camera + button handoff vía sessionStorage, PRO-12 en SearchContent, SearchFilterDrawer reutilizado |
 | Búsqueda texto | Página catálogo `/search` + drawer lateral (sort + categoría); filtro client-side sobre `getProducts()` | ✅ Resuelto (PRO-11) | `search/SearchContent.tsx`, `SearchFilterDrawer.tsx` |
@@ -143,12 +144,14 @@ VISUAL SEARCH
 | Pagos Stripe | **Completo (local E2E)** | Payment Element, `/checkout/return`, webhook, `lib/cart/reconcile` | Prod: keys Vercel + webhook `vioshi.vercel.app` |
 | Admin productos | **Parcial** | CRUD + imágenes; validación débil | Falta variants UI, validación uploads |
 | Admin pickup points | **Completo** | CRUD contra DB | Checkout no consume misma fuente |
+| **Admin brands + Brand filtering (pilot)** | **En desarrollo** | Tabla dedicada `brands` con logo, CRUD admin completo, selector en productos, filtro en drawer de búsqueda | BR-01 a BR-05 (2026-05) |
 | Búsqueda texto | **Completo** | Página catálogo `/search` + drawer lateral sort/categoría (PRO-11); filtro client-side sobre `getProducts()` | `app/[locale]/search/SearchContent.tsx` + `components/SearchFilterDrawer.tsx` |
 | **Visual search** | **Integrado (Fase 3)** | Full-screen analyzer + resultados estilo /search + botón FILTRAR unificado | PRO-12 + VS-08/09 completados (2026-05) |
 | Vender (consignación) | **Pendiente** | `setTimeout` + TODO | Backend formulario |
 | Archive | **Parcial** | Metadata mock; productos reales slice | Drops reales en DB |
 | Promo codes | **Pendiente** | Tabla existe; sin UI | Validación en cart |
 | Product variants | **Pendiente** | Tabla existe; sin admin UI | Stock por talla/color |
+| **Brands como entidad** (logos + filtro) | **Pilot en desarrollo** | Tabla `brands` + admin CRUD + logos B/N minimalistas + filtro en drawer | BR-01..05 |
 | Tests automatizados | **Pendiente** | 0 tests | — |
 | Email transaccional | **Pendiente** | RESEND comentado | — |
 
@@ -261,6 +264,7 @@ VISUAL SEARCH
 | Sin validación schemas | Todas las actions | Media | Datos basura / crashes | Zod en actions críticas |
 | Upload images silent fail | `uploadImages` | Media | Productos sin imágenes sin aviso | Reportar errores al UI |
 | Pickup dual source | checkout vs admin | Media | Precios/datos incorrectos | Fetch `pickup_points` en checkout |
+| **Dual "marca" durante transición** | `product_attributes` vs nueva tabla `brands` | Media | Datos inconsistentes hasta backfill (BR-06) | Completar BR-01..06 + backfill manual |
 | Visual search abuse | `/api/visual-search` | Media | Costo Gemini | Rate limit + auth opcional |
 | Embeddings públicos RLS | `products` policy | Media | Scraping catálogo semántico | Excluir `embedding` de select anon o view |
 | Sin tests | repo entero | Media | Regresiones | Smoke e2e checkout/auth |

@@ -1,6 +1,6 @@
 # PLAN.md - Viogi (Roadmap Vivo)
 
-**Última actualización:** 2026-05-22
+**Última actualización:** 2026-05-27 (inicio piloto Brands BR-01..06)
 **Rama actual:** `feat/checkout-real` (base `main` @ `f846b77`) — **lista para merge**
 **Estado general:** Fases 0, 1 y 2 **cerradas en código** ✅. Pendiente post-merge: env Stripe en Vercel + migración `0006` en prod si falta.
 **Fuente de verdad técnica:** `RESEARCH-CONSOLIDADO.md` (2026-05-19)
@@ -25,6 +25,7 @@ Viogi se considera **cerrado y listo para vender** cuando se cumplen **todos** e
 
 ### Admin y catálogo
 - [ ] Admin CRUD productos con validación de inputs, uploads con feedback de errores, y schema reproducible desde migraciones (incl. `product_attributes`).
+- [ ] **Marcas como entidad** (`brands`) con logos minimalistas gestionables desde admin + asociación a productos (BR-01..03).
 - [ ] Pickup points en checkout provienen de la misma fuente que el panel admin (`pickup_points` en DB).
 - [ ] Variantes de producto administrables (tabla `product_variants` ya existe).
 
@@ -458,6 +459,34 @@ Actualizar:
 
 ---
 
+#### 3.6.4 VS-12 — Crop selector + tema claro + cross-fades suaves
+
+**Estado:** ✅ Completado (2026-05-26)
+
+**Motivación del usuario:** "todo es muy brusco, no? pasas del buscador a esa pagina negra. en primer lugar que el usuario seleccione la zona con un selector… luego se busque pero en blanco con puntos de negro o gris, solo la zona de la prenda, diga MIRANDO… sin el cursor, y aparezcan los resultados pero no tan brusco".
+
+**Cambios:**
+- Nuevo componente [`components/VisualSearchCropper.tsx`](./components/VisualSearchCropper.tsx) — full-screen blanco con rect drag/resize sin libs (pointer events, 4 handles 14px). Rule-of-thirds inner guides, máscara `bg-white/55` en strips fuera del crop, CTA `BUSCAR` abajo. Devuelve `CropRect { x, y, w, h }` en coordenadas relativas `[0,1]`.
+- [`components/VisualSearchAnalyzer.tsx`](./components/VisualSearchAnalyzer.tsx) reescrito a **tema claro**: fondo `bg-white`, imagen al 18% opacidad, dot field con color `#111`, label `MIRANDO` sin cursor parpadeante, botón back con border negro translúcido. Acepta `cropRect?` y lo pasa al dot field.
+- [`components/VisualSearchDotField.tsx`](./components/VisualSearchDotField.tsx) — nueva prop `cropRect?: DotFieldCropRect` que restringe el grid `for` loop al sub-box `[cx0,cy0]→[cx1,cy1]` calculado desde la rect relativa. El sampleo de densidad sigue siendo respecto a la imagen completa (u/v no cambian) para mantener la silueta correcta.
+- [`app/[locale]/visual-search/page.tsx`](./app/[locale]/visual-search/page.tsx) — Stage union ahora `'cropping' | 'looking' | 'results'`. Pipeline:
+  1. `cropping` (default al cargar el File)
+  2. `handleCropConfirm` recorta el File client-side vía `canvas.toBlob('image/jpeg', 0.92)` y lo envía al endpoint
+  3. Garantía de visibilidad mínima del dot field: 1200ms para que la transición se sienta intencional incluso en redes rápidas
+  4. `results` se monta con clase `vs-fade-in-slow` (900ms ease-out)
+- [`app/globals.css`](./app/globals.css) — nuevas keyframes `vs-fade-in` (600ms) y `.vs-fade-in-slow` (900ms). Se mantiene `vs-cursor-blink` (lo usa otra parte del flujo).
+- [`messages/es.json`](./messages/es.json) + [`messages/en.json`](./messages/en.json) — nuevas keys `search.looking`, `search.select_zone`, `search.find`.
+
+**Decisiones técnicas:**
+- **Crop client-side antes del POST:** mejora la precisión del análisis Gemini (se enfoca solo en la prenda) y reduce el payload al endpoint sin tocar el server.
+- **`vs-fade-in` en lugar de Framer Motion:** mantenemos política de cero deps de animación; CSS keyframes son suficientes para cross-fades simples.
+- **Min-visible delay (1200ms):** sin esto, en localhost el endpoint devuelve en <300ms y el dot field aparece como un flash — la animación pierde su carácter de "mirando".
+
+**Commits:**
+- `feat(VS-12): add crop selector + light theme analyzer + smooth cross-fades`
+
+---
+
 #### 3.6.2 Hotfix VS-10 — Mover `/visual-search` dentro del shell `[locale]` (single-pass)
 
 **Estado:** ✅ Completado (2026-05-26)
@@ -605,6 +634,8 @@ En [`components/Header.tsx`](./components/Header.tsx) líneas 249-260 (desktop) 
 
 **Estado actual:** No iniciada. Depende de Fases 1–3.
 
+**Nueva iniciativa piloto (2026-05):** Brands como entidad de primer nivel (BR-01..06). Ver backlog. Objetivo: pasar de "marca" como texto libre en `product_attributes` a una entidad administrable con logos minimalistas oficiales en B/N + filtrado en la tienda.
+
 ---
 
 ## 3. Backlog Priorizado (tabla principal)
@@ -659,9 +690,16 @@ En [`components/Header.tsx`](./components/Header.tsx) líneas 249-260 (desktop) 
 | VS-09 | Resultados visual search acoplados a layout `/search` (mismo título-row, botón FILTRAR, drawer) | 3 | P1 | M | VS-08, PRO-12 | DOM diff visible entre `/search` y `/visual-search` solo en título y dataset; `VisualSearchPanel.tsx` borrado | ✅ (2026-05) |
 | VS-10 | Mover `/visual-search` dentro de shell `[locale]` para heredar Header/Footer + i18n; arreglar link Header (file picker), redirects locale-aware, borrar `VisualSearchProvider` muerto, limpiar middleware | 3 | P1 | M | VS-09 | Header+Footer visibles en results; sin redirects hardcoded a `/es`; link Header abre picker | ✅ (2026-05-26) |
 | VS-11 | Reemplazar línea de scan + cuadro DETECTADO por **diffusion dot field** estilo ChatGPT "creating image" (canvas + value noise inline, sin deps) sobre fondo negro con imagen al 32% | 3 | P1 | S | VS-10 | Sin línea barrida; sin badge/dashed rect; analyzer comunica "AI processing" vía campo de puntos respirando | ✅ (2026-05-26) |
+| VS-12 | Crop selector previo + tema claro + cross-fades suaves. Usuario selecciona zona de la prenda (rect drag/resize sin deps); luego analyzer en blanco con dots oscuros confinados al crop; label "MIRANDO" sin cursor; transiciones `vs-fade-in` 600–900ms entre stages; imagen recortada se envía al endpoint para que Gemini se enfoque en la prenda | 3 | P1 | M | VS-11 | Flujo: cropper → looking → results con fades; no salto brusco; crop real enviado al API | ✅ (2026-05-26) |
 | DEB-01 | Zod en Server Actions críticas | 1 | P2 | L | — | Inputs invalidos rechazados tipados | Pendiente |
 | DEB-02 | Eliminar upsert redundante signUpAction profiles | 1 | P2 | S | — | Solo trigger 0002 crea profile | Pendiente |
 | DEB-03 | Refactor Header (1100+ líneas) | 4 | P2 | XL | — | Componentes extraídos | Pendiente |
+| BR-01 | Migración 0007: tabla `brands` + columna `brand_id` en `products` + RLS + índices | 4 | P0 | M | — | Schema listo + productos pueden tener marca | Pendiente |
+| BR-02 | Admin CRUD completo `/admin/brands` (listado, crear/editar, toggle `is_active`, subida de logo a bucket `brand-logos`) | 4 | P0 | L | BR-01 | Admin puede gestionar marcas + logos minimalistas B/N | Pendiente |
+| BR-03 | Reemplazar atributo "marca" por selector de `brand_id` en ProductForm + crear marca al vuelo desde el selector | 4 | P0 | M | BR-02 | Consistencia de marcas + mejor UX en admin | Pendiente |
+| BR-04 | Actualizar `lib/products.ts` (joins + ProductData) para exponer brand (name + logo_url) | 4 | P0 | S | BR-01 | Productos devuelven su marca | Pendiente |
+| BR-05 | Agregar sección "Marcas" en `SearchFilterDrawer` (logos pequeños cuando existan) + filtrado client-side en SearchContent | 4 | P1 | M | BR-04 | Usuario puede filtrar por marca en la tienda | Pendiente |
+| BR-06 | Backfill manual de `brand_id` en productos existentes que ya tenían atributo "marca" | 4 | P1 | S | BR-03, BR-05 | Catálogo limpio sin datos legacy | Pendiente |
 
 **Leyenda esfuerzo:** S = horas, M = 1–2 días, L = 3–5 días, XL = 1–2 semanas (estimación relativa, 1 dev).
 
@@ -681,6 +719,7 @@ En [`components/Header.tsx`](./components/Header.tsx) líneas 249-260 (desktop) 
 | D-08 | Embeddings públicos | View vs RPC-only vs column revoke | **Column REVOKE** en migración `0005` (anon/authenticated) | SEC-06 |
 | D-09 | Rate limit stack | Upstash vs Vercel Edge Middleware vs in-memory | **Upstash** si hay cuenta; si no, middleware Vercel con IP throttle básico | SEC-05 |
 | D-10 | Validación inputs | Zod vs manual | **Zod** en actions nuevas (checkout, admin); no bloquear Fase 0 | DEB-01 |
+| D-11 | **Brands / Marcas** | Texto libre en atributos vs entidad dedicada con logos | **Entidad dedicada `brands`** (BR-01..06) con `brand_id` en products, admin CRUD + logos en bucket `brand-logos`, selector en ProductForm y filtro en drawer. Logos en B/N minimalista estilo oficial de marca. | 2026-05 |
 
 ---
 
@@ -780,6 +819,7 @@ Extraídas del Research Consolidado y `CLAUDE.md`:
 | 2026-05-21 | Rama feat/checkout-real iniciada | Fase 2 comienza: placeOrderAction + pickup desde DB + success real |
 | 2026-05-22 | Fase 2 cerrada; merge-ready | E2E local OK; fix form anidado; return page + reconcile carrito |
 | 2026-05 (actual) | Fase 3 3.6 (PRO-12 + VS-08/09) completado | Integración visual search full-screen + botón FILTRAR único. Adaptación: sessionStorage handoff (context no cruza shells). VisualSearchPanel eliminado. i18n + analyzer + results listos. |
+| 2026-05 | Inicio piloto Brands (BR-01..06) | Nueva entidad `brands` con logos minimalistas B/N gestionables desde admin. Reemplaza "marca" como texto libre. Filtro por marca en drawer de búsqueda. |
 
 ---
 
