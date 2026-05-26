@@ -193,12 +193,229 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | 3.3 | Rate limit 5 req/IP/min en `/api/visual-search` | ✅ VS-06 |
 | 3.4 | **Panel búsqueda visual en barra del Header** — ícono cámara junto a la X; bottom sheet mobile (cámara auto + subir archivo); modal desktop; animación pulso mientras busca; resultados inline con grid catálogo | ✅ VS-07 |
 | 3.5 | **Búsqueda de texto rediseñada** — panel inline estilo Nike/Adidas; resultados como vista catálogo filtrada; sort (precio ↑↓, nuevo) + filtro por categoría (chips); API route `/api/search` server-side ilike; estética Viogi minimalista | ✅ PRO-11 |
-| 3.6 | Unificar prompts Gemini entre endpoint y `generate-embeddings.ts` (VS-01) | Pendiente |
-| 3.7 | Indexación automática de embedding en `createProduct` / `updateProduct` (VS-02) | Pendiente |
-| 3.8 | Retunar índice IVFFlat cuando catálogo >100 productos | Pendiente |
-| 3.9 | Limpieza seeds `[seed]` en producción si aplica | Pendiente |
+| 3.6 | **Botón único FILTRAR + Visual search full-screen + resultados estilo /search** (PRO-12 + VS-08 + VS-09) — ver [§3.6.1 Spec detallada](#361-spec-detallada-pro-12--vs-08--vs-09) | ← **PRÓXIMO** |
+| 3.7 | Unificar prompts Gemini entre endpoint y `generate-embeddings.ts` (VS-01) | Pendiente |
+| 3.8 | Indexación automática de embedding en `createProduct` / `updateProduct` (VS-02) | Pendiente |
+| 3.9 | Retunar índice IVFFlat cuando catálogo >100 productos | Pendiente |
+| 3.10 | Limpieza seeds `[seed]` en producción si aplica | Pendiente |
 
-**Estado actual:** VS panel ✅ + búsqueda texto rediseñada ✅. Próximo: unificar prompts Gemini (3.6) o indexación automática (3.7).
+**Estado actual:** VS panel ✅ + búsqueda texto rediseñada ✅. Próximo: botón único + visual search full-screen (3.6).
+
+---
+
+#### 3.6.1 Spec detallada (PRO-12 + VS-08 + VS-09)
+
+> **Para el agente que implemente:** Esta sección es autocontenida. Sigue los pasos en orden. Cada paso es un commit atómico. Después de cada commit corre `npm run type-check && npm run lint`. No incluyas la línea `Co-Authored-By: Claude` en los commits.
+
+##### Contexto previo (lee antes de empezar)
+- Arquitectura actual de búsqueda texto: [`app/[locale]/search/SearchContent.tsx`](./app/[locale]/search/SearchContent.tsx) + [`components/SearchFilterDrawer.tsx`](./components/SearchFilterDrawer.tsx). El layout patrón es: título arriba-izq, línea centrada `MOSTRANDO N RESULTADOS · FILTRAR · ORDENAR POR`, `ProductGrid` debajo.
+- Endpoint visual search: [`app/api/visual-search/route.ts`](./app/api/visual-search/route.ts). Acepta `multipart/form-data` con campo `image`; retorna `{ results: Array<{ id, slug, name, price_mxn, similarity, image_url }> }`. Rate limit 5/IP/min (VS-06).
+- Componente actual a borrar: [`components/VisualSearchPanel.tsx`](./components/VisualSearchPanel.tsx) (panel 3-col inline en Header).
+- Header search bar: [`components/Header.tsx`](./components/Header.tsx) líneas ~635–760 (búsqueda + cámara). El input file oculto está en `vsInputRef`; al seleccionar, hoy se setea `vsFile` y se renderiza `VisualSearchPanel` debajo.
+- Catálogo de referencia visual: [`app/[locale]/collections/[category]/page.tsx`](./app/[locale]/collections/[category]/page.tsx).
+- Drawer reutilizable: [`components/SearchFilterDrawer.tsx`](./components/SearchFilterDrawer.tsx). Ya soporta sort + categoría. Se reusa tal cual en visual search.
+
+##### PRO-12 — Botón único `FILTRAR` (no centrado, subrayado)
+
+**Decisión:** Combinar `FILTRAR · ORDENAR POR` en un solo botón `FILTRAR` alineado a la derecha, subrayado. El drawer sigue mostrando ambas secciones (sort + categoría).
+
+**Cambios:**
+1. Editar [`app/[locale]/search/SearchContent.tsx`](./app/[locale]/search/SearchContent.tsx). Reemplazar el bloque centrado actual:
+   ```tsx
+   {/* Línea minimalista: SHOWING N RESULTS · FILTER · ORDER BY */}
+   <div className="text-center mb-8 md:mb-10 flex items-center justify-center gap-3 flex-wrap">
+     <span ...>{t('showing_results', { count })}</span>
+     <span ...>·</span>
+     <button onClick={() => setDrawerOpen(true)}>{t('filter')}</button>
+     <span ...>·</span>
+     <button onClick={() => setDrawerOpen(true)}>{t('order_by')}</button>
+   </div>
+   ```
+   por una fila `flex justify-between items-center` con contador a la izquierda y un solo botón `FILTRAR` subrayado a la derecha:
+   ```tsx
+   <div className="flex items-center justify-between mb-8 md:mb-10 pb-4 border-b" style={{ borderColor: 'rgba(0,0,0,0.08)' }}>
+     <span style={{ ...labelStyle, fontWeight: 400, color: '#999' }}>
+       {t('showing_results', { count: products.length })}
+     </span>
+     <button
+       type="button"
+       onClick={() => setDrawerOpen(true)}
+       style={{ ...labelStyle, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: '4px' }}
+       className="hover:opacity-60 transition-opacity"
+     >
+       {t('filter')}
+     </button>
+   </div>
+   ```
+2. **No** modificar `SearchFilterDrawer.tsx`. Ya contiene secciones `sort_by` y `category`; el botón único abre el drawer entero.
+3. **Commit:** `refactor(PRO-12): merge FILTER + ORDER BY into single underlined FILTRAR button (right-aligned)`
+
+##### VS-08 — Visual search full-screen analyzer
+
+**Decisión:** Al seleccionar archivo en el Header, navegar a `/visual-search` (no overlay inline). Página renderiza 3 estados: analyzer → detection crop → results.
+
+**A. Context para pasar el `File` entre rutas**
+
+Crear `store/visualSearchContext.tsx`:
+```tsx
+'use client';
+import { createContext, useContext, useState, ReactNode } from 'react';
+
+type Ctx = { file: File | null; setFile: (f: File | null) => void };
+const VisualSearchCtx = createContext<Ctx | null>(null);
+
+export function VisualSearchProvider({ children }: { children: ReactNode }) {
+  const [file, setFile] = useState<File | null>(null);
+  return <VisualSearchCtx.Provider value={{ file, setFile }}>{children}</VisualSearchCtx.Provider>;
+}
+
+export function useVisualSearch() {
+  const ctx = useContext(VisualSearchCtx);
+  if (!ctx) throw new Error('useVisualSearch outside provider');
+  return ctx;
+}
+```
+
+Wrap en [`components/ClientLayout.tsx`](./components/ClientLayout.tsx) (dentro del `flex flex-col min-h-screen`, fuera de `<main>`).
+
+**Commit:** `feat(VS-08): add VisualSearchProvider context for passing File between routes`
+
+**B. Wiring del Header**
+
+En [`components/Header.tsx`](./components/Header.tsx):
+- Importar `useVisualSearch` y `useRouter` (ya está).
+- Eliminar `vsFile` local state, `VisualSearchPanel` import y su render (líneas ~735–742).
+- En el `onChange` del input file (línea ~708):
+  ```tsx
+  onChange={(e) => {
+    const f = e.target.files?.[0];
+    if (f) {
+      setVsFile(f); // del context
+      setSearchOpen(false);
+      setSearchQuery('');
+      router.push(`/${locale}/visual-search`);
+    }
+    e.target.value = '';
+  }}
+  ```
+- Quitar el `setVsFile(null)` en los handlers de cerrar (X, overlay, escape) ya que vsFile vive en el context y se limpia al salir de la página.
+
+**Commit:** `feat(VS-08): wire Header camera to navigate to /visual-search route via context`
+
+**C. Página `/visual-search` reescrita**
+
+Reescribir `app/[locale]/visual-search/page.tsx` como `'use client'` (necesita context + estados de animación):
+
+```tsx
+'use client';
+// 1. const { file } = useVisualSearch();
+// 2. useEffect: si !file → router.replace(`/${locale}`); return;
+// 3. useEffect: ejecutar fetch a /api/visual-search con FormData. Setear `results` y `loaded=true` al terminar.
+// 4. Estado: 'analyzing' (mientras loading), 'detected' (600ms tras loaded), 'results' (después).
+// 5. Render condicional:
+//    - analyzing | detected → <VisualSearchAnalyzer file={file} stage={stage} />
+//    - results → <VisualSearchResults locale={locale} results={results} />
+// 6. Botón ← arriba izq en analyzing/detected → router.back()
+```
+
+**D. Componente `VisualSearchAnalyzer`** (`components/VisualSearchAnalyzer.tsx`):
+
+```tsx
+'use client';
+interface Props {
+  file: File;
+  stage: 'analyzing' | 'detected';
+  onBack: () => void;
+}
+```
+
+Layout (full-viewport bajo el header):
+- `min-h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-white px-4 py-8`
+- Imagen: `URL.createObjectURL(file)` en `<img>` con `max-height: 70vh; max-width: min(90vw, 500px); object-fit: contain`. Cleanup con `URL.revokeObjectURL` en unmount.
+- Botón ← absoluto top-left (top: 80px; left: 20px); círculo gris 32px (estilo Stüssy del drawer).
+- Overlay sobre la imagen:
+  - **stage='analyzing':** línea horizontal negra 2px que recorre vertical de top a bottom y vuelve, loop 1.5s. Implementar con keyframes:
+    ```css
+    @keyframes scan { 0%,100% { top: 0 } 50% { top: 100% } }
+    ```
+    Sombra suave (`box-shadow: 0 0 12px rgba(0,0,0,0.3)`). Texto inferior `ANALIZANDO...` (i18n).
+  - **stage='detected':** rect punteado negro centrado (~70% del área de la imagen), border `2px dashed #000`, con label `DETECTADO` arriba en caja blanca con borde. Sin animación de loop (estático ~600ms).
+
+**E. Componente `VisualSearchResults`** (`components/VisualSearchResults.tsx`):
+
+```tsx
+'use client';
+interface Props {
+  locale: Locale;
+  results: Array<{ id: string; slug: string; name: string; price_mxn: number; image_url: string | null; similarity: number }>;
+}
+```
+
+- Convertir cada result a `ProductData`-compatible:
+  ```ts
+  const products: Product[] = results.map(r => ({
+    id: r.id, name: r.name, price: r.price_mxn,
+    image: r.image_url ?? '', slug: r.slug,
+  }));
+  ```
+- Layout **idéntico** a `SearchContent.tsx` post-PRO-12:
+  - Título: `🔍 BÚSQUEDA VISUAL` (i18n `search.visual_title`)
+  - Fila contador + botón FILTRAR
+  - `<ProductGrid products={products} />`
+  - `<SearchFilterDrawer />` con state local `sort` + `category` (filtra/ordena `products` con `useMemo`)
+- Si `results.length === 0`: render igual pero con `ProductGrid` mostrando su mensaje vacío nativo.
+
+**Commit:** `feat(VS-08): add VisualSearchAnalyzer with large image, scan animation, detection crop`
+
+##### VS-09 — Resultados acoplados a /search
+
+**Cambios:**
+1. Crear `components/VisualSearchResults.tsx` (descrito arriba en VS-08.E).
+2. Reescribir `app/[locale]/visual-search/page.tsx` para componer analyzer + results.
+3. **Borrar** [`components/VisualSearchPanel.tsx`](./components/VisualSearchPanel.tsx). Buscar referencias con `Grep "VisualSearchPanel"` antes de borrar; debería estar limpio tras VS-08.B.
+4. **i18n:** añadir a `messages/es.json` y `messages/en.json` bajo `"search"`:
+   - `"analyzing"`: `"ANALIZANDO..."` / `"ANALYZING..."`
+   - `"detected"`: `"DETECTADO"` / `"DETECTED"`
+   - `"visual_title"`: `"BÚSQUEDA VISUAL"` / `"VISUAL SEARCH"`
+   - `"back"`: `"Volver"` / `"Back"`
+
+**Commits:**
+- `feat(VS-09): add VisualSearchResults reusing /search layout (single FILTRAR button)`
+- `feat(VS-09): rewrite /visual-search page with 3-stage flow (analyzing → detected → results)`
+- `refactor(VS-09): remove obsolete VisualSearchPanel inline component`
+- `i18n(VS-09): add analyzing/detected/visual_title/back keys`
+
+##### Casos borde y decisiones cerradas
+
+| Caso | Decisión |
+|------|----------|
+| Usuario carga `/visual-search` directo (sin file en context) | `router.replace('/${locale}')` en `useEffect` |
+| Botón ← durante análisis | `router.back()` y limpia `setFile(null)` |
+| Endpoint VS retorna 0 resultados | Mismo layout con `ProductGrid` vacío + mensaje nativo |
+| Endpoint VS retorna 429 (rate limit) | Mostrar pantalla simple: ícono + texto i18n `Demasiadas búsquedas, intenta en un momento` + botón volver |
+| Tiempo entre `detected` y `results` | 600ms con `setTimeout` |
+| Animación scanning frame rate | CSS keyframes (no requestAnimationFrame); `animation-duration: 1.5s; animation-iteration-count: infinite` |
+| ¿Drawer en visual search incluye categoría? | Sí, idéntico a `/search`. Filtra client-side sobre los resultados ya retornados |
+| ¿Sort por similitud? | No exponer; los resultados ya llegan ordenados por similitud descendente. Las opciones del drawer (precio/newest) reordenan client-side |
+| ¿Persistir file al recargar página? | No; recargar = volver al home |
+
+##### Definition of Done
+
+- [ ] `npm run type-check` y `npm run lint` limpios
+- [ ] `/search` muestra contador izq + `FILTRAR` subrayado derecha; el drawer abre con ambas secciones
+- [ ] Click en cámara del Header → navega a `/visual-search` con imagen grande y animación scan
+- [ ] Tras ~análisis del endpoint, aparece overlay punteado 600ms, luego resultados en grid catálogo
+- [ ] Layout de `/visual-search` resultados es **idéntico** a `/search` (mismo título-row, mismo botón FILTRAR derecho, mismo drawer)
+- [ ] `components/VisualSearchPanel.tsx` borrado; ninguna referencia residual (`Grep "VisualSearchPanel"` vacío)
+- [ ] Traducciones presentes en `es.json` y `en.json`
+- [ ] Footer respeta el patrón sticky (ya implementado en `ClientLayout`)
+
+##### Después del DoD
+
+Actualizar:
+- [`RESEARCH-CONSOLIDADO.md`](./RESEARCH-CONSOLIDADO.md) §3.1 fila "Visual search" → cambiar `✅ Demo (rama feature)` a `✅ Integrado (VS-08/09)` y agregar archivos en columna evidencia.
+- Marcar 3.6 como ✅ en la tabla de Fase 3 arriba.
+- `git push origin main` al cerrar.
 
 ---
 
@@ -269,6 +486,9 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | PRO-09 | Formulario vender backend | 4 | P2 | M | — | POST persiste aplicación | Pendiente |
 | PRO-10 | Tests smoke (auth, checkout) | 4 | P2 | XL | CHK-01 | Al menos 1 e2e Playwright | Pendiente |
 | PRO-11 | Búsqueda texto rediseñada — panel inline Nike/Adidas style, API ilike, sort+filtro, estética Viogi | 3 | P1 | M | — | Resultados inline sin redirect; sort/filtro funcionales | ✅ Resuelto |
+| PRO-12 | Botón único FILTRAR (subrayado, alineado derecha) sustituyendo `FILTRAR · ORDENAR POR` centrado en `/search` | 3 | P1 | S | PRO-11 | Solo 1 botón visible; drawer mantiene ambas secciones | ← PRÓXIMO (ver §3.6.1) |
+| VS-08 | Visual search full-screen analyzer (imagen grande + animación scan + crop detectado) reemplazando panel inline | 3 | P1 | M | VS-06 | `/visual-search` muestra imagen ≥70vh con scan animado; transición a resultados ≤1s tras endpoint OK | ← PRÓXIMO (ver §3.6.1) |
+| VS-09 | Resultados visual search acoplados a layout `/search` (mismo título-row, botón FILTRAR, drawer) | 3 | P1 | M | VS-08, PRO-12 | DOM diff visible entre `/search` y `/visual-search` solo en título y dataset; `VisualSearchPanel.tsx` borrado | ← PRÓXIMO (ver §3.6.1) |
 | DEB-01 | Zod en Server Actions críticas | 1 | P2 | L | — | Inputs invalidos rechazados tipados | Pendiente |
 | DEB-02 | Eliminar upsert redundante signUpAction profiles | 1 | P2 | S | — | Solo trigger 0002 crea profile | Pendiente |
 | DEB-03 | Refactor Header (1100+ líneas) | 4 | P2 | XL | — | Componentes extraídos | Pendiente |
