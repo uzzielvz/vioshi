@@ -245,9 +245,10 @@ export default function Header({ userEmail = null }: HeaderProps) {
 
         {/* RIGHT SIDE - TEXT */}
         <div className="flex items-center gap-6">
-          {/* VISUAL SEARCH - Desktop only */}
-          <Link
-            href="/visual-search"
+          {/* VISUAL SEARCH - Desktop only. Opens the same file picker as the camera icon. */}
+          <button
+            type="button"
+            onClick={() => vsInputRef.current?.click()}
             className="hidden md:inline text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
             style={{
               fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -257,7 +258,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
             }}
           >
             {tCommon('visual_search')}
-          </Link>
+          </button>
 
           {/* BUSCAR / CERRAR */}
           <button
@@ -723,7 +724,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 </svg>
               </button>
 
-              {/* Input de imagen oculto - VS-08: handoff a /visual-search (no context por shells separados) */}
+              {/* Input de imagen oculto - VS-10: handoff a /[locale]/visual-search via sessionStorage. */}
               <input
                 ref={vsInputRef}
                 type="file"
@@ -732,10 +733,6 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 onChange={async (e) => {
                   const f = e.target.files?.[0];
                   if (f) {
-                    // Cross-shell handoff: store as dataURL + metadata in sessionStorage.
-                    // /visual-search page (standalone layout shell) will reconstruct File on mount.
-                    // Reason: React Context from VisualSearchProvider (in ClientLayout) cannot
-                    // bridge [locale] shell <-> /visual-search shell (see RESEARCH §3.2 "Dos shells HTML").
                     try {
                       const dataUrl = await new Promise<string>((resolve, reject) => {
                         const reader = new FileReader();
@@ -754,7 +751,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
                     }
                     setSearchOpen(false);
                     setSearchQuery('');
-                    router.push('/visual-search');
+                    router.push(`/${locale}/visual-search`);
                   }
                   // Reset input so same file can be re-selected
                   e.target.value = '';
@@ -1156,11 +1153,14 @@ export default function Header({ userEmail = null }: HeaderProps) {
               {tHeader('archive')}
             </Link>
 
-            {/* VISUAL SEARCH */}
-            <Link
-              href="/visual-search"
-              className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
-              onClick={() => setMobileMenuOpen(false)}
+            {/* VISUAL SEARCH — opens file picker (same flow as camera icon) */}
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                vsInputRef.current?.click();
+              }}
+              className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b text-left"
               style={{
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                 letterSpacing: '0.02em',
@@ -1172,7 +1172,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
               }}
             >
               {tCommon('visual_search')}
-            </Link>
+            </button>
 
             {/* SHIPPING TO - Selector de País/Moneda */}
             <div className="px-6 py-5 flex items-center justify-between border-b" style={{ borderColor: 'rgba(0, 0, 0, 0.08)' }}>
