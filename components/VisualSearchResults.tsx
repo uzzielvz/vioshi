@@ -92,9 +92,8 @@ export default function VisualSearchResults({
   return (
     <CartProvider>
       <div className="px-4 md:px-8 py-8 md:py-12">
-        {/* Title — mirrors search but with visual search iconography */}
-        <div className="flex items-center gap-3 mb-6 md:mb-8">
-          <span style={{ ...labelStyle, fontSize: '16px' }}>🔍</span>
+        {/* Title for visual search results (no emoji per request) */}
+        <div className="mb-6 md:mb-8">
           <h1 style={labelStyle}>{t('visual_title')}</h1>
         </div>
 
