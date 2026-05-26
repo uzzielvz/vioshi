@@ -14,6 +14,7 @@ export type AdminProduct = {
   price_mxn: string | number
   original_price_mxn: string | number | null
   category_id: string | null
+  brand_id?: string | null
   sku: string | null
   material: string | null
   made_in: string
@@ -24,7 +25,15 @@ export type AdminProduct = {
   product_attributes?: { key: string; value: string }[]
 }
 
-const FIXED_ATTRS = ['color', 'marca']
+export type AdminBrand = {
+  id: string
+  name: string
+  slug: string
+  logo_url: string | null
+  is_active: boolean
+}
+
+const FIXED_ATTRS = ['color'] // 'marca' was replaced by dedicated brands system (BR-03)
 type FormAction = (
   prevState: { error: string } | null,
   formData: FormData
@@ -75,10 +84,12 @@ function toSlug(value: string) {
 
 export default function ProductForm({
   categories,
+  brands = [],
   product,
   action,
 }: {
   categories: Category[]
+  brands?: AdminBrand[]
   product?: AdminProduct
   action: FormAction
 }) {
@@ -87,9 +98,10 @@ export default function ProductForm({
   const [slug, setSlug]               = useState(product?.slug ?? '')
   const [slugTouched, setSlugTouched] = useState(!!product)
 
-  // Build initial attrs: fixed keys first, then any extras from DB
+  // Build initial attrs: fixed keys first, then any extras from DB.
+  // 'marca' is now handled via brand_id (legacy values are ignored here).
   const initAttrs = (): { key: string; value: string }[] => {
-    const existing = product?.product_attributes ?? []
+    const existing = (product?.product_attributes ?? []).filter(a => a.key.toLowerCase() !== 'marca')
     const fixed = FIXED_ATTRS.map(k => ({
       key: k,
       value: existing.find(a => a.key === k)?.value ?? '',
@@ -178,6 +190,41 @@ export default function ProductForm({
                   <option key={c.id} value={c.id}>{c.name_es}</option>
                 ))}
               </select>
+            </div>
+
+            {/* Brand Selector (BR-03) */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <FieldLabel>Brand</FieldLabel>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Opens the brand creation in a new tab for now (simple & safe)
+                    window.open('/admin/brands/new', '_blank')
+                  }}
+                  className="uppercase tracking-widest text-[10px] text-gray-400 hover:text-black"
+                  style={font}
+                >
+                  + Create new brand
+                </button>
+              </div>
+
+              <select
+                name="brand_id"
+                defaultValue={product?.brand_id ?? ''}
+                className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors appearance-none"
+                style={{ ...font, fontSize: '11px' }}
+              >
+                <option value="">— No brand —</option>
+                {brands.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-gray-400 text-[10px] mt-1" style={font}>
+                Select from managed brands. Logos will appear in the public filters.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

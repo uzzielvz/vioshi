@@ -13,16 +13,20 @@ export default async function EditProductPage({
   const { id } = await params
   const supabase = createAdminClient()
 
-  const [{ data: product }, { data: categories }] = await Promise.all([
+  const [{ data: product }, { data: categories }, { data: brands }] = await Promise.all([
     supabase
       .from('products')
-      .select('id, slug, name, description, price_mxn, original_price_mxn, category_id, sku, material, made_in, is_featured, is_new, sold_out, product_images (id, url, is_primary, sort_order), product_attributes (key, value, sort_order)')
+      .select('id, slug, name, description, price_mxn, original_price_mxn, category_id, brand_id, sku, material, made_in, is_featured, is_new, sold_out, product_images (id, url, is_primary, sort_order), product_attributes (key, value, sort_order)')
       .eq('id', id)
       .single(),
     supabase
       .from('categories')
       .select('id, slug, name_es')
       .order('sort_order'),
+    supabase
+      .from('brands')
+      .select('id, name, slug, logo_url, is_active')
+      .order('name'),
   ])
 
   if (!product) notFound()
@@ -38,6 +42,7 @@ export default async function EditProductPage({
   return (
     <ProductForm
       categories={categories ?? []}
+      brands={brands ?? []}
       product={{ ...row, product_images: images, product_attributes: attrs }}
       action={updateProduct}
     />

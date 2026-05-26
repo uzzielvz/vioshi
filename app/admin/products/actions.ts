@@ -29,6 +29,7 @@ export async function createProduct(_prev: ActionState, formData: FormData): Pro
   const origPrice       = formData.get('original_price_mxn') as string
   const original_price_mxn = origPrice ? parseFloat(origPrice) : null
   const category_id     = (formData.get('category_id') as string) || null
+  const brand_id        = (formData.get('brand_id') as string) || null
   const sku             = (formData.get('sku') as string) || null
   const material        = (formData.get('material') as string) || null
   const made_in         = (formData.get('made_in') as string) || 'México'
@@ -38,7 +39,7 @@ export async function createProduct(_prev: ActionState, formData: FormData): Pro
 
   const { data: product, error } = await supabase
     .from('products')
-    .insert({ name, slug, description, price_mxn, original_price_mxn, category_id, sku, material, made_in, is_featured, is_new, sold_out })
+    .insert({ name, slug, description, price_mxn, original_price_mxn, category_id, brand_id, sku, material, made_in, is_featured, is_new, sold_out })
     .select('id')
     .single()
 
@@ -66,6 +67,7 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
   const origPrice       = formData.get('original_price_mxn') as string
   const original_price_mxn = origPrice ? parseFloat(origPrice) : null
   const category_id     = (formData.get('category_id') as string) || null
+  const brand_id        = (formData.get('brand_id') as string) || null
   const sku             = (formData.get('sku') as string) || null
   const material        = (formData.get('material') as string) || null
   const made_in         = (formData.get('made_in') as string) || 'México'
@@ -75,7 +77,7 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
 
   const { error } = await supabase
     .from('products')
-    .update({ name, slug, description, price_mxn, original_price_mxn, category_id, sku, material, made_in, is_featured, is_new, sold_out })
+    .update({ name, slug, description, price_mxn, original_price_mxn, category_id, brand_id, sku, material, made_in, is_featured, is_new, sold_out })
     .eq('id', id)
 
   if (error) return { error: error.message }
