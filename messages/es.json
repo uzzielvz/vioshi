@@ -222,6 +222,10 @@
     "category": "Categoría",
     "showing_results": "MOSTRANDO {count} RESULTADOS",
     "search_results_for": "BÚSQUEDA: \"{query}\"",
+    "analyzing": "ANALIZANDO...",
+    "detected": "DETECTADO",
+    "visual_title": "BÚSQUEDA VISUAL",
+    "back": "Volver",
     "categories": {
       "all": "Todos",
       "hoodie": "Hoodies",
