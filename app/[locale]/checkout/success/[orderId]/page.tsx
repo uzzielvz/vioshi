@@ -56,7 +56,29 @@ export default async function OrderSuccessPage({ params, searchParams }: Props) 
           : await getGuestOrderByPaymentIntent(paymentIntentId)
       : null);
 
-  if (!order) notFound();
+  if (!order) {
+    // Parche temporal para evitar 404 cuando se pierde sessionStorage después del redirect de Stripe.
+    // Esto permite que el usuario vea un mensaje útil en vez de página no encontrada.
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-6" style={fontStyle}>
+        <div className="max-w-md text-center space-y-6">
+          <p className="text-[15px]">Pago registrado correctamente.</p>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            No pudimos cargar los detalles del pedido automáticamente.<br />
+            En unos minutos debería aparecer en <strong>Mis Pedidos</strong>.
+          </p>
+          <div className="pt-2">
+            <Link
+              href={`/${locale}/account/orders`}
+              className="inline-block text-[11px] uppercase tracking-widest underline hover:opacity-70"
+            >
+              Ir a Mis Pedidos
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const formattedDate = new Date(order.created_at).toLocaleDateString('es-MX', {
     year: 'numeric',

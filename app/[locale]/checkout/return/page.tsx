@@ -34,7 +34,16 @@ function CheckoutReturnContent() {
     const pending = readPendingOrder();
 
     if (!pending) {
-      setError('La sesión de pago expiró. Vuelve al checkout e intenta de nuevo.');
+      const paymentIntent = searchParams.get('payment_intent');
+
+      // Fallback temporal: si perdimos sessionStorage pero tenemos payment_intent,
+      // intentamos redirigir igual para evitar 404 en la mayoría de casos.
+      if (paymentIntent) {
+        router.replace(`/${locale}/checkout/success/pending?payment_intent=${paymentIntent}`);
+        return;
+      }
+
+      setError('La sesión de pago expiró. Revisa "Mis Pedidos" o vuelve a intentar.');
       return;
     }
 
