@@ -419,6 +419,135 @@ Actualizar:
 
 ---
 
+#### 3.6.2 Hotfix VS-10 — Mover `/visual-search` dentro del shell `[locale]` (single-pass)
+
+**Estado:** ✅ Completado (2026-05-26)
+
+**Síntomas detectados tras revisión:**
+
+1. **Header y Footer NO aparecen en la vista de resultados de búsqueda visual** — el usuario lo confirmó. Root cause: [`app/visual-search/layout.tsx`](./app/visual-search/layout.tsx) define un shell HTML independiente que **no** monta `ClientLayout` (donde viven `Header` + `Footer`). Por eso `/search` muestra chrome pero `/visual-search` no.
+2. `app/visual-search/layout.tsx:7,20-23` hardcodea `lang="es"` e importa solo `messages/es.json` → usuarios EN ven UI en español.
+3. `app/visual-search/page.tsx:68,181` hardcodea `router.replace('/es')` en fallbacks → usuarios EN aterrizan en home español tras error/timeout.
+4. `components/Header.tsx:249-260` (desktop) y `:1159-1175` (mobile): el link **"VISUAL SEARCH"** apunta a `/visual-search` sin pasar archivo → page corre `loadPendingFile`, no encuentra storage, redirige a `/es`. Es un link muerto que bota al home.
+5. `VisualSearchResults.tsx:93,128` envuelve `<CartProvider>` aunque el layout ya lo provee → doble wrap (inocuo pero ruido).
+6. `store/visualSearchContext.tsx` quedó decorativo (handoff real es sessionStorage) → código muerto.
+7. `VisualSearchResults` recibe prop `locale` que nunca se usa.
+
+**Decisión arquitectónica:** **Mover `app/visual-search/` → `app/[locale]/visual-search/`**.
+
+Esto resuelve **todos los problemas anteriores en una sola pasada** porque:
+- Hereda automáticamente `ClientLayout` (Header + Footer + CartDrawer) → fix #1.
+- Hereda `NextIntlClientProvider` con el locale correcto → fix #2 y #3.
+- Permite `useLocale()` de `next-intl` para construir redirects relativos al locale activo.
+- El handoff `sessionStorage` ya **no depende** de cruzar shells; funciona dentro del mismo shell sin problema (RESEARCH §3.2 ya no aplica).
+- El motivo histórico de tener un shell separado (React Context cross-shell) ya fue resuelto vía sessionStorage en VS-08; el shell separado es ahora un **vestigio**.
+
+##### Pasos (single-pass, en orden)
+
+**A. Mover archivos y borrar shell duplicado**
+
+1. Mover `app/visual-search/page.tsx` → `app/[locale]/visual-search/page.tsx`
+2. **Borrar** `app/visual-search/layout.tsx` (el de `[locale]` lo reemplaza por completo)
+3. **Borrar** el directorio `app/visual-search/` cuando quede vacío
+4. **Borrar** `store/visualSearchContext.tsx` (código muerto post-VS-08)
+5. Remover `<VisualSearchProvider>` wrap en [`components/ClientLayout.tsx`](./components/ClientLayout.tsx) y su import
+
+**B. Actualizar `app/[locale]/visual-search/page.tsx`**
+
+Cambios sobre el archivo movido:
+- Importar `useLocale` de `next-intl` y obtener locale dinámico:
+  ```tsx
+  import { useLocale } from 'next-intl';
+  // ...
+  const locale = useLocale();
+  ```
+- Reemplazar `router.replace('/es')` por `router.replace(`/${locale}`)` en los **dos** sitios (línea ~68 fallback sin file, línea ~181 botón back desde error)
+- Quitar `t` de la dependencia del `useEffect` de búsqueda (línea 162: `}, [file, t]` → `}, [file]`)
+- El `useTranslations('search')` se queda; ya funciona con next-intl al estar dentro de `[locale]`
+
+**C. Limpiar `components/VisualSearchResults.tsx`**
+
+- Remover el wrap externo `<CartProvider>` y `</CartProvider>` (ya está en `ClientLayout`)
+- Remover el import `import { CartProvider } from '@/store/cartStore';`
+- Remover la prop `locale` de la interfaz y de la firma del componente (no se usa)
+- Simplificar `handleDrawerChange` a la firma estricta:
+  ```tsx
+  function handleDrawerChange(next: { sort: SortKey; category: string }) {
+    setSort(next.sort);
+    setCategory(next.category);
+  }
+  ```
+
+**D. Fix Header — link "VISUAL SEARCH" debe abrir picker, no navegar**
+
+En [`components/Header.tsx`](./components/Header.tsx) líneas 249-260 (desktop) y 1159-1175 (mobile):
+- Cambiar el `<Link href="/visual-search">` a `<button type="button" onClick={() => vsInputRef.current?.click()}>`
+- Mantener mismo styling (`className` y `style`)
+- En mobile además cerrar el menú: `onClick={() => { setMobileMenuOpen(false); vsInputRef.current?.click(); }}`
+- El input file ya existe (línea ~727) y ya hace el handoff por sessionStorage → flujo unificado con el ícono de cámara
+
+**E. Actualizar `middleware.ts`**
+
+- Línea 61: quitar `visual-search` del negative-lookahead del matcher para que `/[locale]/visual-search` reciba la cookie/locale como cualquier otra ruta `[locale]`. El matcher quedará: `'/((?!api|auth|_next|.*\\..*).*)'`
+- Línea 58 (`/api/visual-search`) se queda — sigue siendo endpoint POST sin i18n
+
+**F. Verificación**
+
+- `npm run type-check` limpio
+- `npm run lint` limpio
+- `Grep "visualSearchContext"` → vacío
+- `Grep "VisualSearchProvider"` → vacío
+- `Grep "app/visual-search"` → vacío (excepto referencias en docs históricos)
+- Manual QA:
+  - Click cámara desktop en `/en/...` → /en/visual-search analyzer → resultados con Header+Footer visibles, todo en inglés
+  - Click cámara desktop en `/es/...` → /es/visual-search → todo en español
+  - Click "VISUAL SEARCH" link desktop y mobile → abre file picker (no navega)
+  - Acceso directo a `/es/visual-search` sin file → redirige a `/es`
+  - Acceso directo a `/en/visual-search` sin file → redirige a `/en`
+  - 429 error: botón back regresa al locale correcto
+
+##### Commits (atómicos)
+
+1. `refactor(VS-10): move /visual-search into [locale] shell to inherit Header/Footer + i18n`
+   - Mover page.tsx, borrar layout.tsx standalone, borrar dir
+2. `chore(VS-10): remove dead VisualSearchProvider context (sessionStorage handoff supersedes)`
+   - Borrar `store/visualSearchContext.tsx`, quitar wrap en `ClientLayout.tsx`
+3. `fix(VS-10): use useLocale() for redirects in visual-search page (was hardcoded /es)`
+4. `refactor(VS-10): remove redundant CartProvider wrap and unused locale prop in VisualSearchResults`
+5. `fix(VS-10): Header "VISUAL SEARCH" link opens file picker instead of navigating to dead route`
+6. `chore(VS-10): remove visual-search exclusion from middleware matcher (now under [locale])`
+
+##### Decisiones de borde
+
+| Caso | Decisión |
+|------|----------|
+| Usuario hace deep-link a `/es/visual-search` directamente | Redirige a `/es` (mismo comportamiento, ahora locale-aware) |
+| Header link click → file picker cancelado por usuario | No-op; permanece en la página actual |
+| Cambio de idioma a mitad del flujo VS | Out of scope — el usuario navega y pierde la sesión, comportamiento aceptable |
+| `app/visual-search/` dir vacío tras mover archivos | Borrar explícitamente (no dejar carpeta vacía en git) |
+
+##### Definition of Done
+
+- [ ] `npm run type-check` y `npm run lint` limpios
+- [ ] Header y Footer **visibles** en `/[locale]/visual-search` (analyzer y results)
+- [ ] Layout de resultados visual search **idéntico** a `/search` (mismo Header+Footer+grid+drawer)
+- [ ] Flujo completo funciona en `/en` y `/es` con UI en el idioma correcto
+- [ ] Link "VISUAL SEARCH" en Header (desktop+mobile) abre el file picker, no navega
+- [ ] `store/visualSearchContext.tsx` borrado; `Grep "VisualSearchProvider"` vacío
+- [ ] `app/visual-search/` borrado; `Grep "app/visual-search"` vacío
+- [ ] middleware matcher actualizado; smoke test que `/en/visual-search` y `/es/visual-search` reciben cookie de locale
+
+##### Después del DoD
+
+- Actualizar [`RESEARCH-CONSOLIDADO.md`](./RESEARCH-CONSOLIDADO.md):
+  - §3.1 fila "Visual search" → cambiar evidencia a `app/[locale]/visual-search/*`
+  - §3.2 "Dos shells HTML" → eliminar referencia o marcar como histórica (ya solo hay un shell)
+  - DEAD/I18N tables → quitar I18N-01 (`/visual-search` fuera de i18n) ya que ahora está dentro
+- Marcar VS-10 ✅ en backlog (agregar fila)
+- `git push origin main` al cerrar
+
+---
+
 ### Fase 4: Preparación Producción y Lanzamiento
 
 **Objetivo:** Deploy estable en Vercel, monitoreo mínimo, UX pulida.
@@ -489,6 +618,7 @@ Actualizar:
 | PRO-12 | Botón único FILTRAR (subrayado, alineado derecha) sustituyendo `FILTRAR · ORDENAR POR` centrado en `/search` | 3 | P1 | S | PRO-11 | Solo 1 botón visible; drawer mantiene ambas secciones | ✅ (2026-05) |
 | VS-08 | Visual search full-screen analyzer (imagen grande + animación scan + crop detectado) reemplazando panel inline | 3 | P1 | M | VS-06 | `/visual-search` muestra imagen ≥70vh con scan animado; transición a resultados ≤1s tras endpoint OK | ✅ (2026-05, con adaptación handoff) |
 | VS-09 | Resultados visual search acoplados a layout `/search` (mismo título-row, botón FILTRAR, drawer) | 3 | P1 | M | VS-08, PRO-12 | DOM diff visible entre `/search` y `/visual-search` solo en título y dataset; `VisualSearchPanel.tsx` borrado | ✅ (2026-05) |
+| VS-10 | Mover `/visual-search` dentro de shell `[locale]` para heredar Header/Footer + i18n; arreglar link Header (file picker), redirects locale-aware, borrar `VisualSearchProvider` muerto, limpiar middleware | 3 | P1 | M | VS-09 | Header+Footer visibles en results; sin redirects hardcoded a `/es`; link Header abre picker | ✅ (2026-05-26) |
 | DEB-01 | Zod en Server Actions críticas | 1 | P2 | L | — | Inputs invalidos rechazados tipados | Pendiente |
 | DEB-02 | Eliminar upsert redundante signUpAction profiles | 1 | P2 | S | — | Solo trigger 0002 crea profile | Pendiente |
 | DEB-03 | Refactor Header (1100+ líneas) | 4 | P2 | XL | — | Componentes extraídos | Pendiente |

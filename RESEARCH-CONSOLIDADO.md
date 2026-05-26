@@ -68,7 +68,7 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 | Admin productos | Service role + Storage | ✅ Parcial | `admin/products/actions.ts` |
 | Admin pickup | Service role | ✅ Completo | `admin/pickup-points/actions.ts` |
 | Pickup en checkout | **In-memory** `lib/pickupPoints.ts` | 🟡 Inconsistente | No usa tabla DB en checkout |
-| Visual search | Gemini + pgvector RPC | ✅ Integrado (VS-08/09) | `app/visual-search/*`, `components/{VisualSearchAnalyzer,VisualSearchResults}.tsx`, `store/visualSearchContext.tsx`, Header camera handoff + PRO-12 en SearchContent, SearchFilterDrawer reutilizado |
+| Visual search | Gemini + pgvector RPC | ✅ Integrado (VS-08/09/10) | `app/[locale]/visual-search/page.tsx`, `components/{VisualSearchAnalyzer,VisualSearchResults}.tsx`, Header camera + button handoff vía sessionStorage, PRO-12 en SearchContent, SearchFilterDrawer reutilizado |
 | Búsqueda texto | Página catálogo `/search` + drawer lateral (sort + categoría); filtro client-side sobre `getProducts()` | ✅ Resuelto (PRO-11) | `search/SearchContent.tsx`, `SearchFilterDrawer.tsx` |
 | Pagos | Stripe Payment Element + webhook | ✅ Completo | `checkout/actions.ts`, `api/webhooks/stripe` |
 
@@ -230,7 +230,7 @@ VISUAL SEARCH
 
 | ID | Problema | Evidencia | Severidad |
 |----|----------|-----------|-----------|
-| I18N-01 | `/visual-search` fuera de i18n (intencional) | matcher excluye | Baja — documentar |
+| I18N-01 | ~~`/visual-search` fuera de i18n~~ | **✅ RESUELTO (VS-10)** — movido a `/[locale]/visual-search` | — |
 | I18N-02 | Cambio locale usa `window.location.href` full reload | `Header.tsx:50` | Baja — workaround hydration |
 
 ### 5.9 Performance
