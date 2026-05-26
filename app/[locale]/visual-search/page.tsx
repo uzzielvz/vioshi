@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import VisualSearchAnalyzer from '@/components/VisualSearchAnalyzer';
 import VisualSearchResults from '@/components/VisualSearchResults';
 
@@ -18,18 +18,20 @@ type VSResult = {
 type Stage = 'analyzing' | 'detected' | 'results';
 
 /**
- * /visual-search (VS-08 + VS-09)
- * 3-stage full-screen flow replacing the old inline panel + old demo page.
+ * /[locale]/visual-search (VS-08 + VS-09 + VS-10)
+ * Lives inside the [locale] shell so Header/Footer/i18n are inherited from ClientLayout.
  *
+ * 3-stage full-screen flow:
  * 1. analyzing → fetch + large image + sweep animation
  * 2. detected (600ms) → dashed crop overlay
- * 3. results → identical layout to /search (post-PRO-12): visual_title + single FILTRAR + ProductGrid + drawer (client filter)
+ * 3. results → identical layout to /search (post-PRO-12): visual_title + single FILTRAR + ProductGrid + drawer
  *
- * File handoff: primarily via sessionStorage (set by Header camera). Context is secondary.
- * Direct access without file → redirect to home (safe /es because visual-search is non-i18n shell).
+ * File handoff via sessionStorage (set by Header camera input).
+ * Direct access without file → redirect to /[locale] home.
  */
 export default function VisualSearchPage() {
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations('search');
 
   const [stage, setStage] = useState<Stage>('analyzing');
@@ -43,7 +45,6 @@ export default function VisualSearchPage() {
     let cancelled = false;
 
     async function loadPendingFile() {
-      // 1. Try sessionStorage handoff (the real cross-shell mechanism)
       try {
         const raw = sessionStorage.getItem('__viogi_vs_pending');
         if (raw) {
@@ -63,9 +64,9 @@ export default function VisualSearchPage() {
         // ignore, fall through to redirect
       }
 
-      // 2. No file available → redirect (spec: router.replace). Use /es as safe default.
+      // No file available → redirect to locale home
       if (!cancelled) {
-        router.replace('/es');
+        router.replace(`/${locale}`);
       }
     }
 
@@ -73,7 +74,7 @@ export default function VisualSearchPage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, locale]);
 
   // When we have a file, run the visual search
   useEffect(() => {
@@ -103,7 +104,6 @@ export default function VisualSearchPage() {
         try {
           data = await res.json();
         } catch {
-          // Response was not JSON (e.g. HTML error page in dev)
           data = {};
         }
 
@@ -115,7 +115,6 @@ export default function VisualSearchPage() {
             return;
           }
 
-          // Show server-provided error when available
           const serverMsg = data?.message || data?.error;
           setError(serverMsg ? `Error del servidor: ${serverMsg}` : 'No se pudo procesar la imagen.');
           setIsLoading(false);
@@ -125,7 +124,6 @@ export default function VisualSearchPage() {
         if (cancelled) return;
 
         setResults(data.results ?? []);
-        // Move through the three stages with the documented 600ms pauses
         setTimeout(() => {
           if (!cancelled) setStage('detected');
         }, 600);
@@ -142,7 +140,6 @@ export default function VisualSearchPage() {
         console.error('Visual search fetch error:', e);
 
         if (!cancelled) {
-          // Distinguish real network error from other failures
           setError(
             navigator.onLine
               ? 'Error de conexión con el servidor. Revisa tu GEMINI_API_KEY y los logs del servidor.'
@@ -159,18 +156,16 @@ export default function VisualSearchPage() {
       cancelled = true;
       controller.abort();
     };
-  }, [file, t]);
+  }, [file]);
 
   // Back handler for analyzer stages
   const handleBack = () => {
-    // Clean any leftover pending (defensive)
     try {
       sessionStorage.removeItem('__viogi_vs_pending');
     } catch {}
     router.back();
   };
 
-  // 429 / error screen (simple, per spec)
   if (error) {
     return (
       <main className="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-white px-6 text-center">
@@ -178,7 +173,7 @@ export default function VisualSearchPage() {
           <p className="text-2xl mb-4">⚠️</p>
           <p className="uppercase tracking-widest text-sm mb-6">{error}</p>
           <button
-            onClick={() => router.replace('/es')}
+            onClick={() => router.replace(`/${locale}`)}
             className="uppercase text-xs tracking-widest border-b border-black pb-0.5 hover:opacity-60"
           >
             {t('back')}
@@ -189,12 +184,11 @@ export default function VisualSearchPage() {
   }
 
   if (!file && !isLoading) {
-    // Should have redirected already, but defensive
     return null;
   }
 
   return (
-    <main className="bg-white min-h-screen">
+    <div className="bg-white">
       {stage !== 'results' && file && (
         <VisualSearchAnalyzer file={file} stage={stage} onBack={handleBack} />
       )}
@@ -202,6 +196,6 @@ export default function VisualSearchPage() {
       {stage === 'results' && (
         <VisualSearchResults results={results} />
       )}
-    </main>
+    </div>
   );
 }
