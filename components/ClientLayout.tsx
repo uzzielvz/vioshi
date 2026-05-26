@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import Header from "./Header";
 import Footer from "./Footer";
 import CartDrawer from "./CartDrawer";
-import { VisualSearchProvider } from "@/store/visualSearchContext";
 
 function getPathWithoutLocale(path: string | null): string {
   if (!path) return '';
@@ -40,12 +39,10 @@ export function ClientLayout({
 
   return (
     <div className="flex flex-col min-h-screen">
-      <VisualSearchProvider>
-        {!isAccount && <Header userEmail={userEmail ?? null} />}
-        <main className={`flex-1 ${!isAccount ? 'pt-16' : ''}`}>{children}</main>
-        {!isCheckout && !isAccount && <Footer />}
-        <CartDrawer />
-      </VisualSearchProvider>
+      {!isAccount && <Header userEmail={userEmail ?? null} />}
+      <main className={`flex-1 ${!isAccount ? 'pt-16' : ''}`}>{children}</main>
+      {!isCheckout && !isAccount && <Footer />}
+      <CartDrawer />
     </div>
   );
 }
