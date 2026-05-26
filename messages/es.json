@@ -214,7 +214,25 @@
     "suggestion_1": "Verifica la ortografía",
     "suggestion_2": "Usa términos más generales",
     "suggestion_3": "Intenta con palabras clave diferentes",
-    "clear_search": "LIMPIAR BÚSQUEDA"
+    "clear_search": "LIMPIAR BÚSQUEDA",
+    "clear": "LIMPIAR",
+    "filter": "FILTRAR",
+    "order_by": "ORDENAR POR",
+    "apply": "APLICAR",
+    "category": "Categoría",
+    "showing_results": "MOSTRANDO {count} RESULTADOS",
+    "search_results_for": "BÚSQUEDA: \"{query}\"",
+    "categories": {
+      "all": "Todos",
+      "hoodie": "Hoodies",
+      "chamarra": "Chamarras",
+      "pants": "Pants",
+      "jeans": "Jeans",
+      "playeras": "Playeras",
+      "camisas": "Camisas",
+      "accesorios": "Accesorios",
+      "bolsos": "Bolsos"
+    }
   },
   "success": {
     "confirmed": "Pedido Confirmado",

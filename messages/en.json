@@ -214,7 +214,25 @@
     "suggestion_1": "Check your spelling",
     "suggestion_2": "Use more general terms",
     "suggestion_3": "Try different keywords",
-    "clear_search": "CLEAR SEARCH"
+    "clear_search": "CLEAR SEARCH",
+    "clear": "CLEAR",
+    "filter": "FILTER",
+    "order_by": "ORDER BY",
+    "apply": "APPLY",
+    "category": "Category",
+    "showing_results": "SHOWING {count} RESULTS",
+    "search_results_for": "SEARCH: \"{query}\"",
+    "categories": {
+      "all": "All",
+      "hoodie": "Hoodies",
+      "chamarra": "Jackets",
+      "pants": "Pants",
+      "jeans": "Jeans",
+      "playeras": "Tees",
+      "camisas": "Shirts",
+      "accesorios": "Accessories",
+      "bolsos": "Bags"
+    }
   },
   "success": {
     "confirmed": "Order Confirmed",
