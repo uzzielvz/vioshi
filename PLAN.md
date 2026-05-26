@@ -193,13 +193,13 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | 3.3 | Rate limit 5 req/IP/min en `/api/visual-search` | ✅ VS-06 |
 | 3.4 | **Panel búsqueda visual en barra del Header** — ícono cámara junto a la X; bottom sheet mobile (cámara auto + subir archivo); modal desktop; animación pulso mientras busca; resultados inline con grid catálogo | ✅ VS-07 |
 | 3.5 | **Búsqueda de texto rediseñada** — panel inline estilo Nike/Adidas; resultados como vista catálogo filtrada; sort (precio ↑↓, nuevo) + filtro por categoría (chips); API route `/api/search` server-side ilike; estética Viogi minimalista | ✅ PRO-11 |
-| 3.6 | **Botón único FILTRAR + Visual search full-screen + resultados estilo /search** (PRO-12 + VS-08 + VS-09) — ver [§3.6.1 Spec detallada](#361-spec-detallada-pro-12--vs-08--vs-09) | ← **PRÓXIMO** |
+| 3.6 | **Botón único FILTRAR + Visual search full-screen + resultados estilo /search** (PRO-12 + VS-08 + VS-09) — ver [§3.6.1 Spec detallada](#361-spec-detallada-pro-12--vs-08--vs-09) | ✅ (adaptado: sessionStorage handoff por shells duales) |
 | 3.7 | Unificar prompts Gemini entre endpoint y `generate-embeddings.ts` (VS-01) | Pendiente |
 | 3.8 | Indexación automática de embedding en `createProduct` / `updateProduct` (VS-02) | Pendiente |
 | 3.9 | Retunar índice IVFFlat cuando catálogo >100 productos | Pendiente |
 | 3.10 | Limpieza seeds `[seed]` en producción si aplica | Pendiente |
 
-**Estado actual:** VS panel ✅ + búsqueda texto rediseñada ✅. Próximo: botón único + visual search full-screen (3.6).
+**Estado actual:** VS panel ✅ + búsqueda texto rediseñada ✅. 3.6 (PRO-12 + VS-08/09) **completado** — flujo integrado con full-screen analyzer + resultados acoplados al layout de búsqueda.
 
 ---
 
@@ -486,9 +486,9 @@ Actualizar:
 | PRO-09 | Formulario vender backend | 4 | P2 | M | — | POST persiste aplicación | Pendiente |
 | PRO-10 | Tests smoke (auth, checkout) | 4 | P2 | XL | CHK-01 | Al menos 1 e2e Playwright | Pendiente |
 | PRO-11 | Búsqueda texto rediseñada — panel inline Nike/Adidas style, API ilike, sort+filtro, estética Viogi | 3 | P1 | M | — | Resultados inline sin redirect; sort/filtro funcionales | ✅ Resuelto |
-| PRO-12 | Botón único FILTRAR (subrayado, alineado derecha) sustituyendo `FILTRAR · ORDENAR POR` centrado en `/search` | 3 | P1 | S | PRO-11 | Solo 1 botón visible; drawer mantiene ambas secciones | ← PRÓXIMO (ver §3.6.1) |
-| VS-08 | Visual search full-screen analyzer (imagen grande + animación scan + crop detectado) reemplazando panel inline | 3 | P1 | M | VS-06 | `/visual-search` muestra imagen ≥70vh con scan animado; transición a resultados ≤1s tras endpoint OK | ← PRÓXIMO (ver §3.6.1) |
-| VS-09 | Resultados visual search acoplados a layout `/search` (mismo título-row, botón FILTRAR, drawer) | 3 | P1 | M | VS-08, PRO-12 | DOM diff visible entre `/search` y `/visual-search` solo en título y dataset; `VisualSearchPanel.tsx` borrado | ← PRÓXIMO (ver §3.6.1) |
+| PRO-12 | Botón único FILTRAR (subrayado, alineado derecha) sustituyendo `FILTRAR · ORDENAR POR` centrado en `/search` | 3 | P1 | S | PRO-11 | Solo 1 botón visible; drawer mantiene ambas secciones | ✅ (2026-05) |
+| VS-08 | Visual search full-screen analyzer (imagen grande + animación scan + crop detectado) reemplazando panel inline | 3 | P1 | M | VS-06 | `/visual-search` muestra imagen ≥70vh con scan animado; transición a resultados ≤1s tras endpoint OK | ✅ (2026-05, con adaptación handoff) |
+| VS-09 | Resultados visual search acoplados a layout `/search` (mismo título-row, botón FILTRAR, drawer) | 3 | P1 | M | VS-08, PRO-12 | DOM diff visible entre `/search` y `/visual-search` solo en título y dataset; `VisualSearchPanel.tsx` borrado | ✅ (2026-05) |
 | DEB-01 | Zod en Server Actions críticas | 1 | P2 | L | — | Inputs invalidos rechazados tipados | Pendiente |
 | DEB-02 | Eliminar upsert redundante signUpAction profiles | 1 | P2 | S | — | Solo trigger 0002 crea profile | Pendiente |
 | DEB-03 | Refactor Header (1100+ líneas) | 4 | P2 | XL | — | Componentes extraídos | Pendiente |
@@ -609,6 +609,7 @@ Extraídas del Research Consolidado y `CLAUDE.md`:
 | 2026-05-21 | Fase 1 cerrada 100% | Deploy prod funcionando; migraciones 0004/0005 aplicadas manualmente |
 | 2026-05-21 | Rama feat/checkout-real iniciada | Fase 2 comienza: placeOrderAction + pickup desde DB + success real |
 | 2026-05-22 | Fase 2 cerrada; merge-ready | E2E local OK; fix form anidado; return page + reconcile carrito |
+| 2026-05 (actual) | Fase 3 3.6 (PRO-12 + VS-08/09) completado | Integración visual search full-screen + botón FILTRAR único. Adaptación: sessionStorage handoff (context no cruza shells). VisualSearchPanel eliminado. i18n + analyzer + results listos. |
 
 ---
 

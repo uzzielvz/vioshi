@@ -68,7 +68,7 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 | Admin productos | Service role + Storage | ✅ Parcial | `admin/products/actions.ts` |
 | Admin pickup | Service role | ✅ Completo | `admin/pickup-points/actions.ts` |
 | Pickup en checkout | **In-memory** `lib/pickupPoints.ts` | 🟡 Inconsistente | No usa tabla DB en checkout |
-| Visual search | Gemini + pgvector RPC | ✅ Demo (rama feature) | `api/visual-search`, scripts CLI |
+| Visual search | Gemini + pgvector RPC | ✅ Integrado (VS-08/09) | `app/visual-search/*`, `components/{VisualSearchAnalyzer,VisualSearchResults}.tsx`, `store/visualSearchContext.tsx`, Header camera handoff + PRO-12 en SearchContent, SearchFilterDrawer reutilizado |
 | Búsqueda texto | Página catálogo `/search` + drawer lateral (sort + categoría); filtro client-side sobre `getProducts()` | ✅ Resuelto (PRO-11) | `search/SearchContent.tsx`, `SearchFilterDrawer.tsx` |
 | Pagos | Stripe Payment Element + webhook | ✅ Completo | `checkout/actions.ts`, `api/webhooks/stripe` |
 
@@ -144,7 +144,7 @@ VISUAL SEARCH
 | Admin productos | **Parcial** | CRUD + imágenes; validación débil | Falta variants UI, validación uploads |
 | Admin pickup points | **Completo** | CRUD contra DB | Checkout no consume misma fuente |
 | Búsqueda texto | **Completo** | Página catálogo `/search` + drawer lateral sort/categoría (PRO-11); filtro client-side sobre `getProducts()` | `app/[locale]/search/SearchContent.tsx` + `components/SearchFilterDrawer.tsx` |
-| **Visual search** | **Parcial** | Funcional en demo; sin integración nav | Endpoint + UI + indexación CLI |
+| **Visual search** | **Integrado (Fase 3)** | Full-screen analyzer + resultados estilo /search + botón FILTRAR unificado | PRO-12 + VS-08/09 completados (2026-05) |
 | Vender (consignación) | **Pendiente** | `setTimeout` + TODO | Backend formulario |
 | Archive | **Parcial** | Metadata mock; productos reales slice | Drops reales en DB |
 | Promo codes | **Pendiente** | Tabla existe; sin UI | Validación en cart |
