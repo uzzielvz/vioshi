@@ -419,6 +419,35 @@ Actualizar:
 
 ---
 
+#### 3.6.3 VS-11 — Diffusion dot field analyzer (ChatGPT-style)
+
+**Estado:** ✅ Completado (2026-05-26)
+
+**Motivación:** La animación previa (línea horizontal barriendo + cuadro dashed "DETECTADO") se sentía datada y didáctica. Reemplazada por un campo de puntos con difusión tipo Perlin/value-noise — idéntica vibra al indicador "Creating image" de ChatGPT, sin perder el minimalismo Viogi (todo blanco sobre negro, sin colores acento, sin labels extra).
+
+**Cambios:**
+- Nuevo componente [`components/VisualSearchDotField.tsx`](./components/VisualSearchDotField.tsx) — canvas 2D con value-noise 3D inline (sin deps npm), respira por `requestAnimationFrame`. Resize-aware vía `ResizeObserver` + `devicePixelRatio` cap a 2 para retina sin matar GPU.
+- [`components/VisualSearchAnalyzer.tsx`](./components/VisualSearchAnalyzer.tsx) reescrito:
+  - Fondo `bg-black` (el cambio de modo cromático = señal "AI processing")
+  - Imagen del usuario al 32% opacity detrás (visible pero secundaria)
+  - Dot field cubre todo el area
+  - Label top-left `ANALIZANDO` con cursor `▍` parpadeante
+  - Botón back movido a top-right (X), borde blanco translúcido
+- Eliminado stage `detected` del flujo y de la `Stage` union en `app/[locale]/visual-search/page.tsx`. Sola transición `analyzing → results` a 900ms.
+- Eliminado `.vs-scan-line` + `@keyframes vs-scan` de `app/globals.css`; agregado `.vs-cursor-blink` + `@keyframes vs-cursor-blink`.
+- Eliminada key i18n `detected` de `es.json` + `en.json` (queda solo `analyzing`).
+
+**Parámetros del dot field (sintonizables vía props):**
+- `gridSize: 16px`, `dotRadius: 1.3px`
+- `noiseScale: 0.07` (frecuencia espacial)
+- `noiseSpeed: 0.0007` (tiempo de "respiración")
+- `opacityRange: [0.12, 0.9]` (contraste de brillo)
+- `color: '#ffffff'`
+
+**Commit:** `feat(VS-11): replace scan line + DETECTADO box with diffusion dot field analyzer`
+
+---
+
 #### 3.6.2 Hotfix VS-10 — Mover `/visual-search` dentro del shell `[locale]` (single-pass)
 
 **Estado:** ✅ Completado (2026-05-26)
@@ -619,6 +648,7 @@ En [`components/Header.tsx`](./components/Header.tsx) líneas 249-260 (desktop) 
 | VS-08 | Visual search full-screen analyzer (imagen grande + animación scan + crop detectado) reemplazando panel inline | 3 | P1 | M | VS-06 | `/visual-search` muestra imagen ≥70vh con scan animado; transición a resultados ≤1s tras endpoint OK | ✅ (2026-05, con adaptación handoff) |
 | VS-09 | Resultados visual search acoplados a layout `/search` (mismo título-row, botón FILTRAR, drawer) | 3 | P1 | M | VS-08, PRO-12 | DOM diff visible entre `/search` y `/visual-search` solo en título y dataset; `VisualSearchPanel.tsx` borrado | ✅ (2026-05) |
 | VS-10 | Mover `/visual-search` dentro de shell `[locale]` para heredar Header/Footer + i18n; arreglar link Header (file picker), redirects locale-aware, borrar `VisualSearchProvider` muerto, limpiar middleware | 3 | P1 | M | VS-09 | Header+Footer visibles en results; sin redirects hardcoded a `/es`; link Header abre picker | ✅ (2026-05-26) |
+| VS-11 | Reemplazar línea de scan + cuadro DETECTADO por **diffusion dot field** estilo ChatGPT "creating image" (canvas + value noise inline, sin deps) sobre fondo negro con imagen al 32% | 3 | P1 | S | VS-10 | Sin línea barrida; sin badge/dashed rect; analyzer comunica "AI processing" vía campo de puntos respirando | ✅ (2026-05-26) |
 | DEB-01 | Zod en Server Actions críticas | 1 | P2 | L | — | Inputs invalidos rechazados tipados | Pendiente |
 | DEB-02 | Eliminar upsert redundante signUpAction profiles | 1 | P2 | S | — | Solo trigger 0002 crea profile | Pendiente |
 | DEB-03 | Refactor Header (1100+ líneas) | 4 | P2 | XL | — | Componentes extraídos | Pendiente |

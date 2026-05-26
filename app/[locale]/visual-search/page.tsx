@@ -15,16 +15,15 @@ type VSResult = {
   image_url: string | null;
 };
 
-type Stage = 'analyzing' | 'detected' | 'results';
+type Stage = 'analyzing' | 'results';
 
 /**
- * /[locale]/visual-search (VS-08 + VS-09 + VS-10)
+ * /[locale]/visual-search (VS-08 + VS-09 + VS-10 + VS-11)
  * Lives inside the [locale] shell so Header/Footer/i18n are inherited from ClientLayout.
  *
- * 3-stage full-screen flow:
- * 1. analyzing → fetch + large image + sweep animation
- * 2. detected (600ms) → dashed crop overlay
- * 3. results → identical layout to /search (post-PRO-12): visual_title + single FILTRAR + ProductGrid + drawer
+ * 2-stage full-screen flow (VS-11 collapsed the old 'detected' stage):
+ * 1. analyzing → diffusion dot field over user image (ChatGPT-style)
+ * 2. results → identical layout to /search (post-PRO-12)
  *
  * File handoff via sessionStorage (set by Header camera input).
  * Direct access without file → redirect to /[locale] home.
@@ -124,16 +123,14 @@ export default function VisualSearchPage() {
         if (cancelled) return;
 
         setResults(data.results ?? []);
-        setTimeout(() => {
-          if (!cancelled) setStage('detected');
-        }, 600);
-
+        // Single transition; the dot field already conveys "AI is processing"
+        // for the whole duration, so we no longer need a 'detected' beat.
         setTimeout(() => {
           if (!cancelled) {
             setStage('results');
             setIsLoading(false);
           }
-        }, 1200);
+        }, 900);
       } catch (e: any) {
         if (e?.name === 'AbortError') return;
 
@@ -189,8 +186,8 @@ export default function VisualSearchPage() {
 
   return (
     <div className="bg-white">
-      {stage !== 'results' && file && (
-        <VisualSearchAnalyzer file={file} stage={stage} onBack={handleBack} />
+      {stage === 'analyzing' && file && (
+        <VisualSearchAnalyzer file={file} onBack={handleBack} />
       )}
 
       {stage === 'results' && (

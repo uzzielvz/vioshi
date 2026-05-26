@@ -222,8 +222,7 @@
     "category": "Category",
     "showing_results": "SHOWING {count} RESULTS",
     "search_results_for": "SEARCH: \"{query}\"",
-    "analyzing": "ANALYZING...",
-    "detected": "DETECTED",
+    "analyzing": "ANALYZING",
     "visual_title": "VISUAL SEARCH",
     "back": "Back",
     "categories": {

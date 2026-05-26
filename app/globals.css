@@ -89,24 +89,15 @@ input[type="number"] {
   display: none;
 }
 
-/* Visual Search full-screen analyzer scan line (VS-08) */
-@keyframes vs-scan {
-  0%, 100% {
-    top: 0%;
-  }
-  50% {
-    top: 100%;
-  }
+/* Visual Search analyzer cursor blink (VS-11) — accompanies the ANALIZANDO label
+   alongside the canvas dot field that replaced the old vs-scan-line sweep. */
+@keyframes vs-cursor-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
 
-.vs-scan-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: #000;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
-  animation: vs-scan 1.5s linear infinite;
-  z-index: 10;
-  pointer-events: none;
+.vs-cursor-blink {
+  display: inline-block;
+  margin-left: 4px;
+  animation: vs-cursor-blink 1s steps(1) infinite;
 }
