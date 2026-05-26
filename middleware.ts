@@ -57,7 +57,8 @@ export const config = {
   matcher: [
     '/api/visual-search',
     // Exclude: api routes (webhooks, etc.), auth callback, static files,
-    // visual-search UI, and Next.js internals
-    '/((?!api|auth|_next|visual-search|.*\\..*).*)',
+    // and Next.js internals. /visual-search now lives under [locale] so it
+    // must go through the intl middleware like any other locale-aware route.
+    '/((?!api|auth|_next|.*\\..*).*)',
   ],
 }
