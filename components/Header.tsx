@@ -7,7 +7,6 @@ import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 import { useCart } from "@/store/cartStore";
 import VisualSearchPanel from "@/components/VisualSearchPanel";
-import SearchPanel from "@/components/SearchPanel";
 
 // Pathname sin prefijo de locale para comparaciones (evita hydration mismatch server vs client)
 function getPathnameWithoutLocale(pathname: string): string {
@@ -24,6 +23,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
   const pathnameWithoutLocale = getPathnameWithoutLocale(pathname);
   const tHeader = useTranslations('header');
   const tCommon = useTranslations('common');
+  const tSearch = useTranslations('search');
   const { locale, currency } = useLocaleContext();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -669,15 +669,16 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 <path d="m21 21-4.35-4.35" />
               </svg>
 
-              {/* INPUT */}
+              {/* INPUT — 16px para evitar zoom en iOS */}
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={tHeader('search_placeholder')}
-                className="flex-1 text-black outline-none search-input-placeholder text-[10px] md:text-[11px]"
+                className="flex-1 text-black outline-none search-input-placeholder"
                 style={{
                   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '16px',
                   fontWeight: 400,
                   letterSpacing: '0.02em',
                   background: 'white',
@@ -685,6 +686,25 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 }}
                 autoFocus
               />
+
+              {/* LIMPIAR — sólo cuando hay texto, no reemplaza nada */}
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="flex-shrink-0 text-gray-500 hover:text-black transition-colors duration-200"
+                  style={{
+                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    letterSpacing: '0.02em',
+                    textTransform: 'uppercase',
+                  }}
+                  aria-label={tSearch('clear')}
+                >
+                  {tSearch('clear')}
+                </button>
+              )}
 
               {/* ÍCONO CÁMARA - Búsqueda visual */}
               <button
@@ -739,18 +759,6 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 locale={locale}
                 file={vsFile}
                 onClose={() => setVsFile(null)}
-              />
-            )}
-
-            {/* Panel de búsqueda de texto (solo cuando no hay visual search activa) */}
-            {!vsFile && (
-              <SearchPanel
-                locale={locale}
-                query={searchQuery}
-                onSelect={() => {
-                  setSearchOpen(false);
-                  setSearchQuery('');
-                }}
               />
             )}
           </div>
