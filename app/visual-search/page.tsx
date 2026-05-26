@@ -1,120 +1,189 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import VisualSearchAnalyzer from '@/components/VisualSearchAnalyzer';
+import VisualSearchResults from '@/components/VisualSearchResults';
 
-type Result = {
+type VSResult = {
   id: string;
   slug: string;
   name: string;
-  description: string;
   price_mxn: number;
   similarity: number;
   image_url: string | null;
 };
 
+type Stage = 'analyzing' | 'detected' | 'results';
+
+/**
+ * /visual-search (VS-08 + VS-09)
+ * 3-stage full-screen flow replacing the old inline panel + old demo page.
+ *
+ * 1. analyzing → fetch + large image + sweep animation
+ * 2. detected (600ms) → dashed crop overlay
+ * 3. results → identical layout to /search (post-PRO-12): visual_title + single FILTRAR + ProductGrid + drawer (client filter)
+ *
+ * File handoff: primarily via sessionStorage (set by Header camera). Context is secondary.
+ * Direct access without file → redirect to home (safe /es because visual-search is non-i18n shell).
+ */
 export default function VisualSearchPage() {
+  const router = useRouter();
+  const t = useTranslations('search');
+
+  const [stage, setStage] = useState<Stage>('analyzing');
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<Result[]>([]);
-  const [aiDescription, setAiDescription] = useState<string | null>(null);
+  const [results, setResults] = useState<VSResult[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleFile = (f: File) => {
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
-    setResults([]);
-    setError(null);
-    setAiDescription(null);
-  };
+  // Reconstruct File from Header handoff (sessionStorage) or fallback
+  useEffect(() => {
+    let cancelled = false;
 
-  const handleSubmit = async () => {
-    if (!file) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-      const res = await fetch('/api/visual-search', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (!res.ok) {
-        if (data.error === 'rate_limit' && data.message) {
-          setError(data.message);
-        } else {
-          setError('No se pudo procesar la imagen.');
+    async function loadPendingFile() {
+      // 1. Try sessionStorage handoff (the real cross-shell mechanism)
+      try {
+        const raw = sessionStorage.getItem('__viogi_vs_pending');
+        if (raw) {
+          const { name, type, dataUrl } = JSON.parse(raw);
+          if (dataUrl) {
+            const res = await fetch(dataUrl);
+            const blob = await res.blob();
+            const reconstructed = new File([blob], name || 'upload.jpg', { type: type || 'image/jpeg' });
+            if (!cancelled) {
+              setFile(reconstructed);
+              sessionStorage.removeItem('__viogi_vs_pending');
+              return;
+            }
+          }
         }
-      } else {
-        setResults(data.results);
-        setAiDescription(data.ai_description);
+      } catch {
+        // ignore, fall through to redirect
       }
-    } catch {
-      setError('Error de conexión.');
-    } finally {
-      setLoading(false);
+
+      // 2. No file available → redirect (spec: router.replace). Use /es as safe default.
+      if (!cancelled) {
+        router.replace('/es');
+      }
     }
+
+    loadPendingFile();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  // When we have a file, run the visual search
+  useEffect(() => {
+    if (!file) return;
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    async function runSearch() {
+      if (!file) return;
+      setIsLoading(true);
+      setError(null);
+      setResults([]);
+      setStage('analyzing');
+
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const res = await fetch('/api/visual-search', {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          if (res.status === 429) {
+            const msg = data?.message || t('analyzing'); // reuse generic if needed
+            setError(msg);
+            setIsLoading(false);
+            return;
+          }
+          setError('No se pudo procesar la imagen.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (cancelled) return;
+
+        setResults(data.results ?? []);
+        // Move through the three stages with the documented 600ms pauses
+        setTimeout(() => {
+          if (!cancelled) setStage('detected');
+        }, 600);
+
+        setTimeout(() => {
+          if (!cancelled) {
+            setStage('results');
+            setIsLoading(false);
+          }
+        }, 1200);
+      } catch (e: any) {
+        if (e?.name === 'AbortError') return;
+        if (!cancelled) {
+          setError('Error de conexión.');
+          setIsLoading(false);
+        }
+      }
+    }
+
+    runSearch();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [file, t]);
+
+  // Back handler for analyzer stages
+  const handleBack = () => {
+    // Clean any leftover pending (defensive)
+    try {
+      sessionStorage.removeItem('__viogi_vs_pending');
+    } catch {}
+    router.back();
   };
+
+  // 429 / error screen (simple, per spec)
+  if (error) {
+    return (
+      <main className="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-white px-6 text-center">
+        <div className="max-w-md">
+          <p className="text-2xl mb-4">⚠️</p>
+          <p className="uppercase tracking-widest text-sm mb-6">{error}</p>
+          <button
+            onClick={() => router.replace('/es')}
+            className="uppercase text-xs tracking-widest border-b border-black pb-0.5 hover:opacity-60"
+          >
+            {t('back')}
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (!file && !isLoading) {
+    // Should have redirected already, but defensive
+    return null;
+  }
 
   return (
-    <main className="min-h-screen bg-white px-6 py-12 max-w-4xl mx-auto">
-      <h1 className="text-4xl font-serif mb-2">Búsqueda Visual</h1>
-      <p className="text-gray-600 mb-8">
-        Sube una foto de una prenda y encuentra similares en el catálogo.
-      </p>
-
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-6">
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-          className="mb-4"
-        />
-        {preview && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="preview" className="mx-auto max-h-64 mt-4 rounded" />
-        )}
-      </div>
-
-      <button
-        onClick={handleSubmit}
-        disabled={!file || loading}
-        className="bg-black text-white px-6 py-3 rounded disabled:opacity-50 mb-8"
-      >
-        {loading ? 'Analizando…' : 'Buscar similares'}
-      </button>
-
-      {error && <p className="text-red-600 mb-4">{error}</p>}
-
-      {aiDescription && (
-        <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-6 text-sm">
-          <p className="font-bold mb-1">IA detectó:</p>
-          <p className="italic text-gray-700">{aiDescription}</p>
-        </div>
+    <main className="bg-white min-h-screen">
+      {stage !== 'results' && file && (
+        <VisualSearchAnalyzer file={file} stage={stage} onBack={handleBack} />
       )}
 
-      {results.length > 0 && (
-        <div>
-          <h2 className="text-2xl font-serif mb-4">Resultados</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {results.map((r) => (
-              <div key={r.id} className="border border-gray-200 rounded-lg p-4">
-                {r.image_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={r.image_url}
-                    alt={r.name}
-                    className="w-full h-48 object-cover rounded mb-3"
-                  />
-                )}
-                <h3 className="font-bold">{r.name}</h3>
-                <p className="text-sm text-gray-600 line-clamp-2 mb-2">{r.description}</p>
-                <p className="font-bold">${r.price_mxn} MXN</p>
-                <p className="text-xs text-gray-500 mt-2">
-                  Similitud: {(r.similarity * 100).toFixed(1)}%
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+      {stage === 'results' && (
+        <VisualSearchResults results={results} />
       )}
     </main>
   );
