@@ -13,16 +13,15 @@ interface VisualSearchAnalyzerProps {
  * VisualSearchAnalyzer (VS-08 + VS-11)
  * Full-viewport analyzer for the uploaded image.
  *
- * Single 'analyzing' stage (the old 'detected' dashed rectangle was removed
- * in VS-11 — the diffusion dot field already communicates "AI processing"
- * without the literal crop UI). Parent page orchestrates timing.
- *
- * Visual stack (back → front):
- *   - black backdrop          → "AI mode" visual cue
- *   - user image @ 35% opacity → user still sees what is being analyzed
- *   - canvas dot field         → ChatGPT-style noise-driven breathing
- *   - top-left label           → ANALIZANDO… with blinking cursor
- *   - back button              → circle button, white border
+ * Visual stack (back → front), all bounded to the rendered <img> box so dots
+ * never spill across the screen:
+ *   - black backdrop                  → "AI processing" mode cue
+ *   - inline-block wrapper            → shrinks to exact image bounds
+ *     - user image @ 14% opacity      → faint ghost so user knows what's analyzed
+ *     - canvas dot field overlay      → density driven by image luminance,
+ *                                       contour-aware, breathing, direction-shifting
+ *   - top-left label                  → ANALIZANDO with blinking cursor
+ *   - top-right back button           → minimal X
  */
 export default function VisualSearchAnalyzer({
   file,
@@ -49,24 +48,27 @@ export default function VisualSearchAnalyzer({
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-64px)] w-full bg-black overflow-hidden">
-      {/* User image — large, centered, low opacity. Sits below the dot field. */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        {previewUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
+    <div className="relative min-h-[calc(100vh-64px)] w-full bg-black overflow-hidden flex items-center justify-center">
+      {/* Image-bound wrapper — inline-block so it sizes to the actual rendered img.
+          Both the <img> and the canvas live inside this box, so the dot cloud is
+          strictly contained within the image, not across the whole viewport. */}
+      {previewUrl && (
+        <div className="relative inline-block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={previewUrl}
             alt="Imagen para búsqueda visual"
-            className="max-h-[75vh] max-w-[min(90vw,540px)] object-contain"
-            style={{ opacity: 0.32 }}
+            className="block max-h-[75vh] max-w-[min(90vw,540px)]"
+            style={{ opacity: 0.14 }}
           />
-        )}
-      </div>
+          <VisualSearchDotField
+            imageUrl={previewUrl}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+          />
+        </div>
+      )}
 
-      {/* Diffusion dot field — covers the whole analyzer area */}
-      <VisualSearchDotField className="absolute inset-0 w-full h-full" />
-
-      {/* Top-left label with blinking cursor, à la ChatGPT */}
+      {/* Top-left label with blinking cursor (ChatGPT vibe) */}
       <div
         className="absolute"
         style={{

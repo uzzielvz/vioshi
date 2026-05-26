@@ -438,13 +438,23 @@ Actualizar:
 - Eliminada key i18n `detected` de `es.json` + `en.json` (queda solo `analyzing`).
 
 **Parámetros del dot field (sintonizables vía props):**
-- `gridSize: 16px`, `dotRadius: 1.3px`
-- `noiseScale: 0.07` (frecuencia espacial)
-- `noiseSpeed: 0.0007` (tiempo de "respiración")
-- `opacityRange: [0.12, 0.9]` (contraste de brillo)
+- `gridSize: 14px`, `baseRadius: 0.5`, `peakRadius: 2.6` (rango de tamaño por densidad)
+- `noiseScale: 0.05` (frecuencia espacial)
+- `noiseSpeed: 0.00085` (tiempo de "respiración")
+- `jitterMag: 4px` (desplazamiento máx por punto, ángulo drifta con `slowZ`)
+- `contourBoost: 2.4` (multiplicador en bordes detectados vía gradient)
 - `color: '#ffffff'`
 
-**Commit:** `feat(VS-11): replace scan line + DETECTADO box with diffusion dot field analyzer`
+**Iteración (VS-11b, 2026-05-26):** el dot field ya **no es uniforme** sobre la pantalla. Ahora samplea la imagen subida:
+- Cada punto del grid mide la luminancia del pixel correspondiente en una copia offscreen a 220px de ancho
+- Densidad = `(1 - luminancia) × alpha` → áreas oscuras (prenda) = puntos grandes/brillantes, fondo blanco = puntos minúsculos/tenues
+- Edge detection cheap (2 vecinos) suma `contourBoost × magnitud` al radio → los contornos se marcan
+- Cada punto tiene jitter `(cos(θ), sin(θ)) × mag` donde θ deriva de un noise lento (`slowZ`) → el enjambre cambia de dirección
+- Canvas absolutamente posicionado sobre el `<img>` en un wrapper `inline-block` → el cloud está **estrictamente confinado** al bounding box de la prenda, jamás se sale a la pantalla negra
+
+**Commits:**
+- `feat(VS-11): replace scan line + DETECTADO box with diffusion dot field analyzer`
+- `feat(VS-11b): make dot field image-driven (luminance density + contour + jitter), confined to image bounds`
 
 ---
 

@@ -3,35 +3,36 @@
 import { useEffect, useRef } from 'react';
 
 interface VisualSearchDotFieldProps {
-  /** Spacing between dots in CSS pixels */
+  /** Object URL or remote URL of the image whose silhouette drives the dots */
+  imageUrl: string;
+  /** Spacing between grid points in CSS pixels */
   gridSize?: number;
-  /** Radius of each dot in CSS pixels */
-  dotRadius?: number;
-  /** Spatial frequency of the noise (higher = more chaotic) */
+  /** Minimum dot radius (low-density / background areas) */
+  baseRadius?: number;
+  /** Maximum dot radius (high-density / garment areas) */
+  peakRadius?: number;
+  /** Spatial frequency of the breathing noise */
   noiseScale?: number;
-  /** Time multiplier; lower = slower breath */
+  /** Time multiplier for the breathing */
   noiseSpeed?: number;
-  /** [min, max] opacity for each dot */
-  opacityRange?: [number, number];
-  /** Dot color (any CSS color) */
+  /** Max pixel offset for direction-shifting jitter */
+  jitterMag?: number;
+  /** Size multiplier added at image contours (edge detection) */
+  contourBoost?: number;
+  /** Dot color */
   color?: string;
-  /** Optional className passed to the canvas */
+  /** Passed through to the canvas element */
   className?: string;
 }
 
-/**
- * Hash-based 2D value noise. No deps. Returns a value in [0, 1].
- * Smooth + tileable enough for our diffusion-style brightness field.
- */
+/** Inline 3D value noise — no deps, smooth in time so the field breathes. */
 function hash(x: number, y: number, z: number): number {
   const n = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453123;
   return n - Math.floor(n);
 }
-
 function smooth(t: number): number {
   return t * t * (3 - 2 * t);
 }
-
 function valueNoise(x: number, y: number, z: number): number {
   const ix = Math.floor(x);
   const iy = Math.floor(y);
@@ -40,7 +41,6 @@ function valueNoise(x: number, y: number, z: number): number {
   const fy = y - iy;
   const fz = z - iz;
 
-  // 8 corner samples for trilinear interp (3D = ruido continuo en el tiempo)
   const a = hash(ix, iy, iz);
   const b = hash(ix + 1, iy, iz);
   const c = hash(ix, iy + 1, iz);
@@ -58,35 +58,41 @@ function valueNoise(x: number, y: number, z: number): number {
   const x1 = c * (1 - sx) + d * sx;
   const x2 = e * (1 - sx) + f * sx;
   const x3 = g * (1 - sx) + h * sx;
-
   const y0 = x0 * (1 - sy) + x1 * sy;
   const y1 = x2 * (1 - sy) + x3 * sy;
-
   return y0 * (1 - sz) + y1 * sz;
 }
 
 /**
  * VisualSearchDotField
  *
- * Canvas-based diffusion dot field inspired by ChatGPT's "creating image"
- * indicator. Each dot's opacity is driven by a 3D value-noise sample
- * (x, y, time) so the field "breathes" as a continuous neural-style mask
- * without any sweeping line or visible pattern.
+ * Canvas dot field driven by the uploaded image itself:
+ *   - density (size + opacity)  → derived from luminance of the source pixel
+ *     (darker pixels ≈ garment → bigger, brighter dots)
+ *   - contour boost              → simple gradient magnitude makes edge dots pop,
+ *     tracing the silhouette of the prenda
+ *   - breathing                  → 3D value noise modulates size + brightness over time
+ *   - direction-shifting jitter  → each dot is offset by a noise-driven angle that
+ *     drifts slowly, so the swarm "changes direction" without a uniform sweep
  *
- * Tuned for Viogi's minimalism: white dots over black, subtle contrast,
- * no animations beyond brightness modulation.
+ * Designed to be absolutely-positioned over the rendered <img> so the dot
+ * cloud is bounded exactly by the image box (no dots over background).
  */
 export default function VisualSearchDotField({
-  gridSize = 16,
-  dotRadius = 1.3,
-  noiseScale = 0.07,
-  noiseSpeed = 0.0007,
-  opacityRange = [0.12, 0.9],
+  imageUrl,
+  gridSize = 14,
+  baseRadius = 0.5,
+  peakRadius = 2.6,
+  noiseScale = 0.05,
+  noiseSpeed = 0.00085,
+  jitterMag = 4,
+  contourBoost = 2.4,
   color = '#ffffff',
   className,
 }: VisualSearchDotFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
+  const sampleRef = useRef<ImageData | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -97,6 +103,24 @@ export default function VisualSearchDotField({
     let width = 0;
     let height = 0;
     let dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    let cancelled = false;
+
+    // Offscreen sampling canvas — moderate resolution keeps getImageData cheap.
+    const offscreen = document.createElement('canvas');
+    const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      if (cancelled || !offCtx) return;
+      const SAMPLE_W = 220;
+      const ratio = img.naturalHeight / Math.max(1, img.naturalWidth);
+      const SAMPLE_H = Math.max(1, Math.round(SAMPLE_W * ratio));
+      offscreen.width = SAMPLE_W;
+      offscreen.height = SAMPLE_H;
+      offCtx.drawImage(img, 0, 0, SAMPLE_W, SAMPLE_H);
+      sampleRef.current = offCtx.getImageData(0, 0, SAMPLE_W, SAMPLE_H);
+    };
+    img.src = imageUrl;
 
     function resize() {
       if (!canvas) return;
@@ -113,8 +137,33 @@ export default function VisualSearchDotField({
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
 
-    const [minA, maxA] = opacityRange;
-    const range = maxA - minA;
+    /**
+     * Density at (u, v) in [0, 1] across the image. Higher = more "stuff" at that pixel.
+     * Strategy: darker pixels = garment ⇒ higher density. Alpha gates transparent areas.
+     */
+    function sampleDensity(u: number, v: number): number {
+      const data = sampleRef.current;
+      if (!data) return 0.45; // neutral while image is loading
+      const sx = Math.max(0, Math.min(data.width - 1, Math.floor(u * (data.width - 1))));
+      const sy = Math.max(0, Math.min(data.height - 1, Math.floor(v * (data.height - 1))));
+      const idx = (sy * data.width + sx) * 4;
+      const r = data.data[idx];
+      const g = data.data[idx + 1];
+      const b = data.data[idx + 2];
+      const a = data.data[idx + 3] / 255;
+      const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      // (1 - lum) so dark = high density; floor at 0.05 so background isn't fully empty
+      return a * Math.max(0.05, 1 - lum);
+    }
+
+    /** Cheap gradient magnitude → boosts dots that sit on contour lines. */
+    function sampleEdge(u: number, v: number): number {
+      const eps = 0.012;
+      const c = sampleDensity(u, v);
+      const r = sampleDensity(Math.min(1, u + eps), v);
+      const d = sampleDensity(u, Math.min(1, v + eps));
+      return Math.abs(r - c) + Math.abs(d - c);
+    }
 
     function frame(t: number) {
       if (!ctx) return;
@@ -122,13 +171,39 @@ export default function VisualSearchDotField({
       ctx.fillStyle = color;
 
       const z = t * noiseSpeed;
+      const slowZ = t * 0.00022; // slow direction-shift clock
 
       for (let x = gridSize / 2; x < width; x += gridSize) {
         for (let y = gridSize / 2; y < height; y += gridSize) {
+          const u = x / width;
+          const v = y / height;
+
+          // Image-driven density (this is what gives the swarm its silhouette)
+          const density = sampleDensity(u, v);
+          const edge = sampleEdge(u, v);
+
+          // Breathing noise — modulates size + opacity
           const n = valueNoise(x * noiseScale, y * noiseScale, z);
-          ctx.globalAlpha = minA + n * range;
+
+          // Direction-shifting jitter: each dot offset by an angle that drifts slowly
+          const dirN = valueNoise(x * 0.012, y * 0.012, slowZ);
+          const angle = dirN * Math.PI * 4; // rotates as slowZ advances
+          const mag = jitterMag * (0.4 + n * 0.7);
+          const dx = Math.cos(angle) * mag;
+          const dy = Math.sin(angle) * mag;
+
+          // Final radius: base + density ramp + breathing + contour boost
+          const radius =
+            baseRadius +
+            density * (peakRadius - baseRadius) * (0.55 + n * 0.7) +
+            edge * contourBoost;
+
+          // Final opacity: bias by density so background is faint, garment is bold
+          const opacity = Math.min(1, 0.08 + density * 0.65 + n * 0.25);
+
+          ctx.globalAlpha = opacity;
           ctx.beginPath();
-          ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
+          ctx.arc(x + dx, y + dy, Math.max(0.2, radius), 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -139,16 +214,11 @@ export default function VisualSearchDotField({
     rafRef.current = requestAnimationFrame(frame);
 
     return () => {
+      cancelled = true;
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       ro.disconnect();
     };
-  }, [gridSize, dotRadius, noiseScale, noiseSpeed, opacityRange, color]);
+  }, [imageUrl, gridSize, baseRadius, peakRadius, noiseScale, noiseSpeed, jitterMag, contourBoost, color]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className={className}
-      aria-hidden="true"
-    />
-  );
+  return <canvas ref={canvasRef} className={className} aria-hidden="true" />;
 }
