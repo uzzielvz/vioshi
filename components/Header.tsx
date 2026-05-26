@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 import { useCart } from "@/store/cartStore";
 import VisualSearchPanel from "@/components/VisualSearchPanel";
+import SearchPanel from "@/components/SearchPanel";
 
 // Pathname sin prefijo de locale para comparaciones (evita hydration mismatch server vs client)
 function getPathnameWithoutLocale(pathname: string): string {
@@ -738,6 +739,18 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 locale={locale}
                 file={vsFile}
                 onClose={() => setVsFile(null)}
+              />
+            )}
+
+            {/* Panel de búsqueda de texto (solo cuando no hay visual search activa) */}
+            {!vsFile && (
+              <SearchPanel
+                locale={locale}
+                query={searchQuery}
+                onSelect={() => {
+                  setSearchOpen(false);
+                  setSearchQuery('');
+                }}
               />
             )}
           </div>
