@@ -23,7 +23,7 @@ function checkRateLimit(ip: string): boolean {
 }
 
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE = 5 * 1024 * 1024;
+const MAX_SIZE = 10 * 1024 * 1024;
 const FLASH_MODEL = 'gemini-2.5-flash';
 const EMBED_MODEL = 'gemini-embedding-001';
 const EMBED_DIMS = 768;
