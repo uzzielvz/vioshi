@@ -1,11 +1,30 @@
 # TESTING-PLAN.md — VIOGI E-commerce
 
 **Fecha de creación:** 2026-05-23  
-**Versión:** 1.0 (Plan inicial)  
-**Estado:** Listo para ejecución iterativa  
+**Última actualización:** 2026-05-27  
+**Versión:** 1.1 (Estado real documentado)  
+**Estado:** Infraestructura parcial + 1 test unitario escrito. Plan necesita reactivación.
+
 **Propósito:** Definir cómo probar **todo el sistema** de forma profesional, priorizada y sostenible, adaptada a las características reales de VIOGI.
 
 > **Filosofía del plan:** No vamos a escribir tests por escribir tests. Vamos a hacer **preguntas constantes**, exploración de código, análisis de riesgos y pruebas incrementales hasta que el sistema tenga la protección que realmente necesita.
+
+---
+
+## Estado Actual (Actualizado 2026-05-27)
+
+| Aspecto                        | Estado                  | Detalle |
+|--------------------------------|-------------------------|--------|
+| **Infraestructura**            | Parcialmente completa   | Vitest + RTL + Playwright instalados. Configs (`vitest.config.ts`, `playwright.config.ts`, `vitest.setup.ts`) existen. Scripts de test en `package.json`. |
+| **Estructura de carpetas**     | Creada                  | `tests/unit/`, `tests/integration/`, `tests/e2e/` |
+| **Tests escritos**             | Muy bajo                | Solo 1 archivo: `tests/unit/lib/cart/reconcile.test.ts` (bastante completo, cubre casos principales de reconciliación). |
+| **Fase 0 del plan**            | Parcialmente ejecutada  | Setup técnico iniciado pero nunca documentado ni terminado formalmente. |
+| **Fase 1 (Protección del dinero)** | **Sin comenzar**     | No hay tests de `createPaymentIntentAction`, webhook de Stripe, ni lookups de órdenes. |
+| **Integración en CI**          | No existe               | `.github/workflows/ci.yml` solo ejecuta lint + type-check + build. |
+| **TESTING-PLAN.md**            | Desactualizado          | Este documento no se actualizó desde su creación hasta mayo 2026. |
+
+**Conclusión del estado actual:**  
+Se hizo un esfuerzo inicial de infraestructura, pero el trabajo real de pruebas se detuvo muy temprano. Estamos todavía al inicio de Fase 0 / antes de Fase 1.
 
 ---
 
@@ -316,12 +335,24 @@ Convención: `*.test.ts` para Vitest, `*.spec.ts` para Playwright.
 
 ---
 
-## 8. Próximos Pasos Inmediatos (Después de aprobar este plan)
+## 8. Próximos Pasos Inmediatos (Actualizado 2026-05-27)
 
-1. Revisión y ajustes de este documento por parte del usuario.
-2. Decidir si creamos un proyecto Supabase separado para tests de RLS.
-3. Instalar dependencias y configuración base.
-4. Comenzar Fase 1 (protección del dinero) con el ciclo iterativo de preguntas + tests.
+**Estado:** La infraestructura básica ya existe. Ya no es necesario empezar desde cero.
+
+### Pasos recomendados ahora:
+
+1. **Actualizar este documento** (hecho en esta sesión) con el estado real.
+2. **Completar Fase 0 pendiente** (bajo esfuerzo):
+   - Terminar de pulir `vitest.setup.ts` si hace falta (mocks globales de localStorage/sessionStorage).
+   - Escribir 2-3 tests adicionales para `lib/admin/session.ts` (ya es una prioridad alta).
+3. **Decidir estrategia de datos de prueba** para RLS y Supabase (¿DB separada o prefijo `[test]`?).
+4. **Empezar Fase 1** (Protección del Dinero) — esta es la prioridad real del proyecto:
+   - Tests de `createPaymentIntentAction`
+   - Tests del Webhook de Stripe
+   - Tests de lookups de órdenes (guest + auth)
+5. Agregar ejecución de tests al CI (`.github/workflows/ci.yml`).
+
+**Recomendación fuerte:** No seguir escribiendo tests aleatorios. Seguir el orden del plan: primero terminar Fase 0 limpia + definir estrategia de datos, luego atacar Fase 1 con foco en `createPaymentIntentAction`.
 
 ---
 
@@ -336,5 +367,12 @@ Convención: `*.test.ts` para Vitest, `*.spec.ts` para Playwright.
 **Este documento es vivo.** Se actualizará después de cada fase de implementación a medida que descubramos nuevos riesgos y mejores formas de probar el sistema.
 
 ---
+
+## Historial de Actualizaciones del Plan
+
+| Fecha       | Versión | Cambio |
+|-------------|---------|--------|
+| 2026-05-23  | 1.0     | Creación inicial del documento |
+| 2026-05-27  | 1.1     | Se agregó sección **"Estado Actual"** con diagnóstico real del proyecto. Se actualizaron los "Próximos Pasos" reconociendo que parte de la infraestructura ya existe. Se documentó que solo hay 1 test unitario escrito (`reconcileCartItems`). |
 
 *Fin del TESTING-PLAN.md — VIOGI*
