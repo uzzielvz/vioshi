@@ -6,6 +6,7 @@ import VisualSearchDotField from './VisualSearchDotField';
 
 interface VisualSearchAnalyzerProps {
   file: File;
+  stage: 'analyzing' | 'detected';
   onBack: () => void;
 }
 
