@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
+import VisualSearchCropper, { type CropRect } from '@/components/VisualSearchCropper';
 import VisualSearchAnalyzer from '@/components/VisualSearchAnalyzer';
 import VisualSearchResults from '@/components/VisualSearchResults';
 
@@ -15,31 +16,32 @@ type VSResult = {
   image_url: string | null;
 };
 
-type Stage = 'analyzing' | 'results';
+type Stage = 'cropping' | 'looking' | 'results';
 
 /**
- * /[locale]/visual-search (VS-08 + VS-09 + VS-10 + VS-11)
- * Lives inside the [locale] shell so Header/Footer/i18n are inherited from ClientLayout.
+ * /[locale]/visual-search (VS-08 → VS-12)
+ * Lives inside the [locale] shell so Header/Footer/i18n are inherited.
  *
- * 2-stage full-screen flow (VS-11 collapsed the old 'detected' stage):
- * 1. analyzing → diffusion dot field over user image (ChatGPT-style)
- * 2. results → identical layout to /search (post-PRO-12)
+ * 3-stage flow with soft cross-fades (VS-12):
+ * 1. cropping → user picks the garment region (white, draggable rect)
+ * 2. looking  → light-theme dot field over the chosen region while we hit the API
+ * 3. results  → identical layout to /search
  *
- * File handoff via sessionStorage (set by Header camera input).
- * Direct access without file → redirect to /[locale] home.
+ * The image is cropped client-side before sending to the API, so Gemini
+ * focuses on the prenda the user actually wants matched.
  */
 export default function VisualSearchPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('search');
 
-  const [stage, setStage] = useState<Stage>('analyzing');
+  const [stage, setStage] = useState<Stage>('cropping');
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [cropRect, setCropRect] = useState<CropRect | null>(null);
   const [results, setResults] = useState<VSResult[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Reconstruct File from Header handoff (sessionStorage) or fallback
   useEffect(() => {
     let cancelled = false;
 
@@ -54,6 +56,7 @@ export default function VisualSearchPage() {
             const reconstructed = new File([blob], name || 'upload.jpg', { type: type || 'image/jpeg' });
             if (!cancelled) {
               setFile(reconstructed);
+              setPreviewUrl(URL.createObjectURL(reconstructed));
               sessionStorage.removeItem('__viogi_vs_pending');
               return;
             }
@@ -63,7 +66,6 @@ export default function VisualSearchPage() {
         // ignore, fall through to redirect
       }
 
-      // No file available → redirect to locale home
       if (!cancelled) {
         router.replace(`/${locale}`);
       }
@@ -75,93 +77,107 @@ export default function VisualSearchPage() {
     };
   }, [router, locale]);
 
-  // When we have a file, run the visual search
   useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  /**
+   * Crop the source File using the rect (relative coords). Returns a JPEG File.
+   */
+  async function cropFile(source: File, rect: CropRect): Promise<File> {
+    const url = URL.createObjectURL(source);
+    try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = reject;
+        el.src = url;
+      });
+      const sx = Math.max(0, Math.round(rect.x * img.naturalWidth));
+      const sy = Math.max(0, Math.round(rect.y * img.naturalHeight));
+      const sw = Math.max(1, Math.round(rect.width * img.naturalWidth));
+      const sh = Math.max(1, Math.round(rect.height * img.naturalHeight));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = sw;
+      canvas.height = sh;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return source;
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+
+      const blob: Blob | null = await new Promise((resolve) =>
+        canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.92)
+      );
+      if (!blob) return source;
+      return new File([blob], source.name.replace(/\.[^.]+$/, '') + '-crop.jpg', { type: 'image/jpeg' });
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  async function handleCropConfirm(rect: CropRect) {
     if (!file) return;
+    setCropRect(rect);
+    setStage('looking');
+    setError(null);
+    setResults([]);
 
-    let cancelled = false;
-    const controller = new AbortController();
+    try {
+      const cropped = await cropFile(file, rect);
+      const formData = new FormData();
+      formData.append('image', cropped);
 
-    async function runSearch() {
-      if (!file) return;
-      setIsLoading(true);
-      setError(null);
-      setResults([]);
-      setStage('analyzing');
+      const startedAt = Date.now();
+      const res = await fetch('/api/visual-search', {
+        method: 'POST',
+        body: formData,
+      });
 
+      let data: any = {};
       try {
-        const formData = new FormData();
-        formData.append('image', file);
+        data = await res.json();
+      } catch {
+        data = {};
+      }
 
-        const res = await fetch('/api/visual-search', {
-          method: 'POST',
-          body: formData,
-          signal: controller.signal,
-        });
-
-        let data: any = {};
-        try {
-          data = await res.json();
-        } catch {
-          data = {};
-        }
-
-        if (!res.ok) {
-          if (res.status === 429) {
-            const msg = data?.message || 'Demasiadas búsquedas. Intenta más tarde.';
-            setError(msg);
-            setIsLoading(false);
-            return;
-          }
-
-          const serverMsg = data?.message || data?.error;
-          setError(serverMsg ? `Error del servidor: ${serverMsg}` : 'No se pudo procesar la imagen.');
-          setIsLoading(false);
+      if (!res.ok) {
+        if (res.status === 429) {
+          setError(data?.message || 'Demasiadas búsquedas. Intenta más tarde.');
           return;
         }
-
-        if (cancelled) return;
-
-        setResults(data.results ?? []);
-        // Single transition; the dot field already conveys "AI is processing"
-        // for the whole duration, so we no longer need a 'detected' beat.
-        setTimeout(() => {
-          if (!cancelled) {
-            setStage('results');
-            setIsLoading(false);
-          }
-        }, 900);
-      } catch (e: any) {
-        if (e?.name === 'AbortError') return;
-
-        console.error('Visual search fetch error:', e);
-
-        if (!cancelled) {
-          setError(
-            navigator.onLine
-              ? 'Error de conexión con el servidor. Revisa tu GEMINI_API_KEY y los logs del servidor.'
-              : 'Sin conexión a internet.'
-          );
-          setIsLoading(false);
-        }
+        const serverMsg = data?.message || data?.error;
+        setError(serverMsg ? `Error del servidor: ${serverMsg}` : 'No se pudo procesar la imagen.');
+        return;
       }
+
+      // Minimum visible time for the dot field so the transition feels
+      // intentional even on fast networks (~1.2s floor).
+      const elapsed = Date.now() - startedAt;
+      const minVisible = 1200;
+      const wait = Math.max(0, minVisible - elapsed);
+
+      setTimeout(() => {
+        setResults(data.results ?? []);
+        setStage('results');
+      }, wait);
+    } catch (e: any) {
+      console.error('Visual search fetch error:', e);
+      setError(
+        navigator.onLine
+          ? 'Error de conexión con el servidor. Revisa tu GEMINI_API_KEY y los logs del servidor.'
+          : 'Sin conexión a internet.'
+      );
     }
+  }
 
-    runSearch();
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [file]);
-
-  // Back handler for analyzer stages
-  const handleBack = () => {
+  function handleBack() {
     try {
       sessionStorage.removeItem('__viogi_vs_pending');
     } catch {}
     router.back();
-  };
+  }
 
   if (error) {
     return (
@@ -180,18 +196,32 @@ export default function VisualSearchPage() {
     );
   }
 
-  if (!file && !isLoading) {
-    return null;
+  if (!file || !previewUrl) {
+    return <div className="min-h-[calc(100vh-64px)] bg-white" />;
   }
 
   return (
     <div className="bg-white">
-      {stage === 'analyzing' && file && (
-        <VisualSearchAnalyzer file={file} onBack={handleBack} />
+      {stage === 'cropping' && (
+        <VisualSearchCropper
+          imageUrl={previewUrl}
+          onConfirm={handleCropConfirm}
+          onBack={handleBack}
+        />
+      )}
+
+      {stage === 'looking' && (
+        <VisualSearchAnalyzer
+          file={file}
+          cropRect={cropRect ?? undefined}
+          onBack={handleBack}
+        />
       )}
 
       {stage === 'results' && (
-        <VisualSearchResults results={results} />
+        <div className="vs-fade-in-slow">
+          <VisualSearchResults results={results} />
+        </div>
       )}
     </div>
   );

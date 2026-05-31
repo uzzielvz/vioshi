@@ -223,6 +223,9 @@
     "showing_results": "SHOWING {count} RESULTS",
     "search_results_for": "SEARCH: \"{query}\"",
     "analyzing": "ANALYZING",
+    "looking": "LOOKING",
+    "select_zone": "SELECT ZONE",
+    "find": "FIND",
     "visual_title": "VISUAL SEARCH",
     "back": "Back",
     "categories": {
@@ -478,32 +481,5 @@
     "archivos_download": "Download",
     "archivos_back": "Back to My Account",
     "back_to_store": "← Back to Store"
-  },
-  "visualSearch": {
-    "title": "VISUAL SEARCH",
-    "subtitle": "Upload a photo of a garment to find similar products",
-    "upload_label": "UPLOAD IMAGE",
-    "drag_drop": "Drag an image here",
-    "drag_drop_or": "or click to select",
-    "supported_formats": "JPEG or PNG · Max 10 MB",
-    "analyzing": "ANALYZING IMAGE...",
-    "try_again": "TRY ANOTHER IMAGE",
-    "result_title": "GARMENT DETECTED",
-    "confidence_label": "CONFIDENCE",
-    "class_playera": "T-Shirt",
-    "class_pantalon": "Pants",
-    "class_sudadera": "Hoodie",
-    "class_calzado": "Footwear",
-    "low_confidence_title": "UNCLEAR IMAGE",
-    "low_confidence_message": "We couldn't classify the garment with enough certainty. Try an image with a neutral background and the full garment visible.",
-    "error_format": "Only JPEG or PNG images are accepted.",
-    "error_size": "The image must not exceed 10 MB.",
-    "error_service": "The classification service is currently unavailable. Please try again later.",
-    "error_quality": "The image does not meet minimum quality requirements (minimum resolution: 100×100 px).",
-    "error_unknown": "An unexpected error occurred. Please try again.",
-    "view_category": "VIEW CATEGORY",
-    "probability_distribution": "PROBABILITY DISTRIBUTION",
-    "take_photo": "TAKE PHOTO",
-    "or_separator": "OR"
   }
 }
