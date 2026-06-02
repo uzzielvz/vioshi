@@ -2,6 +2,14 @@
 
 import { useEffect, useRef } from 'react';
 
+export interface DotFieldCropRect {
+  /** All values in [0, 1] relative to the canvas. Dots render only inside this box. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 interface VisualSearchDotFieldProps {
   /** Object URL or remote URL of the image whose silhouette drives the dots */
   imageUrl: string;
@@ -21,6 +29,8 @@ interface VisualSearchDotFieldProps {
   contourBoost?: number;
   /** Dot color */
   color?: string;
+  /** If provided, restrict dots to this sub-rectangle of the canvas (relative coords). */
+  cropRect?: DotFieldCropRect;
   /** Passed through to the canvas element */
   className?: string;
 }
@@ -88,6 +98,7 @@ export default function VisualSearchDotField({
   jitterMag = 4,
   contourBoost = 2.4,
   color = '#ffffff',
+  cropRect,
   className,
 }: VisualSearchDotFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -173,8 +184,17 @@ export default function VisualSearchDotField({
       const z = t * noiseSpeed;
       const slowZ = t * 0.00022; // slow direction-shift clock
 
-      for (let x = gridSize / 2; x < width; x += gridSize) {
-        for (let y = gridSize / 2; y < height; y += gridSize) {
+      // If a cropRect is provided, dots render only inside that sub-box.
+      const cx0 = cropRect ? cropRect.x * width : 0;
+      const cy0 = cropRect ? cropRect.y * height : 0;
+      const cx1 = cropRect ? (cropRect.x + cropRect.width) * width : width;
+      const cy1 = cropRect ? (cropRect.y + cropRect.height) * height : height;
+
+      for (let x = cx0 + gridSize / 2; x < cx1; x += gridSize) {
+        for (let y = cy0 + gridSize / 2; y < cy1; y += gridSize) {
+          // Sample density relative to the rendered image (canvas spans the
+          // image), so u/v always map back to the image pixels even when
+          // restricted to the crop sub-region.
           const u = x / width;
           const v = y / height;
 
@@ -218,7 +238,11 @@ export default function VisualSearchDotField({
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       ro.disconnect();
     };
-  }, [imageUrl, gridSize, baseRadius, peakRadius, noiseScale, noiseSpeed, jitterMag, contourBoost, color]);
+    // We intentionally key on the individual cropRect fields instead of the
+    // object identity so parents can pass new {x,y,w,h} literals every render
+    // without forcing the effect to teardown each time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageUrl, gridSize, baseRadius, peakRadius, noiseScale, noiseSpeed, jitterMag, contourBoost, color, cropRect?.x, cropRect?.y, cropRect?.width, cropRect?.height]);
 
   return <canvas ref={canvasRef} className={className} aria-hidden="true" />;
 }
