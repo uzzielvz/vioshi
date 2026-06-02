@@ -729,7 +729,6 @@ export default function Header({ userEmail = null }: HeaderProps) {
                 ref={vsInputRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
-                capture="environment"
                 className="hidden"
                 onChange={async (e) => {
                   const f = e.target.files?.[0];
