@@ -37,6 +37,7 @@ export default function VisualSearchPage() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [results, setResults] = useState<VSResult[]>([]);
+  const [aiDescription, setAiDescription] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -104,6 +105,7 @@ export default function VisualSearchPage() {
       setStage('looking');
       setError(null);
       setResults([]);
+      setAiDescription('');
 
       try {
         const formData = new FormData();
@@ -140,9 +142,20 @@ export default function VisualSearchPage() {
         const elapsed = Date.now() - startedAt;
         const wait = Math.max(0, 1200 - elapsed);
 
+        // Demo observability: log Gemini's raw output (description + match scores).
+        console.log('[visual-search] Gemini description:', data.ai_description);
+        console.log(
+          '[visual-search] matches:',
+          (data.results ?? []).map((r: VSResult) => ({
+            name: r.name,
+            similarity: r.similarity,
+          }))
+        );
+
         setTimeout(() => {
           if (!cancelled) {
             setResults(data.results ?? []);
+            setAiDescription(data.ai_description ?? '');
             setStage('results');
           }
         }, wait);
@@ -202,7 +215,7 @@ export default function VisualSearchPage() {
 
       {stage === 'results' && (
         <div className="vs-fade-in-slow">
-          <VisualSearchResults results={results} />
+          <VisualSearchResults results={results} aiDescription={aiDescription} />
         </div>
       )}
     </div>

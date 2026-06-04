@@ -18,6 +18,8 @@ interface VSResult {
 interface VisualSearchResultsProps {
   /** Results already sorted by similarity desc from the API */
   results: VSResult[];
+  /** Gemini's one-sentence description of the uploaded garment (demo observability) */
+  aiDescription?: string;
 }
 
 /**
@@ -30,8 +32,12 @@ interface VisualSearchResultsProps {
  * No URL param sync (transient results). Empty state delegated to ProductGrid.
  * CartProvider + NextIntlClientProvider are inherited from the [locale] layout shell.
  */
-export default function VisualSearchResults({ results }: VisualSearchResultsProps) {
+export default function VisualSearchResults({ results, aiDescription }: VisualSearchResultsProps) {
   const t = useTranslations('search');
+
+  const topSimilarity = results.length
+    ? Math.round((results[0]?.similarity ?? 0) * 100)
+    : 0;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sort, setSort] = useState<SortKey>('newest');
@@ -89,6 +95,25 @@ export default function VisualSearchResults({ results }: VisualSearchResultsProp
       {/* Title for visual search results (no emoji per request) */}
       <div className="mb-6 md:mb-8">
         <h1 style={labelStyle}>{t('visual_title')}</h1>
+        {aiDescription && (
+          <p
+            className="mt-3 max-w-2xl"
+            style={{
+              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              fontSize: '12px',
+              lineHeight: 1.5,
+              color: '#666',
+            }}
+          >
+            <span style={{ color: '#000', fontWeight: 500 }}>Gemini:</span>{' '}
+            “{aiDescription}”
+            {topSimilarity > 0 && (
+              <span style={{ color: '#999' }}>
+                {' '}· {topSimilarity}% match
+              </span>
+            )}
+          </p>
+        )}
       </div>
 
       {/* Identical post-PRO-12 title row: counter + single FILTRAR */}
