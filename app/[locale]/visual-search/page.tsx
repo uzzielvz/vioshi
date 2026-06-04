@@ -46,6 +46,13 @@ export default function VisualSearchPage() {
     let cancelled = false;
 
     async function loadPendingFile() {
+      // Reset to a clean slate so a second search (same route, no remount)
+      // starts from the cropping stage instead of staying on results.
+      setStage('cropping');
+      setResults([]);
+      setError(null);
+      setCropRect(null);
+
       try {
         const raw = sessionStorage.getItem('__viogi_vs_pending');
         if (raw) {
@@ -71,9 +78,15 @@ export default function VisualSearchPage() {
       }
     }
 
+    // Initial mount load.
     loadPendingFile();
+
+    // A new search fired from the Header while already on /visual-search does
+    // NOT remount this page (same route), so we re-run on a custom event.
+    window.addEventListener('viogi:vs-new', loadPendingFile);
     return () => {
       cancelled = true;
+      window.removeEventListener('viogi:vs-new', loadPendingFile);
     };
   }, [router, locale]);
 

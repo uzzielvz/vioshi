@@ -752,6 +752,9 @@ export default function Header({ userEmail = null }: HeaderProps) {
                     setSearchOpen(false);
                     setSearchQuery('');
                     router.push(`/${locale}/visual-search`);
+                    // If already on /visual-search, the push won't remount the
+                    // page — notify it so it reloads the new file and resets.
+                    window.dispatchEvent(new Event('viogi:vs-new'));
                   }
                   // Reset input so same file can be re-selected
                   e.target.value = '';
