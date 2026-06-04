@@ -13,9 +13,10 @@ interface VisualSearchAnalyzerProps {
  * VisualSearchAnalyzer (VS-08 + VS-11 + VS-13)
  * Full-viewport analyzer for the uploaded image.
  *
- * Light theme: white backdrop, image at low opacity, dark dots over the whole
- * photo. No blinking cursor — label just reads "MIRANDO" to feel calm and
- * intentional.
+ * Light theme: white backdrop, garment at low opacity, with an iridescent
+ * rainbow dot field tracing its contour (hue flows + a brightness wave sweeps
+ * the silhouette). No blinking cursor — label just reads "MIRANDO" to feel
+ * calm and intentional.
  */
 export default function VisualSearchAnalyzer({
   file,
@@ -50,11 +51,11 @@ export default function VisualSearchAnalyzer({
             src={previewUrl}
             alt="Imagen para búsqueda visual"
             className="block max-h-[75vh] max-w-[min(90vw,540px)]"
-            style={{ opacity: 0.18 }}
+            style={{ opacity: 0.28 }}
           />
           <VisualSearchDotField
             imageUrl={previewUrl}
-            color="#111111"
+            rainbow
             className="absolute inset-0 w-full h-full pointer-events-none"
           />
         </div>
