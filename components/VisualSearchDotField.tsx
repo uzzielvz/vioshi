@@ -126,6 +126,10 @@ export default function VisualSearchDotField({
     // Offscreen sampling canvas — moderate resolution keeps getImageData cheap.
     const offscreen = document.createElement('canvas');
     const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
+    // Low-res field used by `rainbow` mode: we paint soft blobs here, then
+    // upscale onto the main canvas so they melt into a diffused cloud.
+    const fieldCanvas = document.createElement('canvas');
+    const fctx = fieldCanvas.getContext('2d');
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
@@ -185,8 +189,6 @@ export default function VisualSearchDotField({
 
     function frame(t: number) {
       if (!ctx) return;
-      ctx.clearRect(0, 0, width, height);
-      if (!rainbow) ctx.fillStyle = color;
 
       const z = t * noiseSpeed;
       const slowZ = t * 0.00022; // slow direction-shift clock
@@ -200,6 +202,65 @@ export default function VisualSearchDotField({
       const cx1 = cropRect ? (cropRect.x + cropRect.width) * width : width;
       const cy1 = cropRect ? (cropRect.y + cropRect.height) * height : height;
 
+      // ── Rainbow mode: diffused iridescent cloud ──────────────────────────
+      // Paint soft blobs onto a low-res field, then upscale with bilinear
+      // smoothing so they blend into a cloud (no visible dots) that follows
+      // the garment contour and breathes with the sweeping wave.
+      if (rainbow && fctx) {
+        const FS = 0.3; // field scale → how much it blurs when upscaled
+        const fw = Math.max(1, Math.round(width * FS));
+        const fh = Math.max(1, Math.round(height * FS));
+        if (fieldCanvas.width !== fw || fieldCanvas.height !== fh) {
+          fieldCanvas.width = fw;
+          fieldCanvas.height = fh;
+        }
+        fctx.clearRect(0, 0, fw, fh);
+        const blobR = gridSize * FS * 1.4;
+
+        for (let x = cx0 + gridSize / 2; x < cx1; x += gridSize) {
+          for (let y = cy0 + gridSize / 2; y < cy1; y += gridSize) {
+            const u = x / width;
+            const v = y / height;
+            const density = sampleDensity(u, v);
+            const edge = sampleEdge(u, v);
+            // Skip empty background so the cloud hugs the garment only.
+            if (density < 0.1 && edge < 0.015) continue;
+
+            const n = valueNoise(x * noiseScale, y * noiseScale, z);
+            const contour = Math.min(1, edge * 6);
+            const band = Math.max(0, 1 - Math.abs(v - sweepY) * 4);
+
+            // Flowing hue: diagonal position + time → the rainbow travels.
+            const hue = ((((u * 0.45 + v * 1.0 + flow) % 1) + 1) % 1) * 360;
+            const light = Math.min(78, 54 + contour * 12 + band * 14 + n * 6);
+            const alpha = Math.min(
+              1,
+              0.12 + density * 0.4 + contour * 0.5 + band * 0.25 + n * 0.15
+            );
+            const r = blobR * (0.8 + density * 0.5 + contour * 0.6 + band * 0.4);
+
+            fctx.globalAlpha = alpha;
+            fctx.fillStyle = `hsl(${hue.toFixed(0)}, 92%, ${light.toFixed(0)}%)`;
+            fctx.beginPath();
+            fctx.arc(x * FS, y * FS, Math.max(0.6, r), 0, Math.PI * 2);
+            fctx.fill();
+          }
+        }
+        fctx.globalAlpha = 1;
+
+        ctx.clearRect(0, 0, width, height);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(fieldCanvas, 0, 0, fw, fh, 0, 0, width, height);
+
+        rafRef.current = requestAnimationFrame(frame);
+        return;
+      }
+
+      // ── Default mode: crisp dot field ────────────────────────────────────
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = color;
+
       for (let x = cx0 + gridSize / 2; x < cx1; x += gridSize) {
         for (let y = cy0 + gridSize / 2; y < cy1; y += gridSize) {
           // Sample density relative to the rendered image (canvas spans the
@@ -212,9 +273,6 @@ export default function VisualSearchDotField({
           const density = sampleDensity(u, v);
           const edge = sampleEdge(u, v);
 
-          // Skip the empty background so the iridescence hugs the garment only.
-          if (rainbow && density < 0.1 && edge < 0.015) continue;
-
           // Breathing noise — modulates size + opacity
           const n = valueNoise(x * noiseScale, y * noiseScale, z);
 
@@ -225,28 +283,14 @@ export default function VisualSearchDotField({
           const dx = Math.cos(angle) * mag;
           const dy = Math.sin(angle) * mag;
 
-          // Contour emphasis (0..1) — bright where the silhouette edge sits.
-          const contour = Math.min(1, edge * 6);
-          // Triangular brightness band sweeping the garment.
-          const band = Math.max(0, 1 - Math.abs(v - sweepY) * 4);
-
-          if (rainbow) {
-            // Flowing hue: diagonal position + time → the rainbow travels.
-            const hue = ((((u * 0.45 + v * 1.0 + flow) % 1) + 1) % 1) * 360;
-            const light = 54 + contour * 12 + band * 14 + n * 6;
-            ctx.fillStyle = `hsl(${hue.toFixed(0)}, 92%, ${Math.min(78, light).toFixed(0)}%)`;
-          }
-
-          // Final radius: base + density ramp + breathing + contour + sweep
+          // Final radius: base + density ramp + breathing + contour boost
           const radius =
             baseRadius +
             density * (peakRadius - baseRadius) * (0.55 + n * 0.7) +
-            (rainbow ? contour * contourBoost + band * 1.3 : edge * contourBoost);
+            edge * contourBoost;
 
-          // Final opacity: background faint, garment bold, contour + wave pop.
-          const opacity = rainbow
-            ? Math.min(1, 0.1 + density * 0.4 + contour * 0.5 + band * 0.25 + n * 0.18)
-            : Math.min(1, 0.08 + density * 0.65 + n * 0.25);
+          // Final opacity: bias by density so background is faint, garment is bold
+          const opacity = Math.min(1, 0.08 + density * 0.65 + n * 0.25);
 
           ctx.globalAlpha = opacity;
           ctx.beginPath();
