@@ -27,14 +27,8 @@ interface VisualSearchDotFieldProps {
   jitterMag?: number;
   /** Size multiplier added at image contours (edge detection) */
   contourBoost?: number;
-  /** Dot color (ignored when `rainbow` is on) */
+  /** Dot color */
   color?: string;
-  /**
-   * Iridescent mode: instead of a flat color, each dot is tinted with a
-   * flowing rainbow whose hue travels diagonally while a brightness wave
-   * sweeps the silhouette — "arcoíris recorriendo el contorno de la prenda".
-   */
-  rainbow?: boolean;
   /** If provided, restrict dots to this sub-rectangle of the canvas (relative coords). */
   cropRect?: DotFieldCropRect;
   /** Passed through to the canvas element */
@@ -104,7 +98,6 @@ export default function VisualSearchDotField({
   jitterMag = 4,
   contourBoost = 2.4,
   color = '#ffffff',
-  rainbow = false,
   cropRect,
   className,
 }: VisualSearchDotFieldProps) {
@@ -186,13 +179,10 @@ export default function VisualSearchDotField({
     function frame(t: number) {
       if (!ctx) return;
       ctx.clearRect(0, 0, width, height);
-      if (!rainbow) ctx.fillStyle = color;
+      ctx.fillStyle = color;
 
       const z = t * noiseSpeed;
       const slowZ = t * 0.00022; // slow direction-shift clock
-      const flow = t * 0.00010; // hue travels diagonally across the prenda
-      // Brightness wave that sweeps top→bottom and loops, tracing the contour.
-      const sweepY = ((t * 0.00035) % 1.4) - 0.2;
 
       // If a cropRect is provided, dots render only inside that sub-box.
       const cx0 = cropRect ? cropRect.x * width : 0;
@@ -212,9 +202,6 @@ export default function VisualSearchDotField({
           const density = sampleDensity(u, v);
           const edge = sampleEdge(u, v);
 
-          // Skip the empty background so the iridescence hugs the garment only.
-          if (rainbow && density < 0.1 && edge < 0.015) continue;
-
           // Breathing noise — modulates size + opacity
           const n = valueNoise(x * noiseScale, y * noiseScale, z);
 
@@ -225,28 +212,14 @@ export default function VisualSearchDotField({
           const dx = Math.cos(angle) * mag;
           const dy = Math.sin(angle) * mag;
 
-          // Contour emphasis (0..1) — bright where the silhouette edge sits.
-          const contour = Math.min(1, edge * 6);
-          // Triangular brightness band sweeping the garment.
-          const band = Math.max(0, 1 - Math.abs(v - sweepY) * 4);
-
-          if (rainbow) {
-            // Flowing hue: diagonal position + time → the rainbow travels.
-            const hue = ((((u * 0.45 + v * 1.0 + flow) % 1) + 1) % 1) * 360;
-            const light = 54 + contour * 12 + band * 14 + n * 6;
-            ctx.fillStyle = `hsl(${hue.toFixed(0)}, 92%, ${Math.min(78, light).toFixed(0)}%)`;
-          }
-
-          // Final radius: base + density ramp + breathing + contour + sweep
+          // Final radius: base + density ramp + breathing + contour boost
           const radius =
             baseRadius +
             density * (peakRadius - baseRadius) * (0.55 + n * 0.7) +
-            (rainbow ? contour * contourBoost + band * 1.3 : edge * contourBoost);
+            edge * contourBoost;
 
-          // Final opacity: background faint, garment bold, contour + wave pop.
-          const opacity = rainbow
-            ? Math.min(1, 0.1 + density * 0.4 + contour * 0.5 + band * 0.25 + n * 0.18)
-            : Math.min(1, 0.08 + density * 0.65 + n * 0.25);
+          // Final opacity: bias by density so background is faint, garment is bold
+          const opacity = Math.min(1, 0.08 + density * 0.65 + n * 0.25);
 
           ctx.globalAlpha = opacity;
           ctx.beginPath();
@@ -269,7 +242,7 @@ export default function VisualSearchDotField({
     // object identity so parents can pass new {x,y,w,h} literals every render
     // without forcing the effect to teardown each time.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageUrl, gridSize, baseRadius, peakRadius, noiseScale, noiseSpeed, jitterMag, contourBoost, color, rainbow, cropRect?.x, cropRect?.y, cropRect?.width, cropRect?.height]);
+  }, [imageUrl, gridSize, baseRadius, peakRadius, noiseScale, noiseSpeed, jitterMag, contourBoost, color, cropRect?.x, cropRect?.y, cropRect?.width, cropRect?.height]);
 
   return <canvas ref={canvasRef} className={className} aria-hidden="true" />;
 }
