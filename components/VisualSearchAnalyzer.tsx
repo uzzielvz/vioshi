@@ -3,25 +3,22 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import VisualSearchDotField from './VisualSearchDotField';
-import type { CropRect } from './VisualSearchCropper';
 
 interface VisualSearchAnalyzerProps {
   file: File;
-  cropRect?: CropRect;
   onBack: () => void;
 }
 
 /**
- * VisualSearchAnalyzer (VS-08 + VS-11 + VS-12)
+ * VisualSearchAnalyzer (VS-08 + VS-11 + VS-13)
  * Full-viewport analyzer for the uploaded image.
  *
- * Light theme (VS-12): white backdrop, image at low opacity, dark dots
- * restricted to the user-selected crop region. No blinking cursor — label
- * just reads "MIRANDO" to feel calm and intentional.
+ * Light theme: white backdrop, image at low opacity, dark dots over the whole
+ * photo. No blinking cursor — label just reads "MIRANDO" to feel calm and
+ * intentional.
  */
 export default function VisualSearchAnalyzer({
   file,
-  cropRect,
   onBack,
 }: VisualSearchAnalyzerProps) {
   const t = useTranslations('search');
@@ -57,7 +54,6 @@ export default function VisualSearchAnalyzer({
           />
           <VisualSearchDotField
             imageUrl={previewUrl}
-            cropRect={cropRect}
             color="#111111"
             className="absolute inset-0 w-full h-full pointer-events-none"
           />

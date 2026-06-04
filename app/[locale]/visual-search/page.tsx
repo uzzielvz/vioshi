@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import VisualSearchCropper, { type CropRect } from '@/components/VisualSearchCropper';
 import VisualSearchAnalyzer from '@/components/VisualSearchAnalyzer';
 import VisualSearchResults from '@/components/VisualSearchResults';
 
@@ -16,29 +15,27 @@ type VSResult = {
   image_url: string | null;
 };
 
-type Stage = 'cropping' | 'looking' | 'results';
+type Stage = 'looking' | 'results';
 
 /**
- * /[locale]/visual-search (VS-08 → VS-12)
+ * /[locale]/visual-search (VS-08 → VS-13)
  * Lives inside the [locale] shell so Header/Footer/i18n are inherited.
  *
- * 3-stage flow with soft cross-fades (VS-12):
- * 1. cropping → user picks the garment region (white, draggable rect)
- * 2. looking  → light-theme dot field over the chosen region while we hit the API
- * 3. results  → identical layout to /search
+ * 2-stage flow with soft cross-fades (VS-13 dropped the crop selector — the
+ * search now fires automatically on the full photo right after it's picked):
+ * 1. looking  → light-theme dot field over the whole image while we hit the API
+ * 2. results  → identical layout to /search
  *
- * The image is cropped client-side before sending to the API, so Gemini
- * focuses on the prenda the user actually wants matched.
+ * File handoff via sessionStorage (set by the Header image input).
  */
 export default function VisualSearchPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('search');
 
-  const [stage, setStage] = useState<Stage>('cropping');
+  const [stage, setStage] = useState<Stage>('looking');
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
-  const [cropRect, setCropRect] = useState<CropRect | null>(null);
   const [results, setResults] = useState<VSResult[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,11 +44,10 @@ export default function VisualSearchPage() {
 
     async function loadPendingFile() {
       // Reset to a clean slate so a second search (same route, no remount)
-      // starts from the cropping stage instead of staying on results.
-      setStage('cropping');
+      // starts fresh instead of staying on results.
+      setStage('looking');
       setResults([]);
       setError(null);
-      setCropRect(null);
 
       try {
         const raw = sessionStorage.getItem('__viogi_vs_pending');
@@ -96,94 +92,79 @@ export default function VisualSearchPage() {
     };
   }, [previewUrl]);
 
-  /**
-   * Crop the source File using the rect (relative coords). Returns a JPEG File.
-   */
-  async function cropFile(source: File, rect: CropRect): Promise<File> {
-    const url = URL.createObjectURL(source);
-    try {
-      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const el = new Image();
-        el.onload = () => resolve(el);
-        el.onerror = reject;
-        el.src = url;
-      });
-      const sx = Math.max(0, Math.round(rect.x * img.naturalWidth));
-      const sy = Math.max(0, Math.round(rect.y * img.naturalHeight));
-      const sw = Math.max(1, Math.round(rect.width * img.naturalWidth));
-      const sh = Math.max(1, Math.round(rect.height * img.naturalHeight));
-
-      const canvas = document.createElement('canvas');
-      canvas.width = sw;
-      canvas.height = sh;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return source;
-      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
-
-      const blob: Blob | null = await new Promise((resolve) =>
-        canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.92)
-      );
-      if (!blob) return source;
-      return new File([blob], source.name.replace(/\.[^.]+$/, '') + '-crop.jpg', { type: 'image/jpeg' });
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-  }
-
-  async function handleCropConfirm(rect: CropRect) {
+  // Fire the search automatically whenever a new file is loaded.
+  useEffect(() => {
     if (!file) return;
-    setCropRect(rect);
-    setStage('looking');
-    setError(null);
-    setResults([]);
 
-    try {
-      const cropped = await cropFile(file, rect);
-      const formData = new FormData();
-      formData.append('image', cropped);
+    let cancelled = false;
+    const controller = new AbortController();
 
-      const startedAt = Date.now();
-      const res = await fetch('/api/visual-search', {
-        method: 'POST',
-        body: formData,
-      });
+    async function runSearch() {
+      if (!file) return;
+      setStage('looking');
+      setError(null);
+      setResults([]);
 
-      let data: any = {};
       try {
-        data = await res.json();
-      } catch {
-        data = {};
-      }
+        const formData = new FormData();
+        formData.append('image', file);
 
-      if (!res.ok) {
-        if (res.status === 429) {
-          setError(data?.message || 'Demasiadas búsquedas. Intenta más tarde.');
+        const startedAt = Date.now();
+        const res = await fetch('/api/visual-search', {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+        });
+
+        let data: any = {};
+        try {
+          data = await res.json();
+        } catch {
+          data = {};
+        }
+
+        if (cancelled) return;
+
+        if (!res.ok) {
+          if (res.status === 429) {
+            setError(data?.message || 'Demasiadas búsquedas. Intenta más tarde.');
+            return;
+          }
+          const serverMsg = data?.message || data?.error;
+          setError(serverMsg ? `Error del servidor: ${serverMsg}` : 'No se pudo procesar la imagen.');
           return;
         }
-        const serverMsg = data?.message || data?.error;
-        setError(serverMsg ? `Error del servidor: ${serverMsg}` : 'No se pudo procesar la imagen.');
-        return;
+
+        // Minimum visible time for the dot field so the transition feels
+        // intentional even on fast networks (~1.2s floor).
+        const elapsed = Date.now() - startedAt;
+        const wait = Math.max(0, 1200 - elapsed);
+
+        setTimeout(() => {
+          if (!cancelled) {
+            setResults(data.results ?? []);
+            setStage('results');
+          }
+        }, wait);
+      } catch (e: any) {
+        if (e?.name === 'AbortError') return;
+        console.error('Visual search fetch error:', e);
+        if (!cancelled) {
+          setError(
+            navigator.onLine
+              ? 'Error de conexión con el servidor. Revisa tu GEMINI_API_KEY y los logs del servidor.'
+              : 'Sin conexión a internet.'
+          );
+        }
       }
-
-      // Minimum visible time for the dot field so the transition feels
-      // intentional even on fast networks (~1.2s floor).
-      const elapsed = Date.now() - startedAt;
-      const minVisible = 1200;
-      const wait = Math.max(0, minVisible - elapsed);
-
-      setTimeout(() => {
-        setResults(data.results ?? []);
-        setStage('results');
-      }, wait);
-    } catch (e: any) {
-      console.error('Visual search fetch error:', e);
-      setError(
-        navigator.onLine
-          ? 'Error de conexión con el servidor. Revisa tu GEMINI_API_KEY y los logs del servidor.'
-          : 'Sin conexión a internet.'
-      );
     }
-  }
+
+    runSearch();
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [file]);
 
   function handleBack() {
     try {
@@ -215,20 +196,8 @@ export default function VisualSearchPage() {
 
   return (
     <div className="bg-white">
-      {stage === 'cropping' && (
-        <VisualSearchCropper
-          imageUrl={previewUrl}
-          onConfirm={handleCropConfirm}
-          onBack={handleBack}
-        />
-      )}
-
       {stage === 'looking' && (
-        <VisualSearchAnalyzer
-          file={file}
-          cropRect={cropRect ?? undefined}
-          onBack={handleBack}
-        />
+        <VisualSearchAnalyzer file={file} onBack={handleBack} />
       )}
 
       {stage === 'results' && (
