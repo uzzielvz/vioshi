@@ -459,9 +459,26 @@ Actualizar:
 
 ---
 
+#### 3.6.5 VS-13 — Quitar el crop selector (búsqueda automática)
+
+**Estado:** ✅ Completado (2026-06-04)
+
+**Motivación del usuario:** tras probar VS-12, el paso de recorte manual se sintió como fricción extra. Flujo deseado: "el usuario da click en el icono de la camara, sale el selectorsito, eliges choose photo, das click en la photo, y automaticamente aparece esa animacion… despues muestra los resultados".
+
+**Cambios:**
+- [`app/[locale]/visual-search/page.tsx`](./app/[locale]/visual-search/page.tsx) — eliminado el stage `cropping`. `Stage` ahora es `'looking' | 'results'`. Un `useEffect([file])` dispara la búsqueda automáticamente en cuanto se carga el File (imagen completa, sin crop client-side). Se conserva el delay mínimo de 1200ms del dot field y el `vs-fade-in-slow` en results.
+- [`components/VisualSearchAnalyzer.tsx`](./components/VisualSearchAnalyzer.tsx) — quitada la prop `cropRect`; los dots cubren la foto completa.
+- Borrado [`components/VisualSearchCropper.tsx`](./components/VisualSearchCropper.tsx) (quedó huérfano; recuperable vía git) + keys i18n `search.select_zone` y `search.find`.
+- Se mantiene del flujo VS-12: tema claro, label `MIRANDO` sin cursor, cross-fades. La prop `cropRect` sigue disponible (sin uso) en `VisualSearchDotField` como capability opcional.
+
+**Commits:**
+- `feat(VS-13): drop crop selector — search fires automatically on full photo`
+
+---
+
 #### 3.6.4 VS-12 — Crop selector + tema claro + cross-fades suaves
 
-**Estado:** ✅ Completado (2026-05-26)
+**Estado:** ⚠️ Superado por VS-13 — el crop selector se eliminó (ver §3.6.5). El tema claro, el label `MIRANDO` y los cross-fades **siguen vivos**; sólo se revirtió el paso de recorte manual.
 
 **Motivación del usuario:** "todo es muy brusco, no? pasas del buscador a esa pagina negra. en primer lugar que el usuario seleccione la zona con un selector… luego se busque pero en blanco con puntos de negro o gris, solo la zona de la prenda, diga MIRANDO… sin el cursor, y aparezcan los resultados pero no tan brusco".
 
@@ -690,7 +707,8 @@ En [`components/Header.tsx`](./components/Header.tsx) líneas 249-260 (desktop) 
 | VS-09 | Resultados visual search acoplados a layout `/search` (mismo título-row, botón FILTRAR, drawer) | 3 | P1 | M | VS-08, PRO-12 | DOM diff visible entre `/search` y `/visual-search` solo en título y dataset; `VisualSearchPanel.tsx` borrado | ✅ (2026-05) |
 | VS-10 | Mover `/visual-search` dentro de shell `[locale]` para heredar Header/Footer + i18n; arreglar link Header (file picker), redirects locale-aware, borrar `VisualSearchProvider` muerto, limpiar middleware | 3 | P1 | M | VS-09 | Header+Footer visibles en results; sin redirects hardcoded a `/es`; link Header abre picker | ✅ (2026-05-26) |
 | VS-11 | Reemplazar línea de scan + cuadro DETECTADO por **diffusion dot field** estilo ChatGPT "creating image" (canvas + value noise inline, sin deps) sobre fondo negro con imagen al 32% | 3 | P1 | S | VS-10 | Sin línea barrida; sin badge/dashed rect; analyzer comunica "AI processing" vía campo de puntos respirando | ✅ (2026-05-26) |
-| VS-12 | Crop selector previo + tema claro + cross-fades suaves. Usuario selecciona zona de la prenda (rect drag/resize sin deps); luego analyzer en blanco con dots oscuros confinados al crop; label "MIRANDO" sin cursor; transiciones `vs-fade-in` 600–900ms entre stages; imagen recortada se envía al endpoint para que Gemini se enfoque en la prenda | 3 | P1 | M | VS-11 | Flujo: cropper → looking → results con fades; no salto brusco; crop real enviado al API | ✅ (2026-05-26) |
+| VS-12 | Crop selector previo + tema claro + cross-fades suaves. Usuario selecciona zona de la prenda (rect drag/resize sin deps); luego analyzer en blanco con dots oscuros confinados al crop; label "MIRANDO" sin cursor; transiciones `vs-fade-in` 600–900ms entre stages; imagen recortada se envía al endpoint para que Gemini se enfoque en la prenda | 3 | P1 | M | VS-11 | Flujo: cropper → looking → results con fades; no salto brusco; crop real enviado al API | ⚠️ Superado por VS-13 (2026-05-26) |
+| VS-13 | Quitar el crop selector — la búsqueda se dispara automáticamente sobre la foto completa al seleccionarla. Se conserva de VS-12: tema claro, label "MIRANDO" sin cursor, cross-fades. Se elimina `VisualSearchCropper.tsx`, la prop `cropRect` del Analyzer y las claves i18n `select_zone`/`find`. Auto-search vía `useEffect([file])` | 3 | P1 | S | VS-12 | Flujo 2-stage: looking → results sin paso de recorte; foto completa enviada al API | ✅ (2026-06-04) |
 | DEB-01 | Zod en Server Actions críticas | 1 | P2 | L | — | Inputs invalidos rechazados tipados | Pendiente |
 | DEB-02 | Eliminar upsert redundante signUpAction profiles | 1 | P2 | S | — | Solo trigger 0002 crea profile | Pendiente |
 | DEB-03 | Refactor Header (1100+ líneas) | 4 | P2 | XL | — | Componentes extraídos | Pendiente |

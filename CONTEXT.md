@@ -48,7 +48,7 @@ Contenido de la raíz (1 nivel, excluyendo `node_modules/`, `.next/`, `.git/`):
 - `app/[locale]/` — todas las rutas públicas con i18n (route group dinámico).
 - `app/admin/` — panel de administración sin prefijo de locale.
 - `app/auth/` — contiene únicamente `callback/route.ts`.
-- `app/visual-search/` — UI búsqueda visual (sin prefijo locale).
+- `app/[locale]/visual-search/` — UI búsqueda visual (dentro del shell `[locale]`, hereda Header/Footer/i18n; VS-10).
 - `app/api/visual-search/` — Route Handler POST.
 - Archivos sueltos en `app/`: `error.tsx`, `globals.css`, `layout.tsx`, `not-found.tsx`.
 
@@ -279,7 +279,7 @@ Declaradas en `.env.example` (no se leyó `.env.local`):
 - El bucket de Storage en uso se llama `product-images` (visible en `app/admin/products/actions.ts`).
 - `next.config.js` solo permite `remotePatterns` para `images.unsplash.com` y el dominio del proyecto Supabase (`oilvubxpxxzfxlqhsumk.supabase.co`). El ID del proyecto Supabase está hardcodeado en este archivo.
 - Existe `documento-secciones-tmpi.html` en raíz (12 KB, no documentado en ningún README).
-- Módulo visual search implementado: `app/visual-search/`, `app/api/visual-search/`, `scripts/seed-real-images.ts`, `scripts/generate-embeddings.ts`, migración `0003`.
+- Módulo visual search implementado: `app/[locale]/visual-search/`, `app/api/visual-search/`, `components/{VisualSearchAnalyzer,VisualSearchDotField,VisualSearchResults}.tsx`, `scripts/seed-real-images.ts`, `scripts/generate-embeddings.ts`, migración `0003`. Flujo 2-stage `looking → results` con búsqueda automática sobre la foto completa (VS-13, sin crop manual).
 - `CLAUDE.md` en raíz tiene 64 líneas y declara reglas de proyecto (Spanish para contenido, English para código, estructura, etc.).
 - HEAD actual en rama feature: `12f6f77` (docs CLN-02). Visual search funcional desde commits `155ed14`–`fff3607`.
 - `app/[locale]/account/page.tsx` actúa como página de login (cuando no hay sesión) y como dashboard (cuando hay sesión); no existe una ruta `/account/login` separada.

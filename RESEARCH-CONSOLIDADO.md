@@ -69,7 +69,7 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 | Admin pickup points | Service role | ✅ Completo | `admin/pickup-points/actions.ts` |
 | **Admin brands (pilot)** | Service role + Storage `brand-logos` | 🟡 **En desarrollo (BR-01..05)** | Nueva entidad con logo gestionable desde admin + filtro por marca |
 | Pickup en checkout | **In-memory** `lib/pickupPoints.ts` | 🟡 Inconsistente | No usa tabla DB en checkout |
-| Visual search | Gemini + pgvector RPC | ✅ Integrado (VS-08/09/10) | `app/[locale]/visual-search/page.tsx`, `components/{VisualSearchAnalyzer,VisualSearchResults}.tsx`, Header camera + button handoff vía sessionStorage, PRO-12 en SearchContent, SearchFilterDrawer reutilizado |
+| Visual search | Gemini + pgvector RPC | ✅ Integrado (VS-08…13) | `app/[locale]/visual-search/page.tsx`, `components/{VisualSearchAnalyzer,VisualSearchDotField,VisualSearchResults}.tsx`. Flujo 2-stage `looking → results`: al seleccionar foto se dispara la búsqueda automáticamente (sin crop manual, VS-13); tema claro + dot field + label "MIRANDO" + cross-fades. Header camera (sin `capture`, action sheet nativo iOS) handoff vía sessionStorage + evento `viogi:vs-new` para búsquedas consecutivas. PRO-12 en SearchContent, SearchFilterDrawer reutilizado |
 | Búsqueda texto | Página catálogo `/search` + drawer lateral (sort + categoría); filtro client-side sobre `getProducts()` | ✅ Resuelto (PRO-11) | `search/SearchContent.tsx`, `SearchFilterDrawer.tsx` |
 | Pagos | Stripe Payment Element + webhook | ✅ Completo | `checkout/actions.ts`, `api/webhooks/stripe` |
 
