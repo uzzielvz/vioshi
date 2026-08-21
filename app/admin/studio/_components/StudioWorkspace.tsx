@@ -316,7 +316,7 @@ export default function StudioWorkspace({
         </div>
 
         <p className="text-gray-400" style={{ ...font, fontSize: '10px' }}>
-          Modelo realista, fuerte, aesthetic, punk / streetwear. No se suben fotos de modelo.
+          Modelo joven y delgado, lookbook Supreme / Yeezy / Dior. Fondo blanco. La prenda es lo que más se ve.
         </p>
 
         <div className="flex items-center gap-4">
