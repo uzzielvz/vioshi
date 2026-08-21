@@ -12,7 +12,7 @@
     "stripe:check-pi": "node scripts/stripe-check-pi.mjs"
   },
   "dependencies": {
-    "@google/genai": "^2.4.0",
+    "@google/genai": "^2.18.0",
     "@stripe/react-stripe-js": "^6.4.0",
     "@stripe/stripe-js": "^9.6.0",
     "@supabase/ssr": "^0.10.2",

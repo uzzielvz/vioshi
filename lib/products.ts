@@ -86,7 +86,7 @@ function rowToProductData(row: DbProduct): ProductData {
   }
 }
 
-async function fetchProducts(category?: string): Promise<ProductData[]> {
+async function fetchProducts(category?: string, requireImages = true): Promise<ProductData[]> {
   const supabase = getSupabase()
 
   let query = supabase
@@ -108,7 +108,10 @@ async function fetchProducts(category?: string): Promise<ProductData[]> {
 
   if (error || !data) return []
 
-  const rows = data as unknown as DbProduct[]
+  let rows = data as unknown as DbProduct[]
+  if (requireImages) {
+    rows = rows.filter((row) => (row.product_images ?? []).length > 0)
+  }
 
   // Supabase returns all rows with categories null for non-matching joins
   // — filter client-side when a specific category is requested
@@ -138,15 +141,27 @@ async function fetchProductBySlug(slug: string): Promise<ProductData | null> {
 
   if (error || !data) return null
 
-  return rowToProductData(data as unknown as DbProduct)
+  const row = data as unknown as DbProduct
+  if ((row.product_images ?? []).length === 0) return null
+
+  return rowToProductData(row)
+}
+
+async function fetchStoreProducts(category?: string): Promise<ProductData[]> {
+  return fetchProducts(category, true)
 }
 
 // Cached with Next.js — revalidate every 60 s, invalidable via revalidateTag('products')
 export const getProducts = unstable_cache(
-  fetchProducts,
+  fetchStoreProducts,
   ['products'],
   { revalidate: 60, tags: ['products'] }
 )
+
+/** Admin list: includes products still unpublished (no store images). */
+export async function getAdminProducts(): Promise<ProductData[]> {
+  return fetchProducts(undefined, false)
+}
 
 export const getProductBySlug = unstable_cache(
   fetchProductBySlug,

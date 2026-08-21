@@ -40,6 +40,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  if (pathname.startsWith('/api/admin')) {
+    const token = request.cookies.get('admin_token')?.value
+    if (!(await verifyAdminSessionToken(token))) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    }
+    return NextResponse.next()
+  }
+
   if (pathname.startsWith('/admin')) {
     if (pathname === '/admin/login') return NextResponse.next()
     const token = request.cookies.get('admin_token')?.value
@@ -56,6 +64,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/api/visual-search',
+    '/api/admin/:path*',
     // Exclude: api routes (webhooks, etc.), auth callback, static files,
     // and Next.js internals. /visual-search now lives under [locale] so it
     // must go through the intl middleware like any other locale-aware route.

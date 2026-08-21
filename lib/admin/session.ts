@@ -125,3 +125,10 @@ export async function requireAdminSession(): Promise<void> {
     redirect('/admin/login')
   }
 }
+
+/** Route Handlers: return false so the caller can send 401 JSON (no redirect). */
+export async function requireAdminApiSession(): Promise<boolean> {
+  const { cookies } = await import('next/headers')
+  const token = cookies().get(COOKIE_NAME)?.value
+  return verifyAdminSessionToken(token)
+}

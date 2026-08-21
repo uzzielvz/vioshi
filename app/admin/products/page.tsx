@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { getProducts } from '@/lib/products'
+import { getAdminProducts } from '@/lib/products'
 import { formatPrice } from '@/lib/formatters'
 import DeleteButton from './DeleteButton'
 
@@ -11,7 +11,7 @@ const fontStyle = {
 export const dynamic = 'force-dynamic'
 
 export default async function AdminProductsPage() {
-  const products = await getProducts()
+  const products = await getAdminProducts()
 
   return (
     <div>

@@ -77,3 +77,4 @@ export function retryAfterSeconds(resetAt: number): number {
 
 export const ADMIN_LOGIN_RATE_LIMIT = { limit: 5, windowMs: 15 * 60 * 1000 }
 export const VISUAL_SEARCH_RATE_LIMIT = { limit: 10, windowMs: 60 * 1000 }
+export const STUDIO_GENERATE_RATE_LIMIT = { limit: 20, windowMs: 60 * 1000 }

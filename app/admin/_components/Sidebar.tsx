@@ -11,6 +11,7 @@ const navFont = {
 export default function Sidebar() {
   const pathname = usePathname()
   const isProducts = pathname.startsWith('/admin/products')
+  const isStudio   = pathname.startsWith('/admin/studio')
   const isPickup   = pathname.startsWith('/admin/pickup-points')
   const isBrands   = pathname.startsWith('/admin/brands')
 
@@ -40,6 +41,17 @@ export default function Sidebar() {
         >
           PRODUCTS
           {isProducts && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
+        </Link>
+
+        <Link
+          href="/admin/studio"
+          className={`uppercase tracking-widest transition-colors duration-150 flex items-center gap-2 ${
+            isStudio ? 'text-white' : 'text-white/40 hover:text-white'
+          }`}
+          style={navFont}
+        >
+          STUDIO
+          {isStudio && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
         </Link>
 
         <Link
