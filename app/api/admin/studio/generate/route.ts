@@ -35,6 +35,8 @@ type GenerateBody = {
   cleanWear?: boolean
   gender?: string
   description?: string
+  poseIndex?: number
+  changeNote?: string
 }
 
 export async function POST(req: NextRequest) {
@@ -68,6 +70,8 @@ export async function POST(req: NextRequest) {
   const gender: ModelGender = body.gender === 'female' ? 'female' : 'male'
   const cleanWear = true
   const description = body.description?.trim() ?? ''
+  const poseIndex = Number.isFinite(body.poseIndex) ? Math.floor(Number(body.poseIndex)) : 0
+  const changeNote = typeof body.changeNote === 'string' ? body.changeNote.trim().slice(0, 400) : ''
 
   if (!productId) return NextResponse.json({ error: 'missing_product' }, { status: 400 })
   if (!kind) return NextResponse.json({ error: 'invalid_kind' }, { status: 400 })
@@ -112,6 +116,8 @@ export async function POST(req: NextRequest) {
       garmentDescription: description,
       garmentImages,
       styleRefs,
+      poseIndex,
+      changeNote: changeNote || undefined,
     })
 
     const generationId = crypto.randomUUID()

@@ -10,6 +10,7 @@ import {
   type ModelGender,
 } from './constants'
 import { catalogPrompt, DESCRIBE_GARMENT_PROMPT, modelPrompt } from './prompts'
+import { inferGarmentFamily, poseInstruction } from './poses'
 
 type InlinePart = { inlineData: { mimeType: string; data: string } }
 type TextPart = { text: string }
@@ -78,12 +79,17 @@ export async function generateStudioImage(opts: {
   garmentDescription: string
   garmentImages: StudioImageInput[]
   styleRefs: StudioImageInput[]
+  poseIndex?: number
+  changeNote?: string
 }): Promise<{ buffer: Buffer; mimeType: string; prompt: string; model: string }> {
   const model = resolveImageModel(opts.kind, opts.quality)
+  const family = inferGarmentFamily(opts.garmentDescription)
+  const pose = poseInstruction(opts.kind, family, opts.poseIndex ?? 0)
+  const changeNote = opts.changeNote?.trim() || undefined
   const prompt =
     opts.kind === 'catalog'
-      ? catalogPrompt(opts.garmentDescription, opts.cleanWear)
-      : modelPrompt(opts.garmentDescription, opts.gender, opts.cleanWear)
+      ? catalogPrompt(opts.garmentDescription, pose, changeNote, opts.cleanWear)
+      : modelPrompt(opts.garmentDescription, opts.gender, pose, changeNote, opts.cleanWear)
 
   const parts: Part[] = [{ text: prompt }]
 

@@ -24,13 +24,18 @@ const CLEAN_PRESENTATION = [
   'Arrange the garment perfectly: symmetric, sleeves and hem aligned, collar neat, fabric smooth.',
 ].join(' ')
 
-export function catalogPrompt(garmentDescription: string, _cleanWear = true): string {
+export function catalogPrompt(
+  garmentDescription: string,
+  pose: string,
+  changeNote?: string,
+  _cleanWear = true
+): string {
   return [
     'Create a single vertical 4:5 professional e-commerce CATALOG photograph of THIS exact garment only.',
-    'True flat-lay (or ghost/filled silhouette for jackets), centered, perfectly symmetrical.',
+    pose,
+    'True flat-lay (or ghost/filled silhouette for jackets/outerwear), centered, perfectly symmetrical.',
     PURE_WHITE_BG,
     'Even catalog lighting, no harsh glare, no lifestyle scene, no model, no hanger, no mannequin stand visible.',
-    'Sleeves mirrored and slightly angled down when the garment has sleeves. Collar neat and centered. Hem even.',
     'CATALOG STYLE REFERENCES teach layout and immaculate pressing ONLY. Ignore their background if it is not pure white. Never copy those garments.',
     'Ignore any website UI, carousel arrows, or buttons in a style reference.',
     `Garment identity to keep: ${garmentDescription}`,
@@ -38,13 +43,20 @@ export function catalogPrompt(garmentDescription: string, _cleanWear = true): st
     CLEAN_PRESENTATION,
     'Do not invent logos, graphics, or brand marks that are not on the source garment.',
     'No extra props, no other clothing, no text overlay, no watermark.',
+    changeNote
+      ? `OPERATOR CHANGE REQUEST (apply this, but NEVER change garment identity, never leave the white background): ${changeNote}`
+      : '',
     'Output one image only.',
-  ].join(' ')
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 export function modelPrompt(
   garmentDescription: string,
   gender: 'male' | 'female',
+  pose: string,
+  changeNote?: string,
   _cleanWear = true
 ): string {
   const person =
@@ -62,16 +74,21 @@ export function modelPrompt(
     'Create a single vertical 4:5 photorealistic luxury-fashion e-commerce photograph of THIS exact garment worn on one person.',
     PURE_WHITE_BG,
     person,
-    'Aesthetic: Supreme lookbook, Yeezy campaign, Dior Homme / Dior, Dolce & Gabbana — clean, expensive, minimal, editorial.',
+    pose,
+    'Aesthetic: Supreme lookbook, Yeezy campaign, Dior, Dolce & Gabbana — clean, expensive, minimal, editorial.',
     'THE GARMENT IS THE HERO. It must occupy attention: large in frame, sharp, centered. The person is a hanger for the clothes, not a character study.',
     'No busy styling that competes: no eye patch, no wallet chain dominating, no heavy costume, no extra jackets, no hats unless the source garment is a hat.',
-    'Simple pose, full or 3/4 body, facing camera or slight 3/4. Calm expression, not grimacing, not acting in an alley.',
-    'Real photography, not CGI, not plastic AI face.',
+    'Calm expression. Real photography, not CGI, not plastic AI face.',
     `Garment identity to keep: ${garmentDescription}`,
     'The garment MUST be the uploaded item: exact color, cut, prints, logos, and hardware — brand-new, steamed, perfectly worn.',
     CLEAN_PRESENTATION,
     'On the body the garment sits correctly: no bunching, no messy collar, no wrinkled torso.',
     'Do not invent logos, graphics, or brand marks. Do not replace the garment with a different item.',
+    changeNote
+      ? `OPERATOR CHANGE REQUEST (apply this, but NEVER change garment identity, never leave the white background, keep the model young and slim): ${changeNote}`
+      : '',
     'One person only. No text overlay, no watermark. Output one image only.',
-  ].join(' ')
+  ]
+    .filter(Boolean)
+    .join(' ')
 }

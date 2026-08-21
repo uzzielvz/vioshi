@@ -53,6 +53,9 @@ export default function StudioWorkspace({
   const [generating, setGenerating] = useState(false)
   const [localCells, setLocalCells] = useState<LocalCell[]>([])
   const [pending, startTransition] = useTransition()
+  const [regenCell, setRegenCell] = useState<LocalCell | null>(null)
+  const [regenNote, setRegenNote] = useState('')
+  const poseTick = useRef(0)
 
   const rawByType = new Map(rawPhotos.map((p) => [p.shot_type, p]))
   const visibleGens: LocalCell[] = [
@@ -85,15 +88,15 @@ export default function StudioWorkspace({
         return
       }
 
-      const jobs: GenerationKind[] = []
-      if (includeCatalog) jobs.push('catalog')
-      for (let i = 0; i < modelCount; i++) jobs.push('model')
+      const jobs: { kind: GenerationKind; poseIndex: number }[] = []
+      if (includeCatalog) jobs.push({ kind: 'catalog', poseIndex: 0 })
+      for (let i = 0; i < modelCount; i++) jobs.push({ kind: 'model', poseIndex: i })
 
-      const placeholders: LocalCell[] = jobs.map((kind, i) => ({
+      const placeholders: LocalCell[] = jobs.map((job, i) => ({
         id: `tmp-${Date.now()}-${i}`,
-        kind,
+        kind: job.kind,
         status: 'pending',
-        model: quality === 'pro' && kind === 'model' ? 'gemini-3-pro-image' : 'gemini-3.1-flash-image',
+        model: quality === 'pro' && job.kind === 'model' ? 'gemini-3-pro-image' : 'gemini-3.1-flash-image',
         clean_wear: true,
         signedUrl: null,
         created_at: new Date().toISOString(),
@@ -102,7 +105,7 @@ export default function StudioWorkspace({
       setLocalCells((prev) => [...placeholders, ...prev])
 
       await Promise.all(
-        jobs.map(async (kind, i) => {
+        jobs.map(async (job, i) => {
           const tempId = placeholders[i].id
           try {
             const res = await fetch('/api/admin/studio/generate', {
@@ -110,11 +113,12 @@ export default function StudioWorkspace({
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 productId: product.id,
-                kind,
-                quality: kind === 'model' ? quality : 'flash',
+                kind: job.kind,
+                quality: job.kind === 'model' ? quality : 'flash',
                 gender,
                 cleanWear: true,
                 description: descJson.description,
+                poseIndex: job.poseIndex,
               }),
             })
             const json = await res.json()
@@ -142,10 +146,17 @@ export default function StudioWorkspace({
     }
   }
 
-  async function handleRegenerate(cell: LocalCell) {
+  function openRegen(cell: LocalCell) {
+    if (cell.status === 'approved') return
+    setRegenNote('')
+    setRegenCell(cell)
+  }
+
+  async function handleRegenerate(cell: LocalCell, changeNote: string) {
     if (cell.status === 'approved') return
     setError(null)
     setGenerating(true)
+    setRegenCell(null)
     try {
       const descRes = await fetch('/api/admin/studio/describe', {
         method: 'POST',
@@ -162,6 +173,7 @@ export default function StudioWorkspace({
         await discardGeneration(cell.id, product.id)
       }
 
+      poseTick.current += 1
       const res = await fetch('/api/admin/studio/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -172,6 +184,8 @@ export default function StudioWorkspace({
           gender,
           cleanWear: true,
           description: descJson.description,
+          poseIndex: poseTick.current,
+          changeNote: changeNote.trim() || undefined,
         }),
       })
       const json = await res.json()
@@ -411,7 +425,7 @@ export default function StudioWorkspace({
                     <button
                       type="button"
                       disabled={pending || generating}
-                      onClick={() => handleRegenerate(cell)}
+                      onClick={() => openRegen(cell)}
                       className="uppercase tracking-widest text-gray-400 hover:text-black disabled:opacity-50"
                       style={{ ...font, fontSize: '10px' }}
                     >
@@ -433,6 +447,44 @@ export default function StudioWorkspace({
           </div>
         )}
       </section>
+
+      {regenCell && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center pt-[20vh] px-4">
+          <div className="bg-white w-full max-w-md p-6 flex flex-col gap-4">
+            <p className="uppercase tracking-widest" style={{ ...font, fontSize: '11px', fontWeight: 500 }}>
+              Regen {regenCell.kind}
+            </p>
+            <textarea
+              autoFocus
+              value={regenNote}
+              onChange={(e) => setRegenNote(e.target.value)}
+              placeholder="Qué quieres cambiar? (pose, crop, más logo, menos sombra…)"
+              rows={4}
+              className="w-full border border-gray-200 p-3 focus:outline-none focus:border-black resize-none"
+              style={{ ...font, fontSize: '11px' }}
+            />
+            <div className="flex gap-4">
+              <button
+                type="button"
+                disabled={generating}
+                onClick={() => handleRegenerate(regenCell, regenNote)}
+                className="bg-black text-white uppercase tracking-widest px-4 py-2 disabled:opacity-50"
+                style={{ ...font, fontSize: '10px', fontWeight: 500 }}
+              >
+                Generate
+              </button>
+              <button
+                type="button"
+                onClick={() => setRegenCell(null)}
+                className="uppercase tracking-widest text-gray-400 hover:text-black"
+                style={{ ...font, fontSize: '10px' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
