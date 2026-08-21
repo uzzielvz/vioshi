@@ -7,6 +7,7 @@ import {
   VISION_MODEL,
   type GenerationKind,
   type ImageQuality,
+  type ModelGender,
 } from './constants'
 import { catalogPrompt, DESCRIBE_GARMENT_PROMPT, modelPrompt } from './prompts'
 
@@ -73,6 +74,7 @@ export async function generateStudioImage(opts: {
   kind: GenerationKind
   quality: ImageQuality
   cleanWear: boolean
+  gender: ModelGender
   garmentDescription: string
   garmentImages: StudioImageInput[]
   styleRefs: StudioImageInput[]
@@ -81,7 +83,7 @@ export async function generateStudioImage(opts: {
   const prompt =
     opts.kind === 'catalog'
       ? catalogPrompt(opts.garmentDescription, opts.cleanWear)
-      : modelPrompt(opts.garmentDescription, opts.cleanWear)
+      : modelPrompt(opts.garmentDescription, opts.gender, opts.cleanWear)
 
   const parts: Part[] = [{ text: prompt }]
 
@@ -90,9 +92,11 @@ export async function generateStudioImage(opts: {
     parts.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } })
   }
 
-  if (opts.kind === 'model') {
+  if (opts.kind === 'catalog') {
     for (const img of opts.styleRefs) {
-      parts.push({ text: `STYLE REFERENCE (look only, not the garment) (${img.label}):` })
+      parts.push({
+        text: `CATALOG STYLE REFERENCE (photography look only; ignore website UI; do not copy this garment) (${img.label}):`,
+      })
       parts.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } })
     }
   }

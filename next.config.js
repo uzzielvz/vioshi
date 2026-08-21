@@ -14,6 +14,9 @@ const supabaseHost = supabaseStorageHostname();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingIncludes: {
+    '/api/admin/studio/generate': ['./studio-assets/catalog-refs/**/*'],
+  },
   images: {
     remotePatterns: [
       {

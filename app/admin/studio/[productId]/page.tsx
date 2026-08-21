@@ -21,7 +21,7 @@ export default async function AdminStudioProductPage({
 
   if (!product) notFound()
 
-  const [{ data: raws }, { data: gens }, { count: styleRefCount }] = await Promise.all([
+  const [{ data: raws }, { data: gens }] = await Promise.all([
     supabase
       .from('studio_raw_photos')
       .select('id, shot_type, storage_path')
@@ -32,7 +32,6 @@ export default async function AdminStudioProductPage({
       .eq('product_id', product.id)
       .neq('status', 'discarded')
       .order('created_at', { ascending: false }),
-    supabase.from('studio_style_refs').select('id', { count: 'exact', head: true }),
   ])
 
   const paths = [
@@ -58,7 +57,6 @@ export default async function AdminStudioProductPage({
         signedUrl: signed.get(g.storage_path) ?? null,
         created_at: g.created_at,
       }))}
-      styleRefCount={styleRefCount ?? 0}
     />
   )
 }

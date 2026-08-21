@@ -12,11 +12,11 @@ import {
 import {
   DEFAULT_MODEL_COUNT,
   MAX_MODEL_COUNT,
-  MIN_STYLE_REFS,
   SHOT_LABELS,
   SHOT_TYPES,
   type GenerationKind,
   type ImageQuality,
+  type ModelGender,
   type ShotType,
 } from '@/lib/studio/constants'
 import { font } from './studioUi'
@@ -39,18 +39,16 @@ export default function StudioWorkspace({
   product,
   rawPhotos,
   generations,
-  styleRefCount,
 }: {
   product: { id: string; name: string; slug: string; price_mxn: string | number }
   rawPhotos: RawPhoto[]
   generations: Generation[]
-  styleRefCount: number
 }) {
   const router = useRouter()
   const [includeCatalog, setIncludeCatalog] = useState(true)
   const [modelCount, setModelCount] = useState(DEFAULT_MODEL_COUNT)
   const [quality, setQuality] = useState<ImageQuality>('flash')
-  const [cleanWear, setCleanWear] = useState(false)
+  const [gender, setGender] = useState<ModelGender>('male')
   const [error, setError] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
   const [localCells, setLocalCells] = useState<LocalCell[]>([])
@@ -96,7 +94,7 @@ export default function StudioWorkspace({
         kind,
         status: 'pending',
         model: quality === 'pro' && kind === 'model' ? 'gemini-3-pro-image' : 'gemini-3.1-flash-image',
-        clean_wear: cleanWear,
+        clean_wear: true,
         signedUrl: null,
         created_at: new Date().toISOString(),
         busy: true,
@@ -114,7 +112,8 @@ export default function StudioWorkspace({
                 productId: product.id,
                 kind,
                 quality: kind === 'model' ? quality : 'flash',
-                cleanWear,
+                gender,
+                cleanWear: true,
                 description: descJson.description,
               }),
             })
@@ -170,7 +169,8 @@ export default function StudioWorkspace({
           productId: product.id,
           kind: cell.kind,
           quality: cell.kind === 'model' ? quality : 'flash',
-          cleanWear,
+          gender,
+          cleanWear: true,
           description: descJson.description,
         }),
       })
@@ -271,7 +271,7 @@ export default function StudioWorkspace({
             onChange={(e) => setIncludeCatalog(e.target.checked)}
           />
           <span className="uppercase tracking-widest" style={{ ...font, fontSize: '10px' }}>
-            Catalog (white 4:5, invisible mannequin)
+            Catalog (white 4:5, flat-lay)
           </span>
         </label>
 
@@ -295,6 +295,32 @@ export default function StudioWorkspace({
 
         <div className="flex items-center gap-4">
           <span className="uppercase tracking-widest text-gray-400" style={{ ...font, fontSize: '10px' }}>
+            Model
+          </span>
+          <button
+            type="button"
+            onClick={() => setGender('male')}
+            className={`uppercase tracking-widest ${gender === 'male' ? 'text-black border-b border-black' : 'text-gray-400'}`}
+            style={{ ...font, fontSize: '10px' }}
+          >
+            Hombre
+          </button>
+          <button
+            type="button"
+            onClick={() => setGender('female')}
+            className={`uppercase tracking-widest ${gender === 'female' ? 'text-black border-b border-black' : 'text-gray-400'}`}
+            style={{ ...font, fontSize: '10px' }}
+          >
+            Mujer
+          </button>
+        </div>
+
+        <p className="text-gray-400" style={{ ...font, fontSize: '10px' }}>
+          Modelo realista, fuerte, aesthetic, punk / streetwear. No se suben fotos de modelo.
+        </p>
+
+        <div className="flex items-center gap-4">
+          <span className="uppercase tracking-widest text-gray-400" style={{ ...font, fontSize: '10px' }}>
             Quality
           </span>
           <button
@@ -315,19 +341,6 @@ export default function StudioWorkspace({
             Pro (model only)
           </button>
         </div>
-
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input type="checkbox" checked={cleanWear} onChange={(e) => setCleanWear(e.target.checked)} />
-          <span className="uppercase tracking-widest" style={{ ...font, fontSize: '10px' }}>
-            Allow minor wear cleanup
-          </span>
-        </label>
-
-        {styleRefCount < MIN_STYLE_REFS && modelCount > 0 && (
-          <p className="text-gray-400" style={{ ...font, fontSize: '10px' }}>
-            Recomendado: {MIN_STYLE_REFS}–8 style refs en Studio para el look de modelo ({styleRefCount} ahora).
-          </p>
-        )}
 
         <button
           type="button"

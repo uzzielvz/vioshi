@@ -13,6 +13,7 @@ import {
   STUDIO_BUCKET,
   type GenerationKind,
   type ImageQuality,
+  type ModelGender,
   type ShotType,
 } from '@/lib/studio/constants'
 import {
@@ -20,6 +21,7 @@ import {
   generateStudioImage,
   mimeFromPath,
 } from '@/lib/studio/gemini'
+import { loadBundledCatalogRefs } from '@/lib/studio/catalogRefs'
 import { createStudioSignedUrl } from '@/lib/studio/storage'
 
 export const runtime = 'nodejs'
@@ -31,6 +33,7 @@ type GenerateBody = {
   kind?: string
   quality?: string
   cleanWear?: boolean
+  gender?: string
   description?: string
 }
 
@@ -62,7 +65,8 @@ export async function POST(req: NextRequest) {
   const productId = body.productId?.trim()
   const kind = body.kind === 'catalog' || body.kind === 'model' ? (body.kind as GenerationKind) : null
   const quality: ImageQuality = body.quality === 'pro' && kind === 'model' ? 'pro' : 'flash'
-  const cleanWear = Boolean(body.cleanWear)
+  const gender: ModelGender = body.gender === 'female' ? 'female' : 'male'
+  const cleanWear = true
   const description = body.description?.trim() ?? ''
 
   if (!productId) return NextResponse.json({ error: 'missing_product' }, { status: 400 })
@@ -83,11 +87,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'no_raw_photos' }, { status: 400 })
   }
 
-  const { data: refs } =
-    kind === 'model'
-      ? await supabase.from('studio_style_refs').select('storage_path, sort_order').order('sort_order')
-      : { data: [] as { storage_path: string; sort_order: number }[] }
-
   try {
     const garmentImages = []
     for (const raw of raws) {
@@ -103,19 +102,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'raw_download_failed' }, { status: 500 })
     }
 
-    const styleRefs = []
-    for (const [i, ref] of (refs ?? []).entries()) {
-      const { data: blob, error: dlError } = await supabase.storage
-        .from(STUDIO_BUCKET)
-        .download(ref.storage_path)
-      if (dlError || !blob) continue
-      styleRefs.push(await blobToStudioImage(blob, mimeFromPath(ref.storage_path), `ref ${i + 1}`))
-    }
+    const styleRefs = kind === 'catalog' ? await loadBundledCatalogRefs() : []
 
     const generated = await generateStudioImage({
       kind,
       quality,
       cleanWear,
+      gender,
       garmentDescription: description,
       garmentImages,
       styleRefs,
