@@ -404,7 +404,7 @@ export default function StudioWorkspace({
         </div>
 
         <p className="text-gray-400" style={{ ...font, fontSize: '10px' }}>
-          Modelo joven y delgado, lookbook Supreme / Yeezy / Dior. Fondo blanco. La prenda es lo que más se ve.
+          Modelo joven y delgado. Outfit streetwear (baggy, paleta de la prenda). Fondo blanco. La prenda es lo que más se ve.
         </p>
 
         <div className="flex items-center gap-4">

@@ -94,7 +94,7 @@ export async function generateStudioImage(opts: {
   const prompt =
     opts.kind === 'catalog'
       ? catalogPrompt(opts.garmentDescription, pose, changeNote, opts.cleanWear)
-      : modelPrompt(opts.garmentDescription, opts.gender, pose, look, changeNote, opts.cleanWear)
+      : modelPrompt(opts.garmentDescription, opts.gender, pose, look, family, changeNote, opts.cleanWear)
 
   const parts: Part[] = [{ text: prompt }]
 
