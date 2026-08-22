@@ -46,6 +46,7 @@ export default function StudioWorkspace({
 }) {
   const router = useRouter()
   const [includeCatalog, setIncludeCatalog] = useState(true)
+  const [includeBack, setIncludeBack] = useState(true)
   const [modelCount, setModelCount] = useState(DEFAULT_MODEL_COUNT)
   const [quality, setQuality] = useState<ImageQuality>('flash')
   const [gender, setGender] = useState<ModelGender>('male')
@@ -55,6 +56,7 @@ export default function StudioWorkspace({
   const [pending, startTransition] = useTransition()
   const [regenCell, setRegenCell] = useState<LocalCell | null>(null)
   const [regenNote, setRegenNote] = useState('')
+  const [regenBack, setRegenBack] = useState(false)
   const poseTick = useRef(0)
 
   const rawByType = new Map(rawPhotos.map((p) => [p.shot_type, p]))
@@ -68,8 +70,8 @@ export default function StudioWorkspace({
       setError('Sube al menos una foto real de la prenda')
       return
     }
-    if (!includeCatalog && modelCount < 1) {
-      setError('Elige catálogo o al menos una foto de modelo')
+    if (!includeCatalog && modelCount < 1 && !includeBack) {
+      setError('Elige catálogo, fotos de modelo, o espalda')
       return
     }
 
@@ -88,9 +90,14 @@ export default function StudioWorkspace({
         return
       }
 
-      const jobs: { kind: GenerationKind; poseIndex: number }[] = []
-      if (includeCatalog) jobs.push({ kind: 'catalog', poseIndex: 0 })
-      for (let i = 0; i < modelCount; i++) jobs.push({ kind: 'model', poseIndex: i })
+      const jobs: { kind: GenerationKind; poseIndex: number; lookIndex: number; view: 'front' | 'back' }[] = []
+      if (includeCatalog) jobs.push({ kind: 'catalog', poseIndex: 0, lookIndex: 0, view: 'front' })
+      for (let i = 0; i < modelCount; i++) {
+        jobs.push({ kind: 'model', poseIndex: i, lookIndex: i, view: 'front' })
+      }
+      if (includeBack) {
+        jobs.push({ kind: 'model', poseIndex: 0, lookIndex: modelCount, view: 'back' })
+      }
 
       const placeholders: LocalCell[] = jobs.map((job, i) => ({
         id: `tmp-${Date.now()}-${i}`,
@@ -119,6 +126,8 @@ export default function StudioWorkspace({
                 cleanWear: true,
                 description: descJson.description,
                 poseIndex: job.poseIndex,
+                lookIndex: job.lookIndex,
+                view: job.view,
               }),
             })
             const json = await res.json()
@@ -149,10 +158,11 @@ export default function StudioWorkspace({
   function openRegen(cell: LocalCell) {
     if (cell.status === 'approved') return
     setRegenNote('')
+    setRegenBack(false)
     setRegenCell(cell)
   }
 
-  async function handleRegenerate(cell: LocalCell, changeNote: string) {
+  async function handleRegenerate(cell: LocalCell, changeNote: string, fromBack: boolean) {
     if (cell.status === 'approved') return
     setError(null)
     setGenerating(true)
@@ -185,6 +195,8 @@ export default function StudioWorkspace({
           cleanWear: true,
           description: descJson.description,
           poseIndex: poseTick.current,
+          lookIndex: poseTick.current + 3,
+          view: fromBack ? 'back' : 'front',
           changeNote: changeNote.trim() || undefined,
         }),
       })
@@ -286,6 +298,17 @@ export default function StudioWorkspace({
           />
           <span className="uppercase tracking-widest" style={{ ...font, fontSize: '10px' }}>
             Catalog (white 4:5, flat-lay)
+          </span>
+        </label>
+
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={includeBack}
+            onChange={(e) => setIncludeBack(e.target.checked)}
+          />
+          <span className="uppercase tracking-widest" style={{ ...font, fontSize: '10px' }}>
+            Foto de espalda
           </span>
         </label>
 
@@ -463,11 +486,21 @@ export default function StudioWorkspace({
               className="w-full border border-gray-200 p-3 focus:outline-none focus:border-black resize-none"
               style={{ ...font, fontSize: '11px' }}
             />
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={regenBack}
+                onChange={(e) => setRegenBack(e.target.checked)}
+              />
+              <span className="uppercase tracking-widest" style={{ ...font, fontSize: '10px' }}>
+                Vista de espalda
+              </span>
+            </label>
             <div className="flex gap-4">
               <button
                 type="button"
                 disabled={generating}
-                onClick={() => handleRegenerate(regenCell, regenNote)}
+                onClick={() => handleRegenerate(regenCell, regenNote, regenBack)}
                 className="bg-black text-white uppercase tracking-widest px-4 py-2 disabled:opacity-50"
                 style={{ ...font, fontSize: '10px', fontWeight: 500 }}
               >

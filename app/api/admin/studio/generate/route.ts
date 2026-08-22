@@ -36,6 +36,8 @@ type GenerateBody = {
   gender?: string
   description?: string
   poseIndex?: number
+  lookIndex?: number
+  view?: string
   changeNote?: string
 }
 
@@ -71,6 +73,8 @@ export async function POST(req: NextRequest) {
   const cleanWear = true
   const description = body.description?.trim() ?? ''
   const poseIndex = Number.isFinite(body.poseIndex) ? Math.floor(Number(body.poseIndex)) : 0
+  const lookIndex = Number.isFinite(body.lookIndex) ? Math.floor(Number(body.lookIndex)) : poseIndex
+  const view = body.view === 'back' ? 'back' : 'front'
   const changeNote = typeof body.changeNote === 'string' ? body.changeNote.trim().slice(0, 400) : ''
 
   if (!productId) return NextResponse.json({ error: 'missing_product' }, { status: 400 })
@@ -117,6 +121,8 @@ export async function POST(req: NextRequest) {
       garmentImages,
       styleRefs,
       poseIndex,
+      lookIndex,
+      view,
       changeNote: changeNote || undefined,
     })
 

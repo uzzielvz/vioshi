@@ -52,28 +52,49 @@ export function catalogPrompt(
     .join(' ')
 }
 
+const MALE_LOOKS = [
+  'LOOK (unique for this shot): young East Asian man, short neat black hair, looking slightly down. No cap, no sunglasses.',
+  'LOOK (unique for this shot): young man with dark wavy medium-length hair, looking slightly away. Optional thin dark sunglasses only if they do not hide the garment.',
+  'LOOK (unique for this shot): young man with curly medium-length brown hair, looking at camera, calm. No hat.',
+  'LOOK (unique for this shot): young Black man, short textured hair, looking at camera. No hat.',
+  'LOOK (unique for this shot): young man, fair skin, buzz cut, small silver hoop earrings, photorealistic. No hat.',
+  'LOOK (unique for this shot): young Latino man, messy dark brown hair, direct gaze. No hat.',
+]
+
+const FEMALE_LOOKS = [
+  'LOOK (unique for this shot): young East Asian woman, straight dark hair, looking slightly down. No hat.',
+  'LOOK (unique for this shot): young woman with dark wavy hair, looking slightly away. No hat.',
+  'LOOK (unique for this shot): young Black woman, short natural hair or sleek bun, looking at camera. No hat.',
+  'LOOK (unique for this shot): young Latina woman, long dark hair, calm gaze. No hat.',
+  'LOOK (unique for this shot): young woman, fair skin, cropped hair, small hoop earrings. No hat.',
+  'LOOK (unique for this shot): young woman, curly brown hair, looking at camera. No hat.',
+]
+
+export function modelLook(gender: 'male' | 'female', lookIndex: number): string {
+  const list = gender === 'female' ? FEMALE_LOOKS : MALE_LOOKS
+  const i = ((lookIndex % list.length) + list.length) % list.length
+  return list[i]
+}
+
 export function modelPrompt(
   garmentDescription: string,
   gender: 'male' | 'female',
   pose: string,
+  look: string,
   changeNote?: string,
   _cleanWear = true
 ): string {
-  const person =
+  const body =
     gender === 'female'
-      ? [
-          'The wearer is a REAL young adult woman (early 20s): slim, lean, high-fashion model body — thin, long lines, not curvy-plus, not muscular gym body.',
-          'Youthful face, photorealistic skin. Looks like a Supreme / Yeezy / Dior / Dolce&Gabbana campaign model.',
-        ].join(' ')
-      : [
-          'The wearer is a REAL young adult man (early 20s): slim, lean, high-fashion model body — thin, tall, not bulky, not bodybuilder, not “chad gym” muscle.',
-          'Youthful face, photorealistic skin. Looks like a Supreme / Yeezy / Dior / Dolce&Gabbana campaign model.',
-        ].join(' ')
+      ? 'The wearer is a REAL young adult woman (early 20s): slim, lean, high-fashion model body — thin, long lines, not curvy-plus, not muscular gym body.'
+      : 'The wearer is a REAL young adult man (early 20s): slim, lean, high-fashion model body — thin, tall, not bulky, not bodybuilder, not “chad gym” muscle.'
 
   return [
     'Create a single vertical 4:5 photorealistic luxury-fashion e-commerce photograph of THIS exact garment worn on one person.',
     PURE_WHITE_BG,
-    person,
+    body,
+    look,
+    'Youthful photorealistic skin. Streetwear lookbook model (Supreme / Yeezy / Dior) — DIFFERENT face from other shots in the set. Never clone the same face.',
     pose,
     'Aesthetic: Supreme lookbook, Yeezy campaign, Dior, Dolce & Gabbana — clean, expensive, minimal, editorial.',
     'THE GARMENT IS THE HERO. It must occupy attention: large in frame, sharp, centered. The person is a hanger for the clothes, not a character study.',

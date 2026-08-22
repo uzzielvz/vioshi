@@ -7,6 +7,8 @@ export type GarmentFamily =
   | 'accessory'
   | 'other'
 
+export type ShotView = 'front' | 'back'
+
 const TEE =
   /\b(tee|t-shirt|tshirt|jersey|shirt|polo|tank|top|playera|camiseta)\b/i
 const HOODIE =
@@ -30,46 +32,56 @@ export function inferGarmentFamily(description: string): GarmentFamily {
   return 'other'
 }
 
-/** On-model poses that sell the piece (white-studio catalog, garment is hero). */
+/** Front/3-4 on-model poses. Back view is a separate job, not mixed in. */
 const MODEL_POSES: Record<GarmentFamily, string[]> = {
   tee: [
-    'POSE to showcase the TOP: camera at chest height, crop head-to-mid-thigh (American shot). Square to camera, arms relaxed at sides so the chest graphic/logo is fully visible and undistorted. Weight even.',
-    'POSE to showcase the TOP: 3/4 turn (~20°). Graphic still fully readable. One hand lightly at the hem, never covering the print.',
-    'POSE to showcase the TOP: full back, arms relaxed, crop head-to-mid-thigh. Show any back print or yoke.',
-    'POSE to showcase the TOP: slow walk toward camera, one foot forward, graphic still front-and-center and unwarped.',
+    'POSE FRONT: camera at chest height, crop head-to-mid-thigh (American shot). Square to camera, arms relaxed at sides so the chest graphic/logo is fully visible and undistorted. Weight even. Looking at camera or slightly down.',
+    'POSE FRONT: 3/4 turn (~20°). Graphic still fully readable. One hand lightly at the hem, never covering the print.',
+    'POSE FRONT: slow walk toward camera, one foot forward, graphic still front-and-center and unwarped. Crop head-to-mid-thigh.',
   ],
   hoodie: [
-    'POSE to showcase the HOODIE: front, hood DOWN, camera at chest height, crop head-to-mid-thigh. Hands at sides so the chest graphic is fully visible. Show rib cuff and hem.',
-    'POSE to showcase the HOODIE: 3/4, one hand in the kangaroo pocket (if it has one), hood down, graphic readable.',
-    'POSE to showcase the HOODIE: hood UP, face still visible, garment fills the frame, cuffs and hem sharp.',
-    'POSE to showcase the HOODIE: full back, hood down, show any back graphic and hood volume.',
+    'POSE FRONT: hood DOWN, camera at chest height, crop head-to-mid-thigh. Hands in the kangaroo pocket (if it has one) or at sides so the chest graphic is fully visible.',
+    'POSE FRONT: 3/4, one hand in the pocket, hood down, graphic readable, looking slightly down.',
+    'POSE FRONT: hood UP, face still visible, garment fills the frame, cuffs and hem sharp.',
   ],
   outerwear: [
-    'POSE to showcase the JACKET/VEST: front, closed as designed (zip/buttons done), arms at sides, crop head-to-hip or full if long. Show collar, zip, and chest logo.',
-    'POSE to showcase the JACKET/VEST: 3/4, one hand in a pocket, show lapel/shoulder line and sleeve length.',
-    'POSE to showcase the JACKET/VEST: worn slightly open over a plain unmarked undershirt (no logos) so lining or inner sherpa is visible without competing with THIS garment.',
-    'POSE to showcase the JACKET/VEST: full back, arms relaxed, show back yoke/logo and hem.',
+    'POSE FRONT: jacket closed as designed, hands in the side pockets, crop head-to-mid-thigh. Show collar, zip, and chest logo. Looking slightly down.',
+    'POSE FRONT: 3/4, one hand in a pocket, show lapel/shoulder line and sleeve length.',
+    'POSE FRONT: worn slightly open over a plain unmarked undershirt (no logos) so lining is visible without competing with THIS garment.',
   ],
   pants: [
-    'POSE to showcase the PANTS: full-length front, camera at hip height, weight even on both feet, legs straight so the full silhouette, stripe, and thigh logo are readable. Waistband and hem both in frame.',
-    'POSE to showcase the PANTS: 3/4 full-length, one knee slightly bent so drape and side stripe show. Hands relaxed, not covering logos.',
-    'POSE to showcase the PANTS: full-length back, show back pockets, waistband, and hem.',
-    'POSE to showcase the PANTS: mid-stride walk, full-length, so the fabric and stripe read in motion. Still on pure white.',
+    'POSE FRONT: full-length, camera at hip height, weight even, legs straight so the full silhouette, stripe, and thigh logo are readable. Waistband and hem both in frame.',
+    'POSE FRONT: 3/4 full-length, one knee slightly bent so drape and side stripe show. Hands relaxed, not covering logos.',
+    'POSE FRONT: mid-stride walk, full-length, fabric and stripe read in motion. Still on pure white.',
   ],
   dress: [
-    'POSE to showcase the DRESS: full-length front, arms slightly away from the body so the silhouette is clean.',
-    'POSE to showcase the DRESS: 3/4 full-length, one step, show drape without hiding the print.',
-    'POSE to showcase the DRESS: full back, arms relaxed.',
+    'POSE FRONT: full-length, arms slightly away from the body so the silhouette is clean.',
+    'POSE FRONT: 3/4 full-length, one step, show drape without hiding the print.',
   ],
   accessory: [
-    'POSE to showcase the ACCESSORY: worn naturally, crop tight on the piece (not a full-body portrait). The accessory is the largest object in frame.',
-    'POSE to showcase the ACCESSORY: 3/4, still tight crop, show hardware and logo.',
+    'POSE FRONT: worn naturally, crop tight on the piece (not a full-body portrait). The accessory is the largest object in frame.',
+    'POSE FRONT: 3/4, still tight crop, show hardware and logo.',
   ],
   other: [
-    'POSE to showcase THIS garment: front, camera height matching the piece (chest for tops, hip for full looks). Arms relaxed, garment fully visible, crop so the piece fills the frame.',
-    'POSE to showcase THIS garment: 3/4 turn, details and side seam readable.',
-    'POSE to showcase THIS garment: back view if the piece has a back, otherwise a tighter crop of the main graphic.',
+    'POSE FRONT: camera height matching the piece (chest for tops, hip for full looks). Arms relaxed, garment fully visible, crop so the piece fills the frame.',
+    'POSE FRONT: 3/4 turn, details and side seam readable.',
   ],
+}
+
+const BACK_POSES: Record<GarmentFamily, string> = {
+  tee: 'POSE BACK VIEW (mandatory): model turned ~180° away from camera. Head slightly turned so a sliver of profile/hair is visible. Arms relaxed at sides. Crop head-to-mid-thigh. THE BACK OF THE GARMENT IS THE HERO — any back print, graphic, or yoke from the GARMENT SOURCE (Reverso) must be fully visible, large, sharp, undistorted. If the source back is plain, keep it plain. Do not invent a back graphic.',
+  hoodie:
+    'POSE BACK VIEW (mandatory): model turned ~180° away, hood DOWN, head slightly in profile. Arms at sides. Crop head-to-mid-thigh. THE BACK GRAPHIC of the hoodie is the hero — copy it exactly from the Reverso source photo. Do not invent a back print.',
+  outerwear:
+    'POSE BACK VIEW (mandatory): model turned ~180° away, arms at sides, crop head-to-mid-thigh or full if long. Show back yoke, back logo, and hem exactly as in the Reverso source. Do not invent back graphics.',
+  pants:
+    'POSE BACK VIEW (mandatory): full-length from behind, camera at hip height. Show back pockets, waistband, stripe, and hem. Do not invent logos.',
+  dress:
+    'POSE BACK VIEW (mandatory): full-length from behind, arms relaxed. Show the true back of the dress from the Reverso source.',
+  accessory:
+    'POSE BACK / reverse of the accessory, still tight crop, hardware readable.',
+  other:
+    'POSE BACK VIEW (mandatory): model turned ~180° away, crop so the BACK of this garment fills the frame. Copy any back detail from the Reverso source. Do not invent prints.',
 }
 
 const CATALOG_POSES: Record<GarmentFamily, string[]> = {
@@ -103,8 +115,12 @@ const CATALOG_POSES: Record<GarmentFamily, string[]> = {
 export function poseInstruction(
   kind: 'catalog' | 'model',
   family: GarmentFamily,
-  poseIndex: number
+  poseIndex: number,
+  view: ShotView = 'front'
 ): string {
+  if (kind === 'model' && view === 'back') {
+    return BACK_POSES[family]
+  }
   const list = kind === 'catalog' ? CATALOG_POSES[family] : MODEL_POSES[family]
   const i = ((poseIndex % list.length) + list.length) % list.length
   return list[i]
