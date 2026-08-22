@@ -18,6 +18,10 @@ export const VISION_MODEL = 'gemini-2.5-flash'
 
 export const IMAGE_ASPECT_RATIO = '4:5'
 
+/** Instagram feed portrait post */
+export const IG_POST_WIDTH = 1080
+export const IG_POST_HEIGHT = 1350
+
 export const SHOT_TYPES = ['front', 'back', 'detail', 'label'] as const
 export type ShotType = (typeof SHOT_TYPES)[number]
 

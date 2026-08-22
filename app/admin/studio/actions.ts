@@ -396,3 +396,50 @@ export async function approveGeneration(id: string, productId: string): Promise<
   revalidatePath('/admin/products')
   return null
 }
+
+export async function replaceGenerationImage(formData: FormData): Promise<ActionState> {
+  await requireAdminSession()
+  const supabase = createAdminClient()
+
+  const productId = formData.get('productId') as string | null
+  const generationId = formData.get('generationId') as string | null
+  const file = formData.get('file') as File | null
+
+  if (!productId || !generationId) return { error: 'Faltan datos' }
+  const invalid = validateImage(file)
+  if (invalid) return { error: invalid }
+
+  const { data: row } = await supabase
+    .from('studio_generations')
+    .select('id, storage_path, status')
+    .eq('id', generationId)
+    .eq('product_id', productId)
+    .maybeSingle()
+
+  if (!row) return { error: 'Generación no encontrada' }
+  if (row.status === 'approved') return { error: 'Ya está en la tienda. Recorta antes de aprobar.' }
+  if (row.status === 'discarded') return { error: 'Esta imagen fue descartada' }
+
+  const path = `generations/${productId}/${generationId}-crop-${Date.now()}.${extFromFile(file!)}`
+  const buffer = Buffer.from(await file!.arrayBuffer())
+
+  const { error: uploadError } = await supabase.storage
+    .from(STUDIO_BUCKET)
+    .upload(path, buffer, { contentType: file!.type, upsert: false })
+
+  if (uploadError) return { error: uploadError.message }
+
+  const { error: updateError } = await supabase
+    .from('studio_generations')
+    .update({ storage_path: path })
+    .eq('id', generationId)
+
+  if (updateError) {
+    await supabase.storage.from(STUDIO_BUCKET).remove([path])
+    return { error: updateError.message }
+  }
+
+  await supabase.storage.from(STUDIO_BUCKET).remove([row.storage_path])
+  revalidatePath(`/admin/studio/${productId}`)
+  return null
+}

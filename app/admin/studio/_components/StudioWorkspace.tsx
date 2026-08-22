@@ -8,6 +8,7 @@ import {
   copyRawPhoto,
   deleteRawPhoto,
   discardGeneration,
+  replaceGenerationImage,
   uploadRawPhoto,
 } from '../actions'
 import {
@@ -21,6 +22,7 @@ import {
   type ShotType,
 } from '@/lib/studio/constants'
 import { font } from './studioUi'
+import CropModal from './CropModal'
 import { castLookIndex } from '@/lib/studio/prompts'
 
 type RawPhoto = { id: string; shot_type: ShotType; signedUrl: string | null }
@@ -59,6 +61,7 @@ export default function StudioWorkspace({
   const [regenCell, setRegenCell] = useState<LocalCell | null>(null)
   const [regenNote, setRegenNote] = useState('')
   const [regenBack, setRegenBack] = useState(false)
+  const [cropCell, setCropCell] = useState<LocalCell | null>(null)
   const poseTick = useRef(0)
 
   const rawByType = new Map(rawPhotos.map((p) => [p.shot_type, p]))
@@ -243,6 +246,24 @@ export default function StudioWorkspace({
     } finally {
       setGenerating(false)
     }
+  }
+
+  function runCrop(file: File) {
+    const cell = cropCell
+    if (!cell || cell.id.startsWith('tmp-')) return
+    const fd = new FormData()
+    fd.set('productId', product.id)
+    fd.set('generationId', cell.id)
+    fd.set('file', file)
+    setCropCell(null)
+    startTransition(async () => {
+      const result = await replaceGenerationImage(fd)
+      if (result?.error) setError(result.error)
+      else {
+        setLocalCells((prev) => prev.filter((c) => c.id !== cell.id))
+        router.refresh()
+      }
+    })
   }
 
   function runApprove(id: string) {
@@ -430,6 +451,9 @@ export default function StudioWorkspace({
         <h2 className="uppercase tracking-widest mb-4" style={{ ...font, fontSize: '11px', fontWeight: 500 }}>
           Grid
         </h2>
+        <p className="text-gray-400 mb-4" style={{ ...font, fontSize: '10px' }}>
+          Crop recorta a 1080×1350 (post vertical IG) sin gastar tokens.
+        </p>
         {visibleGens.length === 0 ? (
           <p className="uppercase tracking-widest text-gray-400" style={{ ...font, fontSize: '11px' }}>
             No generations yet
@@ -473,6 +497,17 @@ export default function StudioWorkspace({
                         style={{ ...font, fontSize: '10px' }}
                       >
                         Approve
+                      </button>
+                    )}
+                    {!cell.id.startsWith('tmp-') && !cell.error && (
+                      <button
+                        type="button"
+                        disabled={pending || generating}
+                        onClick={() => setCropCell(cell)}
+                        className="uppercase tracking-widest text-gray-400 hover:text-black disabled:opacity-50"
+                        style={{ ...font, fontSize: '10px' }}
+                      >
+                        Crop
                       </button>
                     )}
                     <button
@@ -547,6 +582,14 @@ export default function StudioWorkspace({
             </div>
           </div>
         </div>
+      )}
+
+      {cropCell && !cropCell.id.startsWith('tmp-') && (
+        <CropModal
+          generationId={cropCell.id}
+          onCancel={() => setCropCell(null)}
+          onApply={runCrop}
+        />
       )}
     </div>
   )
