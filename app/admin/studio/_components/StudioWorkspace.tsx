@@ -1,10 +1,11 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useRef, useState, useTransition, type DragEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   approveGeneration,
+  copyRawPhoto,
   deleteRawPhoto,
   discardGeneration,
   uploadRawPhoto,
@@ -270,7 +271,7 @@ export default function StudioWorkspace({
           Raw photos
         </h2>
         <p className="text-gray-400 mb-4" style={{ ...font, fontSize: '10px' }}>
-          Fotos reales. No salen en la tienda.
+          Fotos reales. Arrastra, pega (Ctrl+V) o copia entre slots. No salen en la tienda.
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {SHOT_TYPES.map((shot) => (
@@ -522,6 +523,20 @@ export default function StudioWorkspace({
   )
 }
 
+const STUDIO_SHOT_DRAG = 'application/x-viogi-shot'
+
+function fileFromClipboard(data: DataTransfer | null): File | undefined {
+  if (!data) return undefined
+  if (data.files?.[0]?.type.startsWith('image/')) return data.files[0]
+  for (const item of Array.from(data.items ?? [])) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile()
+      if (file) return file
+    }
+  }
+  return undefined
+}
+
 function RawSlot({
   productId,
   shot,
@@ -537,6 +552,8 @@ function RawSlot({
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const [over, setOver] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   function onFile(file: File | undefined) {
     if (!file) return
@@ -553,6 +570,22 @@ function RawSlot({
     })
   }
 
+  function onDrop(e: DragEvent) {
+    e.preventDefault()
+    setOver(false)
+    if (disabled || pending) return
+    const fromShot = e.dataTransfer.getData(STUDIO_SHOT_DRAG) as ShotType | ''
+    if (fromShot && SHOT_TYPES.includes(fromShot) && fromShot !== shot) {
+      startTransition(async () => {
+        const result = await copyRawPhoto(productId, fromShot, shot)
+        if (result?.error) setError(result.error)
+        else router.refresh()
+      })
+      return
+    }
+    onFile(e.dataTransfer.files?.[0])
+  }
+
   function onDelete() {
     if (!photo) return
     startTransition(async () => {
@@ -562,26 +595,70 @@ function RawSlot({
     })
   }
 
+  async function onCopy() {
+    if (!photo?.signedUrl) return
+    try {
+      const res = await fetch(photo.signedUrl)
+      const blob = await res.blob()
+      const type = blob.type.startsWith('image/') ? blob.type : 'image/png'
+      await navigator.clipboard.write([new ClipboardItem({ [type]: blob })])
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setError('No se pudo copiar. Arrastra la foto o usa clic derecho.')
+    }
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <span className="uppercase tracking-widest text-gray-400" style={{ ...font, fontSize: '10px' }}>
         {SHOT_LABELS[shot]}
       </span>
-      <button
-        type="button"
-        disabled={disabled || pending}
-        onClick={() => inputRef.current?.click()}
-        className="relative aspect-[4/5] border border-dashed border-gray-300 hover:border-black transition-colors bg-gray-50 overflow-hidden disabled:opacity-50"
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => {
+          if (!disabled && !pending) inputRef.current?.click()
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            if (!disabled && !pending) inputRef.current?.click()
+          }
+        }}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setOver(true)
+        }}
+        onDragLeave={() => setOver(false)}
+        onDrop={onDrop}
+        onPaste={(e) => {
+          e.preventDefault()
+          onFile(fileFromClipboard(e.clipboardData))
+        }}
+        className={`relative aspect-[4/5] border border-dashed overflow-hidden bg-gray-50 transition-colors outline-none ${
+          over ? 'border-black' : 'border-gray-300 hover:border-black'
+        } ${disabled || pending ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}
       >
         {photo?.signedUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo.signedUrl} alt="" className="w-full h-full object-cover" />
+          <img
+            src={photo.signedUrl}
+            alt=""
+            draggable
+            onClick={(e) => e.stopPropagation()}
+            onDragStart={(e) => {
+              e.dataTransfer.setData(STUDIO_SHOT_DRAG, shot)
+              e.dataTransfer.effectAllowed = 'copy'
+            }}
+            className="w-full h-full object-cover cursor-grab"
+          />
         ) : (
-          <span className="uppercase tracking-widest text-gray-400" style={{ ...font, fontSize: '10px' }}>
-            {pending ? '...' : '+'}
+          <span className="uppercase tracking-widest text-gray-400 flex items-center justify-center h-full px-2 text-center" style={{ ...font, fontSize: '10px' }}>
+            {pending ? '...' : 'Arrastra o +'}
           </span>
         )}
-      </button>
+      </div>
       <input
         ref={inputRef}
         type="file"
@@ -589,17 +666,30 @@ function RawSlot({
         className="hidden"
         onChange={(e) => onFile(e.target.files?.[0])}
       />
-      {photo && (
-        <button
-          type="button"
-          disabled={disabled || pending}
-          onClick={onDelete}
-          className="uppercase tracking-widest text-gray-400 hover:text-red-500 text-left disabled:opacity-50"
-          style={{ ...font, fontSize: '10px' }}
-        >
-          Remove
-        </button>
-      )}
+      <div className="flex gap-3">
+        {photo && (
+          <button
+            type="button"
+            disabled={disabled || pending}
+            onClick={onCopy}
+            className="uppercase tracking-widest text-gray-400 hover:text-black text-left disabled:opacity-50"
+            style={{ ...font, fontSize: '10px' }}
+          >
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        )}
+        {photo && (
+          <button
+            type="button"
+            disabled={disabled || pending}
+            onClick={onDelete}
+            className="uppercase tracking-widest text-gray-400 hover:text-red-500 text-left disabled:opacity-50"
+            style={{ ...font, fontSize: '10px' }}
+          >
+            Remove
+          </button>
+        )}
+      </div>
       {error && (
         <p className="text-red-500" style={{ ...font, fontSize: '10px' }}>
           {error}

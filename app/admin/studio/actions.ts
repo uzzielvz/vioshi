@@ -220,6 +220,53 @@ export async function uploadRawPhoto(formData: FormData): Promise<ActionState> {
   return null
 }
 
+export async function copyRawPhoto(
+  productId: string,
+  fromShot: ShotType,
+  toShot: ShotType
+): Promise<ActionState> {
+  await requireAdminSession()
+  if (fromShot === toShot) return null
+  if (!SHOT_TYPES.includes(fromShot) || !SHOT_TYPES.includes(toShot)) {
+    return { error: 'Tipo de foto inválido' }
+  }
+
+  const supabase = createAdminClient()
+
+  const { data: source } = await supabase
+    .from('studio_raw_photos')
+    .select('storage_path')
+    .eq('product_id', productId)
+    .eq('shot_type', fromShot)
+    .maybeSingle()
+
+  if (!source) return { error: 'No hay foto para copiar' }
+
+  const { data: blob, error: downloadError } = await supabase.storage
+    .from(STUDIO_BUCKET)
+    .download(source.storage_path)
+
+  if (downloadError || !blob) {
+    return { error: downloadError?.message ?? 'No se pudo leer la foto' }
+  }
+
+  const ext = source.storage_path.split('.').pop() || 'jpg'
+  const mime =
+    blob.type && blob.type.startsWith('image/')
+      ? blob.type
+      : ext === 'png'
+        ? 'image/png'
+        : ext === 'webp'
+          ? 'image/webp'
+          : 'image/jpeg'
+  const file = new File([blob], `${toShot}.${ext}`, { type: mime })
+  const fd = new FormData()
+  fd.set('productId', productId)
+  fd.set('shotType', toShot)
+  fd.set('file', file)
+  return uploadRawPhoto(fd)
+}
+
 export async function deleteRawPhoto(id: string, productId: string): Promise<ActionState> {
   await requireAdminSession()
   const supabase = createAdminClient()
