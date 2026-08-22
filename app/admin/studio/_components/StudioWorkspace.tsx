@@ -21,6 +21,7 @@ import {
   type ShotType,
 } from '@/lib/studio/constants'
 import { font } from './studioUi'
+import { castLookIndex } from '@/lib/studio/prompts'
 
 type RawPhoto = { id: string; shot_type: ShotType; signedUrl: string | null }
 
@@ -91,14 +92,17 @@ export default function StudioWorkspace({
         return
       }
 
-      const jobs: { kind: GenerationKind; poseIndex: number; lookIndex: number; view: 'front' | 'back' }[] = []
-      if (includeCatalog) jobs.push({ kind: 'catalog', poseIndex: 0, lookIndex: 0, view: 'front' })
+      const lookIndex = castLookIndex(product.id, gender)
+      const catalogJobs: { kind: GenerationKind; poseIndex: number; view: 'front' | 'back' }[] = []
+      const modelJobs: { kind: GenerationKind; poseIndex: number; view: 'front' | 'back' }[] = []
+      if (includeCatalog) catalogJobs.push({ kind: 'catalog', poseIndex: 0, view: 'front' })
       for (let i = 0; i < modelCount; i++) {
-        jobs.push({ kind: 'model', poseIndex: i, lookIndex: i, view: 'front' })
+        modelJobs.push({ kind: 'model', poseIndex: i, view: 'front' })
       }
       if (includeBack) {
-        jobs.push({ kind: 'model', poseIndex: 0, lookIndex: modelCount, view: 'back' })
+        modelJobs.push({ kind: 'model', poseIndex: 0, view: 'back' })
       }
+      const jobs = [...catalogJobs, ...modelJobs]
 
       const placeholders: LocalCell[] = jobs.map((job, i) => ({
         id: `tmp-${Date.now()}-${i}`,
@@ -112,43 +116,64 @@ export default function StudioWorkspace({
       }))
       setLocalCells((prev) => [...placeholders, ...prev])
 
-      await Promise.all(
-        jobs.map(async (job, i) => {
-          const tempId = placeholders[i].id
-          try {
-            const res = await fetch('/api/admin/studio/generate', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                productId: product.id,
-                kind: job.kind,
-                quality: job.kind === 'model' ? quality : 'flash',
-                gender,
-                cleanWear: true,
-                description: descJson.description,
-                poseIndex: job.poseIndex,
-                lookIndex: job.lookIndex,
-                view: job.view,
-              }),
-            })
-            const json = await res.json()
-            if (!res.ok || !json.generation) {
-              setLocalCells((prev) =>
-                prev.map((c) =>
-                  c.id === tempId ? { ...c, busy: false, error: describeError(json.error) } : c
-                )
-              )
-              return
-            }
-            const g = json.generation as Generation
-            setLocalCells((prev) => prev.map((c) => (c.id === tempId ? { ...g, busy: false } : c)))
-          } catch {
+      const runJob = async (
+        job: (typeof jobs)[number],
+        tempId: string,
+        identityGenerationId?: string
+      ): Promise<string | undefined> => {
+        try {
+          const res = await fetch('/api/admin/studio/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              productId: product.id,
+              kind: job.kind,
+              quality: job.kind === 'model' ? quality : 'flash',
+              gender,
+              cleanWear: true,
+              description: descJson.description,
+              poseIndex: job.poseIndex,
+              lookIndex,
+              view: job.view,
+              identityGenerationId,
+            }),
+          })
+          const json = await res.json()
+          if (!res.ok || !json.generation) {
             setLocalCells((prev) =>
-              prev.map((c) => (c.id === tempId ? { ...c, busy: false, error: 'Error de red' } : c))
+              prev.map((c) =>
+                c.id === tempId ? { ...c, busy: false, error: describeError(json.error) } : c
+              )
             )
+            return undefined
           }
-        })
+          const g = json.generation as Generation
+          setLocalCells((prev) => prev.map((c) => (c.id === tempId ? { ...g, busy: false } : c)))
+          return g.id
+        } catch {
+          setLocalCells((prev) =>
+            prev.map((c) => (c.id === tempId ? { ...c, busy: false, error: 'Error de red' } : c))
+          )
+          return undefined
+        }
+      }
+
+      const catalogPlaceholders = placeholders.slice(0, catalogJobs.length)
+      const modelPlaceholders = placeholders.slice(catalogJobs.length)
+
+      const catalogPromise = Promise.all(
+        catalogJobs.map((job, i) => runJob(job, catalogPlaceholders[i].id))
       )
+
+      let identityId: string | undefined
+      if (modelJobs.length > 0) {
+        identityId = await runJob(modelJobs[0], modelPlaceholders[0].id)
+        await Promise.all(
+          modelJobs.slice(1).map((job, i) => runJob(job, modelPlaceholders[i + 1].id, identityId))
+        )
+      }
+
+      await catalogPromise
 
       router.refresh()
     } finally {
@@ -185,6 +210,9 @@ export default function StudioWorkspace({
       }
 
       poseTick.current += 1
+      const identityGenerationId = visibleGens.find(
+        (g) => g.kind === 'model' && g.id !== cell.id && !g.id.startsWith('tmp-') && !g.error
+      )?.id
       const res = await fetch('/api/admin/studio/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -196,9 +224,10 @@ export default function StudioWorkspace({
           cleanWear: true,
           description: descJson.description,
           poseIndex: poseTick.current,
-          lookIndex: poseTick.current + 3,
+          lookIndex: castLookIndex(product.id, gender),
           view: fromBack ? 'back' : 'front',
           changeNote: changeNote.trim() || undefined,
+          identityGenerationId,
         }),
       })
       const json = await res.json()

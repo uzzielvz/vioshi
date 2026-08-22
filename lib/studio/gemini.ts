@@ -83,12 +83,13 @@ export async function generateStudioImage(opts: {
   lookIndex?: number
   view?: ShotView
   changeNote?: string
+  identityImages?: StudioImageInput[]
 }): Promise<{ buffer: Buffer; mimeType: string; prompt: string; model: string }> {
   const model = resolveImageModel(opts.kind, opts.quality)
   const family = inferGarmentFamily(opts.garmentDescription)
   const view: ShotView = opts.view === 'back' ? 'back' : 'front'
   const pose = poseInstruction(opts.kind, family, opts.poseIndex ?? 0, view)
-  const look = modelLook(opts.gender, opts.lookIndex ?? opts.poseIndex ?? 0)
+  const look = modelLook(opts.gender, opts.lookIndex ?? 0)
   const changeNote = opts.changeNote?.trim() || undefined
   const prompt =
     opts.kind === 'catalog'
@@ -96,6 +97,15 @@ export async function generateStudioImage(opts: {
       : modelPrompt(opts.garmentDescription, opts.gender, pose, look, changeNote, opts.cleanWear)
 
   const parts: Part[] = [{ text: prompt }]
+
+  if (opts.kind === 'model') {
+    for (const img of opts.identityImages ?? []) {
+      parts.push({
+        text: `IDENTITY REFERENCE (${img.label}): SAME person for this garment. Copy face/hair/body exactly. Change only pose/view. Keep THIS garment from the GARMENT SOURCE photos, not a different item.`,
+      })
+      parts.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } })
+    }
+  }
 
   for (const img of opts.garmentImages) {
     parts.push({ text: `GARMENT SOURCE (${img.label}):` })

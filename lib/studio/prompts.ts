@@ -53,22 +53,29 @@ export function catalogPrompt(
 }
 
 const MALE_LOOKS = [
-  'LOOK (unique for this shot): young East Asian man, short neat black hair, looking slightly down. No cap, no sunglasses.',
-  'LOOK (unique for this shot): young man with dark wavy medium-length hair, looking slightly away. Optional thin dark sunglasses only if they do not hide the garment.',
-  'LOOK (unique for this shot): young man with curly medium-length brown hair, looking at camera, calm. No hat.',
-  'LOOK (unique for this shot): young Black man, short textured hair, looking at camera. No hat.',
-  'LOOK (unique for this shot): young man, fair skin, buzz cut, small silver hoop earrings, photorealistic. No hat.',
-  'LOOK (unique for this shot): young Latino man, messy dark brown hair, direct gaze. No hat.',
+  'CAST LOCK: young East Asian man, short neat black hair, no cap, no sunglasses, no facial hair.',
+  'CAST LOCK: young man with dark wavy medium-length hair, no hat, no sunglasses, light stubble optional.',
+  'CAST LOCK: young man with curly medium-length brown hair, no hat, no sunglasses.',
+  'CAST LOCK: young Black man, short textured hair, no hat, no sunglasses.',
+  'CAST LOCK: young man, fair skin, buzz cut, small silver hoop earrings, no hat.',
+  'CAST LOCK: young Latino man, messy dark brown hair, no hat, no sunglasses.',
 ]
 
 const FEMALE_LOOKS = [
-  'LOOK (unique for this shot): young East Asian woman, straight dark hair, looking slightly down. No hat.',
-  'LOOK (unique for this shot): young woman with dark wavy hair, looking slightly away. No hat.',
-  'LOOK (unique for this shot): young Black woman, short natural hair or sleek bun, looking at camera. No hat.',
-  'LOOK (unique for this shot): young Latina woman, long dark hair, calm gaze. No hat.',
-  'LOOK (unique for this shot): young woman, fair skin, cropped hair, small hoop earrings. No hat.',
-  'LOOK (unique for this shot): young woman, curly brown hair, looking at camera. No hat.',
+  'CAST LOCK: young East Asian woman, straight dark hair, no hat.',
+  'CAST LOCK: young woman with dark wavy hair, no hat.',
+  'CAST LOCK: young Black woman, short natural hair or sleek bun, no hat.',
+  'CAST LOCK: young Latina woman, long dark hair, no hat.',
+  'CAST LOCK: young woman, fair skin, cropped hair, small hoop earrings, no hat.',
+  'CAST LOCK: young woman, curly brown hair, no hat.',
 ]
+
+export function castLookIndex(productId: string, gender: 'male' | 'female'): number {
+  let h = 0
+  const s = `${productId}:${gender}`
+  for (let i = 0; i < s.length; i++) h = Math.imul(h, 31) + s.charCodeAt(i)
+  return Math.abs(h)
+}
 
 export function modelLook(gender: 'male' | 'female', lookIndex: number): string {
   const list = gender === 'female' ? FEMALE_LOOKS : MALE_LOOKS
@@ -94,7 +101,8 @@ export function modelPrompt(
     PURE_WHITE_BG,
     body,
     look,
-    'Youthful photorealistic skin. Streetwear lookbook model (Supreme / Yeezy / Dior) — DIFFERENT face from other shots in the set. Never clone the same face.',
+    'IDENTITY RULE: this is a LOOKBOOK SET. The SAME person wears the garment in every shot of this product. Same face, hair, skin, age, ears, jewelry, and body. Only pose and camera change.',
+    'If an IDENTITY REFERENCE photo is attached, that person is the cast: copy them exactly. Do not invent a new model.',
     pose,
     'Aesthetic: Supreme lookbook, Yeezy campaign, Dior, Dolce & Gabbana — clean, expensive, minimal, editorial.',
     'THE GARMENT IS THE HERO. It must occupy attention: large in frame, sharp, centered. The person is a hanger for the clothes, not a character study.',

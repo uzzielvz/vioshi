@@ -39,6 +39,7 @@ type GenerateBody = {
   lookIndex?: number
   view?: string
   changeNote?: string
+  identityGenerationId?: string
 }
 
 export async function POST(req: NextRequest) {
@@ -73,9 +74,10 @@ export async function POST(req: NextRequest) {
   const cleanWear = true
   const description = body.description?.trim() ?? ''
   const poseIndex = Number.isFinite(body.poseIndex) ? Math.floor(Number(body.poseIndex)) : 0
-  const lookIndex = Number.isFinite(body.lookIndex) ? Math.floor(Number(body.lookIndex)) : poseIndex
+  const lookIndex = Number.isFinite(body.lookIndex) ? Math.floor(Number(body.lookIndex)) : 0
   const view = body.view === 'back' ? 'back' : 'front'
   const changeNote = typeof body.changeNote === 'string' ? body.changeNote.trim().slice(0, 400) : ''
+  const identityGenerationId = body.identityGenerationId?.trim() || ''
 
   if (!productId) return NextResponse.json({ error: 'missing_product' }, { status: 400 })
   if (!kind) return NextResponse.json({ error: 'invalid_kind' }, { status: 400 })
@@ -112,6 +114,25 @@ export async function POST(req: NextRequest) {
 
     const styleRefs = kind === 'catalog' ? await loadBundledCatalogRefs() : []
 
+    const identityImages = []
+    if (kind === 'model' && identityGenerationId) {
+      const { data: identity } = await supabase
+        .from('studio_generations')
+        .select('storage_path, kind, status')
+        .eq('id', identityGenerationId)
+        .eq('product_id', productId)
+        .maybeSingle()
+
+      if (identity?.kind === 'model' && identity.status !== 'discarded') {
+        const { data: blob } = await supabase.storage.from(STUDIO_BUCKET).download(identity.storage_path)
+        if (blob) {
+          identityImages.push(
+            await blobToStudioImage(blob, mimeFromPath(identity.storage_path), 'same model')
+          )
+        }
+      }
+    }
+
     const generated = await generateStudioImage({
       kind,
       quality,
@@ -124,6 +145,7 @@ export async function POST(req: NextRequest) {
       lookIndex,
       view,
       changeNote: changeNote || undefined,
+      identityImages,
     })
 
     const generationId = crypto.randomUUID()
