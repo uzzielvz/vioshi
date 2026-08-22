@@ -54,6 +54,47 @@ export function catalogPrompt(
     .join(' ')
 }
 
+export function detailPrompt(garmentDescription: string, changeNote?: string): string {
+  return [
+    'Create a single vertical 4:5 HD e-commerce DETAIL photograph of THIS exact garment.',
+    'Close-up catalog still life: fabric texture, stitching, print, embroidery, or hardware — whatever the GARMENT SOURCE (Detalle) shows. If there is no Detalle photo, pick the most informative close area from the other sources.',
+    'Fill the frame. The detail is large, razor-sharp, boutique HD. Not a full garment, not a model.',
+    PURE_WHITE_BG,
+    'Even high-key catalog lighting, no harsh glare, no color cast, no lifestyle scene.',
+    `Garment identity to keep: ${garmentDescription}`,
+    'Keep the exact color, weave, print, logos, and hardware from the source. Do not invent text or marks.',
+    CLEAN_PRESENTATION,
+    'Fabric looks steam-pressed and immaculate even in the close-up.',
+    'No extra props, no hands, no model, no text overlay, no watermark.',
+    changeNote
+      ? `OPERATOR CHANGE REQUEST (apply this, but NEVER change garment identity, never leave the white background): ${changeNote}`
+      : '',
+    'Output one image only.',
+  ]
+    .filter(Boolean)
+    .join(' ')
+}
+
+export function labelPrompt(garmentDescription: string, changeNote?: string): string {
+  return [
+    'Create a single vertical 4:5 HD e-commerce LABEL / CARE-TAG photograph of THIS exact garment.',
+    'Tight close-up of the brand label, size tag, or care label from the GARMENT SOURCE (Etiqueta). If that photo is missing, use the clearest label visible in the other sources.',
+    'Label centered, flat, steam-pressed, perfectly readable, HD. Isolated on white. No model, no full garment unless needed to hold the tag.',
+    PURE_WHITE_BG,
+    'Even catalog lighting so the type is sharp. No glare that hides the text.',
+    `Garment identity to keep: ${garmentDescription}`,
+    'Copy the label text, logos, and stitching EXACTLY from the source. Do not invent a brand, size, or care line.',
+    CLEAN_PRESENTATION,
+    'No extra props, no text overlay, no watermark.',
+    changeNote
+      ? `OPERATOR CHANGE REQUEST (apply this, but NEVER change garment identity, never leave the white background): ${changeNote}`
+      : '',
+    'Output one image only.',
+  ]
+    .filter(Boolean)
+    .join(' ')
+}
+
 const MALE_LOOKS = [
   'CAST LOCK: young East Asian man, short neat black hair, no cap, no sunglasses, no facial hair.',
   'CAST LOCK: young man with dark wavy medium-length hair, no hat, no sunglasses, light stubble optional.',

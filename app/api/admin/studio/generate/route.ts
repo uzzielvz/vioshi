@@ -68,7 +68,13 @@ export async function POST(req: NextRequest) {
   }
 
   const productId = body.productId?.trim()
-  const kind = body.kind === 'catalog' || body.kind === 'model' ? (body.kind as GenerationKind) : null
+  const kind =
+    body.kind === 'catalog' ||
+    body.kind === 'model' ||
+    body.kind === 'detail' ||
+    body.kind === 'label'
+      ? (body.kind as GenerationKind)
+      : null
   const quality: ImageQuality = body.quality === 'pro' && kind === 'model' ? 'pro' : 'flash'
   const gender: ModelGender = body.gender === 'female' ? 'female' : 'male'
   const cleanWear = true
@@ -110,6 +116,13 @@ export async function POST(req: NextRequest) {
 
     if (garmentImages.length === 0) {
       return NextResponse.json({ error: 'raw_download_failed' }, { status: 500 })
+    }
+
+    if (kind === 'detail') {
+      garmentImages.sort((a, b) => Number(b.label === 'Detalle') - Number(a.label === 'Detalle'))
+    }
+    if (kind === 'label') {
+      garmentImages.sort((a, b) => Number(b.label === 'Etiqueta') - Number(a.label === 'Etiqueta'))
     }
 
     const styleRefs = kind === 'catalog' ? await loadBundledCatalogRefs() : []

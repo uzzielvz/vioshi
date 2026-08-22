@@ -63,6 +63,8 @@ export default function StudioWorkspace({
   const router = useRouter()
   const [includeCatalog, setIncludeCatalog] = useState(true)
   const [includeBack, setIncludeBack] = useState(true)
+  const [includeDetail, setIncludeDetail] = useState(true)
+  const [includeLabel, setIncludeLabel] = useState(true)
   const [modelCount, setModelCount] = useState(DEFAULT_MODEL_COUNT)
   const [quality, setQuality] = useState<ImageQuality>('flash')
   const [gender, setGender] = useState<ModelGender>('male')
@@ -88,8 +90,8 @@ export default function StudioWorkspace({
       setError('Sube al menos una foto real de la prenda')
       return
     }
-    if (!includeCatalog && modelCount < 1 && !includeBack) {
-      setError('Elige catálogo, fotos de modelo, o espalda')
+    if (!includeCatalog && modelCount < 1 && !includeBack && !includeDetail && !includeLabel) {
+      setError('Elige al menos una salida: catálogo, modelo, espalda, detalle o etiqueta')
       return
     }
 
@@ -109,16 +111,18 @@ export default function StudioWorkspace({
       }
 
       const lookIndex = castLookIndex(product.id, gender)
-      const catalogJobs: { kind: GenerationKind; poseIndex: number; view: 'front' | 'back' }[] = []
+      const stillJobs: { kind: GenerationKind; poseIndex: number; view: 'front' | 'back' }[] = []
       const modelJobs: { kind: GenerationKind; poseIndex: number; view: 'front' | 'back' }[] = []
-      if (includeCatalog) catalogJobs.push({ kind: 'catalog', poseIndex: 0, view: 'front' })
+      if (includeCatalog) stillJobs.push({ kind: 'catalog', poseIndex: 0, view: 'front' })
+      if (includeDetail) stillJobs.push({ kind: 'detail', poseIndex: 0, view: 'front' })
+      if (includeLabel) stillJobs.push({ kind: 'label', poseIndex: 0, view: 'front' })
       for (let i = 0; i < modelCount; i++) {
         modelJobs.push({ kind: 'model', poseIndex: i, view: 'front' })
       }
       if (includeBack) {
         modelJobs.push({ kind: 'model', poseIndex: 0, view: 'back' })
       }
-      const jobs = [...catalogJobs, ...modelJobs]
+      const jobs = [...stillJobs, ...modelJobs]
 
       const placeholders: LocalCell[] = jobs.map((job, i) => ({
         id: `tmp-${Date.now()}-${i}`,
@@ -175,11 +179,11 @@ export default function StudioWorkspace({
         }
       }
 
-      const catalogPlaceholders = placeholders.slice(0, catalogJobs.length)
-      const modelPlaceholders = placeholders.slice(catalogJobs.length)
+      const stillPlaceholders = placeholders.slice(0, stillJobs.length)
+      const modelPlaceholders = placeholders.slice(stillJobs.length)
 
-      const catalogPromise = Promise.all(
-        catalogJobs.map((job, i) => runJob(job, catalogPlaceholders[i].id))
+      const stillPromise = Promise.all(
+        stillJobs.map((job, i) => runJob(job, stillPlaceholders[i].id))
       )
 
       let identityId: string | undefined
@@ -190,7 +194,7 @@ export default function StudioWorkspace({
         )
       }
 
-      await catalogPromise
+      await stillPromise
 
       router.refresh()
     } finally {
@@ -392,6 +396,28 @@ export default function StudioWorkspace({
           />
           <span className="uppercase tracking-widest" style={{ ...font, fontSize: '10px' }}>
             Foto de espalda
+          </span>
+        </label>
+
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={includeDetail}
+            onChange={(e) => setIncludeDetail(e.target.checked)}
+          />
+          <span className="uppercase tracking-widest" style={{ ...font, fontSize: '10px' }}>
+            Detalle (blanco, HD)
+          </span>
+        </label>
+
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={includeLabel}
+            onChange={(e) => setIncludeLabel(e.target.checked)}
+          />
+          <span className="uppercase tracking-widest" style={{ ...font, fontSize: '10px' }}>
+            Etiqueta (blanco, HD)
           </span>
         </label>
 

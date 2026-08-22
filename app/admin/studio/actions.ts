@@ -372,7 +372,14 @@ export async function approveGeneration(id: string, productId: string): Promise<
     .insert({
       product_id: productId,
       url: publicUrl,
-      alt: row.kind === 'catalog' ? 'Catálogo' : 'Modelo',
+      alt:
+        row.kind === 'catalog'
+          ? 'Catálogo'
+          : row.kind === 'detail'
+            ? 'Detalle'
+            : row.kind === 'label'
+              ? 'Etiqueta'
+              : 'Modelo',
       is_primary: isPrimary,
       sort_order,
     })

@@ -32,7 +32,7 @@ export const SHOT_LABELS: Record<ShotType, string> = {
   label: 'Etiqueta',
 }
 
-export type GenerationKind = 'catalog' | 'model'
+export type GenerationKind = 'catalog' | 'model' | 'detail' | 'label'
 export type GenerationStatus = 'pending' | 'approved' | 'discarded'
 export type ImageQuality = 'flash' | 'pro'
 export type ModelGender = 'male' | 'female'

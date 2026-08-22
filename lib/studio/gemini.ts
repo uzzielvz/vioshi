@@ -9,7 +9,14 @@ import {
   type ImageQuality,
   type ModelGender,
 } from './constants'
-import { catalogPrompt, DESCRIBE_GARMENT_PROMPT, modelLook, modelPrompt } from './prompts'
+import {
+  catalogPrompt,
+  DESCRIBE_GARMENT_PROMPT,
+  detailPrompt,
+  labelPrompt,
+  modelLook,
+  modelPrompt,
+} from './prompts'
 import { inferGarmentFamily, poseInstruction, type ShotView } from './poses'
 
 type InlinePart = { inlineData: { mimeType: string; data: string } }
@@ -88,13 +95,28 @@ export async function generateStudioImage(opts: {
   const model = resolveImageModel(opts.kind, opts.quality)
   const family = inferGarmentFamily(opts.garmentDescription)
   const view: ShotView = opts.view === 'back' ? 'back' : 'front'
-  const pose = poseInstruction(opts.kind, family, opts.poseIndex ?? 0, view)
-  const look = modelLook(opts.gender, opts.lookIndex ?? 0)
   const changeNote = opts.changeNote?.trim() || undefined
   const prompt =
-    opts.kind === 'catalog'
-      ? catalogPrompt(opts.garmentDescription, pose, changeNote, opts.cleanWear)
-      : modelPrompt(opts.garmentDescription, opts.gender, pose, look, family, changeNote, opts.cleanWear)
+    opts.kind === 'detail'
+      ? detailPrompt(opts.garmentDescription, changeNote)
+      : opts.kind === 'label'
+        ? labelPrompt(opts.garmentDescription, changeNote)
+        : opts.kind === 'catalog'
+          ? catalogPrompt(
+              opts.garmentDescription,
+              poseInstruction('catalog', family, opts.poseIndex ?? 0, view),
+              changeNote,
+              opts.cleanWear
+            )
+          : modelPrompt(
+              opts.garmentDescription,
+              opts.gender,
+              poseInstruction('model', family, opts.poseIndex ?? 0, view),
+              modelLook(opts.gender, opts.lookIndex ?? 0),
+              family,
+              changeNote,
+              opts.cleanWear
+            )
 
   const parts: Part[] = [{ text: prompt }]
 
