@@ -39,6 +39,18 @@ type Generation = {
 
 type LocalCell = Generation & { error?: string; busy?: boolean }
 
+function fileStem(name: string): string {
+  const stem = name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[<>:"/\\|?*]+/g, '')
+    .replace(/\s+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+    .slice(0, 80)
+  return stem || 'prenda'
+}
+
 export default function StudioWorkspace({
   product,
   rawPhotos,
@@ -62,6 +74,7 @@ export default function StudioWorkspace({
   const [regenNote, setRegenNote] = useState('')
   const [regenBack, setRegenBack] = useState(false)
   const [cropCell, setCropCell] = useState<LocalCell | null>(null)
+  const [userPrompt, setUserPrompt] = useState('')
   const poseTick = useRef(0)
 
   const rawByType = new Map(rawPhotos.map((p) => [p.shot_type, p]))
@@ -139,6 +152,7 @@ export default function StudioWorkspace({
               lookIndex,
               view: job.view,
               identityGenerationId,
+              changeNote: userPrompt.trim() || undefined,
             }),
           })
           const json = await res.json()
@@ -245,6 +259,24 @@ export default function StudioWorkspace({
       router.refresh()
     } finally {
       setGenerating(false)
+    }
+  }
+
+  async function downloadCell(cell: LocalCell, n: number) {
+    if (cell.id.startsWith('tmp-') || cell.error) return
+    try {
+      const res = await fetch(`/api/admin/studio/generation-file?id=${encodeURIComponent(cell.id)}`)
+      if (!res.ok) throw new Error('download_failed')
+      const blob = await res.blob()
+      const ext = blob.type.includes('png') ? 'png' : blob.type.includes('webp') ? 'webp' : 'jpg'
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${fileStem(product.name)}_${n}.${ext}`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      setError('No se pudo descargar')
     }
   }
 
@@ -407,6 +439,20 @@ export default function StudioWorkspace({
           Modelo joven y delgado. Outfit streetwear (baggy, paleta de la prenda). Fondo blanco. La prenda es lo que más se ve.
         </p>
 
+        <div>
+          <label className="block uppercase tracking-widest text-gray-400 mb-1" style={{ ...font, fontSize: '10px' }}>
+            Prompt extra
+          </label>
+          <textarea
+            value={userPrompt}
+            onChange={(e) => setUserPrompt(e.target.value.slice(0, 400))}
+            placeholder="Opcional: pose, recorte, más logo, look…"
+            rows={3}
+            className="w-full border border-gray-200 p-3 focus:outline-none focus:border-black resize-none"
+            style={{ ...font, fontSize: '11px' }}
+          />
+        </div>
+
         <div className="flex items-center gap-4">
           <span className="uppercase tracking-widest text-gray-400" style={{ ...font, fontSize: '10px' }}>
             Quality
@@ -460,7 +506,7 @@ export default function StudioWorkspace({
           </p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {visibleGens.map((cell) => (
+            {visibleGens.map((cell, i) => (
               <div key={cell.id} className="flex flex-col gap-2">
                 <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden">
                   {cell.signedUrl && !cell.error ? (
@@ -486,8 +532,19 @@ export default function StudioWorkspace({
                     {cell.error}
                   </p>
                 )}
-                {cell.status !== 'approved' && !cell.busy && (
-                  <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
+                  {!cell.id.startsWith('tmp-') && !cell.error && !cell.busy && (
+                    <button
+                      type="button"
+                      onClick={() => downloadCell(cell, i + 1)}
+                      className="uppercase tracking-widest text-gray-400 hover:text-black"
+                      style={{ ...font, fontSize: '10px' }}
+                    >
+                      Download
+                    </button>
+                  )}
+                  {cell.status !== 'approved' && !cell.busy && (
+                    <>
                     {!cell.id.startsWith('tmp-') && !cell.error && (
                       <button
                         type="button"
@@ -528,8 +585,9 @@ export default function StudioWorkspace({
                     >
                       Discard
                     </button>
-                  </div>
-                )}
+                    </>
+                  )}
+                </div>
               </div>
             ))}
           </div>
