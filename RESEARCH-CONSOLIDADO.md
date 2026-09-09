@@ -18,7 +18,7 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 **Riesgos activos:**
 1. **Dual auth admin** — cookie HMAC firmada (SEC-03 ✅); aún sin re-validación en todas las Server Actions admin (SA-01).
 2. **Visual search público** — endpoint sin auth ni rate limit; costo Gemini + service role server-side.
-3. **Embeddings expuestos por RLS** — `SELECT REVOKE` en migración 0005 (SEC-06 ✅); verificar en prod.
+3. ~~**Embeddings expuestos por RLS**~~ — **✅ RESUELTO REALMENTE en `0011` (2026-09-08).** SEC-06 estaba marcado como cerrado desde 0005 y **era falso**: el `revoke select (embedding)` de 0005 es un no-op porque Supabase concede `GRANT ALL ON TABLE products TO anon`, y en PostgreSQL el privilegio de tabla cubre todas las columnas. Verificado en prod: `anon → ?select=embedding` devolvía HTTP 200 con vectores. Ver [`docs/ESQUEMA-REAL.md`](./docs/ESQUEMA-REAL.md).
 4. **Sin tests automatizados** — 0 tests; CI solo lint+tsc.
 
 **Resueltos en Fase 2:** checkout mock (CART-02 ✅), guest order lookup (RLS-03 ✅ con HMAC guest_token), orders/addresses pages (CART-04 ✅), Stripe webhook (CHK-07 ✅), validación server precios (CART-01 ✅).
@@ -310,7 +310,7 @@ VISUAL SEARCH
 4. **Proteger `/api/visual-search`** — Upstash rate limit o Vercel middleware; cap diario Gemini. *(pendiente)*
 5. ~~Actualizar `.env.example`~~ — **✅ RESUELTO** Stripe keys + instrucciones documentadas.
 6. **Unificar pickup points** — reemplazar `lib/pickupPoints.ts` en checkout por query server. *(pendiente)*
-7. ~~`SELECT REVOKE` columna `embedding`~~ — **✅ RESUELTO (SEC-06)** migración `0005`.
+7. ~~`SELECT REVOKE` columna `embedding`~~ — **✅ RESUELTO (SEC-06)** migración `0011`, no `0005`. El enfoque de 0005 (revoke a nivel columna sobre una tabla con `GRANT ALL`) nunca surtió efecto. `0011` revoca el SELECT de tabla y concede lista blanca de columnas. Ver [`docs/ESQUEMA-REAL.md`](./docs/ESQUEMA-REAL.md).
 8. ~~Sanitizar `next` en auth callback~~ — **✅ RESUELTO (SEC-02)** regex `^/[^/\\]`.
 9. ~~CI: `npm run build` en PR workflow~~ — **✅ RESUELTO (SEC-08)** `.github/workflows/ci.yml`.
 10. ~~E2E Stripe local~~ — **✅ RESUELTO** (fix form anidado en checkout; `payment_intent.succeeded`).

@@ -147,7 +147,7 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 | 1.4 | Endurecer admin: cookie firmada o sesión opaca; no almacenar `ADMIN_SECRET` en cookie (AUTH-01) | ✅ SEC-03 |
 | 1.5 | Re-validación admin en Server Actions (`createProduct`, `deleteProduct`, etc.) (SA-01) | ✅ SEC-03/04 |
 | 1.6 | Rate limit `/admin/login` y `/api/visual-search` (AUTH-02, VS-01) | ✅ SEC-05 |
-| 1.7 | Restringir exposición pública de `products.embedding` (RLS-02) | ✅ SEC-06 (migración 0005) |
+| 1.7 | Restringir exposición pública de `products.embedding` (RLS-02) | ✅ SEC-06 — migración **0011** (0005 era no-op) |
 | 1.8 | Validación uploads admin: tamaño, MIME, errores visibles (IMG-01, SA-04) | ✅ SEC-07 |
 | 1.9 | Parametrizar Supabase hostname en `next.config.js` desde env (IMG-03) | ✅ SEC-09 |
 | 1.10 | Añadir `npm run build` al workflow CI (`.github/workflows/ci.yml`) | ✅ SEC-08 |
@@ -671,7 +671,7 @@ En [`components/Header.tsx`](./components/Header.tsx) líneas 249-260 (desktop) 
 | SEC-03 | Admin cookie ≠ secreto en claro | 1 | P0 | L | — | Cookie opaca/JWT; secret rotable | ✅ |
 | SEC-04 | Re-validar admin en Server Actions | 1 | P0 | M | SEC-03 | Actions fallan sin sesión admin válida | ✅ |
 | SEC-05 | Rate limit admin login + visual-search API | 1 | P0 | M | — | Abuso bloqueado en demo load | ✅ |
-| SEC-06 | Ocultar `embedding` de SELECT público | 1 | P1 | M | — | Anon key no devuelve vectores | ✅ Migración 0005 |
+| SEC-06 | Ocultar `embedding` de SELECT público | 1 | P1 | M | — | Anon key no devuelve vectores | ✅ Migración **0011** (0005 no surtió efecto) |
 | SEC-07 | Validación uploads (size, MIME, errores UI) | 1 | P1 | M | — | Admin ve error si upload falla | ✅ |
 | SEC-08 | CI incluye `npm run build` | 1 | P1 | S | — | PR falla si build roto | ✅ `.github/workflows/ci.yml` |
 | SEC-09 | Parametrizar Supabase URL en next.config | 1 | P2 | S | — | Sin project ID hardcoded | ✅ |
@@ -734,7 +734,7 @@ En [`components/Header.tsx`](./components/Header.tsx) líneas 249-260 (desktop) 
 | D-05 | Seeds `[seed]` en prod | Mantener vs borrar post-demo | **Borrar** antes de launch público; catálogo real solo | VS-09 |
 | D-06 | `product_attributes` DDL prod | ¿Existe manualmente? | ✅ Verificado; migración `0004` alineada con prod | SEC-01 |
 | D-07 | Rama FastAPI obsoleta | Delete vs archive | **Archivar** tag `feat/visual-search-legacy` y borrar rama remota tras merge gemini | CLN-06 |
-| D-08 | Embeddings públicos | View vs RPC-only vs column revoke | **Column REVOKE** en migración `0005` (anon/authenticated) | SEC-06 |
+| D-08 | Embeddings públicos | View vs RPC-only vs column revoke | ~~Column REVOKE (`0005`)~~ **inválido**: no-op ante `GRANT ALL` de tabla. Sustituido por **revoke de tabla + grant de lista blanca** en `0011` | SEC-06 |
 | D-09 | Rate limit stack | Upstash vs Vercel Edge Middleware vs in-memory | **Upstash** si hay cuenta; si no, middleware Vercel con IP throttle básico | SEC-05 |
 | D-10 | Validación inputs | Zod vs manual | **Zod** en actions nuevas (checkout, admin); no bloquear Fase 0 | DEB-01 |
 | D-11 | **Brands / Marcas** | Texto libre en atributos vs entidad dedicada con logos | **Entidad dedicada `brands`** (BR-01..06) con `brand_id` en products, admin CRUD + logos en bucket `brand-logos`, selector en ProductForm y filtro en drawer. Logos en B/N minimalista estilo oficial de marca. | 2026-05 |
@@ -832,7 +832,7 @@ Extraídas del Research Consolidado y `CLAUDE.md`:
 | 2026-05-19 | Creación inicial | Basado en RESEARCH-CONSOLIDADO.md Fase 2 |
 | 2026-05-19 | Fase 0 CLN-01..04, CLN-07 completados | Limpieza docs y scripts |
 | 2026-05-19 | Supabase CLI migrations | Link falló sin access token; 0003 ya aplicada manualmente en demo |
-| 2026-05-19 | SEC-06 hide embedding | Migración 0005: REVOKE SELECT embedding para anon/authenticated |
+| 2026-05-19 | SEC-06 hide embedding | Migración 0005: REVOKE SELECT embedding para anon/authenticated — **sin efecto real, ver 2026-09-08** |
 | 2026-05-21 | Fase 1 cerrada 100% | Deploy prod funcionando; migraciones 0004/0005 aplicadas manualmente |
 | 2026-05-21 | Rama feat/checkout-real iniciada | Fase 2 comienza: placeOrderAction + pickup desde DB + success real |
 | 2026-05-22 | Fase 2 cerrada; merge-ready | E2E local OK; fix form anidado; return page + reconcile carrito |
