@@ -191,7 +191,11 @@
     "cat_playeras": "TEES",
     "cat_accesorios": "ACCESSORIES",
     "cat_bolsos": "BAGS",
-    "cat_default": "SHOP"
+    "cat_default": "SHOP",
+    "size_marked": "Labelled size",
+    "condition": "Condition",
+    "flaws": "Flaws",
+    "measurement_note": "Measured with the garment laid flat. Chest is pit-to-pit, not the full circumference."
   },
   "search": {
     "placeholder": "SEARCH PRODUCTS...",

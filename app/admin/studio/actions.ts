@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdminSession } from '@/lib/admin/session'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isOwner } from '@/lib/garments'
 import {
   ALLOWED_IMAGE_TYPES,
   MAX_IMAGE_BYTES,
@@ -55,7 +56,12 @@ export async function createMinimalProduct(
   const priceRaw = formData.get('price_mxn') as string | null
   const price_mxn = priceRaw ? parseFloat(priceRaw) : NaN
 
+  // products.owner es NOT NULL sin default (0010): asignar propietario en
+  // silencio produciría repartos de utilidad equivocados.
+  const owner = (formData.get('owner') as string | null)?.trim() ?? ''
+
   if (!name) return { error: 'El nombre es obligatorio' }
+  if (!isOwner(owner)) return { error: 'Selecciona un propietario (uzziel o mario)' }
   if (!Number.isFinite(price_mxn) || price_mxn <= 0) {
     return { error: 'El precio en MXN debe ser mayor a 0' }
   }
@@ -71,6 +77,7 @@ export async function createMinimalProduct(
       name,
       slug,
       price_mxn,
+      owner,
       sold_out: true,
       made_in: 'México',
     })

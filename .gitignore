@@ -45,3 +45,9 @@ planbasedinresearch.md
 .claude/
 .windsurf/
 skills-lock.json
+
+# respaldos de base de datos (contienen PII de clientes)
+/backups/
+
+# cache del CLI de Supabase
+supabase/.temp/

@@ -9,11 +9,24 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
+import {
+  CONDITION_LABELS,
+  CONDITION_LABELS_EN,
+  MEASUREMENT_LABELS,
+  MEASUREMENT_LABELS_EN,
+  requiredMeasurements,
+  type MeasurementKey,
+} from "@/lib/garments";
 
 interface ProductContentProps {
   product: Product;
   allProducts: Product[];
 }
+
+// Misma familia que el resto de la ficha. El sistema de diseño va después.
+const BASE_FONT = {
+  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+} as const;
 
 export default function ProductContent({ product, allProducts }: ProductContentProps) {
   const tCart = useTranslations("cart");
@@ -33,6 +46,16 @@ export default function ProductContent({ product, allProducts }: ProductContentP
 
   // Use images array if available, otherwise use single image
   const galleryImages = product.images || [product.image];
+
+  // Etiquetas de medidas y estado viven junto al modelo de dominio
+  // (lib/garments) para no duplicar el mapa tipo → medidas en los mensajes.
+  const measurementLabels = locale === 'en' ? MEASUREMENT_LABELS_EN : MEASUREMENT_LABELS;
+  const conditionLabels   = locale === 'en' ? CONDITION_LABELS_EN   : CONDITION_LABELS;
+
+  // Orden estable y explícito: el que define el tipo de prenda, no el del objeto.
+  const measurementEntries = requiredMeasurements(product.garmentType)
+    .map((key) => [key, product.measurements?.[key]] as const)
+    .filter((entry): entry is readonly [MeasurementKey, number] => typeof entry[1] === 'number');
 
   const currentIndex = allProducts.findIndex(p => p.id === product.id);
   const prevProduct = currentIndex > 0 ? allProducts[currentIndex - 1] : null;
@@ -208,20 +231,54 @@ export default function ProductContent({ product, allProducts }: ProductContentP
               {formatPrice(product.price, locale)}
             </p>
 
-            {/* Size Selector */}
-            {!product.soldOut && product.size && (
-              <div className="mb-8">
-                <p
-                  className="uppercase tracking-wide mb-3"
-                  style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                    fontSize: '11px',
-                    fontWeight: 500,
-                    letterSpacing: '0.05em'
-                  }}
-                >
-                  {product.size}
-                </p>
+            {/* Talla, medidas y estado — visibles sin abrir acordeón.
+                En segunda mano son el dato que decide la compra. */}
+            {(product.size || measurementEntries.length > 0 || product.condition) && (
+              <div className="mb-8 space-y-2">
+                {product.size && (
+                  <p style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 500 }}>
+                    <span style={{ color: '#666' }}>{t('size_marked')}: </span>
+                    {product.size}
+                  </p>
+                )}
+
+                {measurementEntries.length > 0 && (
+                  <p style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 400 }}>
+                    {measurementEntries
+                      .map(([key, value]) => `${measurementLabels[key]} ${value} cm`)
+                      .join(' · ')}
+                  </p>
+                )}
+
+                {product.condition && (
+                  <p style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 400 }}>
+                    <span style={{ color: '#666' }}>{t('condition')}: </span>
+                    {conditionLabels[product.condition]}
+                  </p>
+                )}
+
+                {/* Misma prominencia que las medidas: esconder los defectos es
+                    lo que rompe la confianza en segunda mano. */}
+                {product.condition === 'con_detalles' && product.defectNotes && (
+                  <p style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 400 }}>
+                    <span style={{ color: '#666' }}>{t('flaws')}: </span>
+                    {product.defectNotes}
+                  </p>
+                )}
+
+                {measurementEntries.length > 0 && (
+                  <p
+                    style={{
+                      ...BASE_FONT,
+                      fontSize: '10px',
+                      lineHeight: 1.5,
+                      color: '#666',
+                      paddingTop: '4px',
+                    }}
+                  >
+                    {t('measurement_note')}
+                  </p>
+                )}
               </div>
             )}
 

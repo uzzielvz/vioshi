@@ -16,7 +16,16 @@ export default async function EditProductPage({
   const [{ data: product }, { data: categories }, { data: brands }] = await Promise.all([
     supabase
       .from('products')
-      .select('id, slug, name, description, price_mxn, original_price_mxn, category_id, brand_id, sku, material, made_in, is_featured, is_new, sold_out, product_images (id, url, is_primary, sort_order), product_attributes (key, value, sort_order)')
+      // Incluye owner y cost_mxn: es el panel admin (service role), nunca la tienda.
+      .select(`
+        id, slug, name, description, price_mxn, original_price_mxn, category_id,
+        brand_id, sku, material, made_in, is_featured, is_new, sold_out,
+        owner, cost_mxn,
+        garment_type, chest_cm, length_cm, sleeve_cm, waist_cm, rise_cm, inseam_cm,
+        condition, defect_notes,
+        product_images (id, url, is_primary, sort_order),
+        product_attributes (key, value, sort_order)
+      `)
       .eq('id', id)
       .single(),
     supabase

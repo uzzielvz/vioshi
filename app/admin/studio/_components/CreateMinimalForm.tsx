@@ -2,6 +2,7 @@
 
 import { useFormState, useFormStatus } from 'react-dom'
 import { createMinimalProduct } from '../actions'
+import { OWNERS } from '@/lib/garments'
 import { font } from './studioUi'
 
 function SubmitButton() {
@@ -23,7 +24,7 @@ export default function CreateMinimalForm() {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px_auto] gap-4 items-end">
+      <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px_140px_auto] gap-4 items-end">
         <div>
           <label className="block uppercase tracking-widest text-gray-400 mb-1" style={{ ...font, fontSize: '10px' }}>
             Name
@@ -51,6 +52,23 @@ export default function CreateMinimalForm() {
             className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors"
             style={{ ...font, fontSize: '11px' }}
           />
+        </div>
+        <div>
+          <label className="block uppercase tracking-widest text-gray-400 mb-1" style={{ ...font, fontSize: '10px' }}>
+            Propietario
+          </label>
+          <select
+            name="owner"
+            required
+            defaultValue=""
+            className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors appearance-none"
+            style={{ ...font, fontSize: '11px' }}
+          >
+            <option value="">—</option>
+            {OWNERS.map(o => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
         </div>
         <SubmitButton />
       </div>

@@ -191,7 +191,11 @@
     "cat_playeras": "PLAYERAS",
     "cat_accesorios": "ACCESORIOS",
     "cat_bolsos": "BOLSOS",
-    "cat_default": "TIENDA"
+    "cat_default": "TIENDA",
+    "size_marked": "Talla marcada",
+    "condition": "Estado",
+    "flaws": "Detalles de la prenda",
+    "measurement_note": "Medidas tomadas con la prenda en plano. El pecho se mide de axila a axila, no es el contorno."
   },
   "search": {
     "placeholder": "BUSCAR PRODUCTOS...",
