@@ -69,6 +69,17 @@ export interface ProductData {
   condition?: Condition;
   /** Solo relevante cuando condition === 'con_detalles'. */
   defectNotes?: string;
+  /**
+   * Estado de disponibilidad de la pieza única.
+   *   'disponible' → se puede comprar
+   *   'apartada'   → alguien la está pagando ahora; puede liberarse
+   *   'vendida'    → ya no vuelve
+   * APARTADA y VENDIDA se muestran DISTINTO a propósito: quien ve "vendida"
+   * se va, quien ve "apartada" se queda esperando.
+   */
+  availability?: 'disponible' | 'apartada' | 'vendida';
+  /** Cuándo se libera la reserva, si está apartada. */
+  reservedUntil?: string;
   attributes?: { key: string; value: string }[];
 }
 
@@ -90,6 +101,7 @@ type DbProduct = {
   inseam_cm: number | null;
   condition: string | null;
   defect_notes: string | null;
+  reserved_until: string | null;
   product_images: { url: string; is_primary: boolean; sort_order: number }[];
   product_attributes: { key: string; value: string; sort_order: number }[];
   categories: { slug: string } | null;
@@ -100,7 +112,7 @@ type DbProduct = {
 const PUBLIC_PRODUCT_SELECT = `
   id, slug, name, description, price_mxn, sold_out, is_new, brand_id,
   garment_type, chest_cm, length_cm, sleeve_cm, waist_cm, rise_cm, inseam_cm,
-  condition, defect_notes,
+  condition, defect_notes, reserved_until,
   product_images (url, is_primary, sort_order),
   product_attributes (key, value, sort_order),
   categories (slug),
@@ -140,6 +152,16 @@ function rowToProductData(row: DbProduct): ProductData {
     if (typeof value === 'number') measurements[key] = value
   }
 
+  // El estado se deriva comparando contra el momento de la consulta: una
+  // reserva vencida que nadie limpió NO debe mostrarse como apartada.
+  const reservaViva =
+    row.reserved_until != null && new Date(row.reserved_until).getTime() > Date.now()
+  const availability: ProductData['availability'] = row.sold_out
+    ? 'vendida'
+    : reservaViva
+      ? 'apartada'
+      : 'disponible'
+
   return {
     id:          row.id,
     name:        row.name,
@@ -164,17 +186,29 @@ function rowToProductData(row: DbProduct): ProductData {
     measurements: Object.keys(measurements).length > 0 ? measurements : undefined,
     condition:   isCondition(row.condition) ? row.condition : undefined,
     defectNotes: row.defect_notes?.trim() || undefined,
+    availability,
+    reservedUntil: reservaViva ? (row.reserved_until ?? undefined) : undefined,
     attributes:  visibleAttrs.length > 0 ? visibleAttrs : undefined,
   }
 }
 
-async function fetchProducts(category?: string, requireImages = true): Promise<ProductData[]> {
+async function fetchProducts(
+  category?: string,
+  requireImages = true,
+  includeSold = false
+): Promise<ProductData[]> {
   const supabase = getSupabase()
 
   let query = supabase
     .from('products')
     .select(PUBLIC_PRODUCT_SELECT)
     .order('created_at', { ascending: false })
+
+  // El listado NO muestra prendas vendidas. Las apartadas SÍ se muestran,
+  // marcadas: pueden liberarse y el cliente se queda esperando.
+  if (!includeSold) {
+    query = query.eq('sold_out', false)
+  }
 
   if (category === 'new') {
     query = query.eq('is_new', true)
@@ -218,8 +252,15 @@ async function fetchProductBySlug(slug: string): Promise<ProductData | null> {
 }
 
 async function fetchStoreProducts(category?: string): Promise<ProductData[]> {
-  return fetchProducts(category, true)
+  return fetchProducts(category, true, false)
 }
+
+/** Sugerencias para la ficha de una prenda vendida. */
+export const getAvailableProducts = unstable_cache(
+  async (limit = 4) => (await fetchProducts(undefined, true, false)).slice(0, limit),
+  ['available-products'],
+  { revalidate: 60, tags: ['products'] }
+)
 
 // Cached with Next.js — revalidate every 60 s, invalidable via revalidateTag('products')
 export const getProducts = unstable_cache(
@@ -230,7 +271,7 @@ export const getProducts = unstable_cache(
 
 /** Admin list: includes products still unpublished (no store images). */
 export async function getAdminProducts(): Promise<ProductData[]> {
-  return fetchProducts(undefined, false)
+  return fetchProducts(undefined, false, true)
 }
 
 export const getProductBySlug = unstable_cache(

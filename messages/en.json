@@ -202,7 +202,11 @@
     "size_marked": "Labelled size",
     "condition": "Condition",
     "flaws": "Flaws",
-    "measurement_note": "Measured with the garment laid flat. Chest is pit-to-pit, not the full circumference."
+    "measurement_note": "Measured with the garment laid flat. Chest is pit-to-pit, not the full circumference.",
+    "reserved": "On hold",
+    "reserved_note": "Someone is buying it right now. If they do not finish, it goes back on sale.",
+    "sold_note": "This piece found its owner. It was one of a kind, so it is not coming back.",
+    "see_others": "See other pieces"
   },
   "search": {
     "placeholder": "SEARCH PRODUCTS...",

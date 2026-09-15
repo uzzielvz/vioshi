@@ -18,13 +18,17 @@ interface ProductCardProps {
   soldOut?: boolean;
   isNew?: boolean;
   size?: string;
+  availability?: 'disponible' | 'apartada' | 'vendida';
 }
 
-export default function ProductCard({ id, name, price, image, slug, soldOut, isNew, size }: ProductCardProps) {
+export default function ProductCard({ id, name, price, image, slug, soldOut, isNew, size, availability }: ProductCardProps) {
   const { addItem, openCart } = useCart();
   const { locale } = useLocaleContext();
   const t = useTranslations("product");
   const [isHovered, setIsHovered] = useState(false);
+
+  // `availability` manda; soldOut queda como respaldo para llamadas viejas.
+  const estado = availability ?? (soldOut ? 'vendida' : 'disponible');
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -62,7 +66,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
             <div className="absolute inset-0 bg-[#EBEBEB]" />
           )}
 
-          {isNew && !soldOut && (
+          {isNew && estado === 'disponible' && (
             <div
               className="absolute top-3 left-3"
               style={{
@@ -77,7 +81,8 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
             </div>
           )}
 
-          {soldOut && (
+          {/* VENDIDA: se apaga la foto, la pieza no vuelve. */}
+          {estado === 'vendida' && (
             <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
               <span
                 className="text-black uppercase tracking-wide"
@@ -92,7 +97,24 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
             </div>
           )}
 
-          {!soldOut && isHovered && (
+          {/* APARTADA: la foto se ve completa. Puede liberarse, así que el
+              objetivo es que el cliente se quede, no que se vaya. */}
+          {estado === 'apartada' && (
+            <div className="absolute top-3 right-3">
+              <span
+                className="bg-white/95 text-black px-2 py-1 uppercase tracking-wide border border-black"
+                style={{
+                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontSize: '10px',
+                  fontWeight: 500
+                }}
+              >
+                {t("reserved")}
+              </span>
+            </div>
+          )}
+
+          {estado === 'disponible' && isHovered && (
             <button
               onClick={handleQuickAdd}
               className="absolute bottom-0 left-0 right-0 bg-black text-white py-3 text-center uppercase tracking-wide transition-opacity duration-200"

@@ -202,7 +202,11 @@
     "size_marked": "Talla marcada",
     "condition": "Estado",
     "flaws": "Detalles de la prenda",
-    "measurement_note": "Medidas tomadas con la prenda en plano. El pecho se mide de axila a axila, no es el contorno."
+    "measurement_note": "Medidas tomadas con la prenda en plano. El pecho se mide de axila a axila, no es el contorno.",
+    "reserved": "Apartada",
+    "reserved_note": "Alguien la está comprando ahora. Si no completa el pago, vuelve a estar disponible.",
+    "sold_note": "Esta pieza ya encontró dueño. Era única, así que no vuelve.",
+    "see_others": "Ver otras piezas"
   },
   "search": {
     "placeholder": "BUSCAR PRODUCTOS...",

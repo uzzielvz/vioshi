@@ -52,6 +52,8 @@ export default function ProductContent({ product, allProducts }: ProductContentP
   const measurementLabels = locale === 'en' ? MEASUREMENT_LABELS_EN : MEASUREMENT_LABELS;
   const conditionLabels   = locale === 'en' ? CONDITION_LABELS_EN   : CONDITION_LABELS;
 
+  const estado = product.availability ?? (product.soldOut ? 'vendida' : 'disponible');
+
   // Orden estable y explícito: el que define el tipo de prenda, no el del objeto.
   const measurementEntries = requiredMeasurements(product.garmentType)
     .map((key) => [key, product.measurements?.[key]] as const)
@@ -351,31 +353,51 @@ export default function ProductContent({ product, allProducts }: ProductContentP
           </div>
 
           {/* Add to Bag - Fixed at bottom */}
-          <div className="mt-auto">
-            {product.soldOut ? (
-              <button
-                disabled
-                className="w-full bg-gray-200 text-gray-500 py-4 uppercase tracking-wide cursor-not-allowed"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  letterSpacing: '0.05em'
-                }}
-              >
-                {t('sold_out')}
-              </button>
+          <div className="mt-auto space-y-3">
+            {estado === 'vendida' ? (
+              <>
+                {/* La ficha de una prenda vendida NO da 404: el link ya circuló
+                    por WhatsApp y va a seguir recibiendo visitas. Se muestra
+                    marcada, con salida hacia lo que sí está disponible. */}
+                <button
+                  disabled
+                  className="w-full bg-gray-100 text-gray-500 py-4 uppercase tracking-wide cursor-not-allowed border border-gray-200"
+                  style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}
+                >
+                  {t('sold_out')}
+                </button>
+                <p style={{ ...BASE_FONT, fontSize: '11px', color: '#666', lineHeight: 1.6 }}>
+                  {t('sold_note')}
+                </p>
+                <Link
+                  href={`/${locale}/collections/all`}
+                  className="block w-full border border-black text-black py-4 uppercase tracking-wide text-center hover:bg-black hover:text-white transition-colors"
+                  style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}
+                >
+                  {t('see_others')}
+                </Link>
+              </>
+            ) : estado === 'apartada' ? (
+              <>
+                {/* APARTADA no es VENDIDA: puede liberarse, así que el mensaje
+                    invita a esperar en vez de cerrar la puerta. */}
+                <button
+                  disabled
+                  className="w-full bg-white text-black py-4 uppercase tracking-wide cursor-not-allowed border border-black"
+                  style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}
+                >
+                  {t('reserved')}
+                </button>
+                <p style={{ ...BASE_FONT, fontSize: '11px', color: '#666', lineHeight: 1.6 }}>
+                  {t('reserved_note')}
+                </p>
+              </>
             ) : (
               <button
                 onClick={handleAddToCart}
                 disabled={isAdding}
                 className="w-full py-4 uppercase tracking-wide transition-colors bg-black text-white hover:bg-gray-800"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  letterSpacing: '0.05em'
-                }}
+                style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}
               >
                 {isAdding ? t('adding') : t('add_to_bag')}
               </button>
