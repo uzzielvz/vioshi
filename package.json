@@ -9,7 +9,9 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "stripe:listen": "stripe listen --forward-to localhost:3000/api/webhooks/stripe",
-    "stripe:check-pi": "node scripts/stripe-check-pi.mjs"
+    "stripe:check-pi": "node scripts/stripe-check-pi.mjs",
+    "test:stock": "node scripts/test-stock.mjs",
+    "test:checkout": "node scripts/test-checkout-flow.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.18.0",
