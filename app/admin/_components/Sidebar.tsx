@@ -14,6 +14,9 @@ export default function Sidebar() {
   const isStudio   = pathname.startsWith('/admin/studio')
   const isPickup   = pathname.startsWith('/admin/pickup-points')
   const isBrands   = pathname.startsWith('/admin/brands')
+  const isReservas = pathname.startsWith('/admin/reservas')
+  const isFondos   = pathname.startsWith('/admin/fondos')
+  const isSettings = pathname.startsWith('/admin/settings')
 
   return (
     <aside className="w-60 bg-black flex flex-col min-h-screen px-6 py-8 shrink-0">
@@ -41,6 +44,17 @@ export default function Sidebar() {
         >
           PRODUCTS
           {isProducts && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
+        </Link>
+
+        <Link
+          href="/admin/reservas"
+          className={`uppercase tracking-widest transition-colors duration-150 flex items-center gap-2 ${
+            isReservas ? 'text-white' : 'text-white/40 hover:text-white'
+          }`}
+          style={navFont}
+        >
+          RESERVAS
+          {isReservas && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
         </Link>
 
         <Link
@@ -74,6 +88,28 @@ export default function Sidebar() {
         >
           BRANDS
           {isBrands && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
+        </Link>
+
+        <Link
+          href="/admin/fondos"
+          className={`uppercase tracking-widest transition-colors duration-150 flex items-center gap-2 ${
+            isFondos ? 'text-white' : 'text-white/40 hover:text-white'
+          }`}
+          style={navFont}
+        >
+          FONDOS
+          {isFondos && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
+        </Link>
+
+        <Link
+          href="/admin/settings"
+          className={`uppercase tracking-widest transition-colors duration-150 flex items-center gap-2 ${
+            isSettings ? 'text-white' : 'text-white/40 hover:text-white'
+          }`}
+          style={navFont}
+        >
+          PARÁMETROS
+          {isSettings && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
         </Link>
 
         <span

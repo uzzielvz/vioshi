@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getAdminProducts } from '@/lib/products'
 import { formatPrice } from '@/lib/formatters'
 import DeleteButton from './DeleteButton'
+import SoldToggle from './SoldToggle'
 
 const fontStyle = {
   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -42,7 +43,7 @@ export default async function AdminProductsPage() {
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-gray-200">
-              {['Image', 'Name', 'Category', 'Price', 'New', 'Sold Out', 'Actions'].map((h) => (
+              {['Image', 'Name', 'Category', 'Price', 'New', 'Estado', 'Actions'].map((h) => (
                 <th
                   key={h}
                   className="text-left pb-3 uppercase tracking-widest text-gray-400 font-normal"
@@ -89,11 +90,11 @@ export default async function AdminProductsPage() {
                   )}
                 </td>
                 <td className="py-3 pr-6">
-                  {product.soldOut ? (
-                    <span className="w-1.5 h-1.5 bg-black rounded-full inline-block" />
-                  ) : (
-                    <span className="text-gray-300" style={{ fontSize: '11px' }}>—</span>
-                  )}
+                  <SoldToggle
+                    id={product.id}
+                    vendida={product.availability === 'vendida'}
+                    apartada={product.availability === 'apartada'}
+                  />
                 </td>
                 <td className="py-3">
                   <div className="flex items-center gap-4">
