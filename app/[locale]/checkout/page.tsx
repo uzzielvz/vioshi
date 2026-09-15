@@ -16,8 +16,13 @@ import {
 } from '@/lib/constants';
 import { lookupCP, type MexicoCPData } from '@/lib/mexico';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { createPaymentIntentAction, syncCartFromDbAction } from './actions';
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
+import {
+  createCheckoutSessionAction,
+  getCheckoutSettingsAction,
+  cancelCheckoutAction,
+  syncCartFromDbAction,
+} from './actions';
 import {
   formatStripeClientError,
   logCheckoutDebug,
@@ -27,208 +32,85 @@ import {
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-// Appearance matching Viogi's minimal B&W aesthetic
-const stripeAppearance: Parameters<typeof loadStripe>[1] extends undefined
-  ? never
-  : import('@stripe/stripe-js').Appearance = {
-  theme: 'stripe',
-  variables: {
-    colorPrimary: '#000000',
-    colorBackground: '#ffffff',
-    colorText: '#000000',
-    colorDanger: '#ef4444',
-    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-    borderRadius: '0px',
-    fontSizeBase: '14px',
-    spacingUnit: '4px',
-  },
-  rules: {
-    '.Input': {
-      border: 'none',
-      borderBottom: '1px solid #e5e7eb',
-      boxShadow: 'none',
-      padding: '14px 0',
-    },
-    '.Input:focus': {
-      borderBottom: '1px solid #000000',
-      boxShadow: 'none',
-      outline: 'none',
-    },
-    '.Label': {
-      fontSize: '9px',
-      textTransform: 'uppercase',
-      letterSpacing: '0.1em',
-      color: '#9ca3af',
-      marginBottom: '8px',
-    },
-    '.Tab': { border: '1px solid #e5e7eb', boxShadow: 'none' },
-    '.Tab--selected': { border: '1px solid #000000', boxShadow: 'none' },
-  },
-};
-
-// ─── Stripe payment confirmation form (must be inside <Elements>) ─────────────
-
-function StripePaymentForm({
-  orderNumber,
-  guestToken,
-  paymentIntentId,
+/**
+ * Paso de pago: Stripe Checkout embebido.
+ *
+ * Reemplaza al PaymentElement sobre un PaymentIntent crudo. La razón es que
+ * OXXO y SPEI necesitan el ciclo asíncrono de Checkout Sessions (el voucher se
+ * emite antes de que llegue el dinero), y ese ciclo solo lo dan los eventos
+ * checkout.session.*. La apariencia se configura en el Dashboard de Stripe
+ * (Settings → Branding), no aquí.
+ */
+function PasoDePago({
   clientSecret,
-  email,
-  locale,
-  total,
+  reservedUntil,
+  cardOnly,
   onBack,
 }: {
-  orderNumber: string;
-  guestToken: string;
-  paymentIntentId: string;
   clientSecret: string;
-  email: string;
-  locale: string;
-  total: number;
+  reservedUntil: string;
+  cardOnly: boolean;
   onBack: () => void;
 }) {
-  const stripe = useStripe();
-  const elements = useElements();
   const t = useTranslations('checkout');
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [stripeError, setStripeError] = useState<string | null>(null);
-  const [lastPiStatus, setLastPiStatus] = useState<string | null>(null);
-  const isDev = process.env.NODE_ENV === 'development';
-
-  const handleConfirm = async () => {
-    if (!stripe || !elements) {
-      setStripeError('Stripe aún no cargó. Espera un segundo y vuelve a intentar.');
-      logCheckoutDebug('Pay blocked: stripe or elements null', {
-        stripe: !!stripe,
-        elements: !!elements,
-      });
-      return;
-    }
-
-    setIsConfirming(true);
-    setStripeError(null);
-    setLastPiStatus(null);
-
-    const returnUrl = `${window.location.origin}/${locale}/checkout/return`;
-
-    sessionStorage.setItem('viogi_checkout_payment', '1');
-    sessionStorage.setItem(
-      'viogi_pending_order',
-      JSON.stringify({ orderNumber, guestToken, paymentIntentId })
-    );
-
-    logCheckoutDebug('1. Pay clicked', { orderNumber, paymentIntentId, returnUrl });
-
-    const { error: submitError } = await elements.submit();
-    if (submitError) {
-      sessionStorage.removeItem('viogi_checkout_payment');
-      const msg = formatStripeClientError(submitError);
-      logCheckoutDebug('2. elements.submit FAILED', submitError);
-      setStripeError(msg);
-      setIsConfirming(false);
-      return;
-    }
-    logCheckoutDebug('2. elements.submit OK');
-
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: returnUrl,
-        receipt_email: email || undefined,
-      },
-    });
-
-    if (error) {
-      sessionStorage.removeItem('viogi_checkout_payment');
-      logCheckoutDebug('3. confirmPayment FAILED', error);
-      setStripeError(formatStripeClientError(error));
-      setIsConfirming(false);
-      return;
-    }
-    logCheckoutDebug('3. confirmPayment returned (no client error)');
-
-    const { paymentIntent } = await stripe.retrievePaymentIntent(clientSecret);
-    const status = paymentIntent?.status ?? 'unknown';
-    setLastPiStatus(status);
-    logCheckoutDebug('4. retrievePaymentIntent', {
-      id: paymentIntent?.id,
-      status,
-    });
-
-    if (status === 'succeeded') {
-      window.location.assign(
-        `${returnUrl}?redirect_status=succeeded&payment_intent=${paymentIntentId}`
-      );
-      return;
-    }
-
-    if (status === 'processing') {
-      window.location.assign(
-        `${returnUrl}?redirect_status=succeeded&payment_intent=${paymentIntentId}`
-      );
-      return;
-    }
-
-    sessionStorage.removeItem('viogi_checkout_payment');
-    setStripeError(
-      `Pago no completado. Estado en Stripe: "${status}". Abre Dashboard → Payments o ejecuta: node scripts/stripe-check-pi.mjs ${paymentIntentId}`
-    );
-    setIsConfirming(false);
-  };
+  const restante = useCuentaRegresiva(reservedUntil);
 
   return (
     <div className="space-y-6">
-      {isDev && (
-        <div className="bg-gray-50 border border-gray-200 px-3 py-2 space-y-1 font-mono text-[10px] text-gray-600 break-all">
-          <p>
-            <span className="text-gray-400">order</span> {orderNumber}
-          </p>
-          <p>
-            <span className="text-gray-400">pi</span> {paymentIntentId}
-          </p>
-          {lastPiStatus && (
-            <p>
-              <span className="text-gray-400">status</span> {lastPiStatus}
-            </p>
-          )}
-          <a
-            href={`/api/dev/stripe-payment-status?pi=${paymentIntentId}`}
-            target="_blank"
-            rel="noreferrer"
-            className="underline text-black"
-          >
-            Ver JSON en Stripe API
-          </a>
-        </div>
-      )}
-      <PaymentElement options={{ layout: 'tabs' }} />
-      {stripeError && (
-        <div className="bg-red-50 border border-red-200 px-4 py-3">
-          <p className="text-[11px] text-red-600 whitespace-pre-wrap">{stripeError}</p>
-        </div>
-      )}
-      <div className="space-y-3 pt-2">
-        <button
-          type="button"
-          onClick={handleConfirm}
-          disabled={!stripe || !elements || isConfirming}
-          className="w-full bg-black text-white py-4 text-[12px] uppercase tracking-widest font-medium hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
-        >
-          {isConfirming
-            ? t('processing')
-            : `${t('pay')} ${formatPrice(total, locale as 'es' | 'en')}`}
-        </button>
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={isConfirming}
-          className="w-full text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors py-2 disabled:cursor-not-allowed"
-        >
-          {t('back_to_details')}
-        </button>
+      {/* Urgencia real, no inventada: la prenda está literalmente apartada. */}
+      <div className="border border-gray-200 bg-gray-50 px-4 py-3 space-y-1">
+        <p className="text-[11px] uppercase tracking-widest font-medium">
+          {t('unique_piece_title')}
+        </p>
+        <p className="text-[11px] text-gray-600 leading-relaxed">
+          {t('unique_piece_body', { tiempo: restante })}
+        </p>
       </div>
+
+      {cardOnly && (
+        <p className="text-[10px] text-gray-500 leading-relaxed">
+          {t('card_only_notice')}
+        </p>
+      )}
+
+      <div id="checkout-embebido">
+        <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret }}>
+          <EmbeddedCheckout />
+        </EmbeddedCheckoutProvider>
+      </div>
+
+      <button
+        type="button"
+        onClick={onBack}
+        className="w-full text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors py-2"
+      >
+        {t('back_to_details')}
+      </button>
     </div>
   );
+}
+
+/** Cuenta regresiva legible: "28 minutos", "2 horas", "mañana". */
+function useCuentaRegresiva(hasta: string): string {
+  const [texto, setTexto] = useState('');
+
+  useEffect(() => {
+    const calcular = () => {
+      const ms = new Date(hasta).getTime() - Date.now();
+      if (ms <= 0) return 'unos momentos';
+      const mins = Math.ceil(ms / 60000);
+      if (mins < 60) return `${mins} ${mins === 1 ? 'minuto' : 'minutos'}`;
+      const horas = Math.round(mins / 60);
+      if (horas < 24) return `${horas} ${horas === 1 ? 'hora' : 'horas'}`;
+      const dias = Math.round(horas / 24);
+      return `${dias} ${dias === 1 ? 'día' : 'días'}`;
+    };
+    setTexto(calcular());
+    const id = setInterval(() => setTexto(calcular()), 30_000);
+    return () => clearInterval(id);
+  }, [hasta]);
+
+  return texto;
 }
 
 // ─── Shared primitive styles ────────────────────────────────────────────────
@@ -356,9 +238,9 @@ export default function CheckoutPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [pendingOrderNumber, setPendingOrderNumber] = useState<string | null>(null);
   const [pendingGuestToken, setPendingGuestToken] = useState<string | null>(null);
-  const [pendingPaymentIntentId, setPendingPaymentIntentId] = useState<string | null>(
-    null
-  );
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [reservedUntil, setReservedUntil] = useState<string | null>(null);
+  const [cardOnly, setCardOnly] = useState(false);
 
   const [cpData, setCpData] = useState<MexicoCPData | null>(null);
   const [cpLoading, setCpLoading] = useState(false);
@@ -511,35 +393,51 @@ export default function CheckoutPage() {
     setIsProcessing(true);
 
     try {
-      const result = await createPaymentIntentAction(cart, {
-        email: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phone,
-        deliveryMethod: formData.deliveryMethod,
-        country: formData.country,
-        address: formData.address,
-        apartment: formData.apartment,
-        colonia: formData.colonia,
-        municipio: formData.municipio,
-        state: formData.state,
-        zipCode: formData.zipCode,
-        shippingMethod: formData.shippingMethod as 'standard' | 'express',
-        pickupPointId: formData.pickupPointId,
-        pickupDate: formData.pickupDate,
-        pickupTimeSlot: formData.pickupTimeSlot as 'morning' | 'afternoon' | 'evening' | '',
-      });
+      const result = await createCheckoutSessionAction(
+        cart,
+        {
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: formData.phone,
+          deliveryMethod: formData.deliveryMethod,
+          country: formData.country,
+          address: formData.address,
+          apartment: formData.apartment,
+          colonia: formData.colonia,
+          municipio: formData.municipio,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          shippingMethod: formData.shippingMethod as 'standard' | 'express',
+          pickupPointId: formData.pickupPointId,
+          pickupDate: formData.pickupDate,
+          pickupTimeSlot: formData.pickupTimeSlot as 'morning' | 'afternoon' | 'evening' | '',
+        },
+        locale
+      );
 
       if (!result.success) {
+        // Alguien más se llevó la prenda mientras el cliente llenaba el formulario.
+        // Mensaje concreto con el nombre, no un error genérico.
+        if (result.error === 'product_unavailable') {
+          const nombres = result.unavailable?.length ? result.unavailable.join(', ') : null;
+          setFormErrors({
+            general: nombres
+              ? t('error_taken_named', { prendas: nombres })
+              : t('error_taken'),
+          });
+          return;
+        }
+
         const errorMsg =
-          result.error === 'price_changed' && result.message
+          result.error === 'invalid_phone' && result.message
+            ? result.message
+            : result.error === 'price_changed' && result.message
             ? result.message
             : result.error === 'price_changed'
             ? t('error_price_changed')
             : result.error === 'pickup_inactive'
             ? t('error_pickup_unavailable')
-            : result.error === 'stripe_error' && result.message
-            ? result.message
             : result.message
             ? result.message
             : t('error_processing');
@@ -554,16 +452,19 @@ export default function CheckoutPage() {
         JSON.stringify({
           orderNumber: result.orderNumber,
           guestToken: result.guestToken,
-          paymentIntentId: result.paymentIntentId,
+          sessionId: result.sessionId,
         })
       );
       setClientSecret(result.clientSecret);
       setPendingOrderNumber(result.orderNumber);
       setPendingGuestToken(result.guestToken);
-      setPendingPaymentIntentId(result.paymentIntentId);
-      logCheckoutDebug('PaymentIntent created', {
+      setPendingOrderId(result.orderId);
+      setReservedUntil(result.reservedUntil);
+      setCardOnly(result.cardOnly);
+      logCheckoutDebug('Checkout Session creada', {
         orderNumber: result.orderNumber,
-        paymentIntentId: result.paymentIntentId,
+        sessionId: result.sessionId,
+        reservedUntil: result.reservedUntil,
       });
     } catch (err) {
       console.error('[checkout] handleSubmit error:', err);
@@ -891,28 +792,23 @@ export default function CheckoutPage() {
                   </div>
 
                   {clientSecret ? (
-                    <Elements
+                    <PasoDePago
                       key={clientSecret}
-                      stripe={stripePromise}
-                      options={{ clientSecret, appearance: stripeAppearance }}
-                    >
-                      <StripePaymentForm
-                        orderNumber={pendingOrderNumber!}
-                        guestToken={pendingGuestToken!}
-                        paymentIntentId={pendingPaymentIntentId!}
-                        clientSecret={clientSecret}
-                        email={formData.email}
-                        locale={locale}
-                        total={total}
-                        onBack={() => {
-                          setClientSecret(null);
-                          setPendingOrderNumber(null);
-                          setPendingGuestToken(null);
-                          setPendingPaymentIntentId(null);
-                          isSubmittingRef.current = false;
-                        }}
-                      />
-                    </Elements>
+                      clientSecret={clientSecret}
+                      reservedUntil={reservedUntil ?? new Date().toISOString()}
+                      cardOnly={cardOnly}
+                      onBack={() => {
+                        // Volver atrás libera la prenda: no tiene por qué
+                        // quedarse apartada mientras el cliente lo piensa.
+                        if (pendingOrderId) void cancelCheckoutAction(pendingOrderId);
+                        setClientSecret(null);
+                        setPendingOrderNumber(null);
+                        setPendingGuestToken(null);
+                        setPendingOrderId(null);
+                        setReservedUntil(null);
+                        isSubmittingRef.current = false;
+                      }}
+                    />
                   ) : (
                     <p className="text-[11px] text-gray-300 tracking-wide">
                       {t('payment_enter_details')}

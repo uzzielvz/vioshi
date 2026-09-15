@@ -4,8 +4,11 @@ import { createHmac } from 'crypto';
 import { reconcileCartItems } from '@/lib/cart/reconcile';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getStripe } from '@/lib/stripe';
+import { getSettings, isCardOnly, DEFERRED_PAYMENT_METHODS } from '@/lib/settings';
+import { normalizePhone } from '@/lib/phone';
 import { TAX_RATE, STANDARD_SHIPPING_COST, EXPRESS_SHIPPING_COST } from '@/lib/constants';
 import type { CartItem } from '@/types';
+import type Stripe from 'stripe';
 
 // ─── Input types ─────────────────────────────────────────────────────────────
 
@@ -36,21 +39,29 @@ export type PlaceOrderResult =
   | {
       success: true;
       clientSecret: string;
-      paymentIntentId: string;
+      sessionId: string;
       orderNumber: string;
       orderId: string;
       guestToken: string;
+      /** Vencimiento de la reserva, para el contador del checkout. */
+      reservedUntil: string;
+      /** true si el monto superó el umbral y solo se ofrece tarjeta. */
+      cardOnly: boolean;
     }
   | {
       success: false;
       error:
         | 'price_changed'
+        | 'product_unavailable'
+        | 'invalid_phone'
         | 'pickup_inactive'
         | 'order_insert_failed'
         | 'items_insert_failed'
         | 'stripe_error'
         | 'internal_error';
       message?: string;
+      /** Nombres de las prendas que se agotaron, para decírselo al usuario. */
+      unavailable?: string[];
     };
 
 // ─── Actions ─────────────────────────────────────────────────────────────────
@@ -71,15 +82,33 @@ export async function syncCartFromDbAction(
   return { items: reconciled.items };
 }
 
-export async function createPaymentIntentAction(
+/** Umbral y ventanas, para que el checkout muestre el aviso correcto. */
+export async function getCheckoutSettingsAction() {
+  const s = await getSettings();
+  return {
+    cardOnlyThreshold: s.card_only_threshold_mxn,
+    cardReserveMinutes: s.card_reserve_minutes,
+    voucherHours: s.voucher_hours,
+  };
+}
+
+export async function createCheckoutSessionAction(
   cartItems: CartItem[],
-  formData: CheckoutFormData
+  formData: CheckoutFormData,
+  locale: string
 ): Promise<PlaceOrderResult> {
   if (!process.env.ADMIN_SECRET) {
     return { success: false, error: 'internal_error', message: 'Missing ADMIN_SECRET' };
   }
 
   const supabase = createAdminClient();
+  const settings = await getSettings();
+
+  // ── 0. Teléfono: se normaliza ANTES de guardar nada ─────────────────────────
+  const phone = normalizePhone(formData.phone);
+  if (!phone.ok) {
+    return { success: false, error: 'invalid_phone', message: phone.error };
+  }
 
   const reconciled = await reconcileCartItems(supabase, cartItems);
   if (!reconciled.ok) {
@@ -92,7 +121,7 @@ export async function createPaymentIntentAction(
   const productIds = cartItems.map((i) => i.productId);
   const { data: dbProducts, error: productsError } = await supabase
     .from('products')
-    .select('id, price_mxn')
+    .select('id, price_mxn, name, sold_out')
     .in('id', productIds);
 
   if (productsError || !dbProducts) {
@@ -107,6 +136,17 @@ export async function createPaymentIntentAction(
     if (dbPrice === undefined || Math.abs(dbPrice - item.price) > 0.01) {
       return { success: false, error: 'price_changed' };
     }
+  }
+
+  // Atajo barato: si ya está vendida, ni creamos el pedido.
+  const yaVendidas = dbProducts.filter((p) => p.sold_out).map((p) => p.name);
+  if (yaVendidas.length > 0) {
+    return {
+      success: false,
+      error: 'product_unavailable',
+      unavailable: yaVendidas,
+      message: `Ya no está disponible: ${yaVendidas.join(', ')}`,
+    };
   }
 
   // ── 2. Validate pickup point (if applicable) ────────────────────────────────
@@ -147,20 +187,61 @@ export async function createPaymentIntentAction(
   const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
   const total = Math.round((subtotal + shippingCost + tax) * 100) / 100;
 
-  // ── 4. Insert order ─────────────────────────────────────────────────────────
+  // Regla de umbral, decidida en el SERVIDOR. Ocultar el botón no basta.
+  const cardOnly = isCardOnly(total, settings);
+
+  // ── 4. Persist shipping address ─────────────────────────────────────────────
+  // Antes esto se capturaba y se tiraba: shipping_address_id quedaba null y un
+  // pedido a domicilio no se podía enviar.
+  let shippingAddressId: string | null = null;
+
+  if (formData.deliveryMethod === 'home') {
+    const { data: addr, error: addrError } = await supabase
+      .from('addresses')
+      .insert({
+        user_id: null, // guest checkout
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone: phone.e164,
+        street: formData.address ?? '',
+        apartment: formData.apartment || null,
+        colony: formData.colonia || null,
+        city: formData.municipio ?? '',
+        state: formData.state ?? '',
+        zip_code: formData.zipCode ?? '',
+        country: formData.country || 'MX',
+      })
+      .select('id')
+      .single();
+
+    if (addrError || !addr) {
+      return {
+        success: false,
+        error: 'order_insert_failed',
+        message: `No se pudo guardar la dirección: ${addrError?.message}`,
+      };
+    }
+    shippingAddressId = addr.id;
+  }
+
+  // ── 5. Insert order ─────────────────────────────────────────────────────────
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert({
       email: formData.email,
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      phone: phone.e164,
       subtotal_mxn: subtotal,
       tax_mxn: tax,
       shipping_mxn: shippingCost,
       discount_mxn: 0,
       total_mxn: total,
       status: 'pending',
-      payment_method: 'card',
+      payment_method: null, // lo define Stripe según lo que elija el cliente
       payment_status: 'pending',
       delivery_method: formData.deliveryMethod,
+      shipping_address_id: shippingAddressId,
       shipping_method: formData.deliveryMethod === 'home' ? (formData.shippingMethod ?? 'standard') : null,
       pickup_point_id: formData.deliveryMethod === 'pickup' ? formData.pickupPointId : null,
       pickup_date: formData.pickupDate || null,
@@ -170,6 +251,7 @@ export async function createPaymentIntentAction(
     .single();
 
   if (orderError || !order) {
+    if (shippingAddressId) await supabase.from('addresses').delete().eq('id', shippingAddressId);
     return {
       success: false,
       error: 'order_insert_failed',
@@ -177,7 +259,14 @@ export async function createPaymentIntentAction(
     };
   }
 
-  // ── 5. Insert order items (price snapshots) ─────────────────────────────────
+  const rollback = async () => {
+    await supabase.rpc('release_reservation', { p_order_id: order.id });
+    await supabase.from('order_items').delete().eq('order_id', order.id);
+    await supabase.from('orders').delete().eq('id', order.id);
+    if (shippingAddressId) await supabase.from('addresses').delete().eq('id', shippingAddressId);
+  };
+
+  // ── 6. Insert order items (price snapshots) ─────────────────────────────────
   const orderItems = cartItems.map((item) => ({
     order_id: order.id,
     product_id: item.productId,
@@ -193,40 +282,122 @@ export async function createPaymentIntentAction(
   const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
 
   if (itemsError) {
-    // Roll back the order so we don't leave orphaned rows
-    await supabase.from('orders').delete().eq('id', order.id);
-    return {
-      success: false,
-      error: 'items_insert_failed',
-      message: itemsError.message,
-    };
+    await rollback();
+    return { success: false, error: 'items_insert_failed', message: itemsError.message };
   }
 
-  // ── 6. Create Stripe PaymentIntent ──────────────────────────────────────────
-  // Stripe expects amounts in the smallest currency unit (centavos for MXN).
-  const amountCentavos = Math.round(total * 100);
+  // ── 7. RESERVA ATÓMICA ──────────────────────────────────────────────────────
+  // Se toma AL INICIAR el checkout, no al confirmar el pago. Si se tomara al
+  // confirmar, dos personas pagarían la misma prenda.
+  //
+  // Se reserva con ventana de tarjeta. Si el cliente elige OXXO/SPEI, el
+  // webhook la extiende a voucher_hours cuando se emite el voucher.
+  const { data: reservedUntil, error: reserveError } = await supabase.rpc('reserve_products', {
+    p_product_ids: productIds,
+    p_order_id: order.id,
+    p_kind: 'card',
+  });
 
-  let paymentIntent;
-  try {
-    paymentIntent = await getStripe().paymentIntents.create({
-      amount: amountCentavos,
+  if (reserveError) {
+    await rollback();
+    const raw = reserveError.message ?? '';
+    if (raw.includes('product_unavailable')) {
+      const nombres = raw.split('product_unavailable:')[1]?.trim() ?? '';
+      const lista = nombres ? nombres.split(', ').filter(Boolean) : [];
+      return {
+        success: false,
+        error: 'product_unavailable',
+        unavailable: lista,
+        message: lista.length
+          ? `Alguien más se adelantó con: ${lista.join(', ')}`
+          : 'Alguien más se adelantó con una de las prendas',
+      };
+    }
+    console.error('[checkout] reserve failed:', raw);
+    return { success: false, error: 'internal_error', message: raw };
+  }
+
+  // ── 8. Stripe Checkout Session ──────────────────────────────────────────────
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = cartItems.map((item) => ({
+    quantity: item.quantity,
+    price_data: {
       currency: 'mxn',
+      unit_amount: Math.round((priceMap.get(item.productId) ?? item.price) * 100),
+      product_data: {
+        name: item.productName,
+        ...(item.image?.startsWith('http') ? { images: [item.image] } : {}),
+      },
+    },
+  }));
+
+  if (shippingCost > 0) {
+    lineItems.push({
+      quantity: 1,
+      price_data: {
+        currency: 'mxn',
+        unit_amount: Math.round(shippingCost * 100),
+        product_data: {
+          name: formData.deliveryMethod === 'pickup' ? 'Costo de punto de entrega' : 'Envío',
+        },
+      },
+    });
+  }
+
+  if (tax > 0) {
+    lineItems.push({
+      quantity: 1,
+      price_data: {
+        currency: 'mxn',
+        unit_amount: Math.round(tax * 100),
+        product_data: { name: 'IVA (16%)' },
+      },
+    });
+  }
+
+  // Stripe no permite expires_at a menos de 30 minutos. Si la ventana de
+  // reserva es más corta, la reserva vence antes que la sesión — y está bien:
+  // `reserved_until` en la base es la autoridad, no Stripe. Un pago que llegue
+  // después lo atrapa el caso borde de mark_order_sold (outcome=conflict).
+  const sessionMinutes = Math.max(30, settings.card_reserve_minutes);
+
+  // OXXO solo acepta vencimiento en DÍAS enteros (1–7), no en horas.
+  const oxxoDays = Math.min(7, Math.max(1, Math.ceil(settings.voucher_hours / 24)));
+
+  const origin = await getOriginUrl();
+
+  let session: Stripe.Checkout.Session;
+  try {
+    session = await getStripe().checkout.sessions.create({
+      mode: 'payment',
+      // La API renombró 'embedded' a 'embedded_page' (verificado contra la API
+      // real el 2026-09-14: 'embedded' devuelve error y la sesión no se crea).
+      ui_mode: 'embedded_page',
+      line_items: lineItems,
+      customer_email: formData.email,
+      expires_at: Math.floor(Date.now() / 1000) + sessionMinutes * 60,
+      return_url: `${origin}/${locale}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
+      // Nada de payment_method_types: eso apagaría los métodos dinámicos.
+      // Para la regla de umbral se excluyen los diferidos explícitamente.
+      ...(cardOnly
+        ? { excluded_payment_method_types: [...DEFERRED_PAYMENT_METHODS] }
+        : { payment_method_options: { oxxo: { expires_after_days: oxxoDays } } }),
       metadata: {
         order_id: order.id,
         order_number: order.order_number,
         customer_email: formData.email,
       },
-      // Card-only in v1 — fewer moving parts while debugging E2E (re-enable automatic_payment_methods later).
-      payment_method_types: ['card'],
-    });
+      payment_intent_data: {
+        metadata: { order_id: order.id, order_number: order.order_number },
+      },
+    } as Stripe.Checkout.SessionCreateParams);
   } catch (stripeError) {
-    // Roll back the order to avoid orphaned pending rows
-    await supabase.from('orders').delete().eq('id', order.id);
+    await rollback();
     const message = stripeError instanceof Error ? stripeError.message : 'Stripe error';
+    console.error('[checkout] stripe session failed:', message);
     return { success: false, error: 'stripe_error', message };
   }
 
-  // ── 7. Save payment_reference + guest_token ─────────────────────────────────
+  // ── 9. Save session + guest token ───────────────────────────────────────────
   const guestToken = createHmac('sha256', process.env.ADMIN_SECRET)
     .update(`${order.order_number}:${formData.email.toLowerCase()}`)
     .digest('hex');
@@ -234,23 +405,86 @@ export async function createPaymentIntentAction(
   const { error: updateError } = await supabase
     .from('orders')
     .update({
-      payment_reference: paymentIntent.id,
+      stripe_session_id: session.id,
+      payment_reference: typeof session.payment_intent === 'string' ? session.payment_intent : null,
       guest_token: guestToken,
     })
     .eq('id', order.id);
 
   if (updateError) {
-    // Non-fatal: order + intent exist. Log but don't fail — guest lookup will
-    // not work, but the payment can still complete via webhook.
-    console.error('[checkout] Failed to save payment_reference/guest_token:', updateError.message);
+    console.error('[checkout] no se pudo guardar stripe_session_id:', updateError.message);
   }
 
   return {
     success: true,
-    clientSecret: paymentIntent.client_secret!,
-    paymentIntentId: paymentIntent.id,
+    clientSecret: session.client_secret!,
+    sessionId: session.id,
     orderNumber: order.order_number,
     orderId: order.id,
     guestToken,
+    reservedUntil: String(reservedUntil),
+    cardOnly,
   };
+}
+
+/** Libera la reserva cuando el usuario abandona el checkout a propósito. */
+export async function cancelCheckoutAction(orderId: string): Promise<void> {
+  if (!orderId) return;
+  const supabase = createAdminClient();
+  await supabase.rpc('release_reservation', { p_order_id: orderId });
+  await supabase
+    .from('orders')
+    .update({ status: 'cancelled', payment_status: 'failed' })
+    .eq('id', orderId)
+    .eq('payment_status', 'pending');
+}
+
+async function getOriginUrl(): Promise<string> {
+  const { headers } = await import('next/headers');
+  const h = headers();
+  const host = h.get('x-forwarded-host') ?? h.get('host');
+  const proto = h.get('x-forwarded-proto') ?? (host?.startsWith('localhost') ? 'http' : 'https');
+  if (host) return `${proto}://${host}`;
+  return process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+}
+
+/**
+ * Resuelve el número de pedido a partir del session_id de Stripe.
+ *
+ * Se verifica la sesión CONTRA STRIPE antes de devolver nada: el session_id
+ * viaja en la URL de retorno, así que no basta con confiar en él. Nunca se
+ * devuelve el guest_token al cliente — la página de éxito lo resuelve del lado
+ * del servidor.
+ */
+export async function resolveCheckoutReturnAction(
+  sessionId: string
+): Promise<{ ok: true; orderNumber: string } | { ok: false; message: string }> {
+  if (!sessionId.startsWith('cs_')) {
+    return { ok: false, message: 'Identificador de pago inválido.' };
+  }
+
+  try {
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
+    const orderId = session.metadata?.order_id;
+    if (!orderId) {
+      return { ok: false, message: 'Esta sesión de pago no corresponde a un pedido.' };
+    }
+
+    const supabase = createAdminClient();
+    const { data: order } = await supabase
+      .from('orders')
+      .select('order_number')
+      .eq('id', orderId)
+      .eq('stripe_session_id', sessionId)
+      .single();
+
+    if (!order) {
+      return { ok: false, message: 'No encontramos tu pedido. Escríbenos y lo resolvemos.' };
+    }
+
+    return { ok: true, orderNumber: order.order_number };
+  } catch (err) {
+    console.error('[checkout] resolveCheckoutReturn falló:', err);
+    return { ok: false, message: 'No pudimos confirmar tu pago. Revisa "Mis Pedidos".' };
+  }
 }

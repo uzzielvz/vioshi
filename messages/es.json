@@ -159,7 +159,14 @@
     "payment_enter_details": "Completa los pasos anteriores para continuar al pago.",
     "error_price_changed": "Los precios de algunos productos cambiaron. Por favor recarga la página e intenta de nuevo.",
     "error_pickup_unavailable": "El punto de recogida seleccionado no está disponible actualmente.",
-    "pay": "Pagar"
+    "pay": "Pagar",
+    "unique_piece_title": "Esta es la única pieza",
+    "unique_piece_body": "Se aparta mientras completas tu pago. Tienes {tiempo}. Si no lo completas, alguien más se la lleva.",
+    "card_only_notice": "Por el monto de este pedido solo aceptamos tarjeta.",
+    "error_taken": "Alguien más se adelantó con una de las prendas. Es pieza única, así que ya no está disponible.",
+    "error_taken_named": "Alguien más se adelantó con: {prendas}. Es pieza única, así que ya no está disponible.",
+    "spei_window_notice": "Tienes {tiempo} para completar tu transferencia. Después, la prenda vuelve a estar disponible.",
+    "oxxo_window_notice": "Tienes {tiempo} para pagar tu ficha en OXXO. Después, la prenda vuelve a estar disponible."
   },
   "footer": {
     "instagram": "Instagram",

@@ -4,23 +4,9 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
+import { resolveCheckoutReturnAction } from '../actions';
 
-type PendingOrder = {
-  orderNumber: string;
-  guestToken: string;
-};
-
-function readPendingOrder(): PendingOrder | null {
-  try {
-    const raw = sessionStorage.getItem('viogi_pending_order');
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as PendingOrder;
-    if (!parsed.orderNumber || !parsed.guestToken) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
+const FONT = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" };
 
 function CheckoutReturnContent() {
   const router = useRouter();
@@ -29,64 +15,67 @@ function CheckoutReturnContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const redirectStatus = searchParams.get('redirect_status');
-    const paymentIntent = searchParams.get('payment_intent');
-    const pending = readPendingOrder();
+    const sessionId = searchParams.get('session_id');
 
-    if (!pending) {
-      const paymentIntent = searchParams.get('payment_intent');
-
-      // Fallback temporal: si perdimos sessionStorage pero tenemos payment_intent,
-      // intentamos redirigir igual para evitar 404 en la mayoría de casos.
-      if (paymentIntent) {
-        router.replace(`/${locale}/checkout/success/pending?payment_intent=${paymentIntent}`);
-        return;
-      }
-
-      setError('La sesión de pago expiró. Revisa "Mis Pedidos" o vuelve a intentar.');
+    if (!sessionId) {
+      setError('No pudimos identificar tu pago. Revisa "Mis Pedidos" o escríbenos.');
       return;
     }
 
-    if (redirectStatus === 'failed') {
-      sessionStorage.removeItem('viogi_checkout_payment');
-      setError('El pago no se completó. Revisa los datos de la tarjeta e intenta otra vez.');
-      return;
-    }
+    let cancelado = false;
 
-    const qs = new URLSearchParams();
-    qs.set('t', pending.guestToken);
-    if (paymentIntent) qs.set('payment_intent', paymentIntent);
+    // El número de pedido se resuelve en el SERVIDOR a partir del session_id,
+    // verificándolo contra Stripe. No se confía en sessionStorage, que se
+    // pierde si el cliente vuelve desde otra pestaña o desde el banco.
+    resolveCheckoutReturnAction(sessionId)
+      .then((res) => {
+        if (cancelado) return;
+        if (!res.ok) {
+          setError(res.message);
+          return;
+        }
+        sessionStorage.removeItem('viogi_checkout_payment');
+        sessionStorage.removeItem('viogi_pending_order');
+        router.replace(
+          `/${locale}/checkout/success/${encodeURIComponent(res.orderNumber)}?session_id=${encodeURIComponent(sessionId)}`
+        );
+      })
+      .catch(() => {
+        if (!cancelado) setError('No pudimos confirmar tu pago. Revisa "Mis Pedidos".');
+      });
 
-    router.replace(
-      `/${locale}/checkout/success/${encodeURIComponent(pending.orderNumber)}?${qs.toString()}`
-    );
+    return () => {
+      cancelado = true;
+    };
   }, [searchParams, router, locale]);
 
   if (error) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center px-6"
-        style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }}
-      >
+      <div className="min-h-screen flex items-center justify-center px-6" style={FONT}>
         <div className="text-center space-y-6 max-w-sm">
-          <p className="text-[11px] text-red-600 leading-relaxed">{error}</p>
-          <Link
-            href={`/${locale}/checkout`}
-            className="inline-block text-[11px] uppercase tracking-widest underline"
-          >
-            Volver al checkout
-          </Link>
+          <p className="text-[13px] text-red-600 leading-relaxed">{error}</p>
+          <div className="space-y-2">
+            <Link
+              href={`/${locale}/account/orders`}
+              className="block text-[11px] uppercase tracking-widest underline"
+            >
+              Ver mis pedidos
+            </Link>
+            <Link
+              href={`/${locale}/collections/all`}
+              className="block text-[11px] uppercase tracking-widest text-gray-400 hover:text-black"
+            >
+              Volver a la tienda
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }}
-    >
-      <p className="text-[11px] text-gray-400 tracking-wide">Confirmando pago…</p>
+    <div className="min-h-screen flex items-center justify-center" style={FONT}>
+      <p className="text-[13px] text-gray-400 tracking-wide">Confirmando tu pago…</p>
     </div>
   );
 }
@@ -95,8 +84,8 @@ export default function CheckoutReturnPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <p className="text-[11px] text-gray-400">Confirmando pago…</p>
+        <div className="min-h-screen flex items-center justify-center" style={FONT}>
+          <p className="text-[13px] text-gray-400">Confirmando tu pago…</p>
         </div>
       }
     >

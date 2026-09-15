@@ -159,7 +159,14 @@
     "payment_enter_details": "Complete the steps above to continue to payment.",
     "error_price_changed": "Some product prices have changed. Please reload the page and try again.",
     "error_pickup_unavailable": "The selected pickup point is not currently available.",
-    "pay": "Pay"
+    "pay": "Pay",
+    "unique_piece_title": "This is the only one",
+    "unique_piece_body": "We hold it while you complete your payment. You have {tiempo}. If you do not finish, someone else takes it.",
+    "card_only_notice": "For this order amount we only accept card payments.",
+    "error_taken": "Someone beat you to one of the pieces. It is one of a kind, so it is gone.",
+    "error_taken_named": "Someone beat you to: {prendas}. It is one of a kind, so it is gone.",
+    "spei_window_notice": "You have {tiempo} to complete your transfer. After that, the piece goes back on sale.",
+    "oxxo_window_notice": "You have {tiempo} to pay your OXXO voucher. After that, the piece goes back on sale."
   },
   "footer": {
     "instagram": "Instagram",
