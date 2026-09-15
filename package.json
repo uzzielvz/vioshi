@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "@google/genai": "^2.18.0",
-    "@stripe/react-stripe-js": "^6.4.0",
-    "@stripe/stripe-js": "^9.6.0",
+    "@stripe/react-stripe-js": "^6.10.0",
+    "@stripe/stripe-js": "^9.16.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.104.1",
     "clsx": "^2.1.1",
@@ -22,7 +22,7 @@
     "next-intl": "^4.7.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "stripe": "^22.1.1"
+    "stripe": "^22.6.2"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
