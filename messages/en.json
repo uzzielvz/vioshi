@@ -70,7 +70,7 @@
     "quantity": "Quantity",
     "size": "Size",
     "color": "Color",
-    "taxes_shipping_note": "TAXES AND SHIPPING CALCULATED AT CHECKOUT.",
+    "taxes_shipping_note": "SHIPPING CALCULATED AT CHECKOUT.",
     "free_shipping_note": "FREE SHIPPING TO ALL MX FOR ORDERS OVER $5,000 MXN. EXCEPTIONS APPLY."
   },
   "checkout": {

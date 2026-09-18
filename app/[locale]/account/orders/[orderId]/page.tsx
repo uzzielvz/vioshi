@@ -154,10 +154,6 @@ export default async function OrderDetailPage({ params }: Props) {
                   <span style={{ fontSize: '11px', color: '#666' }}>Envío</span>
                   <span style={{ fontSize: '11px', color: '#000' }}>${Number(order.shipping_mxn).toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span style={{ fontSize: '11px', color: '#666' }}>IVA</span>
-                  <span style={{ fontSize: '11px', color: '#000' }}>${Number(order.tax_mxn).toFixed(2)}</span>
-                </div>
                 <div className="flex justify-between pt-2 border-t border-gray-200 mt-2">
                   <span className="uppercase tracking-wide" style={{ fontSize: '11px', fontWeight: 600, color: '#000' }}>Total</span>
                   <span style={{ fontSize: '11px', fontWeight: 600, color: '#000' }}>

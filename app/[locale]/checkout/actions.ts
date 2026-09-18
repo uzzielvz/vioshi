@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getStripe } from '@/lib/stripe';
 import { getSettings, isCardOnly, DEFERRED_PAYMENT_METHODS } from '@/lib/settings';
 import { normalizePhone } from '@/lib/phone';
-import { TAX_RATE, STANDARD_SHIPPING_COST, EXPRESS_SHIPPING_COST } from '@/lib/constants';
+import { STANDARD_SHIPPING_COST, EXPRESS_SHIPPING_COST } from '@/lib/constants';
 import type { CartItem } from '@/types';
 import type Stripe from 'stripe';
 
@@ -184,8 +184,9 @@ export async function createCheckoutSessionAction(
     shippingCost = pickupAdditionalCost;
   }
 
-  const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
-  const total = Math.round((subtotal + shippingCost + tax) * 100) / 100;
+  // Precios al público ya incluyen IVA. No se suma ni se muestra al cliente.
+  const tax = 0;
+  const total = Math.round((subtotal + shippingCost) * 100) / 100;
 
   // Regla de umbral, decidida en el SERVIDOR. Ocultar el botón no basta.
   const cardOnly = isCardOnly(total, settings);
@@ -339,17 +340,6 @@ export async function createCheckoutSessionAction(
         product_data: {
           name: formData.deliveryMethod === 'pickup' ? 'Costo de punto de entrega' : 'Envío',
         },
-      },
-    });
-  }
-
-  if (tax > 0) {
-    lineItems.push({
-      quantity: 1,
-      price_data: {
-        currency: 'mxn',
-        unit_amount: Math.round(tax * 100),
-        product_data: { name: 'IVA (16%)' },
       },
     });
   }

@@ -178,10 +178,6 @@ export default function CartPage() {
                     <span>{t("shipping")}</span>
                     <span>{cart.shipping === 0 ? t("free") : formatPrice(cart.shipping, locale)}</span>
                   </div>
-                  <div className="flex justify-between text-gray-500" style={{ ...fontStyle, fontSize: '11px' }}>
-                    <span>{t("tax")}</span>
-                    <span>{formatPrice(cart.tax, locale)}</span>
-                  </div>
                 </div>
 
                 <div className="border-t border-gray-300 pt-4 mb-6">

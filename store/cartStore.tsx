@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { Cart, CartItem } from "@/types";
-import { STORAGE_KEYS, TAX_RATE, STANDARD_SHIPPING_COST } from "@/lib/constants";
+import { STORAGE_KEYS, STANDARD_SHIPPING_COST } from "@/lib/constants";
 
 interface CartContextType {
   cart: Cart;
@@ -32,9 +32,9 @@ const initialCart: Cart = {
 // prevShipping preserves any custom shipping cost set by checkout
 function calculateTotals(items: CartItem[], prevShipping: number = STANDARD_SHIPPING_COST): Cart {
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const tax = subtotal * TAX_RATE;
+  const tax = 0; // IVA incluido en el precio; no se cobra ni se muestra
   const shipping = items.length > 0 ? prevShipping : 0;
-  const total = subtotal + tax + shipping;
+  const total = subtotal + shipping;
 
   return { items, subtotal, tax, shipping, total };
 }
@@ -117,7 +117,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const updateShippingCost = useCallback((cost: number) => {
     setCart((prevCart) => {
       const shipping = prevCart.items.length > 0 ? cost : 0;
-      const total = prevCart.subtotal + prevCart.tax + shipping;
+      const total = prevCart.subtotal + shipping;
 
       return {
         ...prevCart,

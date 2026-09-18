@@ -18,7 +18,8 @@ export const FREE_SHIPPING_THRESHOLD = 100;
 export const CURRENCY = "MXN";
 export const CURRENCY_SYMBOL = "$";
 
-// Tax rate — IVA México: 16%
+// IVA: los precios al público ya lo incluyen. No se suma en checkout ni se muestra.
+// Se deja la constante por si más adelante hace falta desglose contable interno.
 export const TAX_RATE = 0.16;
 
 // Shipping

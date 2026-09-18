@@ -111,6 +111,12 @@ Contenido de la raíz (1 nivel, excluyendo `node_modules/`, `.next/`, `.git/`):
 
 ## 4. Pagos
 
+### Precios e IVA (2026-09-17)
+
+- `price_mxn` es el **precio final al público**. El IVA no se suma en checkout ni se muestra en carrito, resumen de pedido ni Stripe.
+- `tax_mxn` se persiste en **0**. Totales = subtotal + envío/pickup.
+- Ver también `lib/constants.ts` (`TAX_RATE` queda solo por si hace falta desglose contable interno) y `store/cartStore.tsx`.
+
 **Dependencias relacionadas en `package.json`**: ninguna. No hay `stripe`, `@stripe/*`, `mercadopago`, `conekta`, `openpay` ni similares.
 
 **Variables de entorno declaradas en `.env.example`** (todas comentadas con `#`, no activas):
