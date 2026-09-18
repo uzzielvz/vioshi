@@ -24,9 +24,13 @@ Un agente = un carril = archivos del paquete. Si dos tocan el mismo archivo, ser
 
 `middleware.ts` · `package.json` · `package-lock.json` · `.env*` · número de migración.
 
+## Git
+
+Rama `agent/L#-…` + PR a `main`. Nunca push/merge a `main`. Detalle: [`docs/agents/GIT.md`](./docs/agents/GIT.md).
+
 ## DoD de cualquier carril
 
-`npm run type-check` · `npm run lint` · un commit atómico · actualizar solo `STATUS.md`.
+`npm run type-check` · `npm run lint` · un commit en la rama del carril · `gh pr create --base main` · el humano mergea.
 
 ## Producto (resumen)
 

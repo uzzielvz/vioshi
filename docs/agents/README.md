@@ -11,7 +11,7 @@ El negocio (nombre de la plataforma, comisión futura, acuerdos con Mario, caja)
 3. [`OPEN.md`](./OPEN.md) — lo que el humano todavía decide
 4. El **paquete** de tu carril en [`packets/`](./packets/)
 
-Luego: [`lanes.md`](./lanes.md) + [`PROMPT.md`](./PROMPT.md).
+Luego: [`lanes.md`](./lanes.md) + [`PROMPT.md`](./PROMPT.md) + [`GIT.md`](./GIT.md).
 
 Mapa de carpetas: [`MAP.md`](./MAP.md).
 

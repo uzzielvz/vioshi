@@ -1,6 +1,6 @@
 # HOY — loop de ejecución
 
-Tú no codeas features. Tú **eliges paquete, lanzas, mergeas**. Un chat = un paquete.
+Tú no codeas features. Tú **eliges paquete, lanzas, revisas el PR, mergeas**. Un chat = un paquete = una rama. `main` no se toca.
 
 ## Arranque (una vez, ahora)
 
@@ -11,23 +11,25 @@ Tú no codeas features. Tú **eliges paquete, lanzas, mergeas**. Un chat = un pa
 
 ```
 1. Abres docs/agents/STATUS.md          → primer paquete LISTO
-2. Nuevo chat / worktree / modelo barato
-3. Pegas docs/agents/PROMPT.md
-   y cambias packets/<este>.md
-4. El agente toca SOLO esa lista
-5. Tú: type-check + lint + diff de 2 min
-6. Merge. STATUS gana una línea. Siguiente.
+2. Worktree + rama agent/L#-…
+3. Chat barato: pegas PROMPT.md + el paquete
+4. El agente codea, commitea en SU rama, abre PR, PARA
+5. Tú (o Claude Pro): revisas el PR vs la lista del paquete
+6. Merge a main. Siguiente.
 ```
+
+Git: [`GIT.md`](./GIT.md). Sin push a `main`.
 
 No pegues PLAN, auditoría ni el vault. Si el agente pregunta negocio de `OPEN.md`, respondes `BLOQUEO` o un número — no rediseñas.
 
 ## Paralelo de hoy (18 Sep)
 
-| Chat | Paquete | ¿Choca? |
-|---|---|---|
-| A | `D-stores.md` (0016) | no |
-| B | `F-admin-ops.md` | no, si no toca `lib/products.ts` |
-| C | `A1-shipping.md` (0017) | no, si no usa 0016 |
+| Chat | Modelo | Paquete | ¿Choca? |
+|---|---|---|---|
+| A | Cursor fast | `D-stores.md` (0016) → PR | no |
+| B | Cursor fast | `F-admin-ops.md` → PR | no, si no toca `lib/products.ts` |
+| C | Cursor fast | `A1-shipping.md` (0017) → PR | no, si no usa 0016 |
+| D | Claude Pro | **revisa A–C** | no codea |
 
 L7 Connect: no. Nombre de plataforma: no. Fiscal: no.
 

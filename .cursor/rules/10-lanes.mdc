@@ -22,4 +22,6 @@ Serializado (humano / un agente a la vez): `middleware.ts`, `package.json`, `pac
 
 `0016` está asignado a L4 stores. No lo uses para otra cosa.
 
+Git: rama `agent/L#-…`, push de ESA rama, `gh pr create --base main`. Nunca push ni merge a `main`. Ver `docs/agents/GIT.md`.
+
 No edites `PLAN.md` / research. No mezcles L1 y L4 en un commit.
