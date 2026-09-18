@@ -23,6 +23,13 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 
 **Resueltos en Fase 2:** checkout mock (CART-02 ✅), guest order lookup (RLS-03 ✅ con HMAC guest_token), orders/addresses pages (CART-04 ✅), Stripe webhook (CHK-07 ✅), validación server precios (CART-01 ✅).
 
+**Corregido 2026-09-17 — el cliente no podía ver su pedido después de pagar.** Dos defectos que se sumaban y dejaban a *todo* comprador en la pantalla de "No pudimos mostrar este pedido":
+
+1. `orders.user_id` **nunca se asignaba** (el INSERT de `createCheckoutSessionAction` no incluía la columna). Como la RLS es `auth.uid() = user_id`, ni el dueño podía releer su pedido: `/account/orders` salía vacío incluso comprando con sesión iniciada. Verificado en prod antes del fix: los pedidos `completed` VIO-2026-0017..0021 tienen `user_id: null`.
+2. La success page solo miraba `?t=` y `?payment_intent=`, pero `/checkout/return` redirige con **`?session_id=`** — el único parámetro que trae el retorno real de Stripe. Ninguno de los tres caminos podía resolver nada. El `guestToken` sí llegaba al cliente (`checkout/page.tsx`) pero era estado muerto: se guardaba y nunca se leía.
+
+Fix: `user_id` se toma de la sesión al crear el pedido, y se agrega `getOrderByStripeSession()` — resuelve por `session_id` **verificando la sesión contra Stripe** (retrieve → `metadata.order_id` → `eq('stripe_session_id')`), sin exponer el `guest_token` al cliente. Pedidos anteriores al fix siguen con `user_id: null`: solo se pueden abrir con su enlace `?t=` o desde el admin.
+
 **Prioridad inmediata:** Fase 3 Visual Search — integración en nav/header, rate limit endpoint, indexación automática.
 
 ---
@@ -94,17 +101,27 @@ TIENDA PÚBLICA
   ProductCard → addItem → cartStore (localStorage viogi_cart)
   /search     → getProducts() server → filter client por q=
 
-CHECKOUT (REAL — Stripe Payment Element)
-  Phase 1: useCart() → validación form client → createPaymentIntentAction(cartItems, formData)
-    → valida precios vs DB → INSERT orders + order_items → stripe.paymentIntents.create
-    → devuelve clientSecret + orderNumber + guestToken
-  Phase 2: <Elements><StripePaymentForm/> → stripe.confirmPayment → redirect /success/[orderId]?t=TOKEN
-  Webhook: POST /api/webhooks/stripe → constructEvent → UPDATE orders SET payment_status
+CHECKOUT (REAL — Stripe Checkout Sessions embebido)
+  Fase 1: useCart() → validación form client → createCheckoutSessionAction(cartItems, formData)
+    → reconcile carrito vs DB → valida precios → valida pickup_point activo
+    → INSERT orders (user_id = sesión o null) + order_items
+    → RESERVA ATÓMICA rpc reserve_products(kind='card')   ← la prenda se aparta AQUÍ
+    → stripe.checkout.sessions.create(ui_mode:'embedded_page', metadata.order_id)
+    → UPDATE orders SET stripe_session_id, payment_reference, guest_token
+    → devuelve clientSecret + orderNumber + guestToken + reservedUntil + cardOnly
+  Fase 2: <EmbeddedCheckout/> → Stripe redirige a /checkout/return?session_id=cs_...
+    → resolveCheckoutReturnAction(sessionId) verifica la sesión CONTRA STRIPE
+    → router.replace /checkout/success/<orderNumber>?session_id=cs_...
+  Webhook: POST /api/webhooks/stripe → constructEvent → mark_order_sold /
+    extend_reservation_for_method / release_reservation + UPDATE orders
 
-GUEST ORDER LOOKUP
-  URL /success/[orderId]?t=HMAC_TOKEN → getOrderByNumber(orderNumber, { guestToken: token })
-  → admin client (bypass RLS) + eq('guest_token', token)
-  Auth user → server client (RLS orders_select_own) + eq('id', orderId)
+ORDER LOOKUP (success page — tres caminos, ninguno adivinable)
+  1. order_number + sesión  → server client, RLS orders_select_own (auth.uid() = user_id)
+  2. order_number + ?t=HMAC → admin client + eq('guest_token', token)
+  3. ?session_id=cs_...     → getOrderByStripeSession: retrieve contra Stripe,
+                              order_id de la metadata + eq('stripe_session_id')
+  El 3 es el que usa el retorno real de Stripe: es lo único que trae la URL.
+  NUNCA se resuelve por payment_intent solo (sería IDOR).
 
 ADDRESSES
   Server Component: SELECT addresses WHERE user_id = auth.uid() ORDER BY is_default DESC
@@ -350,7 +367,8 @@ VISUAL SEARCH
 
 ### lib/ (claves)
 - `lib/products.ts` — anon client, unstable_cache 60s, join product_attributes
-- `lib/orders.ts` — `getOrderByNumber` (auth + guest), `getOrdersByUser`, `getOrderById`
+- `lib/orders.ts` — `getOrderByNumber` (auth + guest), `getOrderByPaymentReference`, `getOrderByStripeSession` (verifica contra Stripe), `getOrdersByUser`, `getOrderById`
+- `lib/brand.ts` — marca de la **plataforma** (env `NEXT_PUBLIC_BRAND_*`); `APP_NAME`/`INSTAGRAM_URL` delegan aquí. OG en `app/layout.tsx` + `products/[slug]/generateMetadata`. No confundir con copy de tienda Viogi.
 - `lib/stripe.ts` — lazy singleton via `getStripe()`; valida que la key no sea `pk_` por error; throws solo cuando se usa si falta la env var (evita romper build en CI)
 - `lib/auth/getOrigin.ts` — `getAuthOrigin()` prioridad `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → headers
 - `lib/supabase/{client,server,admin,middleware}.ts` — bridge cookies documentado

@@ -59,10 +59,19 @@ VIOGI es un e-commerce de streetwear premium con **transacciones reales de diner
    - Webhook `/api/webhooks/stripe` (idempotente, actualiza `payment_status`)
 
 2. **Búsqueda de pedidos de invitados (seguridad crítica)**
-   - `getOrderByNumber`, `getOrderByPaymentReference` en `lib/orders.ts` (guest siempre con `guest_token`; sin lookup por `payment_intent` solo)
-   - Tres caminos diferentes de lookup
+   - `getOrderByNumber`, `getOrderByPaymentReference`, `getOrderByStripeSession` en `lib/orders.ts`
+   - Tres caminos de lookup, y **ninguno** puede resolver un pedido desde un
+     identificador adivinable:
+     1. `order_number` + sesión → RLS `orders_select_own` (`auth.uid() = user_id`)
+     2. `order_number` + `?t=` → admin client + `eq('guest_token', …)`
+     3. `?session_id=cs_…` → **retrieve contra Stripe** + `metadata.order_id` +
+        `eq('stripe_session_id', …)`. Es el camino del retorno real de Stripe.
+   - Nunca por `payment_intent` solo (sería IDOR)
    - Uso de `createAdminClient()` (bypass RLS) + verificación de `guest_token`
    - Token generado como: `HMAC-SHA256(order_number:email, ADMIN_SECRET)`
+   - **Regresión a cubrir:** que el pedido se cree con `user_id` cuando hay
+     sesión. Si vuelve a quedar en null, "Mis Pedidos" se vacía en silencio y
+     el fallo no rompe ningún test de pago.
 
 3. **Autenticación dual (dos sistemas completamente separados)**
    - **Usuarios normales:** Supabase Auth (email/password + Google OAuth) → RLS fuerte
