@@ -59,7 +59,7 @@ VIOGI es un e-commerce de streetwear premium con **transacciones reales de diner
    - Webhook `/api/webhooks/stripe` (idempotente, actualiza `payment_status`)
 
 2. **Búsqueda de pedidos de invitados (seguridad crítica)**
-   - `getOrderByNumber`, `getOrderByPaymentReference`, `getGuestOrderByPaymentIntent` en `lib/orders.ts`
+   - `getOrderByNumber`, `getOrderByPaymentReference` en `lib/orders.ts` (guest siempre con `guest_token`; sin lookup por `payment_intent` solo)
    - Tres caminos diferentes de lookup
    - Uso de `createAdminClient()` (bypass RLS) + verificación de `guest_token`
    - Token generado como: `HMAC-SHA256(order_number:email, ADMIN_SECRET)`

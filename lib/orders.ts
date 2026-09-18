@@ -106,20 +106,6 @@ export async function getOrderByPaymentReference(
   return null;
 }
 
-/** Guest order lookup via Stripe redirect (?payment_intent=pi_...) when token query is missing. */
-export async function getGuestOrderByPaymentIntent(
-  paymentIntentId: string
-): Promise<OrderRow | null> {
-  const supabase = createAdminClient();
-  const { data } = await supabase
-    .from('orders')
-    .select(ORDER_SELECT)
-    .eq('payment_reference', paymentIntentId)
-    .is('user_id', null)
-    .single();
-  return (data as OrderRow) ?? null;
-}
-
 /**
  * Fetch all orders for an authenticated user, newest first.
  * Uses the server client so RLS limits results to that user's orders.

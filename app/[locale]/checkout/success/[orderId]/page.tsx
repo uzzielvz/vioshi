@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
-  getGuestOrderByPaymentIntent,
   getOrderByNumber,
   getOrderByPaymentReference,
 } from '@/lib/orders';
@@ -46,26 +45,24 @@ export default async function OrderSuccessPage({ params, searchParams }: Props) 
 
   const lookupOpts = { userId: user?.id ?? null, guestToken };
 
+  // Guest lookup ALWAYS requires guest_token (?t=). Never resolve by payment_intent alone (IDOR).
   let order =
     (await getOrderByNumber(orderNumber, lookupOpts)) ??
-    (paymentIntentId
-      ? user
-        ? await getOrderByPaymentReference(paymentIntentId, { userId: user.id })
-        : guestToken
-          ? await getOrderByPaymentReference(paymentIntentId, { guestToken })
-          : await getGuestOrderByPaymentIntent(paymentIntentId)
-      : null);
+    (paymentIntentId && user
+      ? await getOrderByPaymentReference(paymentIntentId, { userId: user.id })
+      : paymentIntentId && guestToken
+        ? await getOrderByPaymentReference(paymentIntentId, { guestToken })
+        : null);
 
   if (!order) {
-    // Parche temporal para evitar 404 cuando se pierde sessionStorage después del redirect de Stripe.
-    // Esto permite que el usuario vea un mensaje útil en vez de página no encontrada.
     return (
       <div className="min-h-screen bg-white flex items-center justify-center px-6" style={fontStyle}>
         <div className="max-w-md text-center space-y-6">
-          <p className="text-[15px]">Pago registrado correctamente.</p>
+          <p className="text-[15px]">No pudimos mostrar este pedido</p>
           <p className="text-sm text-gray-600 leading-relaxed">
-            No pudimos cargar los detalles del pedido automáticamente.<br />
-            En unos minutos debería aparecer en <strong>Mis Pedidos</strong>.
+            Si acabas de pagar, revisa el correo de confirmación o entra a{' '}
+            <strong>Mis Pedidos</strong> con la misma cuenta / enlace del correo.
+            No compartas enlaces de checkout: llevan un token personal.
           </p>
           <div className="pt-2">
             <Link
