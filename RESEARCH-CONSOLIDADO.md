@@ -68,7 +68,7 @@ Viogi es un e-commerce Next.js 14 (App Router) con catálogo real en Supabase, a
 | Admin productos | Service role + Storage | ✅ Parcial | `admin/products/actions.ts` |
 | Admin pickup points | Service role | ✅ Completo | `admin/pickup-points/actions.ts` |
 | **Admin brands (pilot)** | Service role + Storage `brand-logos` | 🟡 **En desarrollo (BR-01..05)** | Nueva entidad con logo gestionable desde admin + filtro por marca |
-| Pickup en checkout | **In-memory** `lib/pickupPoints.ts` | 🟡 Inconsistente | No usa tabla DB en checkout |
+| Pickup en checkout | **DB** `pickup_points` vía `getActivePickupPointsAction` + `lib/pickup.ts` | ✅ | Agrupa por municipio; `transfer_day` → “disponible a partir del…” |
 | Visual search | Gemini + pgvector RPC | ✅ Integrado (VS-08…13) | `app/[locale]/visual-search/page.tsx`, `components/{VisualSearchAnalyzer,VisualSearchDotField,VisualSearchResults}.tsx`. Flujo 2-stage `looking → results`: al seleccionar foto se dispara la búsqueda automáticamente (sin crop manual, VS-13); tema claro + dot field + label "MIRANDO" + cross-fades. Header camera (sin `capture`, action sheet nativo iOS) handoff vía sessionStorage + evento `viogi:vs-new` para búsquedas consecutivas. PRO-12 en SearchContent, SearchFilterDrawer reutilizado |
 | Búsqueda texto | Página catálogo `/search` + drawer lateral (sort + categoría); filtro client-side sobre `getProducts()` | ✅ Resuelto (PRO-11) | `search/SearchContent.tsx`, `SearchFilterDrawer.tsx` |
 | Pagos | Stripe Payment Element + webhook | ✅ Completo | `checkout/actions.ts`, `api/webhooks/stripe` |
@@ -226,7 +226,7 @@ VISUAL SEARCH
 |----|----------|-----------|-----------|
 | CART-01 | ~~Carrito no valida precios contra DB~~ | **✅ RESUELTO** — `createPaymentIntentAction` valida vs DB | — |
 | CART-02 | ~~Checkout submit mock~~ | **✅ RESUELTO** — Stripe Payment Element real | — |
-| CART-03 | Pickup points en checkout desde **memoria**, admin edita **DB** | import `lib/pickupPoints` | Media — datos divergentes (pendiente) |
+| CART-03 | ~~Pickup points en checkout desde memoria~~ | Unificado 2026-09-17: DB + `lib/pickup.ts`; `lib/pickupPoints.ts` eliminado | — |
 | CART-04 | ~~Success page no consulta DB~~ | **✅ RESUELTO** — Server Component con `getOrderByNumber` | — |
 
 ### 5.8 i18n y middleware
@@ -309,7 +309,7 @@ VISUAL SEARCH
 3. ~~Endurecer admin auth~~ — **✅ RESUELTO (SEC-03)** HMAC session token + action guards + in-memory rate limit.
 4. **Proteger `/api/visual-search`** — Upstash rate limit o Vercel middleware; cap diario Gemini. *(pendiente)*
 5. ~~Actualizar `.env.example`~~ — **✅ RESUELTO** Stripe keys + instrucciones documentadas.
-6. **Unificar pickup points** — reemplazar `lib/pickupPoints.ts` en checkout por query server. *(pendiente)*
+6. ~~**Unificar pickup points**~~ — hecho 2026-09-17 (`getActivePickupPointsAction`, migración `0015`).
 7. ~~`SELECT REVOKE` columna `embedding`~~ — **✅ RESUELTO (SEC-06)** migración `0011`, no `0005`. El enfoque de 0005 (revoke a nivel columna sobre una tabla con `GRANT ALL`) nunca surtió efecto. `0011` revoca el SELECT de tabla y concede lista blanca de columnas. Ver [`docs/ESQUEMA-REAL.md`](./docs/ESQUEMA-REAL.md).
 8. ~~Sanitizar `next` en auth callback~~ — **✅ RESUELTO (SEC-02)** regex `^/[^/\\]`.
 9. ~~CI: `npm run build` en PR workflow~~ — **✅ RESUELTO (SEC-08)** `.github/workflows/ci.yml`.

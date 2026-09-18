@@ -178,7 +178,7 @@ Ejecutar en Supabase SQL Editor cuando el catálogo real esté listo.
 **Decisión D-01 (pasarela):** Stripe elegido para Fase 2 (Payment Element). MercadoPago diferido.
 **Decisión D-04 (guest lookup):** HMAC `guest_token` + fallback `payment_intent` en success page.
 
-**Estado actual (2026-05-22):** CHK-01..10 completados. E2E local OK (`payment_intent.succeeded`, success page). **Known gap:** UI pickup en checkout sigue leyendo `lib/pickupPoints.ts`; validación server usa DB (`CHK-06` parcial UI).
+**Estado actual (2026-09-17):** CHK-01..10 + pickup unificado. Checkout carga `pickup_points` activos desde DB (`getActivePickupPointsAction`), agrupa por municipio y muestra disponibilidad según `transfer_day`. `lib/pickupPoints.ts` eliminado.
 
 ---
 

@@ -7,7 +7,9 @@ import { getStripe } from '@/lib/stripe';
 import { getSettings, isCardOnly, DEFERRED_PAYMENT_METHODS } from '@/lib/settings';
 import { normalizePhone } from '@/lib/phone';
 import { STANDARD_SHIPPING_COST, EXPRESS_SHIPPING_COST } from '@/lib/constants';
+import { mapPickupPointRow, type PickupPointRow } from '@/lib/pickup';
 import type { CartItem } from '@/types';
+import type { PickupPoint } from '@/types/delivery';
 import type Stripe from 'stripe';
 
 // ─── Input types ─────────────────────────────────────────────────────────────
@@ -90,6 +92,26 @@ export async function getCheckoutSettingsAction() {
     cardReserveMinutes: s.card_reserve_minutes,
     voucherHours: s.voucher_hours,
   };
+}
+
+/** Active pickup points for checkout (public read via service role for consistency). */
+export async function getActivePickupPointsAction(): Promise<PickupPoint[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('pickup_points')
+    .select(
+      'id, name, address, city, state, type, additional_cost_mxn, available_hours, available_days, estimated_days, is_active, municipality, whatsapp, maps_url, transfer_day, is_dropoff'
+    )
+    .eq('is_active', true)
+    .order('municipality', { ascending: true })
+    .order('name', { ascending: true });
+
+  if (error || !data) {
+    console.error('[checkout] pickup_points load failed', error);
+    return [];
+  }
+
+  return (data as PickupPointRow[]).map(mapPickupPointRow);
 }
 
 export async function createCheckoutSessionAction(

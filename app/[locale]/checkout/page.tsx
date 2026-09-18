@@ -8,7 +8,13 @@ import { formatPrice } from '@/lib/formatters';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/store/cartStore';
-import { PICKUP_POINTS, getPickupPointById } from '@/lib/pickupPoints';
+import {
+  formatAvailabilityLabel,
+  groupPickupPointsByMunicipality,
+  nextAvailableDate,
+  toDateInputValue,
+} from '@/lib/pickup';
+import type { PickupPoint } from '@/types/delivery';
 import {
   DELIVERY_METHODS,
   EXPRESS_SHIPPING_COST,
@@ -20,6 +26,7 @@ import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe
 import {
   createCheckoutSessionAction,
   getCheckoutSettingsAction,
+  getActivePickupPointsAction,
   cancelCheckoutAction,
   syncCartFromDbAction,
 } from './actions';
@@ -251,6 +258,8 @@ export default function CheckoutPage() {
     pickup?: string;
     general?: string;
   }>({});
+  const [pickupPoints, setPickupPoints] = useState<PickupPoint[]>([]);
+  const [pickupPointsLoading, setPickupPointsLoading] = useState(true);
 
   // Fix stale localStorage cart (slug ids / old prices) before checkout submit
   useEffect(() => {
@@ -271,6 +280,19 @@ export default function CheckoutPage() {
       cancelled = true;
     };
   }, [cart, replaceItems]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPickupPointsLoading(true);
+    getActivePickupPointsAction().then((points) => {
+      if (cancelled) return;
+      setPickupPoints(points);
+      setPickupPointsLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     email: '',
@@ -295,9 +317,24 @@ export default function CheckoutPage() {
   });
 
   const selectedPickupPoint = useMemo(
-    () => (formData.pickupPointId ? getPickupPointById(formData.pickupPointId) : undefined),
-    [formData.pickupPointId]
+    () => pickupPoints.find((p) => p.id === formData.pickupPointId),
+    [formData.pickupPointId, pickupPoints]
   );
+
+  const pickupByMunicipality = useMemo(
+    () => groupPickupPointsByMunicipality(pickupPoints),
+    [pickupPoints]
+  );
+
+  const pickupAvailabilityLabel = useMemo(
+    () => (selectedPickupPoint ? formatAvailabilityLabel(selectedPickupPoint) : ''),
+    [selectedPickupPoint]
+  );
+
+  const pickupMinDate = useMemo(() => {
+    if (!selectedPickupPoint) return toDateInputValue(new Date(Date.now() + 2 * 86400000));
+    return toDateInputValue(nextAvailableDate(selectedPickupPoint.transferDay));
+  }, [selectedPickupPoint]);
 
   const isSubmittingRef = useRef(false);
 
@@ -350,11 +387,11 @@ export default function CheckoutPage() {
     if (formData.deliveryMethod === 'home') {
       return formData.shippingMethod === 'express' ? EXPRESS_SHIPPING_COST : STANDARD_SHIPPING_COST;
     }
-    if (formData.deliveryMethod === 'pickup' && formData.pickupPointId) {
-      return getPickupPointById(formData.pickupPointId)?.additionalCost ?? 0;
+    if (formData.deliveryMethod === 'pickup' && selectedPickupPoint) {
+      return selectedPickupPoint.additionalCost;
     }
     return 0;
-  }, [formData.deliveryMethod, formData.shippingMethod, formData.pickupPointId]);
+  }, [formData.deliveryMethod, formData.shippingMethod, selectedPickupPoint]);
 
   useEffect(() => {
     updateShippingCost(shippingCost);
@@ -363,7 +400,11 @@ export default function CheckoutPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    const updatedFormData = { ...formData, [name]: type === 'checkbox' ? checked : value };
+    const updatedFormData = {
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value,
+      ...(name === 'pickupPointId' ? { pickupDate: '' } : {}),
+    };
     setFormData(updatedFormData);
 
     if (['address', 'colonia', 'state', 'zipCode', 'deliveryMethod', 'pickupPointId'].includes(name)) {
@@ -695,23 +736,29 @@ export default function CheckoutPage() {
 
                       <div className="pt-2">
                         <p className={`${SECTION_LABEL} mb-3`}>{t('select_pickup_point_label')}</p>
-                        <CustomSelect name="pickupPointId" value={formData.pickupPointId} onChange={handleInputChange} required>
-                          <option value="">{t('select_pickup_point_placeholder')}</option>
-                          <optgroup label={t('viogi_stores')}>
-                            {PICKUP_POINTS.filter(p => p.type === 'flagship' || p.type === 'retail').map(point => (
-                              <option key={point.id} value={point.id}>
-                                {point.name}{point.additionalCost > 0 ? ` (+${formatPrice(point.additionalCost, locale)})` : ''}
-                              </option>
+                        {pickupPointsLoading ? (
+                          <p className="text-[10px] text-gray-400 uppercase tracking-widest">
+                            {t('pickup_points_loading')}
+                          </p>
+                        ) : pickupByMunicipality.length === 0 ? (
+                          <p className="text-[10px] text-red-500">{t('pickup_points_empty')}</p>
+                        ) : (
+                          <CustomSelect name="pickupPointId" value={formData.pickupPointId} onChange={handleInputChange} required>
+                            <option value="">{t('select_pickup_point_placeholder')}</option>
+                            {pickupByMunicipality.map(([municipio, points]) => (
+                              <optgroup key={municipio} label={municipio.toUpperCase()}>
+                                {points.map((point) => (
+                                  <option key={point.id} value={point.id}>
+                                    {point.name}
+                                    {point.additionalCost > 0
+                                      ? ` (+${formatPrice(point.additionalCost, locale)})`
+                                      : ''}
+                                  </option>
+                                ))}
+                              </optgroup>
                             ))}
-                          </optgroup>
-                          <optgroup label={t('authorized_points')}>
-                            {PICKUP_POINTS.filter(p => p.type === 'partner').map(point => (
-                              <option key={point.id} value={point.id}>
-                                {point.name}{point.additionalCost > 0 ? ` (+${formatPrice(point.additionalCost, locale)})` : ''}
-                              </option>
-                            ))}
-                          </optgroup>
-                        </CustomSelect>
+                          </CustomSelect>
+                        )}
                         {formErrors.pickup && (
                           <p data-error className="text-[10px] text-red-500 mt-2">{formErrors.pickup}</p>
                         )}
@@ -720,10 +767,23 @@ export default function CheckoutPage() {
                       {formData.pickupPointId && selectedPickupPoint && (
                         <div className="pt-4 pl-1 space-y-0.5">
                           <p className="text-[11px] font-medium">{selectedPickupPoint.name}</p>
-                          <p className="text-[10px] text-gray-400">{selectedPickupPoint.address}, {selectedPickupPoint.city}, {selectedPickupPoint.state}</p>
-                          <p className="text-[10px] text-gray-400">{selectedPickupPoint.estimatedDays} · {selectedPickupPoint.availableHours}</p>
+                          <p className="text-[10px] text-gray-400">
+                            {selectedPickupPoint.address}, {selectedPickupPoint.city},{' '}
+                            {selectedPickupPoint.state}
+                          </p>
+                          <p className="text-[10px] text-gray-400">{pickupAvailabilityLabel}</p>
+                          {selectedPickupPoint.availableHours && (
+                            <p className="text-[10px] text-gray-400">{selectedPickupPoint.availableHours}</p>
+                          )}
+                          {selectedPickupPoint.isDropoff && (
+                            <p className="text-[10px] text-gray-500 uppercase tracking-widest">
+                              {t('pickup_dropoff_hub')}
+                            </p>
+                          )}
                           {selectedPickupPoint.additionalCost > 0 && (
-                            <p className="text-[10px] text-gray-400">{t('cost')} {formatPrice(selectedPickupPoint.additionalCost, locale)}</p>
+                            <p className="text-[10px] text-gray-400">
+                              {t('cost')} {formatPrice(selectedPickupPoint.additionalCost, locale)}
+                            </p>
                           )}
                         </div>
                       )}
@@ -737,7 +797,7 @@ export default function CheckoutPage() {
                               name="pickupDate"
                               value={formData.pickupDate}
                               onChange={handleInputChange}
-                              min={new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                              min={pickupMinDate}
                               className={INPUT}
                             />
                           </div>
