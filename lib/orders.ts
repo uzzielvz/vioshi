@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { getStripe } from '@/lib/stripe';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,7 +61,10 @@ export async function getOrderByNumber(
       .select(ORDER_SELECT)
       .eq('order_number', orderNumber)
       .single();
-    return (data as OrderRow) ?? null;
+    if (data) return data as OrderRow;
+    // Sin `return null` a propósito: quien compró como invitado y después creó
+    // cuenta tiene el pedido con user_id null, así que la RLS no se lo entrega.
+    // Si trae el token de su correo, sigue siendo suyo y debe poder verlo.
   }
 
   if (options.guestToken) {
@@ -89,7 +93,8 @@ export async function getOrderByPaymentReference(
       .select(ORDER_SELECT)
       .eq('payment_reference', paymentIntentId)
       .single();
-    return (data as OrderRow) ?? null;
+    if (data) return data as OrderRow;
+    // Mismo caso que arriba: la sesión no invalida un guest_token válido.
   }
 
   if (options.guestToken) {
@@ -104,6 +109,42 @@ export async function getOrderByPaymentReference(
   }
 
   return null;
+}
+
+/**
+ * Lookup tras el redirect de Stripe (?session_id=cs_...).
+ *
+ * Es el único camino que le queda a un invitado que vuelve del pago: el
+ * guest_token no viaja en la URL de retorno y `payment_intent` tampoco.
+ *
+ * El session_id viaja en la URL, así que NO basta con confiar en él: se
+ * verifica CONTRA STRIPE antes de tocar la base, y además el pedido tiene que
+ * ser el que Stripe trae en la metadata Y tener guardado ese mismo
+ * stripe_session_id. Esa doble condición es lo que lo hace seguro sin token:
+ * un `cs_...` inventado no existe en Stripe, y uno real solo lo tiene quien
+ * hizo ese pago.
+ */
+export async function getOrderByStripeSession(sessionId: string): Promise<OrderRow | null> {
+  if (!sessionId.startsWith('cs_')) return null;
+
+  let orderId: string | undefined;
+  try {
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
+    orderId = session.metadata?.order_id;
+  } catch (err) {
+    console.error('[orders] no se pudo verificar la sesión con Stripe:', err);
+    return null;
+  }
+  if (!orderId) return null;
+
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from('orders')
+    .select(ORDER_SELECT)
+    .eq('id', orderId)
+    .eq('stripe_session_id', sessionId)
+    .single();
+  return (data as OrderRow) ?? null;
 }
 
 /**

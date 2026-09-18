@@ -1,8 +1,8 @@
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
   getOrderByNumber,
   getOrderByPaymentReference,
+  getOrderByStripeSession,
 } from '@/lib/orders';
 import { createClient } from '@/lib/supabase/server';
 import ClearCartOnMount from './_components/ClearCartOnMount';
@@ -11,6 +11,7 @@ interface Props {
   params: { locale: string; orderId: string };
   searchParams: {
     t?: string;
+    session_id?: string;
     payment_intent?: string;
     redirect_status?: string;
   };
@@ -26,17 +27,23 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled:  'Cancelado',
 };
 
+// Los estados salen del check constraint de `orders` (0012). Faltaban
+// `awaiting_payment` y `expired`, que son justo los de OXXO/SPEI: sin ellos se
+// le mostraba al cliente el string crudo de la base.
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  pending:   'Pago pendiente',
-  completed: 'Pago completado',
-  failed:    'Pago fallido',
-  refunded:  'Reembolsado',
+  pending:          'Pago pendiente',
+  awaiting_payment: 'Esperando tu pago',
+  completed:        'Pago completado',
+  failed:           'Pago fallido',
+  expired:          'Pago vencido',
+  refunded:         'Reembolsado',
 };
 
 export default async function OrderSuccessPage({ params, searchParams }: Props) {
   const { locale, orderId: orderNumberParam } = params;
   const orderNumber = decodeURIComponent(orderNumberParam);
   const guestToken = searchParams.t ?? null;
+  const sessionId = searchParams.session_id ?? null;
   const paymentIntentId = searchParams.payment_intent ?? null;
 
   // Resolve current user (may be null for guests)
@@ -45,14 +52,21 @@ export default async function OrderSuccessPage({ params, searchParams }: Props) 
 
   const lookupOpts = { userId: user?.id ?? null, guestToken };
 
-  // Guest lookup ALWAYS requires guest_token (?t=). Never resolve by payment_intent alone (IDOR).
-  let order =
+  // Tres caminos, y ninguno resuelve un pedido a partir de un identificador
+  // adivinable:
+  //   1. order_number + sesión del usuario (RLS) o + guest_token (HMAC)
+  //   2. payment_intent + esa misma prueba de identidad
+  //   3. session_id, verificado CONTRA STRIPE antes de tocar la base
+  //
+  // El 3 es el que usa el retorno de Stripe: es lo único que trae la URL
+  // (`/checkout/return` redirige con `?session_id=`), y sessionStorage no
+  // sobrevive si el cliente vuelve desde otra pestaña o desde el banco.
+  const order =
     (await getOrderByNumber(orderNumber, lookupOpts)) ??
-    (paymentIntentId && user
-      ? await getOrderByPaymentReference(paymentIntentId, { userId: user.id })
-      : paymentIntentId && guestToken
-        ? await getOrderByPaymentReference(paymentIntentId, { guestToken })
-        : null);
+    (paymentIntentId && (user || guestToken)
+      ? await getOrderByPaymentReference(paymentIntentId, lookupOpts)
+      : null) ??
+    (sessionId ? await getOrderByStripeSession(sessionId) : null);
 
   if (!order) {
     return (
