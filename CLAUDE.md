@@ -12,6 +12,7 @@ Read these before making architectural changes:
 
 | Document | Purpose |
 |----------|---------|
+| [`AGENTS.md`](./AGENTS.md) | **Parallel agents** — lanes, worktrees, anti-collision |
 | [`RESEARCH-CONSOLIDADO.md`](./RESEARCH-CONSOLIDADO.md) | **SSOT** — verified technical facts, risks, architecture |
 | [`PLAN.md`](./PLAN.md) | Living roadmap and prioritized backlog |
 | [`CONTEXT.md`](./CONTEXT.md) | Quick repo map, env vars, key paths |
