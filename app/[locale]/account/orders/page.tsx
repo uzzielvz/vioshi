@@ -2,118 +2,117 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getOrdersByUser } from '@/lib/orders';
+import type { Locale } from '@/i18n';
+import AccountShell from '../_components/AccountShell';
+import { getAccountDisplayName } from '../_components/accountDisplayName';
 
 interface Props {
   params: { locale: string };
 }
 
-const fontStyle: React.CSSProperties = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-};
-
 const STATUS_LABELS: Record<string, string> = {
-  pending:    'Pendiente',
+  pending: 'Pendiente',
   processing: 'En proceso',
-  shipped:    'Enviado',
-  delivered:  'Entregado',
-  cancelled:  'Cancelado',
+  shipped: 'Enviado',
+  delivered: 'Entregado',
+  cancelled: 'Cancelado',
 };
 
 export default async function OrdersPage({ params }: Props) {
-  const { locale } = params;
+  const locale = params.locale as Locale;
 
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect(`/${locale}/account`);
   }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name')
+    .eq('id', user.id)
+    .maybeSingle();
+
   const orders = await getOrdersByUser();
+  const displayName = getAccountDisplayName(user, profile?.name ?? null);
 
   return (
-    <div className="min-h-screen bg-white" style={fontStyle}>
-      <div className="max-w-3xl mx-auto px-6 py-10">
-
-        {/* Header */}
-        <div className="mb-8 border-b border-gray-200 pb-6">
-          <Link
-            href={`/${locale}/account`}
-            className="inline-flex items-center gap-2 hover:opacity-60 transition-opacity mb-4"
-            style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}
-          >
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            Volver a Mi Cuenta
-          </Link>
-          <h1 style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#000' }}>
+    <AccountShell
+      locale={locale}
+      displayName={displayName}
+      email={user.email ?? ''}
+    >
+      <div>
+        <header className="mb-8 pb-6 border-b border-gray-200">
+          <h1 className="text-[11px] font-semibold uppercase tracking-widest text-black">
             Mis Pedidos
           </h1>
-        </div>
+        </header>
 
         {orders.length === 0 ? (
-          <div className="py-16 text-center">
-            <p style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div className="py-12">
+            <p className="text-[11px] uppercase tracking-widest text-gray-400">
               No tienes pedidos
             </p>
-            <p className="mt-2" style={{ fontSize: '11px', color: '#999' }}>
+            <p className="mt-2 text-[11px] text-gray-400">
               Cuando realices una compra, tus pedidos aparecerán aquí
             </p>
             <Link
               href={`/${locale}/collections/all`}
-              className="inline-block mt-6 bg-black text-white py-2.5 px-8 hover:opacity-75 transition-opacity"
-              style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+              className="inline-block mt-6 bg-black text-white py-2.5 px-8 text-[11px] uppercase tracking-widest hover:opacity-80 transition-opacity"
             >
               Explorar Productos
             </Link>
           </div>
         ) : (
-          <div>
+          <ul>
             {orders.map((order) => {
-              const itemNames = order.order_items.map((i) => i.product_name).join(', ');
-              const formattedDate = new Date(order.created_at).toLocaleDateString('es-MX', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              });
+              const itemNames = order.order_items
+                .map((i) => i.product_name)
+                .join(', ');
+              const formattedDate = new Date(order.created_at).toLocaleDateString(
+                'es-MX',
+                { year: 'numeric', month: 'long', day: 'numeric' }
+              );
 
               return (
-                <Link
-                  key={order.id}
-                  href={`/${locale}/account/orders/${order.id}`}
-                  className="flex items-start justify-between border-b border-gray-200 py-5 hover:opacity-60 transition-opacity"
-                >
-                  <div className="space-y-1.5 min-w-0 pr-4">
-                    <p style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#000' }}>
-                      #{order.order_number}
-                    </p>
-                    <p style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      {formattedDate}
-                    </p>
-                    <p style={{ fontSize: '10px', color: '#999' }} className="truncate">
-                      {itemNames}
-                    </p>
-                    {order.tracking_number && (
-                      <p style={{ fontSize: '10px', color: '#999', fontFamily: 'monospace', textTransform: 'uppercase' }}>
-                        Rastreo: {order.tracking_number}
+                <li key={order.id}>
+                  <Link
+                    href={`/${locale}/account/orders/${order.id}`}
+                    className="flex items-start justify-between gap-4 py-5 border-b border-gray-100 hover:opacity-60 transition-opacity"
+                  >
+                    <div className="space-y-1.5 min-w-0 pr-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-black">
+                        #{order.order_number}
                       </p>
-                    )}
-                  </div>
-                  <div className="text-right space-y-1.5 flex-shrink-0">
-                    <p style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#000' }}>
-                      ${Number(order.total_mxn).toFixed(2)}
-                    </p>
-                    <p style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      {STATUS_LABELS[order.status] ?? order.status}
-                    </p>
-                  </div>
-                </Link>
+                      <p className="text-[10px] uppercase tracking-widest text-gray-400">
+                        {formattedDate}
+                      </p>
+                      <p className="text-[10px] text-gray-400 truncate">{itemNames}</p>
+                      {order.tracking_number && (
+                        <p className="text-[10px] text-gray-400 font-mono uppercase">
+                          Rastreo: {order.tracking_number}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right space-y-1.5 flex-shrink-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-black">
+                        ${Number(order.total_mxn).toFixed(2)}
+                      </p>
+                      <p className="text-[10px] uppercase tracking-widest text-gray-400">
+                        {STATUS_LABELS[order.status] ?? order.status}
+                      </p>
+                    </div>
+                  </Link>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
       </div>
-    </div>
+    </AccountShell>
   );
 }

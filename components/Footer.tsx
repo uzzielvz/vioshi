@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
+import { brand } from '@/lib/brand';
 
 export default function Footer() {
   const t = useTranslations('footer');
@@ -14,7 +15,7 @@ export default function Footer() {
       <div className="flex items-center justify-between px-6 md:px-8 py-4">
         <div className="flex items-center gap-6">
           <a
-            href="https://www.instagram.com/viogi_/?hl=es"
+            href={brand.instagramUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="uppercase tracking-wide hover:opacity-60 transition-opacity"
@@ -47,7 +48,7 @@ export default function Footer() {
           }}
           suppressHydrationWarning
         >
-          {t('copyright', { year: currentYear })}
+          © {currentYear} {brand.name}
         </p>
       </div>
     </footer>

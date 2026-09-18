@@ -42,3 +42,4 @@ Merge to `main` only after `npm run type-check` and `npm run lint`.
 - Mario sells **inside** Viogi store (`owner` column for payouts)
 - Pickup price: **per row** in `pickup_points.additional_cost_mxn`
 - Display prices: **IVA included** in `price_mxn`. Do **not** add 16% at checkout. Do **not** show an IVA line in cart, order summary, or Stripe line items. Persist `tax_mxn = 0`.
+- Platform display name: **`lib/brand.ts`** + `NEXT_PUBLIC_BRAND_*` (do not hardcode platform shell as "VIOGI"; store-facing Viogi copy is separate).

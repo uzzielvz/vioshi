@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
+import { brand } from '@/lib/brand';
 
 const fontStyle: React.CSSProperties = {
   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -60,7 +61,7 @@ export default function VenderPage() {
                 Solicitud Enviada
               </h1>
               <p style={{ fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
-                Gracias por tu interés en vender con VIOGI. Revisaremos tu
+                Gracias por tu interés en vender con {brand.name}. Revisaremos tu
                 solicitud y nos pondremos en contacto contigo pronto.
               </p>
             </div>
@@ -84,7 +85,7 @@ export default function VenderPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="uppercase tracking-wide mb-3" style={{ fontSize: '11px', fontWeight: 600, color: '#000' }}>
-            Vende con VIOGI
+            Vende con {brand.name}
           </h1>
           <p style={{ fontSize: '11px', color: '#666', lineHeight: '1.7', maxWidth: '480px', margin: '0 auto' }}>
             Únete a nuestra comunidad de marcas y diseñadores. Comparte tu
@@ -253,7 +254,7 @@ export default function VenderPage() {
               </p>
               <textarea
                 name="message"
-                placeholder="Describe tu marca, tu visión y por qué quieres vender en VIOGI..."
+                placeholder={`Describe tu marca, tu visión y por qué quieres vender en ${brand.name}...`}
                 required
                 rows={6}
                 value={formData.message}

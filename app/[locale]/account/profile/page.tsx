@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { Locale } from '@/i18n';
+import AccountShell from '../_components/AccountShell';
+import { getAccountDisplayName } from '../_components/accountDisplayName';
 import ProfileForm from './_components/ProfileForm';
 
 export default async function ProfilePage({
@@ -26,23 +28,20 @@ export default async function ProfilePage({
     .eq('id', user.id)
     .maybeSingle();
 
+  const displayName = getAccountDisplayName(user, profile?.name ?? null);
+
   return (
-    <main className="min-h-screen bg-white pt-16">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <Link
-            href={`/${locale}/account`}
-            className="text-sm uppercase tracking-wider text-gray-600 hover:text-black transition-colors inline-flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Volver a Mi Cuenta
-          </Link>
-          <h1 className="text-3xl font-bold uppercase tracking-wider mt-4">
+    <AccountShell
+      locale={locale}
+      displayName={displayName}
+      email={user.email ?? ''}
+    >
+      <div>
+        <header className="mb-8 pb-6 border-b border-gray-200">
+          <h1 className="text-[11px] font-semibold uppercase tracking-widest text-black">
             Mi Perfil
           </h1>
-        </div>
+        </header>
 
         <ProfileForm
           email={user.email ?? ''}
@@ -50,46 +49,21 @@ export default async function ProfilePage({
           initialPhone={profile?.phone ?? ''}
         />
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6 md:p-8 mt-6">
-          <h2 className="text-sm uppercase tracking-wider font-medium mb-4">
+        <div className="mt-10 pt-8 border-t border-gray-200">
+          <h2 className="text-[11px] font-semibold uppercase tracking-widest text-black mb-3">
             Contraseña
           </h2>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-[11px] text-gray-400 mb-5 max-w-md">
             Para cambiar tu contraseña te enviaremos un enlace de recuperación a tu correo.
           </p>
           <Link
             href={`/${locale}/account/forgot-password`}
-            className="inline-block border-2 border-black text-black px-6 py-3 rounded uppercase tracking-wider font-medium hover:bg-black hover:text-white transition-colors text-sm"
+            className="inline-block border border-black text-black px-6 py-2.5 text-[11px] uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
           >
             Cambiar contraseña
           </Link>
         </div>
-
-        <div className="grid md:grid-cols-2 gap-4 mt-6">
-          <Link
-            href={`/${locale}/account/orders`}
-            className="bg-white border border-gray-200 rounded-lg p-6 hover:border-black transition-colors"
-          >
-            <h3 className="text-sm uppercase tracking-wider font-medium mb-2">
-              Mis Pedidos
-            </h3>
-            <p className="text-sm text-gray-600">
-              Ver historial de compras y tracking
-            </p>
-          </Link>
-          <Link
-            href={`/${locale}/account/addresses`}
-            className="bg-white border border-gray-200 rounded-lg p-6 hover:border-black transition-colors"
-          >
-            <h3 className="text-sm uppercase tracking-wider font-medium mb-2">
-              Mis Direcciones
-            </h3>
-            <p className="text-sm text-gray-600">
-              Gestiona tus direcciones de envío
-            </p>
-          </Link>
-        </div>
       </div>
-    </main>
+    </AccountShell>
   );
 }

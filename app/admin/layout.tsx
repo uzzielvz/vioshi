@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
+import { brand } from '@/lib/brand'
 import '../globals.css'
 import Sidebar from './_components/Sidebar'
 
 export const metadata: Metadata = {
-  title: 'VIOGI Admin',
+  title: `${brand.name} Admin`,
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

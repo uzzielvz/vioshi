@@ -1,4 +1,5 @@
 import SupportNav from '@/components/SupportNav';
+import { brand } from '@/lib/brand';
 
 const fontStyle = {
   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -28,12 +29,12 @@ export default function LegalPage() {
             </h2>
             <div className="space-y-4">
               <p style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
-                Al acceder y utilizar el sitio web de VIOGI, aceptas cumplir con estos términos
+                Al acceder y utilizar el sitio web de {brand.name}, aceptas cumplir con estos términos
                 y condiciones de uso. Si no estás de acuerdo con alguna parte de estos términos,
                 te pedimos que no utilices nuestro sitio.
               </p>
               <p style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
-                VIOGI se reserva el derecho de modificar estos términos en cualquier momento.
+                {brand.name} se reserva el derecho de modificar estos términos en cualquier momento.
                 Los cambios serán efectivos inmediatamente después de su publicación en el sitio.
               </p>
             </div>
@@ -48,7 +49,7 @@ export default function LegalPage() {
             </h2>
             <div className="space-y-4">
               <p style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
-                En VIOGI, respetamos tu privacidad y nos comprometemos a proteger tus datos personales.
+                En {brand.name}, respetamos tu privacidad y nos comprometemos a proteger tus datos personales.
                 Esta política describe cómo recopilamos, utilizamos y protegemos tu información.
               </p>
               <p
@@ -88,7 +89,7 @@ export default function LegalPage() {
             <p style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
               Todo el contenido de este sitio, incluyendo pero no limitado a textos, gráficos,
               logos, imágenes, clips de audio, descargas digitales y compilaciones de datos,
-              es propiedad de VIOGI o sus proveedores de contenido y está protegido por las
+              es propiedad de {brand.name} o sus proveedores de contenido y está protegido por las
               leyes de propiedad intelectual de México e internacionales.
             </p>
           </section>
@@ -116,7 +117,7 @@ export default function LegalPage() {
             </h2>
             <p style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
               Para cualquier consulta legal, puedes contactarnos en:{' '}
-              <span style={{ color: '#000', fontWeight: 500 }}>legal@viogi.com</span>
+              <span style={{ color: '#000', fontWeight: 500 }}>{brand.legalEmail}</span>
             </p>
           </section>
         </div>

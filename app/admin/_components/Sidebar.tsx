@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import LogoutButton from './LogoutButton'
+import { brand } from '@/lib/brand'
 
 const navFont = {
   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -22,7 +23,7 @@ export default function Sidebar() {
     <aside className="w-60 bg-black flex flex-col min-h-screen px-6 py-8 shrink-0">
       <Link href="/es" className="mb-8">
         <div className="font-logo tracking-widest text-white leading-none" style={{ fontSize: '18px' }}>
-          VIOGI
+          {brand.name}
         </div>
         <div
           className="uppercase tracking-widest text-white/40 mt-0.5"

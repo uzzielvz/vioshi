@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
 import { updateProfileAction, type ProfileUpdateState } from '../actions';
 
-const inputClass =
-  'w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black disabled:bg-gray-50 disabled:text-gray-500 text-sm';
+const INPUT =
+  'w-full py-3 border-b border-gray-200 bg-transparent focus:outline-none focus:border-black disabled:text-gray-400 disabled:cursor-not-allowed text-[11px] transition-colors';
 
-const labelClass = 'block text-xs uppercase tracking-wider text-gray-500 mb-2';
+const LABEL = 'text-[9px] uppercase tracking-widest text-gray-400 mb-1';
 
 function SaveButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
@@ -15,7 +15,7 @@ function SaveButton({ disabled }: { disabled: boolean }) {
     <button
       type="submit"
       disabled={pending || disabled}
-      className="flex-1 bg-black text-white py-3 rounded uppercase tracking-wider font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+      className="flex-1 bg-black text-white py-2.5 text-[11px] uppercase tracking-widest font-medium hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
     >
       {pending ? 'Guardando...' : 'Guardar cambios'}
     </button>
@@ -38,7 +38,6 @@ export default function ProfileForm({ email, initialName, initialPhone }: Props)
   const [name, setName] = useState(initialName);
   const [phone, setPhone] = useState(initialPhone);
 
-  // Cuando el guardado tiene éxito, salimos de modo edición
   useEffect(() => {
     if (state && 'ok' in state) {
       setIsEditing(false);
@@ -52,100 +51,96 @@ export default function ProfileForm({ email, initialName, initialPhone }: Props)
   };
 
   return (
-    <form action={formAction} className="bg-white border border-gray-200 rounded-lg p-6 md:p-8">
-      <div className="space-y-6">
+    <form action={formAction} className="space-y-8">
+      <div>
+        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-black mb-5">
+          Información personal
+        </h2>
         <div>
-          <h2 className="text-sm uppercase tracking-wider font-medium mb-4">
-            Información personal
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className={labelClass}>
-                Nombre completo
-              </label>
-              <input
-                id="name"
-                type="text"
-                name="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={!isEditing}
-                required
-                className={inputClass}
-              />
-            </div>
+          <label htmlFor="name" className={LABEL}>
+            Nombre completo
+          </label>
+          <input
+            id="name"
+            type="text"
+            name="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={!isEditing}
+            required
+            className={INPUT}
+          />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-black mb-5">
+          Información de contacto
+        </h2>
+        <div className="space-y-5">
+          <div>
+            <label htmlFor="email" className={LABEL}>
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              disabled
+              className={INPUT}
+            />
+            <p className="text-[10px] text-gray-400 mt-1">
+              El email no se puede cambiar desde aquí.
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="phone" className={LABEL}>
+              Teléfono (opcional)
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              name="phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              disabled={!isEditing}
+              placeholder="+52 55 1234 5678"
+              className={INPUT}
+            />
           </div>
         </div>
+      </div>
 
-        <div>
-          <h2 className="text-sm uppercase tracking-wider font-medium mb-4">
-            Información de contacto
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className={labelClass}>
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                disabled
-                className={inputClass}
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                El email no se puede cambiar desde aquí.
-              </p>
-            </div>
+      {state && 'error' in state && (
+        <p className="text-[10px] text-red-500">{state.error}</p>
+      )}
 
-            <div>
-              <label htmlFor="phone" className={labelClass}>
-                Teléfono (opcional)
-              </label>
-              <input
-                id="phone"
-                type="tel"
-                name="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                disabled={!isEditing}
-                placeholder="+52 55 1234 5678"
-                className={inputClass}
-              />
-            </div>
-          </div>
-        </div>
+      {state && 'ok' in state && !isEditing && (
+        <p className="text-[10px] text-green-600">Perfil actualizado correctamente.</p>
+      )}
 
-        {state && 'error' in state && (
-          <p className="text-xs text-red-500">{state.error}</p>
-        )}
-
-        {state && 'ok' in state && !isEditing && (
-          <p className="text-xs text-green-600">Perfil actualizado correctamente.</p>
-        )}
-
-        <div className="flex gap-3 pt-4 border-t border-gray-200">
-          {!isEditing ? (
+      <div className="flex gap-3 pt-4 border-t border-gray-100">
+        {!isEditing ? (
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="flex-1 bg-black text-white py-2.5 text-[11px] uppercase tracking-widest font-medium hover:opacity-80 transition-opacity"
+          >
+            Editar perfil
+          </button>
+        ) : (
+          <>
+            <SaveButton disabled={!name.trim()} />
             <button
               type="button"
-              onClick={() => setIsEditing(true)}
-              className="flex-1 bg-black text-white py-3 rounded uppercase tracking-wider font-medium hover:bg-gray-800 transition-colors text-sm"
+              onClick={cancelEdit}
+              className="flex-1 border border-black text-black py-2.5 text-[11px] uppercase tracking-widest font-medium hover:bg-black hover:text-white transition-colors"
             >
-              Editar perfil
+              Cancelar
             </button>
-          ) : (
-            <>
-              <SaveButton disabled={!name.trim()} />
-              <button
-                type="button"
-                onClick={cancelEdit}
-                className="flex-1 border-2 border-black text-black py-3 rounded uppercase tracking-wider font-medium hover:bg-black hover:text-white transition-colors text-sm"
-              >
-                Cancelar
-              </button>
-            </>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </form>
   );

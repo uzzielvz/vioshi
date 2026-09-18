@@ -30,6 +30,7 @@ import {
   cancelCheckoutAction,
   syncCartFromDbAction,
 } from './actions';
+import { brand } from '@/lib/brand';
 import {
   formatStripeClientError,
   logCheckoutDebug,
@@ -537,7 +538,7 @@ export default function CheckoutPage() {
                 textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
               }}
             >
-              VIOGI
+              {brand.name}
             </button>
             {/* Back to cart */}
             <button

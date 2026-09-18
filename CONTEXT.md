@@ -292,6 +292,7 @@ Declaradas en `.env.example` (no se leyó `.env.local`):
 - `app/[locale]/account/orders/page.tsx` y `app/[locale]/account/addresses/page.tsx` existen pero (según commits previos del módulo auth) usan datos mock; no se leyó código aquí para confirmar el estado actual.
 - Checkout: `actions.ts` + Stripe + webhook; ver sección Pagos arriba.
 - En `docs/archive/plan-auth.md` se indica "Módulo Auth: 100% completado y probado." (referencia histórica).
+- **Bloque C (2026-09):** `lib/brand.ts` + `NEXT_PUBLIC_BRAND_*` / `NEXT_PUBLIC_SITE_URL`. Metadata raíz + Open Graph en ficha de producto. UI shell (header/home/account/admin/legales/vender) usa `brand.name`. Viogi como tienda ≠ nombre de plataforma.
 
 ---
 

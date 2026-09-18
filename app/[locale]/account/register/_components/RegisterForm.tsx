@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useFormState, useFormStatus } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import type { Locale } from '@/i18n';
+import { brand } from '@/lib/brand';
 import { signUpAction, signInWithGoogleAction, type AuthState } from '../../actions';
 
 const FONT: React.CSSProperties = {
@@ -16,8 +17,8 @@ const LOGO: React.CSSProperties = {
   textShadow: '0 0 0.5px rgba(0,0,0,0.8)',
 };
 
-const inputClass =
-  'w-full border border-gray-300 px-3 py-2.5 text-[11px] placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors bg-transparent';
+const INPUT =
+  'w-full border-b border-gray-200 py-3 text-[11px] placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors bg-transparent';
 
 function GoogleLogo() {
   return (
@@ -36,7 +37,7 @@ function SubmitButton({ idle, busy }: { idle: string; busy: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="w-full bg-black text-white py-2.5 text-[11px] uppercase tracking-wide font-medium hover:opacity-75 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+      className="w-full bg-black text-white py-3 text-[11px] uppercase tracking-widest font-medium hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed mt-2"
     >
       {pending ? busy : idle}
     </button>
@@ -47,63 +48,63 @@ export default function RegisterForm({ locale }: { locale: Locale }) {
   const t = useTranslations('account');
   const [state, formAction] = useFormState<AuthState, FormData>(signUpAction, null);
 
-  // Confirmación de contraseña: validación visual sin tocar el server
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const passwordsMatch = !confirm || password === confirm;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-10">
-      <div className="bg-gray-50 w-full max-w-sm px-8 py-10" style={FONT}>
-        <div className="text-center mb-3">
-          <span className="text-lg font-bold" style={LOGO}>VIOGI</span>
+    <div className="min-h-screen bg-white pt-16 flex items-start justify-center px-4 py-16 md:py-24" style={FONT}>
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-10">
+          <span className="text-2xl font-bold uppercase tracking-wider" style={LOGO}>
+            {brand.name}
+          </span>
+          <div className="mt-4">
+            <Link
+              href={`/${locale}`}
+              className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
+            >
+              {t('back_to_store')}
+            </Link>
+          </div>
         </div>
 
-        <div className="text-center mb-5">
-          <Link
-            href={`/${locale}`}
-            className="text-[10px] uppercase tracking-widest text-gray-300 hover:text-black transition-colors"
-          >
-            {t('back_to_store')}
-          </Link>
-        </div>
-
-        <p className="text-[11px] font-semibold uppercase tracking-wide mb-0.5">{t('register_title')}</p>
-        <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-5">{t('register_subtitle')}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-widest mb-1">{t('register_title')}</p>
+        <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-8">{t('register_subtitle')}</p>
 
         <form action={signInWithGoogleAction}>
           <input type="hidden" name="locale" value={locale} />
           <button
             type="submit"
-            className="w-full border border-gray-300 py-2.5 text-[11px] uppercase tracking-wide hover:border-black transition-colors flex items-center justify-center gap-2 mb-4"
+            className="w-full border border-gray-200 py-3 text-[11px] uppercase tracking-widest hover:border-black transition-colors flex items-center justify-center gap-2 mb-6"
           >
             <GoogleLogo />
             {t('login_with_google')}
           </button>
         </form>
 
-        <div className="relative mb-4">
+        <div className="relative mb-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
+            <div className="w-full border-t border-gray-100" />
           </div>
           <div className="relative flex justify-center">
-            <span className="px-3 bg-gray-50 text-[10px] text-gray-300 uppercase tracking-wide">
+            <span className="px-3 bg-white text-[10px] text-gray-300 uppercase tracking-widest">
               {t('or')}
             </span>
           </div>
         </div>
 
-        <form action={formAction} className="space-y-3" noValidate>
+        <form action={formAction} className="space-y-4" noValidate>
           <input type="hidden" name="locale" value={locale} />
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-4">
             <input
               type="text"
               name="firstName"
               placeholder={t('first_name')}
               required
               autoComplete="given-name"
-              className={inputClass}
+              className={INPUT}
             />
             <input
               type="text"
@@ -111,7 +112,7 @@ export default function RegisterForm({ locale }: { locale: Locale }) {
               placeholder={t('last_name')}
               required
               autoComplete="family-name"
-              className={inputClass}
+              className={INPUT}
             />
           </div>
 
@@ -121,7 +122,7 @@ export default function RegisterForm({ locale }: { locale: Locale }) {
             placeholder="Email"
             required
             autoComplete="email"
-            className={inputClass}
+            className={INPUT}
           />
 
           <div>
@@ -134,9 +135,9 @@ export default function RegisterForm({ locale }: { locale: Locale }) {
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={inputClass}
+              className={INPUT}
             />
-            <p className="text-[10px] text-gray-400 mt-0.5">{t('min_chars')}</p>
+            <p className="text-[10px] text-gray-400 mt-1">{t('min_chars')}</p>
           </div>
 
           <input
@@ -148,7 +149,7 @@ export default function RegisterForm({ locale }: { locale: Locale }) {
             autoComplete="new-password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className={inputClass}
+            className={INPUT}
           />
 
           {!passwordsMatch && (
@@ -166,16 +167,16 @@ export default function RegisterForm({ locale }: { locale: Locale }) {
           <SubmitButton idle={t('register_submit')} busy={t('register_submitting')} />
         </form>
 
-        <div className="mt-5 text-center mb-6">
+        <div className="mt-8 text-center mb-10">
           <Link
             href={`/${locale}/account`}
-            className="text-[10px] text-gray-400 hover:text-black transition-colors"
+            className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
           >
             {t('already_account')} {t('sign_in')}
           </Link>
         </div>
 
-        <div className="flex items-center justify-center gap-3 pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-center gap-3 pt-6 border-t border-gray-100">
           <Link
             href="/es/account/register"
             className={`text-[10px] uppercase tracking-widest transition-colors ${locale === 'es' ? 'text-black' : 'text-gray-300 hover:text-gray-500'}`}

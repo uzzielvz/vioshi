@@ -2,6 +2,7 @@
 import { useFormState, useFormStatus } from 'react-dom'
 import Link from 'next/link'
 import { loginAction } from './actions'
+import { brand } from '@/lib/brand'
 
 const fontStyle = {
   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
@@ -32,7 +33,7 @@ export default function AdminLoginPage() {
             className="font-logo tracking-widest"
             style={{ fontSize: '28px', lineHeight: 1 }}
           >
-            VIOGI
+            {brand.name}
           </span>
           <br />
           <span

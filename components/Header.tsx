@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 import { useCart } from "@/store/cartStore";
+import { brand } from "@/lib/brand";
 // VisualSearchPanel removed (VS-09): inline panel replaced by full-screen /visual-search route
 // File handoff across layout shells uses sessionStorage (see handoffToVisualSearch)
 
@@ -159,7 +160,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
               textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
             }}
           >
-            VIOGI
+            {brand.name}
           </Link>
           {/* Espacio fijo mínimo entre logo y enlaces */}
           <span className="hidden md:inline-block shrink-0 min-w-[4rem]" aria-hidden />

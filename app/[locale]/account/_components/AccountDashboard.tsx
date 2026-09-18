@@ -1,116 +1,121 @@
 import Link from 'next/link';
 import type { User } from '@supabase/supabase-js';
 import type { Locale } from '@/i18n';
-import { signOutAction } from '../actions';
+import type { OrderRow } from '@/lib/orders';
+import AccountShell from './AccountShell';
+import { getAccountDisplayName } from './accountDisplayName';
 
-const FONT: React.CSSProperties = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'Pendiente',
+  processing: 'En proceso',
+  shipped: 'Enviado',
+  delivered: 'Entregado',
+  cancelled: 'Cancelado',
 };
-
-const LOGO: React.CSSProperties = {
-  ...FONT,
-  textShadow: '0 0 0.5px rgba(0,0,0,0.8)',
-};
-
-function getDisplayName(user: User, profileName: string | null): string {
-  if (profileName && profileName.trim()) return profileName.trim();
-  const meta = user.user_metadata as Record<string, unknown> | null;
-  const fullName = typeof meta?.full_name === 'string' ? meta.full_name.trim() : '';
-  if (fullName) return fullName;
-  return user.email ?? 'Usuario';
-}
-
-interface DashboardLink {
-  href: string;
-  title: string;
-  description: string;
-}
 
 export default function AccountDashboard({
   user,
   profileName,
   locale,
+  recentOrders,
 }: {
   user: User;
   profileName: string | null;
   locale: Locale;
+  recentOrders: OrderRow[];
 }) {
-  const displayName = getDisplayName(user, profileName);
-
-  const links: DashboardLink[] = [
-    {
-      href: `/${locale}/account/profile`,
-      title: 'Mi Perfil',
-      description: 'Datos personales y contacto',
-    },
-    {
-      href: `/${locale}/account/orders`,
-      title: 'Mis Pedidos',
-      description: 'Historial de compras y tracking',
-    },
-    {
-      href: `/${locale}/account/addresses`,
-      title: 'Mis Direcciones',
-      description: 'Direcciones de envío guardadas',
-    },
-    {
-      href: `/${locale}/wishlist`,
-      title: 'Wishlist',
-      description: 'Productos guardados para después',
-    },
-  ];
+  const displayName = getAccountDisplayName(user, profileName);
+  const email = user.email ?? '';
 
   return (
-    <div className="min-h-screen bg-gray-100 px-4 py-10" style={FONT}>
-      <div className="max-w-2xl mx-auto bg-gray-50 px-8 py-10">
-        <div className="text-center mb-8">
-          <span className="text-lg font-bold" style={LOGO}>VIOGI</span>
-        </div>
-
-        <div className="text-center mb-10">
+    <AccountShell locale={locale} displayName={displayName} email={email}>
+      <div>
+        <header className="mb-8 pb-6 border-b border-gray-200">
           <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
             Hola
           </p>
-          <p className="text-base font-semibold uppercase tracking-wide text-black">
+          <h1 className="text-[13px] font-semibold uppercase tracking-widest text-black">
             {displayName}
+          </h1>
+          <p className="text-[11px] text-gray-400 mt-3 max-w-md leading-relaxed">
+            Gestiona tus pedidos, direcciones y perfil desde aquí.
           </p>
-          <p className="text-[10px] text-gray-400 mt-1">{user.email}</p>
-        </div>
+        </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="block bg-white border border-gray-200 px-5 py-4 hover:border-black transition-colors"
-            >
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-black mb-1">
-                {link.title}
+        <section>
+          <div className="flex items-baseline justify-between mb-4">
+            <h2 className="text-[11px] font-semibold uppercase tracking-widest text-black">
+              Pedidos recientes
+            </h2>
+            {recentOrders.length > 0 && (
+              <Link
+                href={`/${locale}/account/orders`}
+                className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
+              >
+                Ver todos
+              </Link>
+            )}
+          </div>
+
+          {recentOrders.length === 0 ? (
+            <div className="py-12 border-t border-gray-100">
+              <p className="text-[11px] uppercase tracking-widest text-gray-400 mb-2">
+                No tienes pedidos
               </p>
-              <p className="text-[10px] text-gray-400">{link.description}</p>
-            </Link>
-          ))}
-        </div>
+              <p className="text-[11px] text-gray-400 mb-6">
+                Cuando compres algo, aparecerá aquí.
+              </p>
+              <Link
+                href={`/${locale}/collections/all`}
+                className="inline-block bg-black text-white px-8 py-2.5 text-[11px] uppercase tracking-widest hover:opacity-80 transition-opacity"
+              >
+                Explorar
+              </Link>
+            </div>
+          ) : (
+            <ul>
+              {recentOrders.map((order) => {
+                const itemNames = order.order_items
+                  .map((i) => i.product_name)
+                  .join(', ');
+                const formattedDate = new Date(order.created_at).toLocaleDateString(
+                  'es-MX',
+                  { year: 'numeric', month: 'short', day: 'numeric' }
+                );
 
-        <form action={signOutAction}>
-          <input type="hidden" name="locale" value={locale} />
-          <button
-            type="submit"
-            className="w-full border border-gray-300 py-2.5 text-[11px] uppercase tracking-wide hover:border-black transition-colors"
-          >
-            Cerrar Sesión
-          </button>
-        </form>
-
-        <div className="text-center mt-6">
-          <Link
-            href={`/${locale}`}
-            className="text-[10px] uppercase tracking-widest text-gray-300 hover:text-black transition-colors"
-          >
-            ← Volver a la tienda
-          </Link>
-        </div>
+                return (
+                  <li key={order.id}>
+                    <Link
+                      href={`/${locale}/account/orders/${order.id}`}
+                      className="flex items-start justify-between gap-4 py-4 border-b border-gray-100 hover:opacity-60 transition-opacity"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-widest text-black">
+                          #{order.order_number}
+                        </p>
+                        <p className="text-[10px] uppercase tracking-widest text-gray-400 mt-1">
+                          {formattedDate}
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-1 truncate">
+                          {itemNames}
+                        </p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-widest text-black">
+                          ${Number(order.total_mxn).toFixed(2)}
+                        </p>
+                        <p className="text-[10px] uppercase tracking-widest text-gray-400 mt-1">
+                          {STATUS_LABELS[order.status] ?? order.status}
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
       </div>
-    </div>
+    </AccountShell>
   );
 }

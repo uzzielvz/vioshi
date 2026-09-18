@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getOrdersByUser } from '@/lib/orders';
 import type { Locale } from '@/i18n';
 import LoginForm from './_components/LoginForm';
 import AccountDashboard from './_components/AccountDashboard';
@@ -25,11 +26,15 @@ export default async function AccountPage({
     .eq('id', user.id)
     .maybeSingle();
 
+  const orders = await getOrdersByUser();
+  const recentOrders = orders.slice(0, 3);
+
   return (
     <AccountDashboard
       user={user}
       profileName={profile?.name ?? null}
       locale={locale}
+      recentOrders={recentOrders}
     />
   );
 }

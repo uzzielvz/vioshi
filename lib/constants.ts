@@ -1,9 +1,11 @@
-// App constants
-export const APP_NAME = "VIOGI";
-export const APP_DESCRIPTION = "Premium Accessible Streetwear";
+import { brand } from '@/lib/brand';
+
+// App constants — name/social come from brand (env-overridable)
+export const APP_NAME = brand.name;
+export const APP_DESCRIPTION = brand.tagline;
 
 // URLs
-export const INSTAGRAM_URL = "https://www.instagram.com/viogi_/?hl=es";
+export const INSTAGRAM_URL = brand.instagramUrl;
 
 // Pagination
 export const PRODUCTS_PER_PAGE = 12;

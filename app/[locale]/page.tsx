@@ -1,5 +1,6 @@
 import ProductGrid from "@/components/ProductGrid";
 import { getProducts } from "@/lib/products";
+import { brand } from "@/lib/brand";
 import Link from "next/link";
 
 export default async function Home({
@@ -21,7 +22,7 @@ export default async function Home({
                 textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
-              VIOGI
+              {brand.name}
             </h1>
             <Link
               href={`/${locale}/collections/all`}
