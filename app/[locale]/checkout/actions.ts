@@ -3,6 +3,7 @@
 import { createHmac } from 'crypto';
 import { reconcileCartItems } from '@/lib/cart/reconcile';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe';
 import { getSettings, isCardOnly, DEFERRED_PAYMENT_METHODS } from '@/lib/settings';
 import { normalizePhone } from '@/lib/phone';
@@ -126,6 +127,12 @@ export async function createCheckoutSessionAction(
   const supabase = createAdminClient();
   const settings = await getSettings();
 
+  // Si hay sesión, el pedido se liga a la cuenta. Sin esto `orders.user_id`
+  // queda null SIEMPRE, y como la RLS es `auth.uid() = user_id`, el dueño no
+  // puede releer su propio pedido: "Mis Pedidos" sale vacío aunque haya
+  // comprado con la sesión iniciada.
+  const { data: { user } } = await createClient().auth.getUser();
+
   // ── 0. Teléfono: se normaliza ANTES de guardar nada ─────────────────────────
   const phone = normalizePhone(formData.phone);
   if (!phone.ok) {
@@ -222,7 +229,10 @@ export async function createCheckoutSessionAction(
     const { data: addr, error: addrError } = await supabase
       .from('addresses')
       .insert({
-        user_id: null, // guest checkout
+        // A propósito null incluso con sesión iniciada: esta dirección es del
+        // pedido, no de la libreta del cliente. Ligarla metería direcciones en
+        // /account/addresses que nadie pidió guardar.
+        user_id: null,
         first_name: formData.firstName,
         last_name: formData.lastName,
         phone: phone.e164,
@@ -251,6 +261,7 @@ export async function createCheckoutSessionAction(
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert({
+      user_id: user?.id ?? null, // null = invitado; el guest_token es su única llave
       email: formData.email,
       first_name: formData.firstName,
       last_name: formData.lastName,
