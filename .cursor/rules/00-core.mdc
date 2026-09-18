@@ -1,0 +1,26 @@
+---
+description: Identidad del repo, docs que sí/no leer, decisiones congeladas
+alwaysApply: true
+---
+
+# Viogi / plataforma
+
+Un solo repo Next.js 14. La web es la **plataforma**; Viogi es la **primera tienda**. Mario vende **dentro** de Viogi (`owner` interno). No construyas un segundo sitio.
+
+## Lee esto, no la hidra
+
+Antes de código: `docs/agents/STATUS.md`, `FROZEN.md`, `OPEN.md`, y el paquete de tu carril. Plantilla: `docs/agents/PROMPT.md`.
+
+No uses como verdad: `PLAN.md` viejo, `CONTEXT.md` viejo, `RESEARCH-CONSOLIDADO.md`, `AUDITORIA-PRE-LANZAMIENTO.md`, `TESTING-PLAN.md`, `docs/archive/**`. Ante doc vs código, **gana el código**. Al cerrar, actualiza solo `docs/agents/STATUS.md`.
+
+## No reabrir
+
+Stripe Checkout Sessions (no Payment Element, no Mercado Pago). IVA incluido, `tax_mxn = 0`. Comisión Fase 1 = 0 %. Marca vía `lib/brand.ts` / env. Prefijo `VIO-` intocable. `owner` y `cost_mxn` nunca al cliente. Registro de vendedores cerrado.
+
+## No inventar negocio
+
+Nombre de plataforma, % de Mario, fiscal, precio real de envío, datos huecos de pickup: `docs/agents/OPEN.md`. Si bloquea, escribe `BLOQUEO` y para.
+
+## Código
+
+TypeScript strict. `"use client"` solo si hace falta. Server Actions para mutaciones (salvo webhooks/APIs). Copy de producto en español; código en inglés. Alias `@/`. i18n es+en. Estética B/N. Sin deps nuevas ni Next 16 de paso.

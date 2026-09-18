@@ -3,6 +3,8 @@
 **Verificado:** 2026-09-08 contra el proyecto de producción `oilvubxpxxzfxlqhsumk` (`viogi`, plan Free, us-east-1).
 **Método:** `supabase migration list` + `db dump` + pruebas funcionales con las llaves `anon` y `service_role`.
 
+> **Tope de esta foto:** `0011`. Relistado 2026-09-18: prod tiene `0001`–`0015` (`0015` aplicada hoy). Estado: [`docs/agents/STATUS.md`](../agents/STATUS.md).
+
 > **Regla:** este documento describe lo que la base **tiene**, no lo que las migraciones **dicen**. Cuando difieran, gana la base.
 
 ---
