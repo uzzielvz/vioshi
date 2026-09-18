@@ -25,6 +25,9 @@ export const CURRENCY_SYMBOL = "$";
 export const TAX_RATE = 0.16;
 
 // Shipping
+// STANDARD_SHIPPING_COST ya no es la fuente del checkout (paquete A1): el
+// domicilio lee `settings.home_shipping_mxn` vía lib/settings.ts. Queda como
+// fallback inicial en el cliente mientras carga y como respaldo si la DB falla.
 export const STANDARD_SHIPPING_COST = 10;
 export const EXPRESS_SHIPPING_COST = 20;
 
