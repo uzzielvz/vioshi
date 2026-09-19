@@ -1,0 +1,16 @@
+---
+description: Checkout, Stripe, stock, IVA
+globs: app/**/checkout/**,app/api/webhooks/stripe/**,lib/orders.ts,lib/stripe.ts,lib/settings.ts,lib/constants.ts,store/cartStore.tsx
+alwaysApply: false
+---
+
+# Dinero
+
+- Checkout Sessions, no PaymentIntents embebidos. OXXO/SPEI son asíncronos: la success page no declara “pagado” sin `payment_status`.
+- Reserva en DB al iniciar, no al webhook. El webhook solo cierra o libera.
+- `tax_mxn = 0`. No línea de IVA. `price_mxn` es final.
+- Pickup: `lib/pickup.ts` + `additional_cost_mxn` por fila. Domicilio: setting, no inventar tarifa.
+- Lookups de pedido: `guest_token` o `session_id` verificado contra Stripe. Sin IDOR.
+- `owner` / `cost_mxn` no viajan al cliente.
+- Lee `.claude/skills/stripe-best-practices/SKILL.md` antes de cambiar Stripe.
+- Nunca dejes `actions.ts` o el webhook vacíos.

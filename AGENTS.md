@@ -1,45 +1,37 @@
-# AGENTS.md — Parallel work without collisions
+# AGENTS.md
 
-Canonical playbook also lives in the Obsidian vault: `Divide and Conquer.md`.
+Sistema operativo para agentes. **Empieza en [`docs/agents/README.md`](./docs/agents/README.md).**
 
-## Golden rule
+## Lectura mínima
 
-**One agent = one lane = non-overlapping files.** If two agents need the same file, run them in series.
+1. [`docs/agents/STATUS.md`](./docs/agents/STATUS.md)
+2. [`docs/agents/FROZEN.md`](./docs/agents/FROZEN.md)
+3. [`docs/agents/OPEN.md`](./docs/agents/OPEN.md)
+4. El paquete en [`docs/agents/packets/`](./docs/agents/packets/)
+5. [`docs/agents/lanes.md`](./docs/agents/lanes.md)
 
-## Lanes
+Plantilla para lanzar un modelo barato: [`docs/agents/PROMPT.md`](./docs/agents/PROMPT.md).
 
-| Lane | Touch only | Do not touch |
-|------|------------|--------------|
-| L1 Money | `app/[locale]/checkout/**`, `lib/orders.ts`, `lib/constants.ts`, `store/cartStore.tsx`, `app/api/webhooks/stripe/**` | admin product forms, visual-search |
-| L2 Pickup | `supabase/migrations/0015_*` (or next free number), `lib/pickup.ts` (new), `app/admin/pickup-points/**` | checkout payment logic |
-| L3 Brand | `lib/brand.ts`, layouts metadata, `products/[slug]` `generateMetadata` only | checkout, migrations |
-| L4 Stores | `0016_stores*`, `app/[locale]/tienda/**`, product `store_id` wiring | stripe webhooks |
-| L5 Admin | `app/admin/products/**`, embed-on-publish | checkout |
-| L6 Visual | `visual-search/**`, `api/visual-search/**` | checkout |
+Negocio (cambia): Obsidian `70_Trabajo/Viogi` · playbook `Divide and Conquer.md`.
 
-**Serialized forever:** `middleware.ts`, `package.json`, `package-lock.json`, `.env*`, migration number assignment (human picks the number in the prompt).
+## Regla de oro
 
-## Prefer git worktrees
+Un agente = un carril = archivos del paquete. Si dos tocan el mismo archivo, serie.
 
-```bash
-git worktree add ../viogi-L1 -b agent/L1-dinero
-git worktree add ../viogi-L2 -b agent/L2-pickup
-```
+**Siguiente trabajo:** paquete D (L4 stores). En paralelo posible: F (L5 admin). Connect (L7) bloqueado.
 
-Merge to `main` only after `npm run type-check` and `npm run lint`.
+## Serializado
 
-## Prompt must include
+`middleware.ts` · `package.json` · `package-lock.json` · `.env*` · número de migración.
 
-1. Lane id  
-2. Allowed file list  
-3. Forbidden list  
-4. Definition of Done (type-check, lint, one atomic commit)
+## Git
 
-## Product decisions (2026-09-17)
+Rama `agent/L#-…` + PR a `main`. Nunca push/merge a `main`. Detalle: [`docs/agents/GIT.md`](./docs/agents/GIT.md).
 
-- Platform Stripe account owner: **Uzziel**
-- Platform fee at start: **0%**
-- Mario sells **inside** Viogi store (`owner` column for payouts)
-- Pickup price: **per row** in `pickup_points.additional_cost_mxn`
-- Display prices: **IVA included** in `price_mxn`. Do **not** add 16% at checkout. Do **not** show an IVA line in cart, order summary, or Stripe line items. Persist `tax_mxn = 0`.
-- Platform display name: **`lib/brand.ts`** + `NEXT_PUBLIC_BRAND_*` (do not hardcode platform shell as "VIOGI"; store-facing Viogi copy is separate).
+## DoD de cualquier carril
+
+`npm run type-check` · `npm run lint` · un commit en la rama del carril · `gh pr create --base main` · el humano mergea.
+
+## Producto (resumen)
+
+Plataforma ≠ tienda Viogi. Mario dentro de Viogi (`owner`). Comisión 0 %. IVA incluido. Stripe Checkout Sessions. Marca por env. Registro de vendedores cerrado.

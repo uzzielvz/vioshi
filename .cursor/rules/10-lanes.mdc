@@ -1,0 +1,27 @@
+---
+description: Un agente un carril; archivos serializados
+alwaysApply: true
+---
+
+# Carriles
+
+Un agente = un paquete = la lista de archivos del paquete. Nada más.
+
+| Carril | Ahora |
+|---|---|
+| L1 dinero | checkout, orders, settings, stripe webhook — no vaciar estos archivos |
+| L2 pickup | cerrado (`lib/pickup.ts`) |
+| L3 marca | cerrado (`lib/brand.ts`) |
+| L4 stores | **siguiente** — `0016`, `/tienda`, `/vender` persist |
+| L5 admin | products + embed; no checkout |
+| L6 visual | solo visual-search |
+| L7 Connect | bloqueado hasta STATUS |
+| L8 studio | `app/admin/studio/**` aislado |
+
+Serializado (humano / un agente a la vez): `middleware.ts`, `package.json`, `package-lock.json`, `.env*`, número de migración.
+
+`0016` está asignado a L4 stores. No lo uses para otra cosa.
+
+Git: rama `agent/L#-…`, push de ESA rama, `gh pr create --base main`. Nunca push ni merge a `main`. Ver `docs/agents/GIT.md`.
+
+No edites `PLAN.md` / research. No mezcles L1 y L4 en un commit.

@@ -1,0 +1,14 @@
+---
+description: Supabase, RLS, columnas internas
+globs: lib/products.ts,lib/supabase/**,supabase/migrations/**,app/admin/products/**
+alwaysApply: false
+---
+
+# Datos
+
+- `lib/products.ts` es público: lista explícita de columnas. Nunca `select('*')`, `owner`, `cost_mxn`, `reserved_*`, `embedding`.
+- Columna nueva en `products` nace invisible a `anon` (`0011`). Si debe verse, `GRANT SELECT (col)` en la misma migración.
+- Pieza única. Talla = atributo `Talla`. No revivas `product_variants` para stock.
+- Medidas en cm; estado `impecable | buen_estado | con_detalles`.
+- Un agente, una migración, un número asignado en el paquete.
+- `createAdminClient()` solo en server. Admin panel revalida sesión en cada Server Action.
