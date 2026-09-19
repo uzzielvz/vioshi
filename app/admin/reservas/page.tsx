@@ -3,6 +3,7 @@ import ReservasClient, {
   type Reserva,
   type Disponible,
   type RevisionManual,
+  type PedidoPorEntregar,
 } from './_components/ReservasClient'
 
 export const dynamic = 'force-dynamic'
@@ -16,28 +17,36 @@ export default async function AdminReservasPage() {
   // reserva vencida que el cron no limpió no es una reserva activa.
   const ahora = new Date().toISOString()
 
-  const [{ data: apartadas }, { data: libres }, { data: revisar }] = await Promise.all([
-    supabase
-      .from('products')
-      .select(
-        'id, name, slug, price_mxn, reserved_until, reservation_kind, reserved_contact_name, reserved_contact_phone, reserved_order_id'
-      )
-      .not('reserved_order_id', 'is', null)
-      .gt('reserved_until', ahora)
-      .eq('sold_out', false)
-      .order('reserved_until', { ascending: true }),
-    supabase
-      .from('products')
-      .select('id, name, price_mxn')
-      .eq('sold_out', false)
-      .or(`reserved_order_id.is.null,reserved_until.lt.${ahora}`)
-      .order('name'),
-    supabase
-      .from('orders')
-      .select('id, order_number, email, phone, total_mxn, review_reason, created_at')
-      .eq('needs_review', true)
-      .order('created_at', { ascending: false }),
-  ])
+  const [{ data: apartadas }, { data: libres }, { data: revisar }, { data: entregar }] =
+    await Promise.all([
+      supabase
+        .from('products')
+        .select(
+          'id, name, slug, price_mxn, reserved_until, reservation_kind, reserved_contact_name, reserved_contact_phone, reserved_order_id'
+        )
+        .not('reserved_order_id', 'is', null)
+        .gt('reserved_until', ahora)
+        .eq('sold_out', false)
+        .order('reserved_until', { ascending: true }),
+      supabase
+        .from('products')
+        .select('id, name, price_mxn')
+        .eq('sold_out', false)
+        .or(`reserved_order_id.is.null,reserved_until.lt.${ahora}`)
+        .order('name'),
+      supabase
+        .from('orders')
+        .select('id, order_number, email, phone, total_mxn, review_reason, created_at')
+        .eq('needs_review', true)
+        .order('created_at', { ascending: false }),
+      // Pagados y aún no entregados: lo que falta por recoger/enviar.
+      supabase
+        .from('orders')
+        .select('id, order_number, email, phone, total_mxn, delivery_method, created_at')
+        .eq('payment_status', 'completed')
+        .not('status', 'in', '(delivered,cancelled)')
+        .order('created_at', { ascending: false }),
+    ])
 
   // Datos del pedido detrás de cada reserva, para poder contactar al cliente.
   const orderIds = (apartadas ?? []).map((p) => p.reserved_order_id).filter(Boolean)
@@ -84,6 +93,16 @@ export default async function AdminReservasPage() {
     created_at: o.created_at,
   }))
 
+  const porEntregar: PedidoPorEntregar[] = (entregar ?? []).map((o) => ({
+    id: o.id,
+    order_number: o.order_number,
+    email: o.email,
+    phone: o.phone,
+    total_mxn: Number(o.total_mxn),
+    delivery_method: o.delivery_method,
+    created_at: o.created_at,
+  }))
+
   return (
     <div>
       <h1
@@ -100,6 +119,7 @@ export default async function AdminReservasPage() {
         reservas={reservas}
         disponibles={disponibles}
         revisiones={revisiones}
+        porEntregar={porEntregar}
       />
     </div>
   )

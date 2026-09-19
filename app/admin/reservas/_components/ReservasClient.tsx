@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useFormState, useFormStatus } from 'react-dom'
 import { formatPhone, whatsappLink } from '@/lib/phone'
 import {
@@ -8,6 +8,7 @@ import {
   releaseReservationAction,
   toggleSoldAction,
   clearReviewFlagAction,
+  markOrderDeliveredAction,
 } from '../actions'
 
 const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
@@ -36,6 +37,16 @@ export type RevisionManual = {
   phone: string | null
   total_mxn: number
   review_reason: string | null
+  created_at: string
+}
+
+export type PedidoPorEntregar = {
+  id: string
+  order_number: string
+  email: string
+  phone: string | null
+  total_mxn: number
+  delivery_method: string
   created_at: string
 }
 
@@ -79,6 +90,33 @@ function Boton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElem
   )
 }
 
+/** Marcar entregado en un clic. No toca Stripe. */
+function EntregadoToggle({ id }: { id: string }) {
+  const [pending, start] = useTransition()
+  const [entregado, setEntregado] = useState(false)
+
+  const marcar = () => {
+    setEntregado(true)
+    start(() => {
+      markOrderDeliveredAction(id)
+    })
+  }
+
+  if (entregado) {
+    return (
+      <span className="uppercase tracking-widest text-gray-400" style={{ ...font, fontSize: '10px' }}>
+        Entregado ✓
+      </span>
+    )
+  }
+
+  return (
+    <Boton onClick={marcar} disabled={pending}>
+      {pending ? '…' : 'Entregado'}
+    </Boton>
+  )
+}
+
 function SubmitApartado() {
   const { pending } = useFormStatus()
   return (
@@ -93,14 +131,21 @@ function SubmitApartado() {
   )
 }
 
+const ETIQUETA_ENTREGA: Record<string, string> = {
+  pickup: 'Recoger en punto',
+  shipping: 'Envío a domicilio',
+}
+
 export default function ReservasClient({
   reservas,
   disponibles,
   revisiones,
+  porEntregar,
 }: {
   reservas: Reserva[]
   disponibles: Disponible[]
   revisiones: RevisionManual[]
+  porEntregar: PedidoPorEntregar[]
 }) {
   const [state, formAction] = useFormState(createManualHoldAction, null)
   const [copiado, setCopiado] = useState<string | null>(null)
@@ -246,6 +291,61 @@ export default function ReservasClient({
                   </tr>
                 )
               })}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      {/* ── Pedidos por entregar ───────────────────────────────────────────── */}
+      <section>
+        <h2
+          className="uppercase tracking-widest mb-1"
+          style={{ ...font, fontSize: '12px', fontWeight: 600 }}
+        >
+          Pedidos por entregar ({porEntregar.length})
+        </h2>
+        <p className="text-gray-500 mb-4" style={{ ...font, fontSize: '10px' }}>
+          Pagados, pendientes de recoger o enviar. No dispara ningún cargo ni transferencia.
+        </p>
+
+        {porEntregar.length === 0 ? (
+          <p className="text-gray-400 py-8" style={{ ...font, fontSize: '11px' }}>
+            Nada pendiente de entrega.
+          </p>
+        ) : (
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b border-gray-200">
+                {['Pedido', 'Cliente', 'Entrega', 'Acciones'].map((h) => (
+                  <th
+                    key={h}
+                    className="text-left pb-3 uppercase tracking-widest text-gray-400 font-normal"
+                    style={{ ...font, fontSize: '10px' }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {porEntregar.map((o) => (
+                <tr key={o.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 pr-6" style={{ ...font, fontSize: '11px' }}>
+                    #{o.order_number}
+                    <span className="text-gray-400 ml-2">${o.total_mxn.toFixed(0)}</span>
+                  </td>
+                  <td className="py-3 pr-6" style={{ ...font, fontSize: '11px' }}>
+                    <div className="text-gray-700">{o.email}</div>
+                    {o.phone && <div className="text-gray-400">{formatPhone(o.phone)}</div>}
+                  </td>
+                  <td className="py-3 pr-6 text-gray-600" style={{ ...font, fontSize: '11px' }}>
+                    {ETIQUETA_ENTREGA[o.delivery_method] ?? o.delivery_method}
+                  </td>
+                  <td className="py-3">
+                    <EntregadoToggle id={o.id} />
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}

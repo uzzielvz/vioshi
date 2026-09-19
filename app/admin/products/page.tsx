@@ -11,11 +11,24 @@ const fontStyle = {
 
 export const dynamic = 'force-dynamic'
 
-export default async function AdminProductsPage() {
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams?: { embed?: string }
+}) {
   const products = await getAdminProducts()
+  const embedPending = searchParams?.embed === 'pending'
 
   return (
     <div>
+      {embedPending && (
+        <p
+          className="border border-black bg-gray-50 px-4 py-3 mb-6 uppercase tracking-widest"
+          style={{ ...fontStyle, fontSize: '10px', fontWeight: 500 }}
+        >
+          Publicado. Embedding pendiente — el buscador visual tardará en verla.
+        </p>
+      )}
       <div className="flex items-center justify-between mb-8">
         <h1
           className="uppercase tracking-widest"

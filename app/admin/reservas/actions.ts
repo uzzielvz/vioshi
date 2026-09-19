@@ -110,3 +110,24 @@ export async function clearReviewFlagAction(orderId: string) {
   await supabase.from('orders').update({ needs_review: false }).eq('id', orderId)
   revalidatePath('/admin/reservas')
 }
+
+/**
+ * Marca el handoff físico del pedido (recogido o entregado). Solo cambia
+ * `orders.status`; no toca Stripe ni el pago — eso lo resuelve el webhook.
+ * `delivered` es un valor válido del CHECK de `0001_initial_schema.sql`.
+ */
+export async function markOrderDeliveredAction(orderId: string) {
+  await requireAdminSession()
+  const supabase = createAdminClient()
+
+  const { data: order } = await supabase
+    .from('orders')
+    .select('status')
+    .eq('id', orderId)
+    .maybeSingle()
+
+  if (!order || order.status === 'delivered' || order.status === 'cancelled') return
+
+  await supabase.from('orders').update({ status: 'delivered' }).eq('id', orderId)
+  revalidatePath('/admin/reservas')
+}

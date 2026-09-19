@@ -28,13 +28,15 @@ Hacia el cliente hay una sola tienda (Viogi). `products.owner` (`uzziel` | `mari
 | Visual search Gemini + pgvector | `/[locale]/visual-search`, `/api/visual-search` |
 | Admin: productos, reservas, settings, studio, pickup | `app/admin/**` |
 | Auth clientes (email + Google) | `app/[locale]/account/**` |
+| Auto-embedding al publicar/editar producto (best-effort, no bloquea) | `lib/embeddings.ts`, `app/admin/products/actions.ts` |
+| Admin marca pedido `delivered` (handoff físico, sin Stripe) | `app/admin/reservas/actions.ts`, `_components/ReservasClient.tsx` |
 
 ## Siguiente código (paquetes)
 
 | Prioridad | Paquete | Carril | Estado |
 |---|---|---|---|
 | 1 | [`packets/D-stores.md`](./packets/D-stores.md) | L4 | **LISTO** — primer código de marketplace |
-| 2 | [`packets/F-admin-ops.md`](./packets/F-admin-ops.md) | L5 | **LISTO** — auto-embed + marcar entregado |
+| 2 | [`packets/F-admin-ops.md`](./packets/F-admin-ops.md) | L5 | **✅ CERRADO** (2026-09-19) — auto-embed + marcar entregado, PR abierto contra main |
 | 3 | [`packets/A1-shipping.md`](./packets/A1-shipping.md) | L1 | **LISTO** — envío a domicilio editable; no inventar el precio |
 | 4 | [`packets/E-connect.md`](./packets/E-connect.md) | L7 | **BLOQUEADO** — negocio + Stripe MX |
 
@@ -46,7 +48,6 @@ No abrir registro público de vendedores. No reviews. No Skydropx. No Next 16.
 - `app/[locale]/tienda/`
 - Connect / `application_fee` / `stripe_account_id`
 - Persistencia de `/vender` (el form hace `setTimeout` y finge éxito)
-- Auto-embedding al publicar (sigue siendo `scripts/generate-embeddings.ts`)
 
 ## Incidente 2026-09-18
 
