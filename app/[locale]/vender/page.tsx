@@ -2,15 +2,25 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 import { brand } from '@/lib/brand';
+import { submitSellerApplication } from './actions';
 
 const fontStyle: React.CSSProperties = {
   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
 };
 
+// The action returns codes, not copy; the message follows the active locale.
+const ERROR_KEYS = {
+  invalid:      'error_invalid',
+  rate_limited: 'error_rate_limited',
+  failed:       'error_failed',
+} as const;
+
 export default function VenderPage() {
   const { locale } = useLocaleContext();
+  const t = useTranslations('pages.vender');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -38,13 +48,20 @@ export default function VenderPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError('');
     try {
-      // TODO: Send application to backend (Phase 2)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      if (mountedRef.current) setSubmitted(true);
+      // Leaves a `pending` row. Approving it is an admin act, not this form's job.
+      const result = await submitSellerApplication(formData);
+      if (!mountedRef.current) return;
+
+      if (result.ok) {
+        setSubmitted(true);
+      } else {
+        setSubmitError(t(ERROR_KEYS[result.code]));
+      }
     } catch (error) {
       console.error('Error submitting application:', error);
-      if (mountedRef.current) setSubmitError('Error al enviar la solicitud. Intenta de nuevo.');
+      if (mountedRef.current) setSubmitError(t('error_failed'));
     } finally {
       if (mountedRef.current) setIsSubmitting(false);
     }

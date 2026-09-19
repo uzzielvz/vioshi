@@ -1,6 +1,6 @@
 # Estado del código
 
-**Verificado:** 2026-09-18 contra el working tree (no contra docs viejos).  
+**Verificado:** 2026-09-18 contra el working tree (no contra docs viejos). Paquete D en PR.  
 **HEAD:** `d63e56d` · repo `uzzielvz/vioshi` · local `viogi-dot-comm` · prod `vioshi.vercel.app`
 
 > Actualiza **solo este archivo** al cerrar un paquete. Fecha + commit + una línea.
@@ -33,7 +33,7 @@ Hacia el cliente hay una sola tienda (Viogi). `products.owner` (`uzziel` | `mari
 
 | Prioridad | Paquete | Carril | Estado |
 |---|---|---|---|
-| 1 | [`packets/D-stores.md`](./packets/D-stores.md) | L4 | **LISTO** — primer código de marketplace |
+| 1 | [`packets/D-stores.md`](./packets/D-stores.md) | L4 | **EN PR** (`agent/L4-stores`) — falta correr `0016` en la DB |
 | 2 | [`packets/F-admin-ops.md`](./packets/F-admin-ops.md) | L5 | **LISTO** — auto-embed + marcar entregado |
 | 3 | [`packets/A1-shipping.md`](./packets/A1-shipping.md) | L1 | **LISTO** — envío a domicilio editable; no inventar el precio |
 | 4 | [`packets/E-connect.md`](./packets/E-connect.md) | L7 | **BLOQUEADO** — negocio + Stripe MX |
@@ -42,11 +42,12 @@ No abrir registro público de vendedores. No reviews. No Skydropx. No Next 16.
 
 ## Hoy no existe (comprobado con grep)
 
-- `stores`, `store_id`, `store_applications`
-- `app/[locale]/tienda/`
-- Connect / `application_fee` / `stripe_account_id`
-- Persistencia de `/vender` (el form hace `setTimeout` y finge éxito)
+- Connect / `application_fee` (la columna `stripe_account_id` ya existe en `stores`, sin uso)
 - Auto-embedding al publicar (sigue siendo `scripts/generate-embeddings.ts`)
+
+`stores`, `store_id`, `store_applications`, `app/[locale]/tienda/` y la
+persistencia de `/vender` llegan en el PR de L4. Existen en código cuando ese PR
+se mergea; en la DB, cuando se corre `0016`.
 
 ## Incidente 2026-09-18
 
@@ -54,7 +55,8 @@ No abrir registro público de vendedores. No reviews. No Skydropx. No Next 16.
 
 ## Migraciones
 
-Repo: `0001` … `0015`. Siguiente número libre: **`0016`** (asignado a L4; no lo uses para otra cosa).
+Repo: `0001` … `0016`. `0016_stores.sql` la trae el PR de L4 (aún no corrida en prod).
+Siguiente número libre: **`0017`** (asignado a L1/A1-shipping; no lo uses para otra cosa).
 
 Prod (`oilvubxpxxzfxlqhsumk`, 2026-09-18): `0001`–`0015` aplicadas. `0015` sembró 13 puntos activos (Rectoría dropoff + red) y apagó los 8 ficticios. Almoloya y Tianguistenco siguen inactivos (datos huecos).
 

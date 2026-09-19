@@ -209,7 +209,8 @@
     "reserved": "Apartada",
     "reserved_note": "Alguien la está comprando ahora. Si no completa el pago, vuelve a estar disponible.",
     "sold_note": "Esta pieza ya encontró dueño. Era única, así que no vuelve.",
-    "see_others": "Ver otras piezas"
+    "see_others": "Ver otras piezas",
+    "sold_by": "Vendido por"
   },
   "search": {
     "placeholder": "BUSCAR PRODUCTOS...",
@@ -435,6 +436,16 @@
       "price_high_low": "Precio: Mayor a Menor",
       "newest": "Más Nuevo",
       "product_count": "{count, plural, one {# producto} other {# productos}}"
+    },
+    "store": {
+      "pieces": "Piezas",
+      "instagram": "Instagram",
+      "empty": "Esta tienda aún no tiene piezas publicadas"
+    },
+    "vender": {
+      "error_invalid": "Revisa los campos obligatorios y tu email.",
+      "error_rate_limited": "Ya recibimos tu solicitud. Intenta más tarde.",
+      "error_failed": "Error al enviar la solicitud. Intenta de nuevo."
     }
   },
   "account": {
