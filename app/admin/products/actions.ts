@@ -3,6 +3,7 @@ import { revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdminSession } from '@/lib/admin/session'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { generateProductEmbedding } from '@/lib/embeddings'
 import {
   generateSku,
   isCondition,
@@ -157,9 +158,10 @@ export async function createProduct(_prev: ActionState, formData: FormData): Pro
   if (uploadError) return { error: uploadError }
 
   await saveAttributes(supabase, product.id, formData)
+  const embedded = await indexProductEmbedding(supabase, product.id)
 
   revalidateTag('products')
-  redirect('/admin/products')
+  redirect(embedded ? '/admin/products' : '/admin/products?embed=pending')
 }
 
 export async function updateProduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -238,12 +240,37 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
   if (uploadError) return { error: uploadError }
 
   await saveAttributes(supabase, id, formData)
+  const embedded = await indexProductEmbedding(supabase, id)
 
   revalidateTag('products')
-  redirect('/admin/products')
+  redirect(embedded ? '/admin/products' : '/admin/products?embed=pending')
 }
 
 type SupabaseClient = ReturnType<typeof createAdminClient>
+
+/**
+ * Re-embeds the product from its primary image (image -> AI description ->
+ * vector) so visual search stays in sync with the catalog. Best-effort:
+ * failures (no GEMINI_API_KEY, fetch/API errors) never block publishing —
+ * the caller redirects with `?embed=pending` when this returns false so the
+ * admin sees the product was saved but the embed still needs to catch up.
+ */
+async function indexProductEmbedding(supabase: SupabaseClient, productId: string): Promise<boolean> {
+  const { data: primary } = await supabase
+    .from('product_images')
+    .select('url')
+    .eq('product_id', productId)
+    .eq('is_primary', true)
+    .maybeSingle()
+
+  if (!primary?.url) return false
+
+  const vector = await generateProductEmbedding(primary.url)
+  if (!vector) return false
+
+  const { error } = await supabase.from('products').update({ embedding: vector }).eq('id', productId)
+  return !error
+}
 
 function formatUploadErrors(result: UploadResult): string | null {
   if (result.errors.length === 0) return null
