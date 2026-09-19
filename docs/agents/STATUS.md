@@ -33,7 +33,7 @@ Hacia el cliente hay una sola tienda (Viogi). `products.owner` (`uzziel` | `mari
 
 | Prioridad | Paquete | Carril | Estado |
 |---|---|---|---|
-| 1 | [`packets/D-stores.md`](./packets/D-stores.md) | L4 | **EN PR** (`agent/L4-stores`) — falta correr `0016` en la DB |
+| 1 | [`packets/D-stores.md`](./packets/D-stores.md) | L4 | **EN PR** (`#6`) — `0016` ya está en prod |
 | 2 | [`packets/F-admin-ops.md`](./packets/F-admin-ops.md) | L5 | **LISTO** — auto-embed + marcar entregado |
 | 3 | [`packets/A1-shipping.md`](./packets/A1-shipping.md) | L1 | **LISTO** — envío a domicilio editable; no inventar el precio |
 | 4 | [`packets/E-connect.md`](./packets/E-connect.md) | L7 | **BLOQUEADO** — negocio + Stripe MX |
@@ -45,9 +45,8 @@ No abrir registro público de vendedores. No reviews. No Skydropx. No Next 16.
 - Connect / `application_fee` (la columna `stripe_account_id` ya existe en `stores`, sin uso)
 - Auto-embedding al publicar (sigue siendo `scripts/generate-embeddings.ts`)
 
-`stores`, `store_id`, `store_applications`, `app/[locale]/tienda/` y la
-persistencia de `/vender` llegan en el PR de L4. Existen en código cuando ese PR
-se mergea; en la DB, cuando se corre `0016`.
+`stores` / `store_id` / `store_applications` ya existen en prod (`0016`).
+El código de `/tienda` y `/vender` llega al mergear `#6`.
 
 ## Incidente 2026-09-18
 
@@ -55,10 +54,12 @@ se mergea; en la DB, cuando se corre `0016`.
 
 ## Migraciones
 
-Repo: `0001` … `0016`. `0016_stores.sql` la trae el PR de L4 (aún no corrida en prod).
-Siguiente número libre: **`0017`** (asignado a L1/A1-shipping; no lo uses para otra cosa).
+Repo: `0001` … `0017` (`0016` en este PR, `0017` ya en `main`).
+Siguiente número libre: **`0018`**.
 
-Prod (`oilvubxpxxzfxlqhsumk`, 2026-09-18): `0001`–`0015` aplicadas. `0015` sembró 13 puntos activos (Rectoría dropoff + red) y apagó los 8 ficticios. Almoloya y Tianguistenco siguen inactivos (datos huecos).
+Prod (`oilvubxpxxzfxlqhsumk`, 2026-09-18): `0001`–`0017` aplicadas.
+`0015` sembró 13 puntos activos. `0016` sembró `viogi` y backfilleo `store_id`.
+`0017` es `home_shipping_mxn` (semilla $10). Almoloya y Tianguistenco siguen inactivos.
 
 Schema escrito hasta `0011`: `docs/ESQUEMA-REAL.md`.
 
