@@ -28,13 +28,14 @@ Hacia el cliente hay una sola tienda (Viogi). `products.owner` (`uzziel` | `mari
 | Visual search Gemini + pgvector | `/[locale]/visual-search`, `/api/visual-search` |
 | Admin: productos, reservas, settings, studio, pickup | `app/admin/**` |
 | Auth clientes (email + Google) | `app/[locale]/account/**` |
+| Auto-embed al publicar prenda + marcar pedido entregado | `lib/embeddings.ts`, `app/admin/products/actions.ts`, `app/admin/reservas/actions.ts` |
 
 ## Siguiente código (paquetes)
 
 | Prioridad | Paquete | Carril | Estado |
 |---|---|---|---|
 | 1 | [`packets/D-stores.md`](./packets/D-stores.md) | L4 | **LISTO** — primer código de marketplace |
-| 2 | [`packets/F-admin-ops.md`](./packets/F-admin-ops.md) | L5 | **LISTO** — auto-embed + marcar entregado |
+| 2 | [`packets/F-admin-ops.md`](./packets/F-admin-ops.md) | L5 | **PR abierto** — auto-embed + marcar entregado |
 | 3 | [`packets/A1-shipping.md`](./packets/A1-shipping.md) | L1 | **LISTO** — envío a domicilio editable; no inventar el precio |
 | 4 | [`packets/E-connect.md`](./packets/E-connect.md) | L7 | **BLOQUEADO** — negocio + Stripe MX |
 

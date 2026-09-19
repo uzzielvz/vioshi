@@ -3,6 +3,7 @@ import { revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdminSession } from '@/lib/admin/session'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { embedProductImage } from '@/lib/embeddings'
 import {
   generateSku,
   isCondition,
@@ -157,6 +158,7 @@ export async function createProduct(_prev: ActionState, formData: FormData): Pro
   if (uploadError) return { error: uploadError }
 
   await saveAttributes(supabase, product.id, formData)
+  await embedOnPublish(supabase, product.id)
 
   revalidateTag('products')
   redirect('/admin/products')
@@ -239,8 +241,38 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
 
   await saveAttributes(supabase, id, formData)
 
+  const { data: current } = await supabase
+    .from('products')
+    .select('embedding')
+    .eq('id', id)
+    .single()
+  if (!current?.embedding) await embedOnPublish(supabase, id)
+
   revalidateTag('products')
   redirect('/admin/products')
+}
+
+/**
+ * Genera el embedding visual al publicar. No bloquea el guardado: si Gemini
+ * falla, la prenda ya está guardada y el buscador visual simplemente no la
+ * verá hasta el próximo intento (scripts/generate-embeddings.ts es idempotente).
+ */
+async function embedOnPublish(supabase: SupabaseClient, productId: string) {
+  const { data: primary } = await supabase
+    .from('product_images')
+    .select('url')
+    .eq('product_id', productId)
+    .eq('is_primary', true)
+    .maybeSingle()
+
+  if (!primary?.url) return
+
+  try {
+    const vector = await embedProductImage(primary.url)
+    await supabase.from('products').update({ embedding: vector }).eq('id', productId)
+  } catch (err) {
+    console.error(`[admin/products] embedding pendiente para ${productId}:`, err)
+  }
 }
 
 type SupabaseClient = ReturnType<typeof createAdminClient>

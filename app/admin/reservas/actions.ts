@@ -110,3 +110,11 @@ export async function clearReviewFlagAction(orderId: string) {
   await supabase.from('orders').update({ needs_review: false }).eq('id', orderId)
   revalidatePath('/admin/reservas')
 }
+
+/** Marca un pedido pagado como entregado (recolección o entrega a domicilio). */
+export async function markOrderDeliveredAction(orderId: string) {
+  await requireAdminSession()
+  const supabase = createAdminClient()
+  await supabase.from('orders').update({ status: 'delivered' }).eq('id', orderId)
+  revalidatePath('/admin/reservas')
+}

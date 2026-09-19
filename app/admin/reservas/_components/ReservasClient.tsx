@@ -8,6 +8,7 @@ import {
   releaseReservationAction,
   toggleSoldAction,
   clearReviewFlagAction,
+  markOrderDeliveredAction,
 } from '../actions'
 
 const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
@@ -37,6 +38,21 @@ export type RevisionManual = {
   total_mxn: number
   review_reason: string | null
   created_at: string
+}
+
+export type PedidoPorEntregar = {
+  id: string
+  order_number: string
+  email: string
+  phone: string | null
+  total_mxn: number
+  delivery_method: string
+  created_at: string
+}
+
+const ETIQUETA_ENTREGA: Record<string, string> = {
+  home: 'A domicilio',
+  pickup: 'Recolección',
 }
 
 const ETIQUETA_TIPO: Record<Reserva['reservation_kind'], string> = {
@@ -97,13 +113,21 @@ export default function ReservasClient({
   reservas,
   disponibles,
   revisiones,
+  pedidosPorEntregar,
 }: {
   reservas: Reserva[]
   disponibles: Disponible[]
   revisiones: RevisionManual[]
+  pedidosPorEntregar: PedidoPorEntregar[]
 }) {
   const [state, formAction] = useFormState(createManualHoldAction, null)
   const [copiado, setCopiado] = useState<string | null>(null)
+  const [entregados, setEntregados] = useState<Set<string>>(new Set())
+
+  const marcarEntregado = (id: string) => {
+    setEntregados((prev) => new Set(prev).add(id))
+    markOrderDeliveredAction(id)
+  }
 
   const copiar = async (r: Reserva) => {
     await navigator.clipboard.writeText(recordatorio(r))
@@ -154,6 +178,52 @@ export default function ReservasClient({
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Pedidos pagados por entregar ───────────────────────────────────── */}
+      {pedidosPorEntregar.length > 0 && (
+        <section>
+          <h2
+            className="uppercase tracking-widest mb-1"
+            style={{ ...font, fontSize: '12px', fontWeight: 600 }}
+          >
+            Por entregar ({pedidosPorEntregar.filter((o) => !entregados.has(o.id)).length})
+          </h2>
+          <p className="text-gray-500 mb-4" style={{ ...font, fontSize: '10px' }}>
+            Pedidos ya pagados. Marca entregado cuando el cliente reciba o recoja su pieza.
+          </p>
+          <div className="border border-gray-200 divide-y divide-gray-100">
+            {pedidosPorEntregar
+              .filter((o) => !entregados.has(o.id))
+              .map((o) => (
+                <div key={o.id} className="px-4 py-3 flex items-start justify-between gap-4">
+                  <div className="min-w-0" style={{ ...font, fontSize: '11px' }}>
+                    <p className="font-medium">
+                      #{o.order_number} · ${Number(o.total_mxn).toFixed(2)} MXN
+                    </p>
+                    <p className="text-gray-600">{o.email}</p>
+                    <p className="text-gray-400 mt-1" style={{ fontSize: '10px' }}>
+                      {ETIQUETA_ENTREGA[o.delivery_method] ?? o.delivery_method}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4 shrink-0">
+                    {o.phone && (
+                      <a
+                        href={whatsappLink(o.phone) ?? '#'}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="uppercase tracking-widest border-b border-black hover:opacity-50"
+                        style={{ ...font, fontSize: '10px' }}
+                      >
+                        WhatsApp
+                      </a>
+                    )}
+                    <Boton onClick={() => marcarEntregado(o.id)}>Entregado</Boton>
+                  </div>
+                </div>
+              ))}
           </div>
         </section>
       )}

@@ -17,7 +17,7 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenAI } from '@google/genai';
+import { EMBED_MODEL, FLASH_MODEL, describeImage, embedText } from '@/lib/embeddings';
 
 function loadEnv() {
   const envPath = resolve(process.cwd(), '.env.local');
@@ -39,47 +39,10 @@ if (!SUPABASE_URL || !SERVICE_ROLE || !GEMINI_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
-const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
-
-const FLASH_MODEL = 'gemini-2.5-flash';
-const EMBED_MODEL = 'gemini-embedding-001';
 const EMBED_DIMS = 768;
 const RATE_DELAY_MS = 600;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-async function describeImage(base64: string, mime: string): Promise<string> {
-  const res = await ai.models.generateContent({
-    model: FLASH_MODEL,
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          {
-            text: 'Describe this clothing item in one rich sentence: color, shape, style, apparent material, pattern or texture. In English, no emojis, no prefixes. Max 50 words.',
-          },
-          { inlineData: { mimeType: mime, data: base64 } },
-        ],
-      },
-    ],
-  });
-  const text = res.text;
-  if (!text) throw new Error('Gemini Flash returned empty text');
-  return text.trim();
-}
-
-async function embedText(text: string): Promise<number[]> {
-  const res = await ai.models.embedContent({
-    model: EMBED_MODEL,
-    contents: text,
-    config: { outputDimensionality: EMBED_DIMS },
-  });
-  const vector = res.embeddings?.[0]?.values;
-  if (!vector || vector.length !== EMBED_DIMS) {
-    throw new Error(`Expected ${EMBED_DIMS}-dim vector, got ${vector?.length}`);
-  }
-  return vector;
-}
 
 type Pending = {
   product_id: string;
