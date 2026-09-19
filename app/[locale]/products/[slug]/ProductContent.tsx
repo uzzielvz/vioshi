@@ -223,7 +223,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
             </h1>
 
             <p
-              className="mb-8"
+              className={product.store ? 'mb-2' : 'mb-8'}
               style={{
                 fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
                 fontSize: '13px',
@@ -232,6 +232,21 @@ export default function ProductContent({ product, allProducts }: ProductContentP
             >
               {formatPrice(product.price, locale)}
             </p>
+
+            {/* Quién vende la prenda. Hoy siempre Viogi; el link ya existe para
+                cuando haya más de una tienda. */}
+            {product.store && (
+              <p className="mb-8" style={{ ...BASE_FONT, fontSize: '11px', color: '#666' }}>
+                {t('sold_by')}{' '}
+                <Link
+                  href={`/${locale}/tienda/${product.store.slug}`}
+                  className="underline hover:opacity-60 transition-opacity"
+                  style={{ color: '#000' }}
+                >
+                  {product.store.name}
+                </Link>
+              </p>
+            )}
 
             {/* Talla, medidas y estado — visibles sin abrir acordeón.
                 En segunda mano son el dato que decide la compra. */}

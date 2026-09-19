@@ -9,7 +9,7 @@ No escribas este paquete hasta que `STATUS.md` diga `L7 desbloqueado` y el human
 
 - [ ] Contador: régimen / retenciones / si Connect en MX para persona física aguanta el piloto
 - [ ] Dashboard Stripe: Express (o Accounts v2) disponible para cuentas MX del tipo que usará Mario
-- [ ] L4 mergeado: existe `stores.stripe_account_id` (aunque Mario no sea store)
+- [x] L4 mergeado: existe `stores.stripe_account_id` (aunque Mario no sea store)
 
 ## Cuando se desbloquee — alcance mínimo
 

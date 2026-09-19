@@ -1,6 +1,6 @@
 # Paquete F — Operación admin (L5)
 
-**Estado:** LISTO  
+**Estado:** MERGEADO (#7)  
 **Carril:** L5  
 **No hagas:** Connect, transferencias Stripe, tocar checkout.
 

@@ -209,7 +209,8 @@
     "reserved": "On hold",
     "reserved_note": "Someone is buying it right now. If they do not finish, it goes back on sale.",
     "sold_note": "This piece found its owner. It was one of a kind, so it is not coming back.",
-    "see_others": "See other pieces"
+    "see_others": "See other pieces",
+    "sold_by": "Sold by"
   },
   "search": {
     "placeholder": "SEARCH PRODUCTS...",
@@ -435,6 +436,16 @@
       "price_high_low": "Price: High to Low",
       "newest": "Newest",
       "product_count": "{count, plural, one {# product} other {# products}}"
+    },
+    "store": {
+      "pieces": "Pieces",
+      "instagram": "Instagram",
+      "empty": "This store has no published pieces yet"
+    },
+    "vender": {
+      "error_invalid": "Check the required fields and your email.",
+      "error_rate_limited": "We already got your application. Try again later.",
+      "error_failed": "Could not send the application. Please try again."
     }
   },
   "account": {

@@ -1,6 +1,6 @@
 # Paquete A1 — Envío a domicilio editable (L1)
 
-**Estado:** LISTO (código) · el **monto real** sigue abierto en negocio  
+**Estado:** MERGEADO (#4) · el **monto real** sigue abierto en negocio  
 **Carril:** L1  
 **No hagas:** Skydropx, tarifario por CP, inventar $150 ni ningún “precio correcto”.
 

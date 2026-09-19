@@ -35,6 +35,17 @@ De `Plataforma_MVP`:
 
 Un agente no “adelanta Fase 3” porque el código sea fácil.
 
+## Qué definir para desbloquear Connect (E)
+
+No son features. Son respuestas. Sin ellas no se abre L7.
+
+1. **Contador (Mario):** en una venta de $250, ¿cuánto le queda al vendedor con RFC, sin RFC y en RESICO? ¿La plataforma debe retener? ¿Hay que constituir sociedad antes del primer payout a Mario?
+2. **Stripe Dashboard (Uzziel):** ¿puedes crear una cuenta Express (o Accounts v2) de persona física en México y completar KYC de prueba? Si el producto no existe para ese perfil, E no se escribe.
+3. **Regla de payout (los dos):** Mario cobra al marcar Entregado, 0 % de comisión, por `owner = mario`. Confirmar que eso sustituye cualquier “día de liquidación”.
+4. **No hay que definir ahora:** nombre de plataforma, comisión 8–10 %, registro abierto, Skydropx.
+
+Cuando 1 y 2 sean sí, el humano escribe en `STATUS.md`: `L7 desbloqueado`. Ahí se lanza el paquete E.
+
 ## Cómo anotar un bloqueo
 
 En el PR o al final del turno:

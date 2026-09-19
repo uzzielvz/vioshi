@@ -18,7 +18,7 @@ Negocio (cambia): Obsidian `70_Trabajo/Viogi` · playbook `Divide and Conquer.md
 
 Un agente = un carril = archivos del paquete. Si dos tocan el mismo archivo, serie.
 
-**Siguiente trabajo:** paquete D (L4 stores). En paralelo posible: F (L5 admin). Connect (L7) bloqueado.
+**Siguiente trabajo:** ninguno LISTO. Connect (L7) bloqueado hasta `OPEN.md` § Connect.
 
 ## Serializado
 

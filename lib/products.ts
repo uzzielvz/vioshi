@@ -69,6 +69,11 @@ export interface ProductData {
   condition?: Condition;
   /** Solo relevante cuando condition === 'con_detalles'. */
   defectNotes?: string;
+  /** Tienda que vende la prenda. Fase 1 siempre es Viogi (0016). */
+  store?: {
+    slug: string;
+    name: string;
+  };
   /**
    * Estado de disponibilidad de la pieza única.
    *   'disponible' → se puede comprar
@@ -102,21 +107,27 @@ type DbProduct = {
   condition: string | null;
   defect_notes: string | null;
   reserved_until: string | null;
+  store_id: string | null;
   product_images: { url: string; is_primary: boolean; sort_order: number }[];
   product_attributes: { key: string; value: string; sort_order: number }[];
   categories: { slug: string } | null;
   brands: { id: string; name: string; slug: string; logo_url: string | null } | null;
+  stores: { slug: string; name: string } | null;
 }
 
-/** Columnas públicas. Excluye owner / cost_mxn / reserved_* por diseño. */
+/**
+ * Columnas públicas. Excluye owner / cost_mxn / reserved_* por diseño.
+ * `stores` solo expone slug y name: `stripe_account_id` es interno (0016).
+ */
 const PUBLIC_PRODUCT_SELECT = `
   id, slug, name, description, price_mxn, sold_out, is_new, brand_id,
   garment_type, chest_cm, length_cm, sleeve_cm, waist_cm, rise_cm, inseam_cm,
-  condition, defect_notes, reserved_until,
+  condition, defect_notes, reserved_until, store_id,
   product_images (url, is_primary, sort_order),
   product_attributes (key, value, sort_order),
   categories (slug),
-  brands (id, name, slug, logo_url)
+  brands (id, name, slug, logo_url),
+  stores (slug, name)
 ` as const
 
 // Public client — no cookies needed for catalog reads (anon key, public data)
@@ -186,6 +197,9 @@ function rowToProductData(row: DbProduct): ProductData {
     measurements: Object.keys(measurements).length > 0 ? measurements : undefined,
     condition:   isCondition(row.condition) ? row.condition : undefined,
     defectNotes: row.defect_notes?.trim() || undefined,
+    store: row.stores
+      ? { slug: row.stores.slug, name: row.stores.name }
+      : undefined,
     availability,
     reservedUntil: reservaViva ? (row.reserved_until ?? undefined) : undefined,
     attributes:  visibleAttrs.length > 0 ? visibleAttrs : undefined,
@@ -195,7 +209,8 @@ function rowToProductData(row: DbProduct): ProductData {
 async function fetchProducts(
   category?: string,
   requireImages = true,
-  includeSold = false
+  includeSold = false,
+  storeId?: string
 ): Promise<ProductData[]> {
   const supabase = getSupabase()
 
@@ -203,6 +218,10 @@ async function fetchProducts(
     .from('products')
     .select(PUBLIC_PRODUCT_SELECT)
     .order('created_at', { ascending: false })
+
+  if (storeId) {
+    query = query.eq('store_id', storeId)
+  }
 
   // El listado NO muestra prendas vendidas. Las apartadas SÍ se muestran,
   // marcadas: pueden liberarse y el cliente se queda esperando.
@@ -251,8 +270,13 @@ async function fetchProductBySlug(slug: string): Promise<ProductData | null> {
   return rowToProductData(row)
 }
 
-async function fetchStoreProducts(category?: string): Promise<ProductData[]> {
+async function fetchStorefrontProducts(category?: string): Promise<ProductData[]> {
   return fetchProducts(category, true, false)
+}
+
+/** Catálogo de una tienda: mismas reglas que el listado general. */
+async function fetchProductsByStoreId(storeId: string): Promise<ProductData[]> {
+  return fetchProducts(undefined, true, false, storeId)
 }
 
 /** Sugerencias para la ficha de una prenda vendida. */
@@ -264,8 +288,15 @@ export const getAvailableProducts = unstable_cache(
 
 // Cached with Next.js — revalidate every 60 s, invalidable via revalidateTag('products')
 export const getProducts = unstable_cache(
-  fetchStoreProducts,
+  fetchStorefrontProducts,
   ['products'],
+  { revalidate: 60, tags: ['products'] }
+)
+
+/** Prendas de una tienda, para /[locale]/tienda/[slug]. */
+export const getProductsByStoreId = unstable_cache(
+  fetchProductsByStoreId,
+  ['products-by-store'],
   { revalidate: 60, tags: ['products'] }
 )
 

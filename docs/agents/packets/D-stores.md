@@ -1,6 +1,6 @@
 # Paquete D — Tiendas (L4)
 
-**Estado:** LISTO  
+**Estado:** MERGEADO (#6) · `0016` aplicada en prod  
 **Carril:** L4  
 **Migración asignada:** `0016_stores.sql`  
 **No hagas:** Connect, comisión, registro abierto, tocar webhooks.
