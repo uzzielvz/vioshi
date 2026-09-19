@@ -35,7 +35,7 @@ Hacia el cliente hay una sola tienda (Viogi). `products.owner` (`uzziel` | `mari
 |---|---|---|---|
 | 1 | [`packets/D-stores.md`](./packets/D-stores.md) | L4 | **LISTO** — primer código de marketplace |
 | 2 | [`packets/F-admin-ops.md`](./packets/F-admin-ops.md) | L5 | **LISTO** — auto-embed + marcar entregado |
-| 3 | [`packets/A1-shipping.md`](./packets/A1-shipping.md) | L1 | **LISTO** — envío a domicilio editable; no inventar el precio |
+| 3 | [`packets/A1-shipping.md`](./packets/A1-shipping.md) | L1 | **PR abierto** — código listo, degrada solo; BLOQUEO: falta número de migración para `settings.home_shipping_mxn` (0016 es de L4, no usar) |
 | 4 | [`packets/E-connect.md`](./packets/E-connect.md) | L7 | **BLOQUEADO** — negocio + Stripe MX |
 
 No abrir registro público de vendedores. No reviews. No Skydropx. No Next 16.

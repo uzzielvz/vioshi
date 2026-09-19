@@ -261,6 +261,9 @@ export default function CheckoutPage() {
   }>({});
   const [pickupPoints, setPickupPoints] = useState<PickupPoint[]>([]);
   const [pickupPointsLoading, setPickupPointsLoading] = useState(true);
+  // Semilla del fallback mientras carga o si la DB falla; el valor real viene
+  // de settings.home_shipping_mxn (paquete A1).
+  const [homeShippingMxn, setHomeShippingMxn] = useState(STANDARD_SHIPPING_COST);
 
   // Fix stale localStorage cart (slug ids / old prices) before checkout submit
   useEffect(() => {
@@ -289,6 +292,17 @@ export default function CheckoutPage() {
       if (cancelled) return;
       setPickupPoints(points);
       setPickupPointsLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCheckoutSettingsAction().then((settings) => {
+      if (cancelled) return;
+      setHomeShippingMxn(settings.homeShippingMxn);
     });
     return () => {
       cancelled = true;
@@ -386,13 +400,13 @@ export default function CheckoutPage() {
 
   const shippingCost = useMemo(() => {
     if (formData.deliveryMethod === 'home') {
-      return formData.shippingMethod === 'express' ? EXPRESS_SHIPPING_COST : STANDARD_SHIPPING_COST;
+      return formData.shippingMethod === 'express' ? EXPRESS_SHIPPING_COST : homeShippingMxn;
     }
     if (formData.deliveryMethod === 'pickup' && selectedPickupPoint) {
       return selectedPickupPoint.additionalCost;
     }
     return 0;
-  }, [formData.deliveryMethod, formData.shippingMethod, selectedPickupPoint]);
+  }, [formData.deliveryMethod, formData.shippingMethod, selectedPickupPoint, homeShippingMxn]);
 
   useEffect(() => {
     updateShippingCost(shippingCost);
@@ -832,7 +846,7 @@ export default function CheckoutPage() {
                         value="standard"
                         checked={formData.shippingMethod === 'standard'}
                         onChange={handleInputChange}
-                        label={`${t('shipping_standard')} — ${formatPrice(STANDARD_SHIPPING_COST, locale)}`}
+                        label={`${t('shipping_standard')} — ${formatPrice(homeShippingMxn, locale)}`}
                       />
                       <RadioCard
                         name="shippingMethod"

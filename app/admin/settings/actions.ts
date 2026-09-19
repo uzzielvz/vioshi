@@ -23,6 +23,10 @@ export async function updateSettingsAction(
   const spei = num('spei_reserve_minutes')
   const voucher = num('voucher_hours')
   const manual = num('manual_hold_days')
+  // Solo llega '1' cuando /admin/settings pudo leer `home_shipping_mxn`
+  // (paquete A1). Mientras la migración no tenga número asignado, la columna
+  // no existe y no se manda en el UPDATE — ver BLOQUEO en STATUS.md.
+  const homeShippingAvailable = formData.get('home_shipping_available') === '1'
 
   if (!Number.isFinite(umbral) || umbral < 0) return { error: 'El umbral debe ser un número ≥ 0' }
   // El mínimo de 30 no es arbitrario: Stripe Checkout no permite que una sesión
@@ -36,17 +40,23 @@ export async function updateSettingsAction(
   if (!Number.isInteger(manual) || manual < 1 || manual > 30)
     return { error: 'El apartado manual debe estar entre 1 y 30 días' }
 
+  const update: Record<string, number> = {
+    card_only_threshold_mxn: umbral,
+    card_reserve_minutes: tarjeta,
+    spei_reserve_minutes: spei,
+    voucher_hours: voucher,
+    manual_hold_days: manual,
+  }
+
+  if (homeShippingAvailable) {
+    const envio = num('home_shipping_mxn')
+    if (!Number.isFinite(envio) || envio < 0)
+      return { error: 'El envío a domicilio debe ser un número ≥ 0' }
+    update.home_shipping_mxn = envio
+  }
+
   const supabase = createAdminClient()
-  const { error } = await supabase
-    .from('settings')
-    .update({
-      card_only_threshold_mxn: umbral,
-      card_reserve_minutes: tarjeta,
-      spei_reserve_minutes: spei,
-      voucher_hours: voucher,
-      manual_hold_days: manual,
-    })
-    .eq('id', true)
+  const { error } = await supabase.from('settings').update(update).eq('id', true)
 
   if (error) return { error: error.message }
 

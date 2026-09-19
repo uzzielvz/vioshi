@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe';
 import { getSettings, isCardOnly, DEFERRED_PAYMENT_METHODS } from '@/lib/settings';
 import { normalizePhone } from '@/lib/phone';
-import { STANDARD_SHIPPING_COST, EXPRESS_SHIPPING_COST } from '@/lib/constants';
+import { EXPRESS_SHIPPING_COST } from '@/lib/constants';
 import { mapPickupPointRow, type PickupPointRow } from '@/lib/pickup';
 import type { CartItem } from '@/types';
 import type { PickupPoint } from '@/types/delivery';
@@ -92,6 +92,7 @@ export async function getCheckoutSettingsAction() {
     cardOnlyThreshold: s.card_only_threshold_mxn,
     cardReserveMinutes: s.card_reserve_minutes,
     voucherHours: s.voucher_hours,
+    homeShippingMxn: s.home_shipping_mxn,
   };
 }
 
@@ -208,7 +209,7 @@ export async function createCheckoutSessionAction(
   if (formData.deliveryMethod === 'home') {
     shippingCost = formData.shippingMethod === 'express'
       ? EXPRESS_SHIPPING_COST
-      : STANDARD_SHIPPING_COST;
+      : settings.home_shipping_mxn;
   } else {
     shippingCost = pickupAdditionalCost;
   }
