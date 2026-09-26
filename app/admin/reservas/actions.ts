@@ -115,19 +115,23 @@ export async function clearReviewFlagAction(orderId: string) {
  * Marca el handoff físico del pedido (recogido o entregado). Solo cambia
  * `orders.status`; no toca Stripe ni el pago — eso lo resuelve el webhook.
  * `delivered` es un valor válido del CHECK de `0001_initial_schema.sql`.
+ *
+ * El pedido DEBE estar cobrado. El filtro va en el UPDATE, no en un `select`
+ * previo: la lista de "por entregar" ya filtra por pago, pero una Server Action
+ * no se protege con lo que muestre una lista, y un select + update en dos pasos
+ * es una carrera. Cuando Connect cuelgue el payout de este botón, un pedido sin
+ * cobrar marcado como entregado se convierte en dinero transferido de más.
  */
 export async function markOrderDeliveredAction(orderId: string) {
   await requireAdminSession()
   const supabase = createAdminClient()
 
-  const { data: order } = await supabase
+  await supabase
     .from('orders')
-    .select('status')
+    .update({ status: 'delivered' })
     .eq('id', orderId)
-    .maybeSingle()
+    .eq('payment_status', 'completed')
+    .not('status', 'in', '(delivered,cancelled)')
 
-  if (!order || order.status === 'delivered' || order.status === 'cancelled') return
-
-  await supabase.from('orders').update({ status: 'delivered' }).eq('id', orderId)
   revalidatePath('/admin/reservas')
 }
