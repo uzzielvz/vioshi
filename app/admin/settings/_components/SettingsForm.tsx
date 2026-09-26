@@ -71,18 +71,11 @@ function Submit() {
   )
 }
 
-export default function SettingsForm({
-  settings,
-  homeShippingAvailable,
-}: {
-  settings: Settings
-  homeShippingAvailable: boolean
-}) {
+export default function SettingsForm({ settings }: { settings: Settings }) {
   const [state, action] = useFormState(updateSettingsAction, null)
 
   return (
     <form action={action} className="max-w-2xl space-y-8">
-      <input type="hidden" name="home_shipping_available" value={homeShippingAvailable ? '1' : '0'} />
       <Campo
         name="card_only_threshold_mxn"
         label="Umbral solo tarjeta (MXN)"
@@ -124,30 +117,15 @@ export default function SettingsForm({
         min={1}
         max={30}
       />
-      {homeShippingAvailable ? (
-        <Campo
-          name="home_shipping_mxn"
-          label="Envío a domicilio (MXN)"
-          hint="Semilla $10, editable aquí. Pickup sigue por punto en /admin/pickup-points, no aquí."
-          defaultValue={settings.home_shipping_mxn}
-          min={0}
-          max={10000}
-          step="0.01"
-        />
-      ) : (
-        <div>
-          <label
-            className="block uppercase tracking-widest text-gray-400 mb-1"
-            style={{ ...font, fontSize: '10px' }}
-          >
-            Envío a domicilio (MXN)
-          </label>
-          <p className="text-gray-400" style={{ ...font, fontSize: '11px' }}>
-            $10 (fijo en código). Pendiente migración de <code>home_shipping_mxn</code> — no editable
-            todavía.
-          </p>
-        </div>
-      )}
+      <Campo
+        name="home_shipping_mxn"
+        label="Envío a domicilio (MXN)"
+        hint="Semilla $10, editable aquí. Pickup sigue por punto en /admin/pickup-points, no aquí."
+        defaultValue={settings.home_shipping_mxn}
+        min={0}
+        max={10000}
+        step="0.01"
+      />
 
       {state && 'error' in state && (
         <p className="text-red-600" style={{ ...font, fontSize: '11px' }}>

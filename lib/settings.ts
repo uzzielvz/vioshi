@@ -11,58 +11,43 @@ export interface BusinessSettings {
   card_reserve_minutes: number
   voucher_hours: number
   manual_hold_days: number
-  /** Editable en /admin/settings (paquete A1). Semilla $10 hasta que la
-   * columna `home_shipping_mxn` exista en `settings` — ver BLOQUEO en
-   * docs/agents/STATUS.md (falta número de migración). */
+  /** Editable en /admin/settings. Semilla $10 (0017). El monto real es una
+   * decisión de negocio abierta: no se hardcodea "el correcto" en otro sitio. */
   home_shipping_mxn: number
 }
 
-/** Valores de respaldo si la tabla no responde. Iguales a los DEFAULT de 0012. */
+/**
+ * Valores de respaldo si la tabla no responde. `card_reserve_minutes` es 30, no
+ * el DEFAULT 20 de 0012: Stripe Checkout no deja expirar una sesión antes de 30
+ * minutos y la reserva debe vencer con ella.
+ */
 const FALLBACK: BusinessSettings = {
   card_only_threshold_mxn: 500,
-  card_reserve_minutes: 20,
+  card_reserve_minutes: 30,
   voucher_hours: 24,
   manual_hold_days: 3,
   home_shipping_mxn: 10,
 }
 
-const BASE_COLUMNS = 'card_only_threshold_mxn, card_reserve_minutes, voucher_hours, manual_hold_days'
+const COLUMNS =
+  'card_only_threshold_mxn, card_reserve_minutes, voucher_hours, manual_hold_days, home_shipping_mxn'
 
 export async function getSettings(): Promise<BusinessSettings> {
   const supabase = createAdminClient()
 
-  const { data, error } = await supabase
-    .from('settings')
-    .select(`${BASE_COLUMNS}, home_shipping_mxn`)
-    .eq('id', true)
-    .single()
+  const { data, error } = await supabase.from('settings').select(COLUMNS).eq('id', true).single()
 
-  if (!error && data) {
-    return {
-      card_only_threshold_mxn: Number(data.card_only_threshold_mxn),
-      card_reserve_minutes: Number(data.card_reserve_minutes),
-      voucher_hours: Number(data.voucher_hours),
-      manual_hold_days: Number(data.manual_hold_days),
-      home_shipping_mxn: Number(data.home_shipping_mxn),
-    }
-  }
-
-  // `home_shipping_mxn` todavía no existe en la tabla (migración pendiente,
-  // ver BLOQUEO en STATUS.md): reintenta sin esa columna para no perder el
-  // resto de los settings mientras la migración no aterriza.
-  const fallback = await supabase.from('settings').select(BASE_COLUMNS).eq('id', true).single()
-
-  if (fallback.error || !fallback.data) {
-    console.error('[settings] lectura falló, usando respaldo:', fallback.error?.message)
+  if (error || !data) {
+    console.error('[settings] lectura falló, usando respaldo:', error?.message)
     return FALLBACK
   }
 
   return {
-    card_only_threshold_mxn: Number(fallback.data.card_only_threshold_mxn),
-    card_reserve_minutes: Number(fallback.data.card_reserve_minutes),
-    voucher_hours: Number(fallback.data.voucher_hours),
-    manual_hold_days: Number(fallback.data.manual_hold_days),
-    home_shipping_mxn: FALLBACK.home_shipping_mxn,
+    card_only_threshold_mxn: Number(data.card_only_threshold_mxn),
+    card_reserve_minutes: Number(data.card_reserve_minutes),
+    voucher_hours: Number(data.voucher_hours),
+    manual_hold_days: Number(data.manual_hold_days),
+    home_shipping_mxn: Number(data.home_shipping_mxn),
   }
 }
 
