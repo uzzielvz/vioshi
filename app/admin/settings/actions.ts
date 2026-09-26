@@ -16,7 +16,13 @@ export async function updateSettingsAction(
 ): Promise<ActionState> {
   await requireAdminSession()
 
-  const num = (k: string) => Number((formData.get(k) as string) ?? '')
+  // Vacío o ausente → NaN, no 0. `required` en el input es validación de
+  // navegador, no del servidor: sin esto, un POST sin `home_shipping_mxn`
+  // guardaría envío $0, porque su rango (≥ 0) sí acepta el cero.
+  const num = (k: string) => {
+    const raw = (formData.get(k) as string | null)?.trim()
+    return raw ? Number(raw) : NaN
+  }
 
   const umbral = num('card_only_threshold_mxn')
   const tarjeta = num('card_reserve_minutes')
