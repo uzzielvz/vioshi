@@ -19,9 +19,13 @@ export async function toggleSoldAction(productId: string, vendida: boolean) {
   const actor = await getAdminActor()
   const supabase = createAdminClient()
 
+  // `sold_at` es lo que hace posible "la ganancia de este mes": una venta
+  // presencial sin fecha no entra en ningún periodo. Al desmarcar se limpia,
+  // para que una prenda disponible no arrastre una fecha de venta vieja.
   const patch = vendida
     ? {
         sold_out: true,
+        sold_at: new Date().toISOString(),
         reserved_order_id: null,
         reserved_at: null,
         reserved_until: null,
@@ -29,7 +33,7 @@ export async function toggleSoldAction(productId: string, vendida: boolean) {
         reserved_contact_name: null,
         reserved_contact_phone: null,
       }
-    : { sold_out: false, sold_order_id: null }
+    : { sold_out: false, sold_order_id: null, sold_at: null }
 
   let query = supabase.from('products').update(patch).eq('id', productId)
   if (actor === 'mario') query = query.eq('owner', 'mario')

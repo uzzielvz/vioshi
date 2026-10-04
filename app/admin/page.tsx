@@ -1,10 +1,24 @@
 import Link from 'next/link'
 import { getAdminActor } from '@/lib/admin/session'
 import { listInventory, totalsFor, type InventoryItem, type OwnerTotals } from '@/lib/admin/inventory'
+import {
+  getInventoryStats,
+  isPeriod,
+  PERIODS,
+  PERIOD_LABELS,
+  type AgingItem,
+  type OwnerStats,
+  type Period,
+} from '@/lib/admin/stats'
 import { formatPrice } from '@/lib/formatters'
 import { GARMENT_TYPE_LABELS, isGarmentType } from '@/lib/garments'
 
 export const dynamic = 'force-dynamic'
+
+const OWNER_LABELS: Record<'uzziel' | 'mario', string> = {
+  uzziel: 'Uzziel',
+  mario: 'Mario',
+}
 
 const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
 
@@ -54,6 +68,153 @@ function garmentLabel(type: string | null) {
   return isGarmentType(type) ? GARMENT_TYPE_LABELS[type] : '—'
 }
 
+/** Selector de periodo sin JS: un link por rango. */
+function PeriodNav({ active }: { active: Period }) {
+  return (
+    <nav className="flex flex-wrap gap-4 mb-5">
+      {PERIODS.map((p) => (
+        <Link
+          key={p}
+          href={`/admin?periodo=${p}`}
+          className={
+            p === active
+              ? 'uppercase tracking-widest border-b border-black'
+              : 'uppercase tracking-widest text-gray-400 hover:text-black transition-colors'
+          }
+          style={{ ...font, fontSize: '10px' }}
+        >
+          {PERIOD_LABELS[p]}
+        </Link>
+      ))}
+    </nav>
+  )
+}
+
+/**
+ * Números de dinero del periodo. La ganancia se muestra junto a su propia
+ * advertencia cuando hay piezas sin costo: un margen incompleto que se vea
+ * como definitivo es peor que un hueco declarado.
+ */
+function MoneyBlock({ title, stats }: { title: string; stats: OwnerStats }) {
+  const incompleta = stats.soldMissingCost > 0
+  const canal =
+    stats.soldPieces > 0 ? `${stats.soldWeb} web · ${stats.soldInstagram} Instagram/DM` : undefined
+
+  return (
+    <section>
+      <h2
+        className="uppercase tracking-widest mb-3"
+        style={{ ...font, fontSize: '11px', fontWeight: 500 }}
+      >
+        {title}
+      </h2>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Stat
+          label="Ganancia del periodo"
+          value={money(stats.profit)}
+          hint={
+            incompleta
+              ? `${stats.soldMissingCost} vendida${stats.soldMissingCost === 1 ? '' : 's'} sin costo capturado: falta`
+              : 'Precio menos costo de lo vendido'
+          }
+        />
+        <Stat
+          label="Vendido en el periodo"
+          value={`${stats.soldPieces} · ${money(stats.soldRevenue)}`}
+          hint={canal}
+        />
+        <Stat
+          label="Comprado en el periodo"
+          value={`${stats.boughtPieces} · ${money(stats.boughtCost)}`}
+          hint="Piezas y lo que costaron"
+        />
+        <Stat
+          label="Invertido sin vender"
+          value={money(stats.investedStanding)}
+          hint={`${stats.standingPieces} prenda${stats.standingPieces === 1 ? '' : 's'} en pie`}
+        />
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
+        <Stat label="Falta por vender" value={String(stats.standingPieces)} />
+        <Stat label="En la tienda" value={String(stats.standingListed)} />
+        <Stat label="Solo inventario" value={String(stats.standingInventoryOnly)} />
+        {stats.soldWithoutDate > 0 && (
+          <Stat
+            label="Vendidas sin fecha"
+            value={String(stats.soldWithoutDate)}
+            hint="Anteriores al registro de fecha: no entran en ningún periodo"
+          />
+        )}
+      </div>
+    </section>
+  )
+}
+
+/** Lo que lleva más tiempo sin venderse: el número que decide qué mover. */
+function AgingTable({ items, showOwner }: { items: AgingItem[]; showOwner: boolean }) {
+  return (
+    <section className="mt-10">
+      <h2
+        className="uppercase tracking-widest mb-1"
+        style={{ ...font, fontSize: '11px', fontWeight: 500 }}
+      >
+        Lo más viejo sin vender
+      </h2>
+      <p className="text-gray-400 mb-3" style={{ ...font, fontSize: '10px' }}>
+        Días desde que se compró o se registró. Capital parado.
+      </p>
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b border-gray-200">
+            {(showOwner ? ['Prenda', 'Dueño', 'Días', 'Costo', 'Dónde'] : ['Prenda', 'Días', 'Costo', 'Dónde']).map(
+              (h) => (
+                <th
+                  key={h}
+                  className="text-left pb-3 uppercase tracking-widest text-gray-400 font-normal"
+                  style={{ ...font, fontSize: '10px' }}
+                >
+                  {h}
+                </th>
+              )
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id} className="border-b border-gray-100">
+              <td className="py-3 pr-4" style={{ ...font, fontSize: '11px' }}>
+                <Link
+                  href={`/admin/products/${item.id}`}
+                  className="border-b border-black hover:opacity-50"
+                >
+                  {item.name}
+                </Link>
+              </td>
+              {showOwner && (
+                <td
+                  className="py-3 pr-4 uppercase tracking-widest"
+                  style={{ ...font, fontSize: '10px' }}
+                >
+                  {OWNER_LABELS[item.owner]}
+                </td>
+              )}
+              <td className="py-3 pr-4 font-mono" style={{ ...font, fontSize: '11px' }}>
+                {item.days}
+              </td>
+              <td className="py-3 pr-4 font-mono" style={{ ...font, fontSize: '11px' }}>
+                {item.costMxn == null ? '—' : money(item.costMxn)}
+              </td>
+              <td className="py-3 uppercase tracking-widest" style={{ ...font, fontSize: '10px' }}>
+                {item.listed ? 'En tienda' : 'Inventario'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  )
+}
+
 function Row({ item, showOwner }: { item: InventoryItem; showOwner: boolean }) {
   return (
     <tr className="border-b border-gray-100">
@@ -80,9 +241,17 @@ function Row({ item, showOwner }: { item: InventoryItem; showOwner: boolean }) {
   )
 }
 
-export default async function AdminDashboardPage() {
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams?: { periodo?: string }
+}) {
   const actor = await getAdminActor()
-  const { items, error } = await listInventory(actor)
+  const period: Period = isPeriod(searchParams?.periodo) ? searchParams.periodo : 'mes_actual'
+  const [{ items, error }, stats] = await Promise.all([
+    listInventory(actor),
+    getInventoryStats(actor, period),
+  ])
   const mine = actor === 'uzziel' ? items.filter((item) => item.owner === 'uzziel') : items
   const mario = items.filter((item) => item.owner === 'mario')
   const recent = items.slice(0, 8)
@@ -113,6 +282,41 @@ export default async function AdminDashboardPage() {
         <p className="border border-black bg-white px-4 py-3 mb-8" style={{ ...font, fontSize: '11px' }}>
           {error}
         </p>
+      )}
+
+      {stats.error && (
+        <p className="border border-black bg-white px-4 py-3 mb-8" style={{ ...font, fontSize: '11px' }}>
+          {stats.error}
+        </p>
+      )}
+
+      {!stats.error && (stats.total || stats.perOwner.length > 0) && (
+        <div className="mb-10">
+          <PeriodNav active={period} />
+          <div className="flex flex-col gap-8">
+            {stats.total ? (
+              <>
+                <MoneyBlock title={`Los dos · ${PERIOD_LABELS[period]}`} stats={stats.total} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {stats.perOwner.map((s) => (
+                    <MoneyBlock key={s.owner} title={OWNER_LABELS[s.owner]} stats={s} />
+                  ))}
+                </div>
+              </>
+            ) : (
+              stats.perOwner.map((s) => (
+                <MoneyBlock
+                  key={s.owner}
+                  title={`Tus números · ${PERIOD_LABELS[period]}`}
+                  stats={s}
+                />
+              ))
+            )}
+          </div>
+          {stats.aging.length > 0 && (
+            <AgingTable items={stats.aging} showOwner={actor === 'uzziel'} />
+          )}
+        </div>
       )}
 
       {!error && (items.length === 0 ? (
