@@ -1,7 +1,7 @@
 'use server'
 import { revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { requireAdminSession } from '@/lib/admin/session'
+import { getAdminActor } from '@/lib/admin/session'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateProductEmbedding } from '@/lib/embeddings'
 import {
@@ -25,16 +25,18 @@ type BusinessFields = {
   owner: string
   cost_mxn: number | null
   garment_type: string
-  condition: string
+  condition: string | null
   defect_notes: string | null
 } & Partial<Record<MeasurementKey, number | null>>
 
 /**
- * Valida y normaliza los campos introducidos en la migración 0010.
- * Espejo en servidor de las reglas del formulario: una prenda de segunda mano
- * sin medidas ni estado no se publica.
+ * Inventario interno puede guardarse sin medidas ni estado.
+ * Publicar (`listed`) exige el mismo ficha que antes: estado y medidas del tipo.
  */
-function parseBusinessFields(formData: FormData): { error: string } | { data: BusinessFields } {
+function parseBusinessFields(
+  formData: FormData,
+  listed: boolean
+): { error: string } | { data: BusinessFields } {
   const owner = (formData.get('owner') as string | null)?.trim() ?? ''
   if (!isOwner(owner)) return { error: 'Selecciona un propietario válido (uzziel o mario).' }
 
@@ -51,18 +53,22 @@ function parseBusinessFields(formData: FormData): { error: string } | { data: Bu
   const garment_type = (formData.get('garment_type') as string | null)?.trim() ?? ''
   if (!isGarmentType(garment_type)) return { error: 'Selecciona un tipo de prenda.' }
 
-  const condition = (formData.get('condition') as string | null)?.trim() ?? ''
-  if (!isCondition(condition)) return { error: 'Selecciona el estado de la prenda.' }
+  const conditionRaw = (formData.get('condition') as string | null)?.trim() ?? ''
+  let condition: string | null = null
+  if (!conditionRaw) {
+    if (listed) return { error: 'Selecciona el estado de la prenda para mostrarla en la tienda.' }
+  } else if (!isCondition(conditionRaw)) {
+    return { error: 'Selecciona el estado de la prenda.' }
+  } else {
+    condition = conditionRaw
+  }
 
   const defectRaw = (formData.get('defect_notes') as string | null)?.trim() ?? ''
   if (condition === 'con_detalles' && !defectRaw) {
     return { error: 'Describe los detalles de la prenda: es obligatorio cuando el estado es «Con detalles».' }
   }
-  // Si el estado deja de ser 'con_detalles', la nota vieja no debe sobrevivir.
   const defect_notes = condition === 'con_detalles' ? defectRaw : null
 
-  // Solo las medidas del tipo se guardan; el resto se limpia explícitamente
-  // para que cambiar de pants a playera no deje cintura/tiro colgando.
   const required = requiredMeasurements(garment_type)
   const measurements: Partial<Record<MeasurementKey, number | null>> = {}
 
@@ -73,6 +79,10 @@ function parseBusinessFields(formData: FormData): { error: string } | { data: Bu
     }
     const raw = (formData.get(key) as string | null)?.trim() ?? ''
     if (!raw) {
+      if (!listed) {
+        measurements[key] = null
+        continue
+      }
       return { error: `Falta la medida «${MEASUREMENT_LABELS[key]}». Sin medidas la prenda no se publica.` }
     }
     const parsed = Number(raw)
@@ -85,6 +95,36 @@ function parseBusinessFields(formData: FormData): { error: string } | { data: Bu
   }
 
   return { data: { owner, cost_mxn, garment_type, condition, defect_notes, ...measurements } }
+}
+
+function parsePrice(raw: string, listed: boolean): { error: string } | { price_mxn: number | null } {
+  const trimmed = raw.trim()
+  if (!trimmed) {
+    if (listed) return { error: 'El precio es obligatorio para mostrar la prenda en la tienda.' }
+    return { price_mxn: null }
+  }
+  const price_mxn = parseFloat(trimmed)
+  if (!Number.isFinite(price_mxn) || price_mxn <= 0) {
+    return { error: 'El precio debe ser mayor a 0.' }
+  }
+  return { price_mxn }
+}
+
+/** Mario no puede asignar ni tocar prendas de Uzziel. */
+async function ownerForWrite(requested: string): Promise<{ error: string } | { owner: string }> {
+  const actor = await getAdminActor()
+  if (actor === 'mario') return { owner: 'mario' }
+  if (!isOwner(requested)) return { error: 'Selecciona un propietario válido (uzziel o mario).' }
+  return { owner: requested }
+}
+
+async function assertCanEdit(id: string): Promise<{ error: string } | { ok: true }> {
+  const actor = await getAdminActor()
+  if (actor === 'uzziel') return { ok: true }
+  const supabase = createAdminClient()
+  const { data } = await supabase.from('products').select('owner').eq('id', id).maybeSingle()
+  if (!data || data.owner !== 'mario') return { error: 'Esa prenda no es tuya.' }
+  return { ok: true }
 }
 
 /** SKU único con reintento: el índice `products.sku unique` es la garantía real. */
@@ -110,32 +150,56 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 type UploadResult = { uploaded: number; errors: string[] }
 
 export async function deleteProduct(id: string) {
-  await requireAdminSession()
+  const gate = await assertCanEdit(id)
+  if ('error' in gate) return
+  const actor = await getAdminActor()
   const supabase = createAdminClient()
-  await supabase.from('products').delete().eq('id', id)
+  let query = supabase.from('products').delete().eq('id', id)
+  if (actor === 'mario') query = query.eq('owner', 'mario')
+  await query
   revalidateTag('products')
 }
 
+function toSlug(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
 export async function createProduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAdminSession()
   const supabase = createAdminClient()
 
-  const name            = formData.get('name') as string
-  const slug            = formData.get('slug') as string
+  const name = ((formData.get('name') as string) || '').trim()
+  if (!name) return { error: 'El nombre es obligatorio.' }
+  let slug = ((formData.get('slug') as string) || '').trim() || toSlug(name)
+  if (!slug) return { error: 'El nombre no produce un identificador válido.' }
+
   const description     = (formData.get('description') as string) || null
-  const price_mxn       = parseFloat(formData.get('price_mxn') as string)
+  const listed          = formData.get('listed') === 'on'
+  const price           = parsePrice((formData.get('price_mxn') as string) || '', listed)
+  if ('error' in price) return { error: price.error }
   const origPrice       = formData.get('original_price_mxn') as string
   const original_price_mxn = origPrice ? parseFloat(origPrice) : null
   const category_id     = (formData.get('category_id') as string) || null
   const brand_id        = (formData.get('brand_id') as string) || null
   const material        = (formData.get('material') as string) || null
   const made_in         = (formData.get('made_in') as string) || 'México'
-  const is_featured     = formData.get('is_featured') === 'on'
-  const is_new          = formData.get('is_new') === 'on'
+  const is_featured     = listed && formData.get('is_featured') === 'on'
+  const is_new          = listed && formData.get('is_new') === 'on'
   const sold_out        = formData.get('sold_out') === 'on'
 
-  const business = parseBusinessFields(formData)
+  const business = parseBusinessFields(formData, listed)
   if ('error' in business) return { error: business.error }
+
+  const owned = await ownerForWrite(business.data.owner)
+  if ('error' in owned) return { error: owned.error }
+  business.data.owner = owned.owner
+
+  const { data: slugTaken } = await supabase.from('products').select('id').eq('slug', slug).maybeSingle()
+  if (slugTaken) slug = `${slug}-${Date.now().toString(36)}`
 
   // SKU automático: ya no se pide a mano.
   const sku = await generateUniqueSku(supabase, business.data.garment_type)
@@ -144,8 +208,8 @@ export async function createProduct(_prev: ActionState, formData: FormData): Pro
   const { data: product, error } = await supabase
     .from('products')
     .insert({
-      name, slug, description, price_mxn, original_price_mxn, category_id, brand_id,
-      sku, material, made_in, is_featured, is_new, sold_out,
+      name, slug, description, price_mxn: price.price_mxn, original_price_mxn, category_id, brand_id,
+      sku, material, made_in, is_featured, is_new, sold_out, listed,
       ...business.data,
     })
     .select('id')
@@ -158,33 +222,42 @@ export async function createProduct(_prev: ActionState, formData: FormData): Pro
   if (uploadError) return { error: uploadError }
 
   await saveAttributes(supabase, product.id, formData)
-  const embedded = await indexProductEmbedding(supabase, product.id)
+  const embedded = listed ? await indexProductEmbedding(supabase, product.id) : true
 
   revalidateTag('products')
   redirect(embedded ? '/admin/products' : '/admin/products?embed=pending')
 }
 
 export async function updateProduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAdminSession()
   const supabase = createAdminClient()
   const id = formData.get('id') as string
+  const gate = await assertCanEdit(id)
+  if ('error' in gate) return { error: gate.error }
 
-  const name            = formData.get('name') as string
-  const slug            = formData.get('slug') as string
+  const name = ((formData.get('name') as string) || '').trim()
+  if (!name) return { error: 'El nombre es obligatorio.' }
+  const slug = ((formData.get('slug') as string) || '').trim()
+  if (!slug) return { error: 'El identificador es obligatorio.' }
   const description     = (formData.get('description') as string) || null
-  const price_mxn       = parseFloat(formData.get('price_mxn') as string)
+  const listed          = formData.get('listed') === 'on'
+  const price           = parsePrice((formData.get('price_mxn') as string) || '', listed)
+  if ('error' in price) return { error: price.error }
   const origPrice       = formData.get('original_price_mxn') as string
   const original_price_mxn = origPrice ? parseFloat(origPrice) : null
   const category_id     = (formData.get('category_id') as string) || null
   const brand_id        = (formData.get('brand_id') as string) || null
   const material        = (formData.get('material') as string) || null
   const made_in         = (formData.get('made_in') as string) || 'México'
-  const is_featured     = formData.get('is_featured') === 'on'
-  const is_new          = formData.get('is_new') === 'on'
+  const is_featured     = listed && formData.get('is_featured') === 'on'
+  const is_new          = listed && formData.get('is_new') === 'on'
   const sold_out        = formData.get('sold_out') === 'on'
 
-  const business = parseBusinessFields(formData)
+  const business = parseBusinessFields(formData, listed)
   if ('error' in business) return { error: business.error }
+
+  const owned = await ownerForWrite(business.data.owner)
+  if ('error' in owned) return { error: owned.error }
+  business.data.owner = owned.owner
 
   // El SKU viaja readOnly desde el form. Si la prenda aún no tiene (borrador
   // creado en el Studio), se genera ahora.
@@ -197,8 +270,10 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
   const { error } = await supabase
     .from('products')
     .update({
-      name, slug, description, price_mxn, original_price_mxn, category_id, brand_id,
-      sku, material, made_in, is_featured, is_new, sold_out,
+      name, slug, description, price_mxn: price.price_mxn, original_price_mxn, category_id, brand_id,
+      sku, material, made_in, is_featured, is_new, sold_out, listed,
+      // Fuera de tienda: el buscador visual no debe seguir encontrándola.
+      ...(listed ? {} : { embedding: null }),
       ...business.data,
     })
     .eq('id', id)
@@ -240,7 +315,7 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
   if (uploadError) return { error: uploadError }
 
   await saveAttributes(supabase, id, formData)
-  const embedded = await indexProductEmbedding(supabase, id)
+  const embedded = listed ? await indexProductEmbedding(supabase, id) : true
 
   revalidateTag('products')
   redirect(embedded ? '/admin/products' : '/admin/products?embed=pending')

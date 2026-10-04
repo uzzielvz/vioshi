@@ -22,7 +22,7 @@ export type AdminProduct = {
   slug: string
   name: string
   description: string | null
-  price_mxn: string | number
+  price_mxn: string | number | null
   original_price_mxn: string | number | null
   category_id: string | null
   brand_id?: string | null
@@ -32,6 +32,7 @@ export type AdminProduct = {
   is_featured: boolean
   is_new: boolean
   sold_out: boolean
+  listed?: boolean
   owner?: string | null
   cost_mxn?: string | number | null
   garment_type?: string | null
@@ -93,7 +94,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
       className="bg-black text-white uppercase tracking-widest px-8 py-3 hover:bg-gray-800 transition-colors disabled:opacity-50"
       style={{ ...font, fontSize: '10px', fontWeight: 500 }}
     >
-      {pending ? 'SAVING...' : isEdit ? 'SAVE CHANGES' : 'SAVE PRODUCT'}
+      {pending ? 'Guardando…' : isEdit ? 'Guardar' : 'Registrar'}
     </button>
   )
 }
@@ -112,11 +113,13 @@ export default function ProductForm({
   brands = [],
   product,
   action,
+  actor = 'uzziel',
 }: {
   categories: Category[]
   brands?: AdminBrand[]
   product?: AdminProduct
   action: FormAction
+  actor?: 'uzziel' | 'mario'
 }) {
   const [state, formAction] = useFormState(action, null)
   const [name, setName]               = useState(product?.name ?? '')
@@ -141,6 +144,7 @@ export default function ProductForm({
   const [attrs, setAttrs] = useState<{ key: string; value: string }[]>(initAttrs)
   const [garmentType, setGarmentType] = useState(product?.garment_type ?? '')
   const [condition, setCondition]     = useState(product?.condition ?? '')
+  const [listed, setListed]           = useState(product?.listed ?? false)
 
   // Solo estas medidas se montan y se exigen. Las demás no existen en el DOM,
   // para que `required` nunca bloquee el submit en un campo invisible.
@@ -170,28 +174,45 @@ export default function ProductForm({
           className="uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
           style={{ ...font, fontSize: '10px' }}
         >
-          ← Back to products
+          ← Inventario
         </Link>
       </div>
 
       <h1 className="uppercase tracking-widest mb-10" style={{ ...font, fontSize: '13px', fontWeight: 500 }}>
-        {isEdit ? 'Edit Product' : 'New Product'}
+        {isEdit ? 'Editar prenda' : 'Registrar prenda'}
       </h1>
 
       <form action={formAction}>
         {isEdit && <input type="hidden" name="id" value={product.id} />}
 
+        <label className="flex items-start gap-3 mb-8 cursor-pointer max-w-xl">
+          <input
+            type="checkbox"
+            name="listed"
+            checked={listed}
+            onChange={e => setListed(e.target.checked)}
+            className="mt-0.5 w-3.5 h-3.5 accent-black border border-black"
+          />
+          <span style={{ ...font, fontSize: '11px' }}>
+            <span className="uppercase tracking-widest" style={{ fontSize: '10px' }}>En la tienda</span>
+            <span className="block text-gray-400 mt-1" style={{ fontSize: '10px' }}>
+              Apagado: solo existe en este inventario. No sale en el catálogo ni se puede comprar.
+              Para publicarla hacen falta precio, estado, medidas y una foto.
+            </span>
+          </span>
+        </label>
+
         <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-12">
           {/* Left — Images */}
           <div>
-            <FieldLabel>Images</FieldLabel>
+            <FieldLabel>Fotos</FieldLabel>
             <ImageUploader existingImages={product?.product_images ?? []} />
           </div>
 
           {/* Right — Fields */}
           <div className="flex flex-col gap-6">
             <div>
-              <FieldLabel>Name</FieldLabel>
+              <FieldLabel>Nombre</FieldLabel>
               <FieldInput
                 type="text"
                 name="name"
@@ -213,7 +234,7 @@ export default function ProductForm({
             </div>
 
             <div>
-              <FieldLabel>Category</FieldLabel>
+              <FieldLabel>Categoría</FieldLabel>
               <select
                 name="category_id"
                 defaultValue={product?.category_id ?? ''}
@@ -230,17 +251,16 @@ export default function ProductForm({
             {/* Brand Selector (BR-03) */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <FieldLabel>Brand</FieldLabel>
+                <FieldLabel>Marca</FieldLabel>
                 <button
                   type="button"
                   onClick={() => {
-                    // Opens the brand creation in a new tab for now (simple & safe)
                     window.open('/admin/brands/new', '_blank')
                   }}
-                  className="uppercase tracking-widest text-[10px] text-gray-400 hover:text-black"
+                  className={`uppercase tracking-widest text-[10px] text-gray-400 hover:text-black ${actor === 'mario' ? 'hidden' : ''}`}
                   style={font}
                 >
-                  + Create new brand
+                  + Nueva marca
                 </button>
               </div>
 
@@ -250,7 +270,7 @@ export default function ProductForm({
                 className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors appearance-none"
                 style={{ ...font, fontSize: '11px' }}
               >
-                <option value="">— No brand —</option>
+                <option value="">— Sin marca —</option>
                 {brands.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
@@ -258,13 +278,13 @@ export default function ProductForm({
                 ))}
               </select>
               <p className="text-gray-400 text-[10px] mt-1" style={font}>
-                Select from managed brands. Logos will appear in the public filters.
+                Si la publicas, el logo sale en los filtros de la tienda.
               </p>
             </div>
 
             {/* Tipo de prenda — define qué medidas se piden abajo */}
             <div>
-              <FieldLabel>Tipo de prenda *</FieldLabel>
+                <FieldLabel>Tipo de prenda *</FieldLabel>
               <select
                 name="garment_type"
                 required
@@ -283,7 +303,7 @@ export default function ProductForm({
             {/* Medidas — solo las que aplican al tipo elegido */}
             {garmentType && (
               <div>
-                <FieldLabel>Medidas en cm (prenda en plano) *</FieldLabel>
+                <FieldLabel>{listed ? 'Medidas en cm (prenda en plano) *' : 'Medidas en cm (prenda en plano)'}</FieldLabel>
                 {visibleMeasurements.length === 0 ? (
                   <p className="text-gray-400 mt-1" style={{ ...font, fontSize: '10px' }}>
                     El tipo «Otro» no exige medidas. Si la prenda las necesita, agrégalas en Características.
@@ -302,7 +322,7 @@ export default function ProductForm({
                           <FieldInput
                             type="number"
                             name={key}
-                            required
+                            required={listed}
                             min={MEASUREMENT_MIN_CM}
                             max={MEASUREMENT_MAX_CM}
                             step="1"
@@ -321,10 +341,10 @@ export default function ProductForm({
 
             {/* Estado */}
             <div>
-              <FieldLabel>Estado *</FieldLabel>
+                <FieldLabel>{listed ? 'Estado *' : 'Estado'}</FieldLabel>
               <select
                 name="condition"
-                required
+                required={listed}
                 value={condition}
                 onChange={e => setCondition(e.target.value)}
                 className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors appearance-none"
@@ -357,18 +377,18 @@ export default function ProductForm({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <FieldLabel>Price MXN</FieldLabel>
+                <FieldLabel>{listed ? 'Precio MXN *' : 'Precio MXN'}</FieldLabel>
                 <FieldInput
                   type="number"
                   name="price_mxn"
                   defaultValue={product?.price_mxn?.toString() ?? ''}
-                  required
+                  required={listed}
                   min="0"
                   step="0.01"
                 />
               </div>
               <div>
-                <FieldLabel>Original Price MXN (opcional)</FieldLabel>
+                <FieldLabel>Precio anterior MXN</FieldLabel>
                 <FieldInput
                   type="number"
                   name="original_price_mxn"
@@ -396,7 +416,7 @@ export default function ProductForm({
                 />
               </div>
               <div>
-                <FieldLabel>Made In</FieldLabel>
+                <FieldLabel>Hecho en</FieldLabel>
                 <FieldInput type="text" name="made_in" defaultValue={product?.made_in ?? 'México'} />
               </div>
             </div>
@@ -407,7 +427,7 @@ export default function ProductForm({
             </div>
 
             <div>
-              <FieldLabel>Description</FieldLabel>
+              <FieldLabel>Descripción</FieldLabel>
               <textarea
                 name="description"
                 defaultValue={product?.description ?? ''}
@@ -490,18 +510,25 @@ export default function ProductForm({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <FieldLabel>Propietario *</FieldLabel>
-                  <select
-                    name="owner"
-                    required
-                    defaultValue={product?.owner ?? ''}
-                    className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors appearance-none"
-                    style={{ ...font, fontSize: '11px' }}
-                  >
-                    <option value="">— Selecciona —</option>
-                    {OWNERS.map(o => (
-                      <option key={o} value={o}>{o}</option>
-                    ))}
-                  </select>
+                  {actor === 'mario' ? (
+                    <>
+                      <input type="hidden" name="owner" value="mario" />
+                      <p className="py-2.5" style={{ ...font, fontSize: '11px' }}>Mario</p>
+                    </>
+                  ) : (
+                    <select
+                      name="owner"
+                      required
+                      defaultValue={product?.owner ?? ''}
+                      className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors appearance-none"
+                      style={{ ...font, fontSize: '11px' }}
+                    >
+                      <option value="">— Selecciona —</option>
+                      {OWNERS.map(o => (
+                        <option key={o} value={o}>{o === 'mario' ? 'Mario' : 'Uzziel'}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
                 <div>
                   <FieldLabel>Costo de adquisición MXN</FieldLabel>
@@ -519,9 +546,9 @@ export default function ProductForm({
             {/* Checkboxes */}
             <div className="flex gap-8">
               {[
-                { name: 'is_new',      label: 'Is New',      checked: product?.is_new },
-                { name: 'is_featured', label: 'Is Featured', checked: product?.is_featured },
-                { name: 'sold_out',    label: 'Sold Out',    checked: product?.sold_out },
+                { name: 'is_new',      label: 'Nueva',      checked: product?.is_new },
+                { name: 'is_featured', label: 'Destacada', checked: product?.is_featured },
+                { name: 'sold_out',    label: 'Vendida',    checked: product?.sold_out },
               ].map(({ name: n, label, checked }) => (
                 <label key={n} className="flex items-center gap-2 cursor-pointer" style={{ ...font, fontSize: '11px' }}>
                   <input
@@ -552,7 +579,7 @@ export default function ProductForm({
             className="border border-black uppercase tracking-widest px-6 py-3 hover:bg-black hover:text-white transition-colors"
             style={{ ...font, fontSize: '10px' }}
           >
-            Cancel
+            Cancelar
           </Link>
           <SubmitButton isEdit={isEdit} />
         </div>

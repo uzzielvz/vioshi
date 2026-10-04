@@ -27,6 +27,7 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 | Brands | `/admin/brands` |
 | Visual search + embed al publicar | `lib/embeddings.ts`, `/admin/products` |
 | Marcar pedido entregado | `/admin/reservas` (sin Stripe). **Exige `payment_status = 'completed'`** (#8) |
+| Inventario interno | `/admin` tablero. Prenda nueva nace con `listed = false`. Entrada por correo (`UZZIEL_ADMIN_*` / `MARIO_ADMIN_*`): Uzziel ve ambos `owner`; Mario solo el suyo |
 | Viogi como tienda | `0016`, `/tienda/viogi`, “Vendido por” |
 | `/vender` persiste `pending` | `store_applications`, no auto-aprueba |
 | Auth clientes | `app/[locale]/account/**` |
@@ -65,7 +66,7 @@ Marcar entregado **no** transfiere dinero. Eso es el paquete E.
 
 ## Migraciones
 
-Repo/prod: `0001`–`0017`. Siguiente libre: **`0018`**.
+Repo/prod: `0001`–`0017` en prod. En repo también está **`0018`** (inventario interno: `products.listed`). Hay que aplicarla en Supabase antes de usar el tablero nuevo. Siguiente libre después de aplicarla: **`0019`**.
 
 ## Auditoría 2026-09-18
 

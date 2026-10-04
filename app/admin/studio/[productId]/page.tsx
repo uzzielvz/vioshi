@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireFullAdmin } from '@/lib/admin/session'
 import { createStudioSignedUrls } from '@/lib/studio/storage'
 import type { GenerationKind, ShotType } from '@/lib/studio/constants'
 import StudioWorkspace from '../_components/StudioWorkspace'
@@ -11,6 +12,7 @@ export default async function AdminStudioProductPage({
 }: {
   params: { productId: string }
 }) {
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const { data: product } = await supabase

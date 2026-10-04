@@ -1,7 +1,7 @@
 'use server'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { ADMIN_SESSION_MAX_AGE_SEC, createAdminSessionToken } from '@/lib/admin/session'
+import { ADMIN_SESSION_MAX_AGE_SEC, createAdminSessionToken, actorFromAdminLogin } from '@/lib/admin/session'
 import {
   ADMIN_LOGIN_RATE_LIMIT,
   checkRateLimit,
@@ -24,11 +24,14 @@ export async function loginAction(
     }
   }
 
-  const password = formData.get('password') as string
-  if (password !== process.env.ADMIN_SECRET) {
-    return { error: 'Incorrect password.' }
+  const email = (formData.get('email') as string | null) ?? ''
+  const password = (formData.get('password') as string | null) ?? ''
+  const actor = actorFromAdminLogin(email, password)
+  if (!actor) {
+    return { error: 'Correo o contraseña incorrectos.' }
   }
-  const token = await createAdminSessionToken()
+
+  const token = await createAdminSessionToken(actor)
   cookies().set('admin_token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -36,5 +39,5 @@ export async function loginAction(
     maxAge: ADMIN_SESSION_MAX_AGE_SEC,
     path: '/',
   })
-  redirect('/admin/products')
+  redirect('/admin')
 }

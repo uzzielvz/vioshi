@@ -14,7 +14,8 @@ type ProductRow = {
   id: string;
   slug: string;
   name: string;
-  price_mxn: string;
+  price_mxn: string | null;
+  listed: boolean;
 };
 
 export type ReconcileCartResult =
@@ -41,7 +42,7 @@ export async function reconcileCartItems(
   if (uuidItems.length > 0) {
     const { data, error } = await supabase
       .from('products')
-      .select('id, slug, name, price_mxn')
+      .select('id, slug, name, price_mxn, listed')
       .in(
         'id',
         uuidItems.map((i) => i.productId)
@@ -55,7 +56,7 @@ export async function reconcileCartItems(
     const slugs = legacyItems.map((i) => (i.slug?.trim() || i.productId).toLowerCase());
     const { data, error } = await supabase
       .from('products')
-      .select('id, slug, name, price_mxn')
+      .select('id, slug, name, price_mxn, listed')
       .in('slug', slugs);
 
     if (error) return { ok: false, message: error.message };
@@ -69,7 +70,7 @@ export async function reconcileCartItems(
       ? byId.get(item.productId)
       : bySlug.get((item.slug?.trim() || item.productId).toLowerCase());
 
-    if (!row) {
+    if (!row || !row.listed || row.price_mxn == null) {
       return {
         ok: false,
         message: `Producto no encontrado en catálogo: ${item.productName}. Vacía el carrito y vuelve a agregar.`,

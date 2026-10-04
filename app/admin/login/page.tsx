@@ -17,7 +17,7 @@ function SubmitButton() {
       className="w-full bg-black text-white uppercase tracking-widest py-3 hover:bg-gray-800 transition-colors disabled:opacity-50"
       style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif", fontSize: '10px', fontWeight: 500 }}
     >
-      {pending ? 'ENTERING...' : 'ENTER ADMIN'}
+      {pending ? 'Entrando…' : 'Entrar'}
     </button>
   )
 }
@@ -26,8 +26,8 @@ export default function AdminLoginPage() {
   const [state, formAction] = useFormState(loginAction, null)
 
   return (
-    <main className="min-h-screen bg-white flex items-start justify-center">
-      <div className="w-full max-w-xs mt-[20vh]">
+    <main className="min-h-dvh bg-white flex items-center justify-center px-6">
+      <div className="w-full max-w-xs">
         <Link href="/es" className="block text-center mb-10">
           <span
             className="font-logo tracking-widest"
@@ -47,9 +47,23 @@ export default function AdminLoginPage() {
         <form action={formAction} className="flex flex-col gap-6">
           <div>
             <input
+              type="text"
+              name="email"
+              inputMode="email"
+              autoComplete="username"
+              placeholder="Correo"
+              required
+              className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors"
+              style={{ ...fontStyle, fontSize: '11px' }}
+            />
+          </div>
+
+          <div>
+            <input
               type="password"
               name="password"
-              placeholder="Password"
+              autoComplete="current-password"
+              placeholder="Contraseña"
               required
               className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors"
               style={{ ...fontStyle, fontSize: '11px' }}

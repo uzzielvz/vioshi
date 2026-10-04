@@ -2,7 +2,7 @@
 
 import { revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { requireAdminSession } from '@/lib/admin/session'
+import { requireFullAdmin } from '@/lib/admin/session'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 type ActionState = { error: string } | null
@@ -11,7 +11,7 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024 // 2MB for logos
 
 export async function createBrand(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const name = (formData.get('name') as string || '').trim()
@@ -54,7 +54,7 @@ export async function createBrand(_prev: ActionState, formData: FormData): Promi
 }
 
 export async function updateBrand(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const id = formData.get('id') as string
@@ -114,7 +114,7 @@ export async function updateBrand(_prev: ActionState, formData: FormData): Promi
 }
 
 export async function deleteBrand(id: string) {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   // Get logo to clean up storage
@@ -137,7 +137,7 @@ export async function deleteBrand(id: string) {
 }
 
 export async function toggleBrandActive(id: string, is_active: boolean) {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   await supabase.from('brands').update({ is_active }).eq('id', id)

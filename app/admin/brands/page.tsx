@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireFullAdmin } from '@/lib/admin/session'
 import ToggleButton from './ToggleButton'
 import DeleteBrandButton from './DeleteBrandButton'
 
@@ -10,6 +11,7 @@ const font = {
 }
 
 export default async function BrandsAdminPage() {
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const { data: brands } = await supabase

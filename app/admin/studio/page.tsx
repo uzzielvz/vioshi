@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireFullAdmin } from '@/lib/admin/session'
 import CreateMinimalForm from './_components/CreateMinimalForm'
 import ProductPicker from './_components/ProductPicker'
 import { font } from './_components/studioUi'
@@ -6,6 +7,7 @@ import { font } from './_components/studioUi'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminStudioPage() {
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const [{ data: products }, { data: raws }, { data: gens }] = await Promise.all([

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireFullAdmin } from '@/lib/admin/session'
 import ToggleButton from './ToggleButton'
 
 export const dynamic = 'force-dynamic'
@@ -13,6 +14,7 @@ const TYPE_LABEL: Record<string, string> = {
 }
 
 export default async function PickupPointsPage() {
+  await requireFullAdmin()
   const supabase = createAdminClient()
   const { data: points } = await supabase
     .from('pickup_points')

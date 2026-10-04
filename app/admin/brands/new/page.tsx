@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { requireFullAdmin } from '@/lib/admin/session'
 import BrandForm from '../_components/BrandForm'
 import { createBrand } from '../actions'
 
@@ -6,7 +7,8 @@ const font = {
   fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
 }
 
-export default function NewBrandPage() {
+export default async function NewBrandPage() {
+  await requireFullAdmin()
   return (
     <div className="max-w-[620px]">
       <div className="mb-8">

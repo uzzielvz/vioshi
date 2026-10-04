@@ -229,6 +229,11 @@ async function fetchProducts(
     query = query.eq('sold_out', false)
   }
 
+  // Inventario interno (listed = false) no es catálogo. La policy RLS
+  // también lo oculta a anon; este filtro cubre el service role si alguien
+  // reusa esta función.
+  query = query.eq('listed', true)
+
   if (category === 'new') {
     query = query.eq('is_new', true)
   }
@@ -260,6 +265,7 @@ async function fetchProductBySlug(slug: string): Promise<ProductData | null> {
     .from('products')
     .select(PUBLIC_PRODUCT_SELECT)
     .eq('slug', slug)
+    .eq('listed', true)
     .single()
 
   if (error || !data) return null
@@ -300,10 +306,7 @@ export const getProductsByStoreId = unstable_cache(
   { revalidate: 60, tags: ['products'] }
 )
 
-/** Admin list: includes products still unpublished (no store images). */
-export async function getAdminProducts(): Promise<ProductData[]> {
-  return fetchProducts(undefined, false, true)
-}
+/** Admin list moved to lib/admin/inventory.ts (service role, incluye no publicadas). */
 
 export const getProductBySlug = unstable_cache(
   fetchProductBySlug,

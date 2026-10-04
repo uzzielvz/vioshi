@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireFullAdmin } from '@/lib/admin/session'
 import FondosClient, { type Fondo } from './_components/FondosClient'
 
 export const dynamic = 'force-dynamic'
@@ -6,6 +7,7 @@ export const dynamic = 'force-dynamic'
 const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
 
 export default async function AdminFondosPage() {
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const { data } = await supabase

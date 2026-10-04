@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireFullAdmin } from '@/lib/admin/session'
 import SettingsForm, { type Settings } from './_components/SettingsForm'
 
 export const dynamic = 'force-dynamic'
@@ -9,6 +10,7 @@ const COLUMNS =
   'card_only_threshold_mxn, card_reserve_minutes, spei_reserve_minutes, voucher_hours, manual_hold_days, home_shipping_mxn'
 
 export default async function AdminSettingsPage() {
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const { data } = await supabase.from('settings').select(COLUMNS).eq('id', true).single()
