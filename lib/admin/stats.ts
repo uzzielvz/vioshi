@@ -60,6 +60,7 @@ type StatsRow = {
   sold_at: string | null
   sold_order_id: string | null
   acquired_on: string | null
+  disposition: string
   created_at: string
   name: string
   id: string
@@ -72,9 +73,16 @@ export type OwnerStats = {
   standingPieces: number
   standingListed: number
   standingInventoryOnly: number
-  /** Comprado dentro del periodo (acquired_on, o created_at si no se capturó). */
+  /** Comprado dentro del periodo. SOLO por acquired_on real. */
   boughtPieces: number
   boughtCost: number
+  /** Piezas vivas sin fecha de compra: no entran en ningún periodo. */
+  withoutBuyDate: number
+  /** Lo que ya no es inventario vendible (0020): merma, uso personal, donada. */
+  deadPieces: number
+  deadCost: number
+  mermaPieces: number
+  mermaCost: number
   /** Vendido dentro del periodo (por sold_at). */
   soldPieces: number
   soldRevenue: number
@@ -121,6 +129,11 @@ function emptyStats(owner: 'uzziel' | 'mario'): OwnerStats {
     standingInventoryOnly: 0,
     boughtPieces: 0,
     boughtCost: 0,
+    withoutBuyDate: 0,
+    deadPieces: 0,
+    deadCost: 0,
+    mermaPieces: 0,
+    mermaCost: 0,
     soldPieces: 0,
     soldRevenue: 0,
     soldCost: 0,
@@ -147,17 +160,32 @@ function daysSince(iso: string): number {
 function accumulate(acc: OwnerStats, row: StatsRow, range: { from: Date; to: Date } | null): void {
   const cost = num(row.cost_mxn)
   const price = num(row.price_mxn)
+  const activa = row.disposition === 'activa'
 
-  if (!row.sold_out) {
+  // Lo que no es inventario activo (merma, uso personal, donada) NO es capital
+  // recuperable: se cuenta aparte o el tablero te hace creer que tienes más.
+  if (!activa && !row.sold_out) {
+    acc.deadPieces += 1
+    if (cost != null) acc.deadCost += cost
+    if (row.disposition === 'merma') {
+      acc.mermaPieces += 1
+      if (cost != null) acc.mermaCost += cost
+    }
+  }
+
+  if (!row.sold_out && activa) {
     acc.standingPieces += 1
     if (cost != null) acc.investedStanding += cost
     if (row.listed) acc.standingListed += 1
     else acc.standingInventoryOnly += 1
+
+    // Sin acquired_on no se sabe CUÁNDO se compró. Usar created_at haría que
+    // la carga del inventario base apareciera como "comprado hoy".
+    if (!row.acquired_on) acc.withoutBuyDate += 1
   }
 
-  // Compra: acquired_on si se capturó, si no el día en que se registró.
-  const boughtAt = row.acquired_on ?? row.created_at
-  if (inRange(boughtAt, range)) {
+  // Compra: solo con fecha real. Vacía = desconocida, no = hoy.
+  if (row.acquired_on && inRange(row.acquired_on, range)) {
     acc.boughtPieces += 1
     if (cost != null) acc.boughtCost += cost
   }
@@ -197,7 +225,7 @@ export async function getInventoryStats(
     let query = supabase
       .from('products')
       .select(
-        'id, name, owner, cost_mxn, price_mxn, listed, sold_out, sold_at, sold_order_id, acquired_on, created_at'
+        'id, name, owner, cost_mxn, price_mxn, listed, sold_out, sold_at, sold_order_id, acquired_on, disposition, created_at'
       )
 
     if (actor === 'mario') {
@@ -229,7 +257,7 @@ export async function getInventoryStats(
       accumulate(bucket, row, range)
       accumulate(total, row, range)
 
-      if (!row.sold_out) {
+      if (!row.sold_out && row.disposition === 'activa') {
         aging.push({
           id: row.id,
           name: row.name,

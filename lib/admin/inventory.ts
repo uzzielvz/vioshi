@@ -10,6 +10,7 @@ export type InventoryItem = {
   costMxn: number | null
   priceMxn: number | null
   listed: boolean
+  disposition: string
   soldOut: boolean
   garmentType: string | null
   image: string | null
@@ -28,6 +29,7 @@ type ProductRow = {
   cost_mxn: string | number | null
   price_mxn: string | number | null
   listed: boolean
+  disposition: string
   sold_out: boolean
   garment_type: string | null
   reserved_until: string | null
@@ -57,6 +59,7 @@ function toItem(row: ProductRow): InventoryItem {
     costMxn: money(row.cost_mxn),
     priceMxn: money(row.price_mxn),
     listed: row.listed,
+    disposition: row.disposition,
     soldOut: row.sold_out,
     garmentType: row.garment_type,
     image: primaryImage(row.product_images),
@@ -74,7 +77,7 @@ export async function listInventory(
     let query = supabase
       .from('products')
       .select(`
-        id, name, slug, sku, owner, cost_mxn, price_mxn, listed, sold_out,
+        id, name, slug, sku, owner, cost_mxn, price_mxn, listed, disposition, sold_out,
         garment_type, reserved_until, created_at,
         product_images (url, is_primary, sort_order)
       `)

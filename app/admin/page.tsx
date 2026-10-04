@@ -11,7 +11,12 @@ import {
   type Period,
 } from '@/lib/admin/stats'
 import { formatPrice } from '@/lib/formatters'
-import { GARMENT_TYPE_LABELS, isGarmentType } from '@/lib/garments'
+import {
+  DISPOSITION_LABELS,
+  GARMENT_TYPE_LABELS,
+  isDisposition,
+  isGarmentType,
+} from '@/lib/garments'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,6 +67,14 @@ function Block({ title, totals }: { title: string; totals: OwnerTotals }) {
       </div>
     </section>
   )
+}
+
+/** Una prenda fuera de inventario activo se nombra por su destino, no por "inventario". */
+function whereLabel(disposition: string, listed: boolean): string {
+  if (isDisposition(disposition) && disposition !== 'activa') {
+    return DISPOSITION_LABELS[disposition]
+  }
+  return listed ? 'En tienda' : 'Inventario'
 }
 
 function garmentLabel(type: string | null) {
@@ -126,7 +139,11 @@ function MoneyBlock({ title, stats }: { title: string; stats: OwnerStats }) {
         <Stat
           label="Comprado en el periodo"
           value={`${stats.boughtPieces} · ${money(stats.boughtCost)}`}
-          hint="Piezas y lo que costaron"
+          hint={
+            stats.withoutBuyDate > 0
+              ? `${stats.withoutBuyDate} sin fecha de compra: fuera del periodo`
+              : 'Piezas y lo que costaron'
+          }
         />
         <Stat
           label="Invertido sin vender"
@@ -146,6 +163,20 @@ function MoneyBlock({ title, stats }: { title: string; stats: OwnerStats }) {
           />
         )}
       </div>
+      {stats.deadPieces > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
+          <Stat
+            label="Merma"
+            value={`${stats.mermaPieces} · ${money(stats.mermaCost)}`}
+            hint="No se vende. Fuera del capital activo"
+          />
+          <Stat
+            label="Fuera de inventario"
+            value={`${stats.deadPieces} · ${money(stats.deadCost)}`}
+            hint="Merma, uso personal y donadas"
+          />
+        </div>
+      )}
     </section>
   )
 }
@@ -235,7 +266,7 @@ function Row({ item, showOwner }: { item: InventoryItem; showOwner: boolean }) {
         {item.costMxn == null ? '—' : money(item.costMxn)}
       </td>
       <td className="py-3 uppercase tracking-widest" style={{ ...font, fontSize: '10px' }}>
-        {item.listed ? 'En tienda' : 'Inventario'}
+        {whereLabel(item.disposition, item.listed)}
       </td>
     </tr>
   )

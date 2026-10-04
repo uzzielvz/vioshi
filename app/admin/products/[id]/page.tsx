@@ -22,7 +22,7 @@ export default async function EditProductPage({
       .select(`
         id, slug, name, description, price_mxn, original_price_mxn, category_id,
         brand_id, sku, material, made_in, is_featured, is_new, sold_out, listed,
-        owner, cost_mxn,
+        owner, cost_mxn, acquired_on, disposition,
         garment_type, chest_cm, length_cm, sleeve_cm, waist_cm, rise_cm, inseam_cm,
         condition, defect_notes,
         product_images (id, url, is_primary, sort_order),

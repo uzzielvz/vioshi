@@ -6,6 +6,8 @@ import ImageUploader from './ImageUploader'
 import {
   CONDITIONS,
   CONDITION_LABELS,
+  DISPOSITION_LABELS,
+  DISPOSITIONS,
   GARMENT_TYPES,
   GARMENT_TYPE_LABELS,
   MEASUREMENT_LABELS,
@@ -35,6 +37,8 @@ export type AdminProduct = {
   listed?: boolean
   owner?: string | null
   cost_mxn?: string | number | null
+  acquired_on?: string | null
+  disposition?: string | null
   garment_type?: string | null
   chest_cm?: number | null
   length_cm?: number | null
@@ -237,6 +241,39 @@ export default function ProductForm({
               step="0.01"
               defaultValue={product?.cost_mxn?.toString() ?? ''}
             />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <FieldLabel>Fecha de compra</FieldLabel>
+            <FieldInput
+              type="date"
+              name="acquired_on"
+              defaultValue={product?.acquired_on ?? ''}
+            />
+            <p className="text-gray-400 mt-1" style={{ ...font, fontSize: '10px' }}>
+              Cuándo la compraste, no cuándo la registras. Si la dejas vacía, no cuenta
+              como compra del mes.
+            </p>
+          </div>
+          <div>
+            <FieldLabel>Destino</FieldLabel>
+            <select
+              name="disposition"
+              defaultValue={product?.disposition ?? 'activa'}
+              className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors appearance-none"
+              style={{ ...font, fontSize: '11px' }}
+            >
+              {DISPOSITIONS.map((d) => (
+                <option key={d} value={d}>
+                  {DISPOSITION_LABELS[d]}
+                </option>
+              ))}
+            </select>
+            <p className="text-gray-400 mt-1" style={{ ...font, fontSize: '10px' }}>
+              Lo que no es inventario activo sale del capital y no se puede publicar.
+            </p>
           </div>
         </div>
 

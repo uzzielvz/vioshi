@@ -52,6 +52,21 @@ export type Condition = (typeof CONDITIONS)[number];
 export const OWNERS = ['uzziel', 'mario'] as const;
 export type Owner = (typeof OWNERS)[number];
 
+/**
+ * Qué pasó con la pieza (0020). No confundir con `condition`: una prenda
+ * `con_detalles` SÍ se vende, más barata. Lo que no es `activa` no es
+ * inventario vendible y no puede publicarse.
+ */
+export const DISPOSITIONS = ['activa', 'merma', 'uso_personal', 'donada'] as const;
+export type Disposition = (typeof DISPOSITIONS)[number];
+
+export const DISPOSITION_LABELS: Record<Disposition, string> = {
+  activa: 'Inventario activo',
+  merma: 'Merma (no se vende)',
+  uso_personal: 'Uso personal',
+  donada: 'Donada o regalada',
+};
+
 /** Rango aceptado por las constraints de la migración. */
 export const MEASUREMENT_MIN_CM = 20;
 export const MEASUREMENT_MAX_CM = 200;
@@ -135,4 +150,8 @@ export function generateSku(garmentType?: string | null): string {
     suffix += SKU_ALPHABET[Math.floor(Math.random() * SKU_ALPHABET.length)];
   }
   return `VIO-${prefix}-${suffix}`;
+}
+
+export function isDisposition(v: unknown): v is Disposition {
+  return typeof v === 'string' && (DISPOSITIONS as readonly string[]).includes(v);
 }

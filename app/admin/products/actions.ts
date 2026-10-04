@@ -7,6 +7,7 @@ import { generateProductEmbedding } from '@/lib/embeddings'
 import {
   generateSku,
   isCondition,
+  isDisposition,
   isGarmentType,
   isOwner,
   MEASUREMENT_KEYS,
@@ -24,6 +25,8 @@ type SupabaseClient = ReturnType<typeof createAdminClient>
 
 type BusinessFields = {
   owner: string
+  disposition: string
+  acquired_on: string | null
   cost_mxn: number | null
   garment_type: string
   condition: string | null
@@ -40,6 +43,26 @@ function parseBusinessFields(
 ): { error: string } | { data: BusinessFields } {
   const owner = (formData.get('owner') as string | null)?.trim() ?? ''
   if (!isOwner(owner)) return { error: 'Selecciona un propietario válido (uzziel o mario).' }
+
+  // Destino de la pieza (0020). Lo que no es inventario activo no se publica:
+  // la base lo impide con un check, aquí se da el mensaje claro.
+  const dispositionRaw = (formData.get('disposition') as string | null)?.trim() ?? 'activa'
+  if (!isDisposition(dispositionRaw)) return { error: 'Selecciona un destino válido para la prenda.' }
+  if (dispositionRaw !== 'activa' && listed) {
+    return { error: 'Una prenda que no es inventario activo no se puede publicar en la tienda.' }
+  }
+  const disposition = dispositionRaw
+
+  // Fecha de compra: opcional. Vacía NO significa "hoy" — significa que no se
+  // sabe, y entonces la pieza no cuenta como compra de ningún periodo.
+  const acquiredRaw = (formData.get('acquired_on') as string | null)?.trim() ?? ''
+  let acquired_on: string | null = null
+  if (acquiredRaw) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(acquiredRaw) || Number.isNaN(Date.parse(acquiredRaw))) {
+      return { error: 'La fecha de compra no es válida.' }
+    }
+    acquired_on = acquiredRaw
+  }
 
   const costRaw = (formData.get('cost_mxn') as string | null)?.trim() ?? ''
   let cost_mxn: number | null = null
@@ -95,7 +118,9 @@ function parseBusinessFields(
     measurements[key] = parsed
   }
 
-  return { data: { owner, cost_mxn, garment_type, condition, defect_notes, ...measurements } }
+  return {
+    data: { owner, disposition, acquired_on, cost_mxn, garment_type, condition, defect_notes, ...measurements },
+  }
 }
 
 function parsePrice(raw: string, listed: boolean): { error: string } | { price_mxn: number | null } {
