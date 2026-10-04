@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import createIntlMiddleware from 'next-intl/middleware'
 import { locales, defaultLocale } from './i18n'
-import { verifyAdminSessionToken } from '@/lib/admin/session'
+import { marioMayEnter, readAdminSession } from '@/lib/admin/session'
 import {
   checkRateLimit,
   getClientIp,
@@ -42,8 +42,12 @@ export async function middleware(request: NextRequest) {
 
   if (pathname.startsWith('/api/admin')) {
     const token = request.cookies.get('admin_token')?.value
-    if (!(await verifyAdminSessionToken(token))) {
+    const session = await readAdminSession(token)
+    if (!session) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    }
+    if (session.actor !== 'uzziel') {
+      return NextResponse.json({ error: 'forbidden' }, { status: 403 })
     }
     return NextResponse.next()
   }
@@ -51,8 +55,12 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/admin')) {
     if (pathname === '/admin/login') return NextResponse.next()
     const token = request.cookies.get('admin_token')?.value
-    if (!(await verifyAdminSessionToken(token))) {
+    const session = await readAdminSession(token)
+    if (!session) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+    if (session.actor === 'mario' && !marioMayEnter(pathname)) {
+      return NextResponse.redirect(new URL('/admin', request.url))
     }
     return NextResponse.next()
   }

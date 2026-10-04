@@ -13,7 +13,8 @@ Monorepo: no. Next.js plano.
 | `app/[locale]/collections/[category]/` | Listados |
 | `app/[locale]/search/` | Búsqueda texto |
 | `app/[locale]/visual-search/` | UI búsqueda visual |
-| `app/[locale]/vender/` | Formulario solicitud (aún no persiste) |
+| `app/[locale]/vender/` | Formulario solicitud → `store_applications` (estado `pending`) |
+| `app/[locale]/tienda/[slug]/` | Página de tienda. Hoy solo `viogi` |
 | `app/[locale]/account/` | Auth + pedidos + direcciones |
 | `app/[locale]/pages/` | Legales / soporte / tallas / locaciones |
 | `app/[locale]/archive/` | Drops (contenido aún en componente) |
@@ -28,8 +29,6 @@ Monorepo: no. Next.js plano.
 | `app/api/webhooks/stripe/` | Webhook de pago |
 | `app/auth/callback/` | OAuth / magic link |
 
-No existe: `app/[locale]/tienda/`.
-
 ## `lib/` — toca con cuidado
 
 | Archivo | Dueño típico |
@@ -42,6 +41,8 @@ No existe: `app/[locale]/tienda/`.
 | `products.ts` | L4/L5 — consultas **públicas**, sin `owner`/`cost_mxn`/`select('*')` |
 | `garments.ts` | L5 |
 | `stripe.ts` | L1 / L7 |
+| `stores.ts` | L4 — consultas **públicas**, sin `stripe_account_id` |
+| `embeddings.ts` | L5/L6 — **canon del prompt Gemini** (`scripts/` solo hace backfill) |
 | `supabase/*` | serializado si cambias clientes |
 
 ## Otros
@@ -51,7 +52,7 @@ No existe: `app/[locale]/tienda/`.
 | `store/cartStore.tsx` | L1 |
 | `messages/*.json` | i18n; un agente a la vez si toca las mismas keys |
 | `supabase/migrations/` | un archivo, un número, un agente |
-| `scripts/generate-embeddings.ts` | L5 / L6 — canon del prompt Gemini |
+| `scripts/generate-embeddings.ts` | L5 / L6 — backfill de seeds. El canon del prompt es `lib/embeddings.ts` |
 | `scripts/test-stock.mjs`, `test-checkout-flow.mjs` | smoke, no Vitest |
 | `types/` | compartir; no dos modelos nuevos de Product |
 

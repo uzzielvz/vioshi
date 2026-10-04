@@ -13,7 +13,14 @@ El negocio (nombre de la plataforma, comisión futura, acuerdos con Mario, caja)
 
 Luego: [`lanes.md`](./lanes.md) + [`PROMPT.md`](./PROMPT.md) + [`GIT.md`](./GIT.md).
 
+Auditor (Opus / Claude Code): [`AUDITOR.md`](./AUDITOR.md).
+
 Mapa de carpetas: [`MAP.md`](./MAP.md).
+
+**Un dato, un archivo.** `STATUS.md` es el **único** que describe estado del código: si otro doc
+cuenta qué se mergeó, en dos semanas se contradicen. `FROZEN.md` y `OPEN.md` aguantan porque guardan
+decisiones, no estado. El histórico de sesiones vive en `sessions.md` (raíz del repo), no aquí.
+Paquetes ya mergeados: `packets/_done/`.
 
 ## Qué no leer
 

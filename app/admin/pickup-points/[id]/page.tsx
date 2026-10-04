@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireFullAdmin } from '@/lib/admin/session'
 import PickupPointForm from '../_components/PickupPointForm'
 
 export const dynamic = 'force-dynamic'
@@ -9,6 +10,7 @@ export default async function EditPickupPointPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  await requireFullAdmin()
   const { id } = await params
   const supabase = createAdminClient()
 

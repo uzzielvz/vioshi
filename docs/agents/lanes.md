@@ -10,7 +10,7 @@ Si dos agentes necesitan el mismo archivo, van **en serie**.
 | **L1 Dinero** | Casi cerrado | `app/[locale]/checkout/**`, `lib/orders.ts`, `lib/constants.ts`, `lib/settings.ts`, `store/cartStore.tsx`, `app/api/webhooks/stripe/**`, `lib/stripe.ts` | admin products, visual-search, studio, tienda |
 | **L2 Pickup** | Cerrado | `lib/pickup.ts`, `app/admin/pickup-points/**`, `0015_*` | lógica de cobro Stripe |
 | **L3 Marca** | Cerrado | `lib/brand.ts`, metadata / OG | checkout, migraciones |
-| **L4 Stores** | **Siguiente** | `0016_stores*`, `app/[locale]/tienda/**`, `app/[locale]/vender/**` (persistir), `lib/products.ts` (solo `store_id` + join), `ProductContent` etiqueta | webhooks Stripe, Connect |
+| **L4 Stores** | Mergeado (#6) | `0016_stores*`, `app/[locale]/tienda/**`, `app/[locale]/vender/**`, `lib/products.ts` (solo `store_id` + join), `ProductContent` etiqueta | webhooks Stripe, Connect |
 | **L5 Admin catálogo** | Abierto | `app/admin/products/**`, embeddings al publicar | checkout, Connect |
 | **L6 Visual** | Mantenimiento | `app/api/visual-search/**`, `app/[locale]/visual-search/**`, `visual-search/**` | checkout |
 | **L7 Connect** | Bloqueado | onboarding Express, transfer al entregar, `stripe_account_id` | no empezar hasta `STATUS` lo desbloquee |

@@ -3,7 +3,7 @@ import { deleteProduct } from './actions'
 
 export default function DeleteButton({ id }: { id: string }) {
   async function handleClick() {
-    if (!confirm('Delete this product?')) return
+    if (!confirm('¿Quitar esta prenda del inventario?')) return
     await deleteProduct(id)
   }
 

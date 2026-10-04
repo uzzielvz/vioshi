@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireFullAdmin } from '@/lib/admin/session'
 import ReservasClient, {
   type Reserva,
   type Disponible,
@@ -11,6 +12,7 @@ export const dynamic = 'force-dynamic'
 const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
 
 export default async function AdminReservasPage() {
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   // Se filtra por reserved_until > now() en vez de por reserved_order_id: una

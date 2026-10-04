@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireFullAdmin } from '@/lib/admin/session'
 import BrandForm from '../_components/BrandForm'
 import { updateBrand } from '../actions'
 
@@ -9,6 +10,7 @@ const font = {
 }
 
 export default async function EditBrandPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireFullAdmin()
   const { id } = await params
   const supabase = createAdminClient()
 

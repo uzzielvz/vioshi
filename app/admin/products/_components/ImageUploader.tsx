@@ -42,7 +42,7 @@ export default function ImageUploader({ existingImages = [] }: { existingImages?
         onClick={() => inputRef.current?.click()}
       >
         <span className="uppercase tracking-widest text-gray-400" style={{ ...font, fontSize: '10px' }}>
-          + Drop image or click
+          + Suelta una foto o haz clic
         </span>
         <input
           ref={inputRef}
@@ -66,7 +66,7 @@ export default function ImageUploader({ existingImages = [] }: { existingImages?
                   className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-center"
                   style={{ ...font, fontSize: '8px', padding: '2px 0' }}
                 >
-                  MAIN
+                  Principal
                 </span>
               )}
               <button
@@ -94,7 +94,7 @@ export default function ImageUploader({ existingImages = [] }: { existingImages?
                     className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-center"
                     style={{ ...font, fontSize: '8px', padding: '2px 0' }}
                   >
-                    MAIN
+                    Principal
                   </span>
                 )}
               </div>
@@ -106,7 +106,7 @@ export default function ImageUploader({ existingImages = [] }: { existingImages?
             className="uppercase tracking-widest text-gray-400 hover:text-black transition-colors underline text-left"
             style={{ ...font, fontSize: '10px' }}
           >
-            Clear new files
+            Quitar fotos nuevas
           </button>
         </div>
       )}

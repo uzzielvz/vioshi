@@ -2,7 +2,7 @@
 
 import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { requireAdminSession } from '@/lib/admin/session'
+import { requireFullAdmin } from '@/lib/admin/session'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isOwner } from '@/lib/garments'
 import {
@@ -49,7 +49,7 @@ export async function createMinimalProduct(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const name = (formData.get('name') as string | null)?.trim() ?? ''
@@ -79,6 +79,7 @@ export async function createMinimalProduct(
       price_mxn,
       owner,
       sold_out: true,
+      listed: false,
       made_in: 'México',
     })
     .select('id')
@@ -94,7 +95,7 @@ export async function createMinimalProduct(
 }
 
 export async function uploadStyleRef(formData: FormData): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const file = formData.get('file') as File | null
@@ -142,7 +143,7 @@ export async function uploadStyleRef(formData: FormData): Promise<ActionState> {
 }
 
 export async function deleteStyleRef(id: string): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const { data: row } = await supabase
@@ -162,7 +163,7 @@ export async function deleteStyleRef(id: string): Promise<ActionState> {
 }
 
 export async function uploadRawPhoto(formData: FormData): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const productId = formData.get('productId') as string | null
@@ -232,7 +233,7 @@ export async function copyRawPhoto(
   fromShot: ShotType,
   toShot: ShotType
 ): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
   if (fromShot === toShot) return null
   if (!SHOT_TYPES.includes(fromShot) || !SHOT_TYPES.includes(toShot)) {
     return { error: 'Tipo de foto inválido' }
@@ -275,7 +276,7 @@ export async function copyRawPhoto(
 }
 
 export async function deleteRawPhoto(id: string, productId: string): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const { data: row } = await supabase
@@ -296,7 +297,7 @@ export async function deleteRawPhoto(id: string, productId: string): Promise<Act
 }
 
 export async function discardGeneration(id: string, productId: string): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const { data: row } = await supabase
@@ -320,7 +321,7 @@ export async function discardGeneration(id: string, productId: string): Promise<
 }
 
 export async function approveGeneration(id: string, productId: string): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const { data: row } = await supabase
@@ -412,7 +413,7 @@ export async function approveGeneration(id: string, productId: string): Promise<
 }
 
 export async function replaceGenerationImage(formData: FormData): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   const productId = formData.get('productId') as string | null

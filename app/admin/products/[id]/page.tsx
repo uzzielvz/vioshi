@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAdminActor } from '@/lib/admin/session'
 import ProductForm from '../_components/ProductForm'
 import { updateProduct } from '../actions'
 
@@ -10,6 +11,7 @@ export default async function EditProductPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const actor = await getAdminActor()
   const { id } = await params
   const supabase = createAdminClient()
 
@@ -19,8 +21,8 @@ export default async function EditProductPage({
       // Incluye owner y cost_mxn: es el panel admin (service role), nunca la tienda.
       .select(`
         id, slug, name, description, price_mxn, original_price_mxn, category_id,
-        brand_id, sku, material, made_in, is_featured, is_new, sold_out,
-        owner, cost_mxn,
+        brand_id, sku, material, made_in, is_featured, is_new, sold_out, listed,
+        owner, cost_mxn, acquired_on, disposition,
         garment_type, chest_cm, length_cm, sleeve_cm, waist_cm, rise_cm, inseam_cm,
         condition, defect_notes,
         product_images (id, url, is_primary, sort_order),
@@ -39,6 +41,7 @@ export default async function EditProductPage({
   ])
 
   if (!product) notFound()
+  if (actor === 'mario' && product.owner !== 'mario') notFound()
 
   type Row = typeof product & {
     product_images: { id: string; url: string; is_primary: boolean; sort_order: number }[]
@@ -54,6 +57,7 @@ export default async function EditProductPage({
       brands={brands ?? []}
       product={{ ...row, product_images: images, product_attributes: attrs }}
       action={updateProduct}
+      actor={actor}
     />
   )
 }

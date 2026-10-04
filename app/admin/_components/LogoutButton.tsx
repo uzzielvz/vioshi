@@ -9,7 +9,7 @@ export default function LogoutButton() {
         className="uppercase tracking-widest text-white/40 hover:text-white transition-colors"
         style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif", fontSize: '10px' }}
       >
-        LOGOUT
+        Salir
       </button>
     </form>
   )

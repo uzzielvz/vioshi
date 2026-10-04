@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { revalidateTag } from 'next/cache'
-import { requireAdminSession } from '@/lib/admin/session'
+import { getAdminActor, requireFullAdmin } from '@/lib/admin/session'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizePhone } from '@/lib/phone'
 
@@ -16,36 +16,35 @@ function refrescar() {
 
 /** Marcar vendida / disponible en un clic (ventas presenciales). */
 export async function toggleSoldAction(productId: string, vendida: boolean) {
-  await requireAdminSession()
+  const actor = await getAdminActor()
   const supabase = createAdminClient()
 
-  if (vendida) {
-    // Al marcar vendida a mano también se limpia cualquier reserva.
-    await supabase
-      .from('products')
-      .update({
+  // `sold_at` es lo que hace posible "la ganancia de este mes": una venta
+  // presencial sin fecha no entra en ningún periodo. Al desmarcar se limpia,
+  // para que una prenda disponible no arrastre una fecha de venta vieja.
+  const patch = vendida
+    ? {
         sold_out: true,
+        sold_at: new Date().toISOString(),
         reserved_order_id: null,
         reserved_at: null,
         reserved_until: null,
         reservation_kind: null,
         reserved_contact_name: null,
         reserved_contact_phone: null,
-      })
-      .eq('id', productId)
-  } else {
-    await supabase
-      .from('products')
-      .update({ sold_out: false, sold_order_id: null })
-      .eq('id', productId)
-  }
+      }
+    : { sold_out: false, sold_order_id: null, sold_at: null }
+
+  let query = supabase.from('products').update(patch).eq('id', productId)
+  if (actor === 'mario') query = query.eq('owner', 'mario')
+  await query
 
   refrescar()
 }
 
 /** Liberar una reserva atorada. */
 export async function releaseReservationAction(productId: string) {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
   await supabase.rpc('admin_release_product', { p_product_id: productId })
   refrescar()
@@ -56,7 +55,7 @@ export async function createManualHoldAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
 
   const productId = (formData.get('product_id') as string)?.trim()
   const nombre = (formData.get('contact_name') as string)?.trim()
@@ -94,7 +93,7 @@ export async function resolveOrphanFundAction(
   status: 'reembolsado' | 'aplicado' | 'ignorado',
   notes?: string
 ) {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
   await supabase
     .from('orphan_funds')
@@ -105,7 +104,7 @@ export async function resolveOrphanFundAction(
 
 /** Cierra un pedido marcado para revisión manual. */
 export async function clearReviewFlagAction(orderId: string) {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
   await supabase.from('orders').update({ needs_review: false }).eq('id', orderId)
   revalidatePath('/admin/reservas')
@@ -123,7 +122,7 @@ export async function clearReviewFlagAction(orderId: string) {
  * cobrar marcado como entregado se convierte en dinero transferido de más.
  */
 export async function markOrderDeliveredAction(orderId: string) {
-  await requireAdminSession()
+  await requireFullAdmin()
   const supabase = createAdminClient()
 
   await supabase

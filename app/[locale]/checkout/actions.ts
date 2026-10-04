@@ -151,12 +151,21 @@ export async function createCheckoutSessionAction(
   const productIds = cartItems.map((i) => i.productId);
   const { data: dbProducts, error: productsError } = await supabase
     .from('products')
-    .select('id, price_mxn, name, sold_out')
+    .select('id, price_mxn, name, sold_out, listed')
     .in('id', productIds);
 
   if (productsError || !dbProducts) {
     console.error('[checkout] products query failed:', productsError?.message);
     return { success: false, error: 'internal_error', message: productsError?.message };
+  }
+
+  const fueraDeTienda = dbProducts.filter((p) => !p.listed || p.price_mxn == null);
+  if (fueraDeTienda.length > 0 || dbProducts.length !== productIds.length) {
+    return {
+      success: false,
+      error: 'product_unavailable',
+      message: 'Una prenda del carrito no está a la venta.',
+    };
   }
 
   const priceMap = new Map(dbProducts.map((p) => [p.id, Number(p.price_mxn)]));

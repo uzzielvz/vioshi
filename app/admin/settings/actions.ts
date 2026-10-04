@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { requireAdminSession } from '@/lib/admin/session'
+import { requireFullAdmin } from '@/lib/admin/session'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 type ActionState = { error: string } | { ok: string } | null
@@ -14,7 +14,7 @@ export async function updateSettingsAction(
   _prev: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdminSession()
+  await requireFullAdmin()
 
   // Vacío o ausente → NaN, no 0. `required` en el input es validación de
   // navegador, no del servidor: sin esto, un POST sin `home_shipping_mxn`

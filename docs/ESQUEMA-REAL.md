@@ -3,7 +3,15 @@
 **Verificado:** 2026-09-08 contra el proyecto de producción `oilvubxpxxzfxlqhsumk` (`viogi`, plan Free, us-east-1).
 **Método:** `supabase migration list` + `db dump` + pruebas funcionales con las llaves `anon` y `service_role`.
 
-> **Tope de esta foto:** `0011`. Relistado 2026-09-18: prod tiene `0001`–`0015` (`0015` aplicada hoy). Estado: [`docs/agents/STATUS.md`](../agents/STATUS.md).
+> ⚠️ **Tope de esta foto: `0011`. Prod está en `0017`** (verificado 2026-09-18 contra la API).
+> Lo que esta foto **no** describe todavía:
+> `0012`–`0014` reserva atómica (`reserved_until`, `reservation_kind`, RPCs de stock, `settings`, `orphan_funds`) ·
+> `0015` puntos de pickup reales · `0016` `stores` + `products.store_id` + `store_applications` ·
+> `0017` `settings.home_shipping_mxn`.
+>
+> **No se reescribe a mano:** se regenera introspeccionando prod con las dos llaves, y el momento
+> barato es justo después de aplicar la siguiente migración (`0018`). Hasta entonces, para saber qué
+> existe: `supabase/migrations/` + [`docs/agents/STATUS.md`](./agents/STATUS.md).
 
 > **Regla:** este documento describe lo que la base **tiene**, no lo que las migraciones **dicen**. Cuando difieran, gana la base.
 
