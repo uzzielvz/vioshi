@@ -21,9 +21,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <html lang="es">
-      <body className="antialiased flex h-dvh overflow-hidden bg-white">
+      {/*
+        En móvil el scroll es el de la página (la barra de navegación va sticky).
+        Con `h-dvh overflow-hidden` en el body no había scroll y el contenido
+        quedaba atrapado. El layout de dos columnas empieza en `md`.
+      */}
+      <body className="antialiased bg-white md:flex md:h-dvh md:overflow-hidden">
         <Sidebar actor={actor} />
-        <main className="flex-1 min-w-0 h-full overflow-y-auto bg-[#fafafa] px-6 py-8 md:px-10">
+        <main className="min-w-0 bg-[#fafafa] px-4 py-6 md:flex-1 md:h-full md:overflow-y-auto md:px-10 md:py-8">
           {children}
         </main>
       </body>

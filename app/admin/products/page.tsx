@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { getAdminActor } from '@/lib/admin/session'
-import { listInventory } from '@/lib/admin/inventory'
+import { listInventory, whereLabel, type InventoryItem } from '@/lib/admin/inventory'
 import { formatPrice } from '@/lib/formatters'
 import { GARMENT_TYPE_LABELS, isGarmentType } from '@/lib/garments'
 import DeleteButton from './DeleteButton'
@@ -15,6 +15,70 @@ export const dynamic = 'force-dynamic'
 
 function money(value: number) {
   return formatPrice(value, 'es', false)
+}
+
+
+function reservedNow(item: InventoryItem): boolean {
+  return (
+    !item.soldOut &&
+    item.reservedUntil != null &&
+    new Date(item.reservedUntil).getTime() > Date.now()
+  )
+}
+
+/**
+ * Vista de teléfono. La tabla tiene nueve columnas y no cabe en 390px; esto
+ * pone lo mismo en una tarjeta, con los botones separados lo suficiente para
+ * no tocar "borrar" cuando quieres "editar".
+ */
+function ProductCard({ item, showOwner }: { item: InventoryItem; showOwner: boolean }) {
+  return (
+    <li className="border border-gray-200 bg-white p-3 flex gap-3">
+      <div className="w-16 h-20 bg-gray-100 relative overflow-hidden shrink-0">
+        {item.image && (
+          <Image src={item.image} alt={item.name} fill className="object-cover" sizes="64px" />
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1 flex flex-col gap-2">
+        <div className="flex items-start justify-between gap-2">
+          <p className="min-w-0 break-words" style={{ ...fontStyle, fontSize: '13px' }}>
+            {item.name}
+          </p>
+          <span
+            className="uppercase tracking-widest text-gray-400 shrink-0"
+            style={{ ...fontStyle, fontSize: '10px' }}
+          >
+            {whereLabel(item.disposition, item.listed)}
+          </span>
+        </div>
+
+        <p className="text-gray-500" style={{ ...fontStyle, fontSize: '11px' }}>
+          {isGarmentType(item.garmentType) ? GARMENT_TYPE_LABELS[item.garmentType] : 'Sin tipo'}
+          {showOwner ? ` · ${item.owner === 'mario' ? 'Mario' : 'Uzziel'}` : ''}
+        </p>
+
+        <p className="font-mono text-gray-600" style={{ ...fontStyle, fontSize: '11px' }}>
+          Costo {item.costMxn == null ? '—' : money(item.costMxn)} · Precio{' '}
+          {item.priceMxn == null ? '—' : money(item.priceMxn)}
+        </p>
+
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <SoldToggle id={item.id} vendida={item.soldOut} apartada={reservedNow(item)} />
+          <div className="flex items-center gap-5">
+            <Link
+              href={`/admin/products/${item.id}`}
+              className="uppercase tracking-widest border-b border-black min-h-[44px] flex items-center"
+              style={{ ...fontStyle, fontSize: '11px' }}
+            >
+              Editar
+            </Link>
+            <DeleteButton id={item.id} />
+          </div>
+        </div>
+      </div>
+    </li>
+  )
 }
 
 export default async function AdminProductsPage({
@@ -69,7 +133,14 @@ export default async function AdminProductsPage({
           Aún no hay prendas
         </p>
       ) : (
-        <table className="w-full border-collapse">
+        <>
+          <ul className="md:hidden flex flex-col gap-3">
+            {products.map((product) => (
+              <ProductCard key={product.id} item={product} showOwner={actor === 'uzziel'} />
+            ))}
+          </ul>
+
+          <table className="hidden md:table w-full border-collapse">
           <thead>
             <tr className="border-b border-gray-200">
               {(actor === 'uzziel'
@@ -128,7 +199,7 @@ export default async function AdminProductsPage({
                     {product.priceMxn == null ? '—' : money(product.priceMxn)}
                   </td>
                   <td className="py-3 pr-6 uppercase tracking-widest" style={{ ...fontStyle, fontSize: '10px' }}>
-                    {product.listed ? 'Tienda' : 'Inventario'}
+                    {whereLabel(product.disposition, product.listed)}
                   </td>
                   <td className="py-3 pr-6">
                     <SoldToggle id={product.id} vendida={product.soldOut} apartada={apartada} />
@@ -149,7 +220,8 @@ export default async function AdminProductsPage({
               )
             })}
           </tbody>
-        </table>
+          </table>
+        </>
       )}
     </div>
   )

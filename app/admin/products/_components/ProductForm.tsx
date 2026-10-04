@@ -75,14 +75,19 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
+/**
+ * Alto y tipografía de todo control del formulario.
+ *
+ * `text-base` (16px) en móvil no es estética: por debajo de 16px, Safari en iOS
+ * hace zoom automático al enfocar el campo, y capturar decenas de prendas con
+ * la pantalla saltando en cada input es inviable. En `md` vuelve a 11px.
+ * `min-h-[44px]` es el objetivo táctil mínimo.
+ */
+const CONTROL_CLASS =
+  'w-full border-b border-gray-200 bg-transparent py-2.5 min-h-[44px] md:min-h-0 text-base md:text-[11px] focus:outline-none focus:border-black transition-colors'
+
 function FieldInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      {...props}
-      className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors"
-      style={{ ...font, fontSize: '11px' }}
-    />
-  )
+  return <input {...props} className={CONTROL_CLASS} style={font} />
 }
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
@@ -91,8 +96,8 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      className="bg-black text-white uppercase tracking-widest px-8 py-3 hover:bg-gray-800 transition-colors disabled:opacity-50"
-      style={{ ...font, fontSize: '10px', fontWeight: 500 }}
+      className="bg-black text-white uppercase tracking-widest w-full sm:w-auto px-8 py-4 sm:py-3 min-h-[48px] hover:bg-gray-800 transition-colors disabled:opacity-50"
+      style={{ ...font, fontSize: '11px', fontWeight: 500 }}
     >
       {pending ? 'Guardando…' : isEdit ? 'Guardar' : 'Registrar'}
     </button>
@@ -174,8 +179,8 @@ export default function ProductForm({
             required
             value={garmentType}
             onChange={(e) => setGarmentType(e.target.value)}
-            className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors appearance-none"
-            style={{ ...font, fontSize: '11px' }}
+            className={`${CONTROL_CLASS} appearance-none`}
+            style={font}
           >
             <option value="">— Selecciona —</option>
             {GARMENT_TYPES.map((t) => (
@@ -193,8 +198,8 @@ export default function ProductForm({
             required={listed}
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
-            className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors appearance-none"
-            style={{ ...font, fontSize: '11px' }}
+            className={`${CONTROL_CLASS} appearance-none`}
+            style={font}
           >
             <option value="">— Selecciona —</option>
             {CONDITIONS.map((c) => (
@@ -214,13 +219,13 @@ export default function ProductForm({
               defaultValue={product?.defect_notes ?? ''}
               rows={3}
               placeholder="Mancha en el puño, 1 cm. Sin agujeros."
-              className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors resize-none"
-              style={{ ...font, fontSize: '11px' }}
+              className={`${CONTROL_CLASS} resize-none`}
+              style={font}
             />
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <FieldLabel>{listed ? 'Precio MXN *' : 'Precio MXN'}</FieldLabel>
             <FieldInput
@@ -244,7 +249,7 @@ export default function ProductForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <FieldLabel>Fecha de compra</FieldLabel>
             <FieldInput
@@ -262,8 +267,8 @@ export default function ProductForm({
             <select
               name="disposition"
               defaultValue={product?.disposition ?? 'activa'}
-              className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors appearance-none"
-              style={{ ...font, fontSize: '11px' }}
+              className={`${CONTROL_CLASS} appearance-none`}
+              style={font}
             >
               {DISPOSITIONS.map((d) => (
                 <option key={d} value={d}>
@@ -291,8 +296,8 @@ export default function ProductForm({
               name="owner"
               required
               defaultValue={product?.owner ?? ''}
-              className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors appearance-none"
-              style={{ ...font, fontSize: '11px' }}
+              className={`${CONTROL_CLASS} appearance-none`}
+              style={font}
             >
               <option value="">— Selecciona —</option>
               {OWNERS.map((o) => (
@@ -334,8 +339,8 @@ export default function ProductForm({
               <select
                 name="category_id"
                 defaultValue={product?.category_id ?? ''}
-                className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors appearance-none"
-                style={{ ...font, fontSize: '11px' }}
+                className={`${CONTROL_CLASS} appearance-none`}
+                style={font}
               >
                 <option value="">— Sin categoría —</option>
                 {categories

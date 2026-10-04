@@ -14,8 +14,8 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full bg-black text-white uppercase tracking-widest py-3 hover:bg-gray-800 transition-colors disabled:opacity-50"
-      style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif", fontSize: '10px', fontWeight: 500 }}
+      className="w-full bg-black text-white uppercase tracking-widest py-4 md:py-3 min-h-[48px] hover:bg-gray-800 transition-colors disabled:opacity-50"
+      style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif", fontSize: '11px', fontWeight: 500 }}
     >
       {pending ? 'Entrando…' : 'Entrar'}
     </button>
@@ -53,8 +53,8 @@ export default function AdminLoginPage() {
               autoComplete="username"
               placeholder="Correo"
               required
-              className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors"
-              style={{ ...fontStyle, fontSize: '11px' }}
+              className="w-full border-b border-gray-200 bg-transparent py-2.5 min-h-[44px] md:min-h-0 text-base md:text-[11px] focus:outline-none focus:border-black transition-colors"
+              style={fontStyle}
             />
           </div>
 
@@ -65,8 +65,8 @@ export default function AdminLoginPage() {
               autoComplete="current-password"
               placeholder="Contraseña"
               required
-              className="w-full border-b border-gray-200 bg-transparent py-2.5 focus:outline-none focus:border-black transition-colors"
-              style={{ ...fontStyle, fontSize: '11px' }}
+              className="w-full border-b border-gray-200 bg-transparent py-2.5 min-h-[44px] md:min-h-0 text-base md:text-[11px] focus:outline-none focus:border-black transition-colors"
+              style={fontStyle}
             />
           </div>
 

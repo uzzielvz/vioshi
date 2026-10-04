@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { AdminActor } from '@/lib/admin/session'
+import { DISPOSITION_LABELS, isDisposition } from '@/lib/garments'
 
 export type InventoryItem = {
   id: string
@@ -125,4 +126,16 @@ export function totalsFor(items: InventoryItem[]): OwnerTotals {
     inventoryOnly: items.length - listed,
     sold,
   }
+}
+
+/**
+ * Dónde está la prenda, en una palabra. Una pieza fuera de inventario activo
+ * (0020) se nombra por su destino: decir "Inventario" de una merma haría creer
+ * que todavía es capital vendible.
+ */
+export function whereLabel(disposition: string, listed: boolean): string {
+  if (isDisposition(disposition) && disposition !== 'activa') {
+    return DISPOSITION_LABELS[disposition]
+  }
+  return listed ? 'Tienda' : 'Inventario'
 }

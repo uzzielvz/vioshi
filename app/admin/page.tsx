@@ -1,6 +1,12 @@
 import Link from 'next/link'
 import { getAdminActor } from '@/lib/admin/session'
-import { listInventory, totalsFor, type InventoryItem, type OwnerTotals } from '@/lib/admin/inventory'
+import {
+  listInventory,
+  totalsFor,
+  whereLabel,
+  type InventoryItem,
+  type OwnerTotals,
+} from '@/lib/admin/inventory'
 import {
   getInventoryStats,
   isPeriod,
@@ -11,12 +17,7 @@ import {
   type Period,
 } from '@/lib/admin/stats'
 import { formatPrice } from '@/lib/formatters'
-import {
-  DISPOSITION_LABELS,
-  GARMENT_TYPE_LABELS,
-  isDisposition,
-  isGarmentType,
-} from '@/lib/garments'
+import { GARMENT_TYPE_LABELS, isGarmentType } from '@/lib/garments'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,14 +68,6 @@ function Block({ title, totals }: { title: string; totals: OwnerTotals }) {
       </div>
     </section>
   )
-}
-
-/** Una prenda fuera de inventario activo se nombra por su destino, no por "inventario". */
-function whereLabel(disposition: string, listed: boolean): string {
-  if (isDisposition(disposition) && disposition !== 'activa') {
-    return DISPOSITION_LABELS[disposition]
-  }
-  return listed ? 'En tienda' : 'Inventario'
 }
 
 function garmentLabel(type: string | null) {
@@ -194,7 +187,34 @@ function AgingTable({ items, showOwner }: { items: AgingItem[]; showOwner: boole
       <p className="text-gray-400 mb-3" style={{ ...font, fontSize: '10px' }}>
         Días desde que se compró o se registró. Capital parado.
       </p>
-      <table className="w-full border-collapse">
+      <ul className="md:hidden flex flex-col gap-2">
+        {items.map((item) => (
+          <li
+            key={item.id}
+            className="border border-gray-200 bg-white px-3 py-3 flex items-start justify-between gap-3"
+          >
+            <div className="min-w-0">
+              <Link
+                href={`/admin/products/${item.id}`}
+                className="border-b border-black break-words"
+                style={{ ...font, fontSize: '12px' }}
+              >
+                {item.name}
+              </Link>
+              <p className="text-gray-500 mt-1" style={{ ...font, fontSize: '10px' }}>
+                {showOwner ? `${OWNER_LABELS[item.owner]} · ` : ''}
+                {item.costMxn == null ? 'sin costo' : money(item.costMxn)} ·{' '}
+                {item.listed ? 'En tienda' : 'Inventario'}
+              </p>
+            </div>
+            <span className="font-mono shrink-0" style={{ ...font, fontSize: '13px' }}>
+              {item.days}d
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <table className="hidden md:table w-full border-collapse">
         <thead>
           <tr className="border-b border-gray-200">
             {(showOwner ? ['Prenda', 'Dueño', 'Días', 'Costo', 'Dónde'] : ['Prenda', 'Días', 'Costo', 'Dónde']).map(
@@ -289,7 +309,7 @@ export default async function AdminDashboardPage({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="uppercase tracking-widest" style={{ ...font, fontSize: '13px', fontWeight: 500 }}>
             {actor === 'mario' ? 'Tu inventario' : 'Inventario'}
@@ -302,8 +322,8 @@ export default async function AdminDashboardPage({
         </div>
         <Link
           href="/admin/products/new"
-          className="bg-black text-white uppercase tracking-widest px-4 py-2 hover:bg-gray-800 transition-colors"
-          style={{ ...font, fontSize: '10px', fontWeight: 500 }}
+          className="bg-black text-white uppercase tracking-widest text-center w-full sm:w-auto px-4 py-4 sm:py-2 min-h-[48px] sm:min-h-0 flex items-center justify-center hover:bg-gray-800 transition-colors shrink-0"
+          style={{ ...font, fontSize: '11px', fontWeight: 500 }}
         >
           Registrar prenda
         </Link>
@@ -380,7 +400,37 @@ export default async function AdminDashboardPage({
               Ver inventario
             </Link>
           </div>
-          <table className="w-full border-collapse">
+          <ul className="md:hidden flex flex-col gap-2">
+            {recent.map((item) => (
+              <li
+                key={item.id}
+                className="border border-gray-200 bg-white px-3 py-3 flex items-start justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <Link
+                    href={`/admin/products/${item.id}`}
+                    className="border-b border-black break-words"
+                    style={{ ...font, fontSize: '12px' }}
+                  >
+                    {item.name}
+                  </Link>
+                  <p className="text-gray-500 mt-1" style={{ ...font, fontSize: '10px' }}>
+                    {garmentLabel(item.garmentType)}
+                    {actor === 'uzziel' ? ` · ${OWNER_LABELS[item.owner]}` : ''} ·{' '}
+                    {item.costMxn == null ? 'sin costo' : money(item.costMxn)}
+                  </p>
+                </div>
+                <span
+                  className="uppercase tracking-widest text-gray-400 shrink-0"
+                  style={{ ...font, fontSize: '10px' }}
+                >
+                  {whereLabel(item.disposition, item.listed)}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <table className="hidden md:table w-full border-collapse">
             <thead>
               <tr className="border-b border-gray-200">
                 {(actor === 'uzziel'
