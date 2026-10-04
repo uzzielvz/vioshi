@@ -10,7 +10,7 @@ Rumbo: plataforma/marketplace con Viogi como tienda ancla.
 | [`docs/agents/README.md`](./docs/agents/README.md) | OS de agentes |
 | [`docs/agents/STATUS.md`](./docs/agents/STATUS.md) | Qué hay / qué falta |
 | [`AGENTS.md`](./AGENTS.md) | Carriles |
-| [`docs/ESQUEMA-REAL.md`](./docs/ESQUEMA-REAL.md) | Schema prod (hasta 0011) |
+| [`docs/ESQUEMA-REAL.md`](./docs/ESQUEMA-REAL.md) | Foto del schema hasta `0011`. **Prod está en `0017`** — para lo nuevo, `supabase/migrations/` |
 
 Históricos: [`docs/archive/`](./docs/archive/README.md).
 

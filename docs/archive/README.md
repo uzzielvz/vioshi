@@ -14,6 +14,7 @@ No usar para desarrollo. La verdad actual está en [`docs/agents/`](../agents/RE
 | `RESEARCH-2026-05-13.md` | 2026-05-13 | Pre–visual search |
 | `plan-auth.md` | 2026-05-03 | Auth cerrado |
 | `plancheckout.md` | 2026-03-17 | Checkout mock |
+| `database-er-2026-05.md` | 2026-05-27 | Diagrama ER de `0001`–`0006`; se anunciaba como "fuente de verdad" con 11 migraciones de retraso. Los diagramas a mano siempre mienten: si hace falta uno, se genera |
 
 ## Ramas
 
