@@ -145,15 +145,30 @@ function emptyStats(owner: 'uzziel' | 'mario'): OwnerStats {
   }
 }
 
+const SOLO_FECHA = /^(\d{4})-(\d{2})-(\d{2})$/
+
+/**
+ * `acquired_on` es una columna `date`, o sea 'YYYY-MM-DD' sin zona. Pasarla
+ * directo a `new Date()` la interpreta como medianoche UTC: en México eso la
+ * corre seis horas atrás y una compra del 1 de octubre se contaba en
+ * septiembre. Una fecha pura se construye en hora LOCAL, igual que los rangos
+ * de `periodRange`. Un timestamptz (`sold_at`) sí trae zona y se parsea normal.
+ */
+function toTime(value: string): number {
+  const m = SOLO_FECHA.exec(value)
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime()
+  return new Date(value).getTime()
+}
+
 function inRange(iso: string | null, range: { from: Date; to: Date } | null): boolean {
   if (!iso) return false
   if (!range) return true
-  const t = new Date(iso).getTime()
+  const t = toTime(iso)
   return t >= range.from.getTime() && t < range.to.getTime()
 }
 
 function daysSince(iso: string): number {
-  const ms = Date.now() - new Date(iso).getTime()
+  const ms = Date.now() - toTime(iso)
   return Math.max(0, Math.floor(ms / 86_400_000))
 }
 
