@@ -18,6 +18,7 @@ import {
 } from '@/lib/garments'
 
 type ActionState = { error: string } | null
+type SupabaseClient = ReturnType<typeof createAdminClient>
 
 // ─── Campos de negocio (0010) ────────────────────────────────────────────────
 
@@ -169,27 +170,67 @@ function toSlug(value: string) {
     .replace(/^-|-$/g, '')
 }
 
+async function uniqueProductSlug(supabase: SupabaseClient, name: string): Promise<string | null> {
+  const base = toSlug(name)
+  if (!base) return null
+  let slug = base
+  const { data: taken } = await supabase.from('products').select('id').eq('slug', slug).maybeSingle()
+  if (taken) slug = `${base}-${Date.now().toString(36)}`
+  return slug
+}
+
+/** Primera vez que escribes Adidas, nace. La siguiente, se reusa. */
+async function findOrCreateBrand(
+  supabase: SupabaseClient,
+  brandName: string
+): Promise<{ error: string } | { brand_id: string | null }> {
+  const name = brandName.trim()
+  if (!name) return { brand_id: null }
+
+  const { data: existing, error: lookupError } = await supabase
+    .from('brands')
+    .select('id, name')
+    .ilike('name', name)
+
+  if (lookupError) return { error: lookupError.message }
+  const hit = (existing ?? []).find((b) => b.name.trim().toLowerCase() === name.toLowerCase())
+  if (hit) return { brand_id: hit.id }
+
+  let slug = toSlug(name) || `marca-${Date.now().toString(36)}`
+  const { data: slugTaken } = await supabase.from('brands').select('id').eq('slug', slug).maybeSingle()
+  if (slugTaken) slug = `${slug}-${Date.now().toString(36)}`
+
+  const { data, error } = await supabase
+    .from('brands')
+    .insert({ name, slug, is_active: true })
+    .select('id')
+    .single()
+
+  if (error) {
+    if (error.code === '23505') {
+      const { data: again } = await supabase.from('brands').select('id').ilike('name', name).maybeSingle()
+      if (again) return { brand_id: again.id }
+    }
+    return { error: error.message }
+  }
+  return { brand_id: data.id }
+}
+
 export async function createProduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const supabase = createAdminClient()
 
   const name = ((formData.get('name') as string) || '').trim()
   if (!name) return { error: 'El nombre es obligatorio.' }
-  let slug = ((formData.get('slug') as string) || '').trim() || toSlug(name)
+  const slug = await uniqueProductSlug(supabase, name)
   if (!slug) return { error: 'El nombre no produce un identificador válido.' }
 
-  const description     = (formData.get('description') as string) || null
-  const listed          = formData.get('listed') === 'on'
-  const price           = parsePrice((formData.get('price_mxn') as string) || '', listed)
+  const listed = formData.get('listed') === 'on'
+  const price = parsePrice((formData.get('price_mxn') as string) || '', listed)
   if ('error' in price) return { error: price.error }
-  const origPrice       = formData.get('original_price_mxn') as string
-  const original_price_mxn = origPrice ? parseFloat(origPrice) : null
-  const category_id     = (formData.get('category_id') as string) || null
-  const brand_id        = (formData.get('brand_id') as string) || null
-  const material        = (formData.get('material') as string) || null
-  const made_in         = (formData.get('made_in') as string) || 'México'
-  const is_featured     = listed && formData.get('is_featured') === 'on'
-  const is_new          = listed && formData.get('is_new') === 'on'
-  const sold_out        = formData.get('sold_out') === 'on'
+  const category_id = listed ? (formData.get('category_id') as string) || null : null
+
+  const brand = await findOrCreateBrand(supabase, (formData.get('brand_name') as string) || '')
+  if ('error' in brand) return { error: brand.error }
 
   const business = parseBusinessFields(formData, listed)
   if ('error' in business) return { error: business.error }
@@ -198,18 +239,26 @@ export async function createProduct(_prev: ActionState, formData: FormData): Pro
   if ('error' in owned) return { error: owned.error }
   business.data.owner = owned.owner
 
-  const { data: slugTaken } = await supabase.from('products').select('id').eq('slug', slug).maybeSingle()
-  if (slugTaken) slug = `${slug}-${Date.now().toString(36)}`
-
-  // SKU automático: ya no se pide a mano.
   const sku = await generateUniqueSku(supabase, business.data.garment_type)
   if (!sku) return { error: 'No se pudo generar un SKU único. Intenta de nuevo.' }
 
   const { data: product, error } = await supabase
     .from('products')
     .insert({
-      name, slug, description, price_mxn: price.price_mxn, original_price_mxn, category_id, brand_id,
-      sku, material, made_in, is_featured, is_new, sold_out, listed,
+      name,
+      slug,
+      description: null,
+      price_mxn: price.price_mxn,
+      original_price_mxn: null,
+      category_id,
+      brand_id: brand.brand_id,
+      sku,
+      material: null,
+      made_in: 'México',
+      is_featured: false,
+      is_new: false,
+      sold_out: false,
+      listed,
       ...business.data,
     })
     .select('id')
@@ -217,14 +266,18 @@ export async function createProduct(_prev: ActionState, formData: FormData): Pro
 
   if (error) return { error: error.message }
 
-  const uploadResult = await uploadImages(supabase, product.id, formData, 0, false)
-  const uploadError = formatUploadErrors(uploadResult)
-  if (uploadError) return { error: uploadError }
+  if (listed) {
+    const hasNewPhoto = (formData.getAll('images') as File[]).some((f) => f instanceof File && f.size > 0)
+    if (!hasNewPhoto) return { error: 'Para publicarla en la tienda hace falta una foto.' }
+    const uploadResult = await uploadImages(supabase, product.id, formData, 0, false)
+    const uploadError = formatUploadErrors(uploadResult)
+    if (uploadError) return { error: uploadError }
+  }
 
-  await saveAttributes(supabase, product.id, formData)
   const embedded = listed ? await indexProductEmbedding(supabase, product.id) : true
 
   revalidateTag('products')
+  revalidateTag('brands')
   redirect(embedded ? '/admin/products' : '/admin/products?embed=pending')
 }
 
@@ -236,21 +289,13 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
 
   const name = ((formData.get('name') as string) || '').trim()
   if (!name) return { error: 'El nombre es obligatorio.' }
-  const slug = ((formData.get('slug') as string) || '').trim()
-  if (!slug) return { error: 'El identificador es obligatorio.' }
-  const description     = (formData.get('description') as string) || null
-  const listed          = formData.get('listed') === 'on'
-  const price           = parsePrice((formData.get('price_mxn') as string) || '', listed)
+  const listed = formData.get('listed') === 'on'
+  const price = parsePrice((formData.get('price_mxn') as string) || '', listed)
   if ('error' in price) return { error: price.error }
-  const origPrice       = formData.get('original_price_mxn') as string
-  const original_price_mxn = origPrice ? parseFloat(origPrice) : null
-  const category_id     = (formData.get('category_id') as string) || null
-  const brand_id        = (formData.get('brand_id') as string) || null
-  const material        = (formData.get('material') as string) || null
-  const made_in         = (formData.get('made_in') as string) || 'México'
-  const is_featured     = listed && formData.get('is_featured') === 'on'
-  const is_new          = listed && formData.get('is_new') === 'on'
-  const sold_out        = formData.get('sold_out') === 'on'
+  const category_id = listed ? (formData.get('category_id') as string) || null : null
+
+  const brand = await findOrCreateBrand(supabase, (formData.get('brand_name') as string) || '')
+  if ('error' in brand) return { error: brand.error }
 
   const business = parseBusinessFields(formData, listed)
   if ('error' in business) return { error: business.error }
@@ -259,9 +304,13 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
   if ('error' in owned) return { error: owned.error }
   business.data.owner = owned.owner
 
-  // El SKU viaja readOnly desde el form. Si la prenda aún no tiene (borrador
-  // creado en el Studio), se genera ahora.
-  let sku = (formData.get('sku') as string | null)?.trim() || null
+  const { data: current } = await supabase
+    .from('products')
+    .select('slug, sku')
+    .eq('id', id)
+    .maybeSingle()
+
+  let sku = current?.sku ?? null
   if (!sku) {
     sku = await generateUniqueSku(supabase, business.data.garment_type)
     if (!sku) return { error: 'No se pudo generar un SKU único. Intenta de nuevo.' }
@@ -270,58 +319,62 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
   const { error } = await supabase
     .from('products')
     .update({
-      name, slug, description, price_mxn: price.price_mxn, original_price_mxn, category_id, brand_id,
-      sku, material, made_in, is_featured, is_new, sold_out, listed,
-      // Fuera de tienda: el buscador visual no debe seguir encontrándola.
-      ...(listed ? {} : { embedding: null }),
+      name,
+      price_mxn: price.price_mxn,
+      category_id,
+      brand_id: brand.brand_id,
+      sku,
+      listed,
+      ...(listed ? {} : { is_featured: false, is_new: false, embedding: null }),
       ...business.data,
     })
     .eq('id', id)
 
   if (error) return { error: error.message }
 
-  // Delete images not in keptImageIds
-  const keptIds = formData.getAll('keptImageIds') as string[]
-  const { data: existingImages } = await supabase
-    .from('product_images')
-    .select('id, url')
-    .eq('product_id', id)
-
-  const storagePrefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/`
-
-  for (const img of existingImages ?? []) {
-    if (!keptIds.includes(img.id)) {
-      const storagePath = img.url.startsWith(storagePrefix)
-        ? decodeURIComponent(img.url.slice(storagePrefix.length).split('?')[0])
-        : null
-      if (storagePath) await supabase.storage.from('product-images').remove([storagePath])
-      await supabase.from('product_images').delete().eq('id', img.id)
+  if (listed) {
+    const keptIds = formData.getAll('keptImageIds') as string[]
+    const hasNewPhoto = (formData.getAll('images') as File[]).some((f) => f instanceof File && f.size > 0)
+    if (keptIds.length === 0 && !hasNewPhoto) {
+      return { error: 'Para publicarla en la tienda hace falta una foto.' }
     }
+    const { data: existingImages } = await supabase
+      .from('product_images')
+      .select('id, url')
+      .eq('product_id', id)
+
+    const storagePrefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/`
+
+    for (const img of existingImages ?? []) {
+      if (!keptIds.includes(img.id)) {
+        const storagePath = img.url.startsWith(storagePrefix)
+          ? decodeURIComponent(img.url.slice(storagePrefix.length).split('?')[0])
+          : null
+        if (storagePath) await supabase.storage.from('product-images').remove([storagePath])
+        await supabase.from('product_images').delete().eq('id', img.id)
+      }
+    }
+
+    const { data: remaining } = await supabase
+      .from('product_images')
+      .select('sort_order')
+      .eq('product_id', id)
+      .order('sort_order', { ascending: false })
+      .limit(1)
+
+    const baseOrder = (remaining?.[0]?.sort_order ?? -1) + 1
+    const hasPrimary = keptIds.length > 0
+    const uploadResult = await uploadImages(supabase, id, formData, baseOrder, hasPrimary)
+    const uploadError = formatUploadErrors(uploadResult)
+    if (uploadError) return { error: uploadError }
   }
 
-  // Get next sort_order for new images
-  const { data: remaining } = await supabase
-    .from('product_images')
-    .select('sort_order')
-    .eq('product_id', id)
-    .order('sort_order', { ascending: false })
-    .limit(1)
-
-  const baseOrder = (remaining?.[0]?.sort_order ?? -1) + 1
-  const hasPrimary = keptIds.length > 0
-
-  const uploadResult = await uploadImages(supabase, id, formData, baseOrder, hasPrimary)
-  const uploadError = formatUploadErrors(uploadResult)
-  if (uploadError) return { error: uploadError }
-
-  await saveAttributes(supabase, id, formData)
   const embedded = listed ? await indexProductEmbedding(supabase, id) : true
 
   revalidateTag('products')
+  revalidateTag('brands')
   redirect(embedded ? '/admin/products' : '/admin/products?embed=pending')
 }
-
-type SupabaseClient = ReturnType<typeof createAdminClient>
 
 /**
  * Re-embeds the product from its primary image (image -> AI description ->
