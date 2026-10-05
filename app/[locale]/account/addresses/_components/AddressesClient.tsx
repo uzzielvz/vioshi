@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState, useOptimistic, useTransition, useState } from 'react';
+import { useOptimistic, useTransition, useState } from 'react';
+import { useFormState, useFormStatus } from 'react-dom';
 import {
   addAddressAction,
   deleteAddressAction,
@@ -34,11 +35,40 @@ const LABEL = 'text-[9px] uppercase tracking-widest text-gray-400';
 
 // ─── Add form ─────────────────────────────────────────────────────────────────
 
-function AddAddressForm({ onCancel }: { onCancel: () => void }) {
-  const [state, action, pending] = useActionState<AddressActionState, FormData>(
-    addAddressAction,
-    null
+/**
+ * Botones del formulario. Van en su propio componente porque `useFormStatus`
+ * solo conoce el estado del <form> que lo envuelve: leído desde el padre
+ * siempre devolvería `pending: false`.
+ */
+function AddFormActions({ onCancel }: { onCancel: () => void }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <div className="flex gap-3 pt-2">
+      <button
+        type="submit"
+        disabled={pending}
+        className="flex-1 bg-black text-white py-3 text-[11px] uppercase tracking-widest hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400"
+      >
+        {pending ? 'Guardando...' : 'Guardar Dirección'}
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        disabled={pending}
+        className="flex-1 border border-gray-300 text-black py-3 text-[11px] uppercase tracking-widest hover:border-black transition-colors"
+      >
+        Cancelar
+      </button>
+    </div>
   );
+}
+
+function AddAddressForm({ onCancel }: { onCancel: () => void }) {
+  // `useFormState` de react-dom, no `useActionState`: eso es React 19 y aquí
+  // corre React 18.3, donde el import no existe y la página revienta al
+  // renderizarse.
+  const [state, action] = useFormState<AddressActionState, FormData>(addAddressAction, null);
 
   return (
     <form action={action} className="border border-gray-200 p-6 mb-6 space-y-4">
@@ -106,23 +136,7 @@ function AddAddressForm({ onCancel }: { onCancel: () => void }) {
         <p className="text-[11px] text-red-500">{state.error}</p>
       )}
 
-      <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          disabled={pending}
-          className="flex-1 bg-black text-white py-3 text-[11px] uppercase tracking-widest hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400"
-        >
-          {pending ? 'Guardando...' : 'Guardar Dirección'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={pending}
-          className="flex-1 border border-gray-300 text-black py-3 text-[11px] uppercase tracking-widest hover:border-black transition-colors"
-        >
-          Cancelar
-        </button>
-      </div>
+      <AddFormActions onCancel={onCancel} />
     </form>
   );
 }
