@@ -102,14 +102,7 @@ export default async function AdminDashboardPage({
     <div className="max-w-5xl">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">
         <div>
-          <h1 className="text-title uppercase tracking-widest">
-            {actor === 'mario' ? 'Tu inventario' : 'Inventario'}
-          </h1>
-          <p className="text-label text-ink-muted mt-2 max-w-md">
-            {actor === 'mario'
-              ? 'Solo ves lo que está a tu nombre. Nada sale a la tienda hasta publicarlo.'
-              : 'Ves lo de los dos. Mario, al entrar, solo ve lo suyo.'}
-          </p>
+          <h1 className="text-title uppercase tracking-widest">Inventario</h1>
         </div>
 
         <Link
@@ -132,7 +125,7 @@ export default async function AdminDashboardPage({
 
           <div className="flex flex-col gap-10">
             <BloqueDinero
-              titulo={actor === 'mario' ? 'Tus números' : 'Los dos'}
+              titulo={actor === 'mario' ? 'Resumen' : 'Total'}
               stats={principal}
               previous={stats.previous}
               period={period}

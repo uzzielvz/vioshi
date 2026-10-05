@@ -29,6 +29,7 @@ function useEntries(actor: AdminActor): Entry[] {
   const base: Entry[] = [
     { href: '/admin', label: 'Tablero', active: pathname === '/admin' },
     { href: '/admin/products', label: 'Inventario', active: pathname.startsWith('/admin/products') },
+    { href: '/admin/reportes', label: 'Reportes', active: pathname.startsWith('/admin/reportes') },
   ]
 
   if (actor !== 'uzziel') return base
@@ -159,12 +160,13 @@ export default function Sidebar({ actor }: { actor: AdminActor }) {
         <div className="border-b border-white/10 mb-6" />
 
         <nav className="flex flex-col gap-4">
-          <DesktopLink entry={entries[0]} />
-          <DesktopLink entry={entries[1]} />
-          {entries.length > 2 && (
+          {entries.slice(0, 3).map((entry) => (
+            <DesktopLink key={entry.href} entry={entry} />
+          ))}
+          {entries.length > 3 && (
             <>
               <div className="border-b border-white/10 my-2" />
-              {entries.slice(2).map((entry) => (
+              {entries.slice(3).map((entry) => (
                 <DesktopLink key={entry.href} entry={entry} />
               ))}
             </>

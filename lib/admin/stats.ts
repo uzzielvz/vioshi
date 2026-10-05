@@ -347,3 +347,87 @@ export async function getInventoryStats(
     }
   }
 }
+
+// ─── Reportería ───────────────────────────────────────────────────────────────
+
+export type Movement = {
+  id: string
+  name: string
+  owner: 'uzziel' | 'mario'
+  /** 'compra' = entró al inventario en el periodo · 'venta' = salió vendida. */
+  kind: 'compra' | 'venta'
+  date: string
+  costMxn: number | null
+  priceMxn: number | null
+  /** Solo en ventas: precio − costo. null si falta el costo. */
+  marginMxn: number | null
+  channel: 'web' | 'instagram' | null
+  disposition: string
+}
+
+/**
+ * Movimientos del periodo, para el reporte y la descarga.
+ *
+ * Mismas reglas que los agregados: Mario solo recibe lo suyo (filtro en la
+ * consulta) y una compra sin `acquired_on` no se cuenta, porque no se sabe
+ * cuándo ocurrió.
+ */
+export async function getMovements(actor: AdminActor, period: Period): Promise<Movement[]> {
+  const range = periodRange(period)
+
+  try {
+    const supabase = createAdminClient()
+    let query = supabase
+      .from('products')
+      .select(
+        'id, name, owner, cost_mxn, price_mxn, sold_out, sold_at, sold_order_id, acquired_on, disposition'
+      )
+
+    if (actor === 'mario') query = query.eq('owner', 'mario')
+
+    const { data, error } = await query
+    if (error || !data) return []
+
+    const out: Movement[] = []
+
+    for (const row of data as unknown as StatsRow[]) {
+      const owner = row.owner === 'mario' ? 'mario' : 'uzziel'
+      const cost = num(row.cost_mxn)
+      const price = num(row.price_mxn)
+
+      if (row.acquired_on && inRange(row.acquired_on, range)) {
+        out.push({
+          id: row.id,
+          name: row.name,
+          owner,
+          kind: 'compra',
+          date: row.acquired_on,
+          costMxn: cost,
+          priceMxn: price,
+          marginMxn: null,
+          channel: null,
+          disposition: row.disposition,
+        })
+      }
+
+      if (row.sold_out && row.sold_at && inRange(row.sold_at, range)) {
+        out.push({
+          id: row.id,
+          name: row.name,
+          owner,
+          kind: 'venta',
+          date: row.sold_at,
+          costMxn: cost,
+          priceMxn: price,
+          marginMxn: price != null && cost != null ? price - cost : null,
+          channel: row.sold_order_id ? 'web' : 'instagram',
+          disposition: row.disposition,
+        })
+      }
+    }
+
+    return out.sort((a, b) => toTime(b.date) - toTime(a.date))
+  } catch {
+    return []
+  }
+}
