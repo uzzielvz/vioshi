@@ -73,7 +73,15 @@ Marcar entregado **no** transfiere dinero. Eso es el paquete E.
 
 ## Migraciones
 
-Repo/prod: `0001`–`0017` en prod. En repo también está **`0018`** (inventario interno: `products.listed`). Hay que aplicarla en Supabase antes de usar el tablero nuevo. Siguiente libre después de aplicarla: **`0019`**.
+Prod: `0001`–`0023`, aplicadas. Siguiente libre: **`0024`**.
+
+- `0021` abrió la merma a la tienda · `0023` la volvió a cerrar: el estado final es
+  que solo `disposition = 'activa'` puede estar `listed` (verificado contra prod).
+- `0022` deja las medidas obligatorias **solo al publicar**. El alta de inventario
+  interno guarda tipo, dueño y costo sin cinta métrica.
+- Ojo con el tracking: estas tres se aplicaron con el CLI, así que en
+  `supabase_migrations.schema_migrations` figuran como timestamps
+  (`20261004…`), no como `0021`–`0023`.
 
 ## Auditoría 2026-09-18
 

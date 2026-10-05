@@ -6,8 +6,9 @@
  *   - products/actions (validación en servidor)
  *   - ProductContent   (qué medidas renderizar en la ficha)
  *
- * Espejo de las constraints de supabase/migrations/0010_business_fields.sql.
- * Si cambias este archivo, cambia también la migración.
+ * Espejo de products_measurements_by_type_check (0010, relajada en 0022).
+ * El mapa es lo que exige publicar (listed). El inventario interno puede
+ * omitir las medidas. Si cambias este archivo, cambia también la migración.
  */
 
 export const GARMENT_TYPES = [
