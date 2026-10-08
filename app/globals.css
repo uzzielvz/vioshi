@@ -11,24 +11,26 @@
   --font-logo: 'Bebas Neue', 'Impact', sans-serif;
 
   /* ── Tokens de la interfaz ───────────────────────────────────────────────
-     Formalizan el lenguaje que ya usa /account (rediseño Grailed, d63e56d):
-     densidad alta, mucho blanco, bordes finos, etiquetas en mayúsculas.
-     Antes estos valores vivían sueltos en 569 estilos inline repartidos en
-     59 archivos; aquí hay UN lugar donde cambiarlos.
-
-     No se introduce color de acento: FROZEN.md lo mantiene en blanco y negro. */
+     Referencia: Grailed (FROZEN, 8 oct 2026). Texto legible en sentence case;
+     las mayúsculas se reservan para botones, pestañas y navegación.
+     UN solo lugar donde cambiar esto: antes vivía suelto en 569 estilos inline. */
 
   /* Texto */
-  --ink:        #000000;  /* principal */
-  --ink-muted:  #666666;  /* secundario: descripciones, metadatos */
-  --ink-faint:  #999999;  /* terciario: etiquetas, estados vacíos */
+  --ink:        #111111;  /* principal */
+  --ink-muted:  #666666;  /* secundario */
+  --ink-faint:  #8e8e8e;  /* metadatos, estados vacíos */
+
+  /* Acento FUNCIONAL: links, pestaña activa, foco. Nunca decorando. */
+  --accent:      #1a3ee8;
+  --accent-soft: #eef1fe;
 
   /* Líneas y superficies */
-  --line:       #e5e7eb;  /* separador de sección (gray-200) */
-  --line-soft:  #f3f4f6;  /* separador de fila (gray-100) */
+  --line:       #e5e7eb;  /* separador de sección */
+  --line-soft:  #f0f0f0;  /* separador de fila */
   --surface:    #ffffff;  /* tarjetas */
   --surface-alt:#fafafa;  /* fondo de trabajo */
-  --fill:       #f5f5f5;  /* marcos de imagen */
+  --panel:      #f7f8fa;  /* bloques secundarios (filtros, avisos) */
+  --fill:       #f2f2f2;  /* marcos de imagen */
 }
 
 html {

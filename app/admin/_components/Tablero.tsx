@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { formatPrice } from '@/lib/formatters'
 import { PERIOD_LABELS, variation, type AgingItem, type OwnerStats, type Period } from '@/lib/admin/stats'
+import { Apilada } from './Charts'
 
 /**
  * Tablero del panel.
@@ -28,8 +29,11 @@ function Delta({ now, before }: { now: number; before: number | undefined }) {
 
   const flecha = v > 0 ? '▲' : v < 0 ? '▼' : '='
   return (
-    <span className="text-label text-ink-muted tabular-nums">
-      {flecha} {Math.abs(v)}% <span className="text-ink-faint">vs. periodo anterior</span>
+    <span className="text-meta tabular-nums">
+      <span className={v > 0 ? 'text-accent' : 'text-ink-muted'}>
+        {flecha} {Math.abs(v)}%
+      </span>{' '}
+      <span className="text-ink-faint">vs. periodo anterior</span>
     </span>
   )
 }
@@ -48,7 +52,7 @@ function Hero({
 }) {
   return (
     <div className="border-b border-line pb-6">
-      <p className="text-label uppercase tracking-widest text-ink-faint">{label}</p>
+      <p className="text-label uppercase text-ink-faint">{label}</p>
       <p className="text-hero tabular-nums mt-2">{value}</p>
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
         {delta}
@@ -71,7 +75,7 @@ function Cifra({
 }) {
   return (
     <div className="py-4 border-b border-line-soft">
-      <p className="text-label uppercase tracking-widest text-ink-faint">{label}</p>
+      <p className="text-label uppercase text-ink-faint">{label}</p>
       <p className="text-display tabular-nums mt-1.5">{value}</p>
       {delta && <div className="mt-1">{delta}</div>}
       {hint && <p className="text-label text-ink-muted mt-1">{hint}</p>}
@@ -88,33 +92,16 @@ function Composicion({ stats }: { stats: OwnerStats }) {
   const total = stats.standingListed + stats.standingInventoryOnly + stats.deadPieces
   if (total === 0) return null
 
-  const partes = [
-    { label: 'En la tienda', n: stats.standingListed, tono: 'bg-ink' },
-    { label: 'Solo inventario', n: stats.standingInventoryOnly, tono: 'bg-ink-muted' },
-    { label: 'Fuera (merma)', n: stats.deadPieces, tono: 'bg-ink-faint' },
-  ].filter((p) => p.n > 0)
-
   return (
-    <div className="py-4">
-      <p className="text-label uppercase tracking-widest text-ink-faint mb-2">Composición</p>
-      <div className="flex h-2 w-full overflow-hidden">
-        {partes.map((p) => (
-          <div
-            key={p.label}
-            className={p.tono}
-            style={{ width: `${(p.n / total) * 100}%` }}
-            title={`${p.label}: ${p.n}`}
-          />
-        ))}
-      </div>
-      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
-        {partes.map((p) => (
-          <span key={p.label} className="text-label text-ink-muted flex items-center gap-1.5">
-            <span className={`inline-block w-2 h-2 ${p.tono}`} />
-            {p.label} <span className="tabular-nums text-ink">{p.n}</span>
-          </span>
-        ))}
-      </div>
+    <div className="py-5">
+      <p className="text-label uppercase text-ink-faint mb-3">Composición</p>
+      <Apilada
+        partes={[
+          { label: 'En la tienda', value: stats.standingListed, tono: 'bg-ink' },
+          { label: 'Solo inventario', value: stats.standingInventoryOnly, tono: 'bg-accent' },
+          { label: 'Merma', value: stats.deadPieces, tono: 'bg-ink-faint' },
+        ]}
+      />
     </div>
   )
 }
@@ -136,7 +123,7 @@ export function BloqueDinero({
     <section>
       <div className="flex items-baseline justify-between mb-4">
         <h2 className="text-body uppercase tracking-widest">{titulo}</h2>
-        <span className="text-label uppercase tracking-widest text-ink-faint">
+        <span className="text-label uppercase text-ink-faint">
           {PERIOD_LABELS[period]}
         </span>
       </div>
@@ -199,7 +186,7 @@ export function BloqueDinero({
 export function BloqueOwner({ stats }: { stats: OwnerStats }) {
   return (
     <div className="border border-line bg-surface p-4">
-      <p className="text-label uppercase tracking-widest text-ink-faint">
+      <p className="text-label uppercase text-ink-faint">
         {OWNER_LABELS[stats.owner]}
       </p>
       <p className="text-title tabular-nums mt-2">{money(stats.profit)}</p>
@@ -229,7 +216,7 @@ export function Antiguedad({ items, showOwner }: { items: AgingItem[]; showOwner
     <section>
       <div className="flex items-baseline justify-between mb-1">
         <h2 className="text-body uppercase tracking-widest">Lo más viejo sin vender</h2>
-        <span className="text-label uppercase tracking-widest text-ink-faint">Capital parado</span>
+        <span className="text-label uppercase text-ink-faint">Capital parado</span>
       </div>
       <p className="text-label text-ink-muted mb-4">
         Días desde que se compró o se registró. Lo de arriba es lo que hay que mover.
@@ -241,11 +228,11 @@ export function Antiguedad({ items, showOwner }: { items: AgingItem[]; showOwner
             <div className="flex items-baseline justify-between gap-4">
               <Link
                 href={`/admin/products/${item.id}`}
-                className="text-read min-w-0 break-words border-b border-ink hover:opacity-50 transition-opacity"
+                className="text-lead min-w-0 break-words border-b border-ink hover:opacity-50 transition-opacity"
               >
                 {item.name}
               </Link>
-              <span className="text-read tabular-nums shrink-0">{item.days}d</span>
+              <span className="text-lead tabular-nums shrink-0">{item.days}d</span>
             </div>
             <div className="mt-2 h-px w-full bg-line-soft">
               <div className="h-px bg-ink" style={{ width: `${(item.days / max) * 100}%` }} />

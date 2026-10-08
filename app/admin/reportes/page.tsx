@@ -34,7 +34,7 @@ function Linea({ label, value, nota }: { label: string; value: string; nota?: st
     <div className="flex items-baseline justify-between gap-4 py-2.5 border-b border-line-soft">
       <span className="text-label uppercase tracking-widest text-ink-faint">{label}</span>
       <span className="text-right">
-        <span className="text-read tabular-nums">{value}</span>
+        <span className="text-lead tabular-nums">{value}</span>
         {nota && <span className="block text-label text-ink-faint">{nota}</span>}
       </span>
     </div>
@@ -47,11 +47,11 @@ function Fila({ m, showOwner }: { m: Movement; showOwner: boolean }) {
       <div className="flex items-baseline justify-between gap-3">
         <Link
           href={`/admin/products/${m.id}`}
-          className="text-read min-w-0 break-words border-b border-ink hover:opacity-50 transition-opacity"
+          className="text-lead min-w-0 break-words border-b border-ink hover:opacity-50 transition-opacity"
         >
           {m.name}
         </Link>
-        <span className="text-read tabular-nums shrink-0">
+        <span className="text-lead tabular-nums shrink-0">
           {m.kind === 'venta'
             ? m.priceMxn == null
               ? '—'

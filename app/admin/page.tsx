@@ -62,7 +62,7 @@ function Recientes({ items, showOwner }: { items: InventoryItem[]; showOwner: bo
             <div className="min-w-0">
               <Link
                 href={`/admin/products/${item.id}`}
-                className="text-read break-words border-b border-ink hover:opacity-50 transition-opacity"
+                className="text-lead break-words border-b border-ink hover:opacity-50 transition-opacity"
               >
                 {item.name}
               </Link>
