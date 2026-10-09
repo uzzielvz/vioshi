@@ -43,6 +43,9 @@ export function actorFromAdminLogin(email: string, password: string): AdminActor
 export function marioMayEnter(pathname: string): boolean {
   if (pathname === '/admin') return true
   if (pathname.startsWith('/admin/products')) return true
+  // Su reporte, con sus propios números: getMovements y getInventoryStats
+  // filtran por owner en la consulta.
+  if (pathname.startsWith('/admin/reportes')) return true
   if (pathname.startsWith('/admin/logout')) return true
   return false
 }
