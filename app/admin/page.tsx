@@ -312,13 +312,8 @@ export default async function AdminDashboardPage({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="uppercase tracking-widest" style={{ ...font, fontSize: '13px', fontWeight: 500 }}>
-            {actor === 'mario' ? 'Tu inventario' : 'Inventario'}
+            Inventario
           </h1>
-          <p className="text-gray-400 mt-2" style={{ ...font, fontSize: '11px' }}>
-            {actor === 'mario'
-              ? 'Solo ves las prendas a tu nombre. No salen en la tienda hasta que se publiquen.'
-              : 'Tú ves las de los dos. Mario, al entrar, solo ve las suyas.'}
-          </p>
         </div>
         <Link
           href="/admin/products/new"
@@ -347,7 +342,7 @@ export default async function AdminDashboardPage({
           <div className="flex flex-col gap-8">
             {stats.total ? (
               <>
-                <MoneyBlock title={`Los dos · ${PERIOD_LABELS[period]}`} stats={stats.total} />
+                <MoneyBlock title={`Total · ${PERIOD_LABELS[period]}`} stats={stats.total} />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {stats.perOwner.map((s) => (
                     <MoneyBlock key={s.owner} title={OWNER_LABELS[s.owner]} stats={s} />
@@ -358,7 +353,7 @@ export default async function AdminDashboardPage({
               stats.perOwner.map((s) => (
                 <MoneyBlock
                   key={s.owner}
-                  title={`Tus números · ${PERIOD_LABELS[period]}`}
+                  title={`Resumen · ${PERIOD_LABELS[period]}`}
                   stats={s}
                 />
               ))
@@ -375,10 +370,10 @@ export default async function AdminDashboardPage({
           Aún no hay prendas
         </p>
       ) : actor === 'mario' ? (
-        <Block title="Mario" totals={totalsFor(items)} />
+        <Block title="Resumen" totals={totalsFor(items)} />
       ) : (
         <div className="flex flex-col gap-8">
-          <Block title="Los dos" totals={totalsFor(items)} />
+          <Block title="Total" totals={totalsFor(items)} />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Block title="Uzziel" totals={totalsFor(mine)} />
             <Block title="Mario" totals={totalsFor(mario)} />

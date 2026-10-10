@@ -51,6 +51,34 @@ export function periodRange(period: Period, now = new Date()): { from: Date; to:
   }
 }
 
+/**
+ * El mismo rango, corrido hacia atrás. Es lo que permite decir "ganaste 30%
+ * más que el mes pasado" en vez de soltar un número sin referencia: un dato
+ * suelto no dice si vas bien.
+ */
+export function previousRange(period: Period, now = new Date()): { from: Date; to: Date } | null {
+  const y = now.getFullYear()
+  const m = now.getMonth()
+
+  switch (period) {
+    case 'mes_actual':
+      return { from: new Date(y, m - 1, 1), to: new Date(y, m, 1) }
+    case 'mes_pasado':
+      return { from: new Date(y, m - 2, 1), to: new Date(y, m - 1, 1) }
+    case 'dias_90': {
+      const to = new Date(now)
+      to.setDate(to.getDate() - 90)
+      const from = new Date(to)
+      from.setDate(from.getDate() - 90)
+      return { from, to }
+    }
+    case 'anio':
+      return { from: new Date(y - 1, 0, 1), to: new Date(y, 0, 1) }
+    case 'todo':
+      return null
+  }
+}
+
 type StatsRow = {
   owner: string
   cost_mxn: number | string | null
@@ -110,8 +138,17 @@ export type AgingItem = {
 export type InventoryStats = {
   perOwner: OwnerStats[]
   total: OwnerStats | null
+  /** Mismos agregados del rango anterior, para comparar. null en 'todo'. */
+  previous: OwnerStats | null
   aging: AgingItem[]
   error: string | null
+}
+
+/** Variación porcentual. null cuando no hay base contra la cual comparar. */
+export function variation(now: number, before: number): number | null {
+  if (!Number.isFinite(now) || !Number.isFinite(before)) return null
+  if (before === 0) return now === 0 ? 0 : null
+  return Math.round(((now - before) / Math.abs(before)) * 100)
 }
 
 function num(value: number | string | null): number | null {
@@ -234,6 +271,7 @@ export async function getInventoryStats(
   period: Period
 ): Promise<InventoryStats> {
   const range = periodRange(period)
+  const prevRange = previousRange(period)
 
   try {
     const supabase = createAdminClient()
@@ -252,6 +290,7 @@ export async function getInventoryStats(
       return {
         perOwner: [],
         total: null,
+        previous: null,
         aging: [],
         error: 'No pude calcular los números. La base no respondió.',
       }
@@ -260,6 +299,7 @@ export async function getInventoryStats(
     const rows = data as unknown as StatsRow[]
     const buckets = new Map<'uzziel' | 'mario', OwnerStats>()
     const total = emptyStats('uzziel')
+    const previous = prevRange ? emptyStats('uzziel') : null
     const aging: AgingItem[] = []
 
     for (const row of rows) {
@@ -271,6 +311,7 @@ export async function getInventoryStats(
       }
       accumulate(bucket, row, range)
       accumulate(total, row, range)
+      if (previous && prevRange) accumulate(previous, row, prevRange)
 
       if (!row.sold_out && row.disposition === 'activa') {
         aging.push({
@@ -292,6 +333,7 @@ export async function getInventoryStats(
       perOwner,
       // Mario no necesita un "total": lo suyo ya es el total de lo que ve.
       total: actor === 'uzziel' ? total : null,
+      previous,
       aging: aging.slice(0, 10),
       error: null,
     }
@@ -299,8 +341,93 @@ export async function getInventoryStats(
     return {
       perOwner: [],
       total: null,
+      previous: null,
       aging: [],
       error: 'No pude calcular los números. La base no respondió.',
     }
+  }
+}
+
+// ─── Reportería ───────────────────────────────────────────────────────────────
+
+export type Movement = {
+  id: string
+  name: string
+  owner: 'uzziel' | 'mario'
+  /** 'compra' = entró al inventario en el periodo · 'venta' = salió vendida. */
+  kind: 'compra' | 'venta'
+  date: string
+  costMxn: number | null
+  priceMxn: number | null
+  /** Solo en ventas: precio − costo. null si falta el costo. */
+  marginMxn: number | null
+  channel: 'web' | 'instagram' | null
+  disposition: string
+}
+
+/**
+ * Movimientos del periodo, para el reporte y la descarga.
+ *
+ * Mismas reglas que los agregados: Mario solo recibe lo suyo (filtro en la
+ * consulta) y una compra sin `acquired_on` no se cuenta, porque no se sabe
+ * cuándo ocurrió.
+ */
+export async function getMovements(actor: AdminActor, period: Period): Promise<Movement[]> {
+  const range = periodRange(period)
+
+  try {
+    const supabase = createAdminClient()
+    let query = supabase
+      .from('products')
+      .select(
+        'id, name, owner, cost_mxn, price_mxn, sold_out, sold_at, sold_order_id, acquired_on, disposition'
+      )
+
+    if (actor === 'mario') query = query.eq('owner', 'mario')
+
+    const { data, error } = await query
+    if (error || !data) return []
+
+    const out: Movement[] = []
+
+    for (const row of data as unknown as StatsRow[]) {
+      const owner = row.owner === 'mario' ? 'mario' : 'uzziel'
+      const cost = num(row.cost_mxn)
+      const price = num(row.price_mxn)
+
+      if (row.acquired_on && inRange(row.acquired_on, range)) {
+        out.push({
+          id: row.id,
+          name: row.name,
+          owner,
+          kind: 'compra',
+          date: row.acquired_on,
+          costMxn: cost,
+          priceMxn: price,
+          marginMxn: null,
+          channel: null,
+          disposition: row.disposition,
+        })
+      }
+
+      if (row.sold_out && row.sold_at && inRange(row.sold_at, range)) {
+        out.push({
+          id: row.id,
+          name: row.name,
+          owner,
+          kind: 'venta',
+          date: row.sold_at,
+          costMxn: cost,
+          priceMxn: price,
+          marginMxn: price != null && cost != null ? price - cost : null,
+          channel: row.sold_order_id ? 'web' : 'instagram',
+          disposition: row.disposition,
+        })
+      }
+    }
+
+    return out.sort((a, b) => toTime(b.date) - toTime(a.date))
+  } catch {
+    return []
   }
 }
