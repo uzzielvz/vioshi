@@ -21,7 +21,7 @@ Fuente de los porqués: Obsidian `Decisiones.md` + `Plataforma_MVP.md`.
 - Comisión de plataforma al inicio: **0 %**. Connect (cuando exista) solo reparte por `owner`. Comisión 8–10 % es objetivo **futuro**, no se implementa ahora.
 - `price_mxn` es precio final. **No sumar IVA. No mostrar línea de IVA. `tax_mxn = 0`.**
 - Autoridad de reserva: **nuestra DB** (`reserved_until` / RPC de stock), no las ventanas de Stripe.
-- Ventanas viven en `settings`: tarjeta 20 min · SPEI 30 min · OXXO 24 h. Umbral solo-tarjeta: $500.
+- Ventanas viven en `settings`: tarjeta ~~20~~ **30** min (corregido 2026-10-13, ver abajo) · SPEI 30 min · OXXO 24 h. Umbral solo-tarjeta: $500.
 - Pickup: costo **por fila** en `pickup_points.additional_cost_mxn`. No tarifa global fija.
 - Valores semilla de pickup ($10 hub / $20 red) son editables. No reescribirlos en código.
 - Pieza única: una prenda = una unidad. `sold_out` + reserva atómica. No revivir `product_variants` para stock.

@@ -48,7 +48,7 @@ lenguaje visual (sobre todo el **feed** y la **tipografía**) y se adaptan los f
 
 | Captura | Qué enseña | Cuándo aplica |
 |---|---|---|
-| `02-feed.png` | Feed a 2 columnas de borde a borde, foto grande, marca + talla + precio + corazón, saludo personalizado | **Fase 1.** Es el rediseño de home, colecciones y búsqueda |
+| `02-feed.png` | Feed a 2 columnas de borde a borde con foto grande. Debajo: marca + categoría (truncada) y talla; luego precio y corazón. Saludo personalizado y secciones tipo "Daily Picks For You" | **Fase 1.** Es el rediseño de home, colecciones y búsqueda |
 | `05-registro.png` | Modal de registro: logo, propuesta de valor, botones píldora, login social | **Fase 1.** Cuenta de cliente (ya existe, falta el diseño) |
 | `03-sell-dashboard.png` | Panel de vendedor: pestañas Home / Ofertas / En venta / Vendido / Borradores, avisos, botón fijo "Agregar" | **Fase 2.** Panel de vendedor. Antes sirve de guía para el admin móvil de Mario |
 | `04-onboarding-preferencia.png` | Elegir hombre / mujer / ambos al entrar | **Fase 2–3.** Necesita un atributo de departamento que hoy no existe |
@@ -67,10 +67,12 @@ Las decisiones congeladas completas están en [`agents/FROZEN.md`](./agents/FROZ
 
 - **Dinero.** IVA incluido: `tax_mxn = 0`, no se suma ni se muestra. Precio y totales se calculan
   siempre en el servidor con el precio de la DB. La autoridad de reserva es la DB
-  (`reserve_products` / `mark_order_sold`), no Stripe. Solo el webhook marca una prenda como
-  vendida. El prefijo de pedido `VIO-` no se toca.
+  (`reserve_products` / `mark_order_sold`), no Stripe. Una prenda de pedido web solo la marca
+  vendida el webhook. Una venta presencial la marca el admin a mano (`toggleSoldAction`). El prefijo de pedido `VIO-` no se toca.
 - **Datos.** El catálogo público nunca usa `select('*')` ni expone `owner`, `cost_mxn`,
-  `reserved_*` ni `stripe_account_id`. Toda columna nueva de `products` nace invisible a `anon`
+  `reserved_order_id`, `reserved_at`, `reservation_kind`, `reserved_contact_*` ni
+  `stripe_account_id`. `reserved_until` sí es público a propósito (`0012`): con él se muestra
+  la prenda como «apartada». Toda columna nueva de `products` nace invisible a `anon`
   hasta un `GRANT` explícito. Si se te olvida, el catálogo sale **vacío sin error**.
 - **Marca.** El nombre de plataforma sale de `lib/brand.ts` (`NEXT_PUBLIC_BRAND_*`, default
   provisional `VIOGI`). "Viogi" la tienda es una fila de `stores`. No se mezclan.
@@ -87,15 +89,15 @@ Next.js plano, sin monorepo.
 
 | Ruta | Qué es | Nota para agentes |
 |---|---|---|
-| `app/[locale]/` | Tienda pública con i18n | El shell (`ClientLayout`) ya pone Header, Footer y `pt-16`. Una página no repite ninguno de los tres |
+| `app/[locale]/` | Tienda pública con i18n | El shell (`ClientLayout`) pone Header, Footer y `pt-16`, salvo en `/account` (ninguno de los tres) y en `/checkout` (sin Footer). Fuera de eso, una página no repite ninguno |
 | `app/[locale]/checkout/` | Checkout + `return` + `success` | **Carril de dinero.** Nunca vaciar `actions.ts` |
-| `app/[locale]/account/` | Cuenta de cliente (Supabase Auth: email + Google) | Cada página valida sesión por su cuenta; no hay layout de cuenta |
+| `app/[locale]/account/` | Cuenta de cliente (Supabase Auth: email + Google) | No hay layout de cuenta: cada página valida sesión por su cuenta, salvo `/account/archivos` (mock sin sesión) |
 | `app/[locale]/tienda/[slug]`, `vender/` | Semilla de marketplace: perfil de tienda y solicitud de vendedor | `/vender` solo inserta `pending`; nada lo aprueba todavía |
 | `app/admin/` | Panel interno, fuera de i18n | Login con correo y contraseña por persona (`UZZIEL_ADMIN_*` / `MARIO_ADMIN_*`). `ADMIN_SECRET` solo **firma** la cookie y el `guest_token` |
-| `app/api/webhooks/stripe/` | Único lugar que confirma o libera un pedido | Necesita body crudo y runtime nodejs |
-| `app/api/visual-search/` | Foto → descripción Gemini → embedding 768 → pgvector | El prompt canónico es `lib/embeddings.ts` |
+| `app/api/webhooks/stripe/` | Único lugar que confirma un pedido pagado (`mark_order_sold`). También se libera una reserva en `cancelCheckoutAction`, en el rollback del checkout y a mano en `/admin/reservas` | Necesita body crudo y runtime nodejs |
+| `app/api/visual-search/` | Foto → descripción Gemini → embedding 768 → pgvector | El prompt canónico es `lib/embeddings.ts`, pero la ruta no lo importa y usa un prompt propio distinto (Etapa 1) |
 | `app/api/admin/studio/` | Generación de fotos de catálogo con Gemini Image | Solo Uzziel |
-| `lib/products.ts`, `lib/stores.ts` | Lecturas **públicas** (anon, caché 60 s, tag `products`) | Lista blanca de columnas |
+| `lib/products.ts`, `lib/stores.ts` | Lecturas **públicas** (anon, caché 60 s; tag `products` y tag `stores`) | Lista blanca de columnas |
 | `lib/admin/*` | Sesión admin, inventario y estadísticas | Lee columnas internas con service role. **Nunca** importarlo desde `app/[locale]` |
 | `lib/supabase/admin.ts` | Cliente service role | Solo servidor |
 | `store/cartStore.tsx` | Carrito (Context + localStorage `viogi_cart`) | El cliente no decide precios |
@@ -119,7 +121,8 @@ Next.js plano, sin monorepo.
 5. **Return → success.** Vacía el carrito.
 6. **Entregado.** Lo marca el admin a mano en `/admin/reservas`, y solo si `payment_status = 'completed'`.
 
-Nadie escribe `shipped` ni `tracking_number`, y la app **no manda correos**.
+Nadie escribe `shipped` ni `tracking_number`, y la app **no manda correos de pedido**. Los únicos
+correos que salen son los de Supabase Auth (confirmar cuenta y restablecer contraseña).
 
 ---
 
@@ -131,18 +134,22 @@ Resumen de la lectura del 2026-10-13. Los detalles con archivo y línea alimenta
    en la raíz. `README.md` es el ensayo de CS50: dice Payment Element, Resend y migraciones
    0001–0006, y nada de eso es cierto. `ESQUEMA-REAL.md` llega a 0011 cuando prod va en 0023.
    `STATUS.md` no registra `/admin/reportes` ni `/admin/fondos`. El paquete H está mergeado pero
-   sigue en `packets/`. FROZEN dice "tarjeta 20 min" y el código exige ≥ 30.
+   sigue en `packets/`. FROZEN decía "tarjeta 20 min" cuando el código exige ≥ 30 (corregido el 2026-10-13).
 2. **Contenido falso en la tienda.**
-   - `/archive` y `/chapters` son inventados (imágenes de Unsplash).
+   - `/archive` (imágenes de Unsplash) y `/pages/chapters` (texto) son inventados.
    - `/pages/locaciones` trae direcciones ficticias y no lee `pickup_points`.
-   - Envíos, pagos y devoluciones prometen $99/$199, PayPal, MSI y "productos con etiqueta",
-     cuando el código cobra $10 desde `settings` con tarjeta, OXXO o SPEI.
+   - Envíos, pagos y devoluciones prometen $99/$199, PayPal, MSI y "productos con etiqueta".
+     El código cobra el envío estándar desde `settings.home_shipping_mxn` (semilla $10, editable),
+     el express a $20 fijo en `lib/constants.ts` y el pickup según el punto, con tarjeta, OXXO o SPEI.
    - El WhatsApp de soporte es `+52 55 0000 0000`.
    - `/account/archivos` muestra facturas simuladas y no pide sesión.
 3. **No hay sistema de diseño.**
-   - Estilos inline: ~120 `fontFamily` repetidos, ~340 `style={}` y 244 `fontSize: '11px'`.
+   - Estilos inline en la tienda: ~130 `fontFamily` repetidos, ~400 `style={}` y ~265
+     `fontSize: '11px'`. Con el admin suben a ~160, ~690 y ~370.
    - `Header.tsx` mide 1284 líneas y `checkout/page.tsx` 1051.
-   - La lista de categorías está copiada en 6 sitios, mientras la tabla `categories` nunca se lee.
+   - La lista de categorías está copiada en 6 sitios de la tienda (Header ×2, filtros, colecciones,
+     ficha, `lib/constants.ts`). La tabla `categories` solo la lee el admin y el join de `slug`;
+     la tienda nunca usa sus `name_es`/`name_en`.
    - `components/common/*` tiene cero imports y `clsx` no se usa.
    - Las fuentes se cargan con `@import` que bloquea el render.
    - Hay Header y Footer duplicados en `/cart` y `/checkout`, y `pt-16` repetido.
@@ -151,7 +158,8 @@ Resumen de la lectura del 2026-10-13. Los detalles con archivo y línea alimenta
    - Dos de las tres entradas a búsqueda visual en el Header no hacen nada.
    - Desde el commit `088a2e3` el admin ya no captura talla ni descripción, y la ficha depende de la talla.
    - La libreta de direcciones existe pero el checkout no la usa.
-   - Studio está desconectado del inventario.
+   - Studio no se enlaza con el inventario: `/admin/products` no lleva a Studio, y el "New piece"
+     de Studio crea productos sin SKU, tipo de prenda ni campos de negocio.
 5. **Bugs de dinero y seguridad** (lo más urgente; ver Etapa 1).
 6. **El marketplace solo existe en la base de datos.** Ya hay `stores`, `products.store_id`,
    `store_applications` y `stripe_account_id`. Falta la identidad de vendedor, la aprobación de
@@ -198,10 +206,14 @@ Objetivo: que el repo diga la verdad y no tenga ruido.
   - Quitar el estado viejo de `.cursor/rules/10-lanes.mdc`.
   - Reescribir o borrar `.claude/commands/write-tests.md` (habla de Jest, que no existe).
 - **Código muerto** (sin cambiar comportamiento).
-  - Archivos: `types/product.ts`, `types/user.ts`, `types/order.ts`, `lib/supabase/client.ts`,
+  - Archivos: `types/product.ts`, `types/user.ts`, `types/order.ts` (quitar también sus
+    `export *` de `types/index.ts`), `lib/supabase/client.ts`,
     `StyleRefsManager.tsx`, `/account/archivos`, `app/api/dev/` y `scripts/seed-real-images.ts`
     (roto con el esquema actual).
-  - Exports: los de `lib/constants.ts`, `formatStripeClientError` y el Proxy `stripe`.
+  - Exports: los muertos de `lib/constants.ts` (todos menos `STORAGE_KEYS`,
+    `STANDARD_SHIPPING_COST` y `EXPRESS_SHIPPING_COST`; `DELIVERY_METHODS` solo tiene un import
+    sin uso), `formatStripeClientError` (con su import sin uso en `checkout/page.tsx`) y el Proxy `stripe`.
+  - Studio: congelar, sacar del nav o conectar al inventario **(humano)**.
   - `saveAttributes` **no** se borra hasta decidir la talla (Etapa 1).
   - `components/common/*` **no** se borra: se rehace en la Etapa 2.
 
@@ -217,11 +229,16 @@ Cada punto lleva evidencia en la lectura del 2026-10-13. Verifica contra el cód
   la ventana equivocada. Los fixtures de `scripts/test-checkout-flow.mjs` lo esconden.
 - **`payment_intent.payment_failed` libera la prenda** al primer rechazo, aunque el cliente todavía
   pueda reintentar en la misma sesión.
-- **Webhook sin guardas de estado.** Un evento tardío puede regresar un pedido `completed` a
-  `awaiting_payment`.
+- **Webhook con guardas incompletas.** `liberarPedido` sí filtra por estado, pero `venderPedido`
+  y `marcarEsperandoPago` actualizan sin condición: un `checkout.session.completed` tardío puede
+  regresar un pedido `completed` a `awaiting_payment`.
+- **Búsqueda visual:** la ruta usa un prompt distinto al que indexa (`lib/embeddings.ts`) y tiene
+  doble rate limit.
 - **RLS (migración, número lo asigna el humano).**
   - `orders_insert_any` y `order_items_insert_any` (`with check (true)`, en `0001`) dejan a `anon`
-    inyectar `order_items` en un pedido ajeno. `mark_order_sold` confía en esos items.
+    insertar `order_items` en cualquier pedido cuyo id conozca, empezando por el suyo (el `orderId`
+    que devuelve `createCheckoutSessionAction`). `mark_order_sold` confía en esos items y marca
+    vendidas prendas que no se cobraron.
   - `profile_update_own` deja que un usuario cambie su propio `role`.
   - `product_images` y `product_attributes` son legibles aunque la prenda no esté publicada.
   - `match_products_by_image` se puede llamar directo, saltando el rate limit.
@@ -237,7 +254,8 @@ Cada punto lleva evidencia en la lectura del 2026-10-13. Verifica contra el cód
 - **Admin.**
   - `createProduct` publica (`listed = true`) antes de validar la foto.
   - Quitar la imagen principal deja la prenda sin `is_primary`.
-  - Fondos registra como "dinero sin pedido" **todo** pago SPEI.
+  - Fondos registra como "dinero sin pedido" **toda** transacción `funded` de saldo de cliente, así
+    que probablemente cada pago SPEI normal aparece ahí (verificar contra eventos reales de Stripe).
   - Borrar una marca falla por la FK, pero el logo ya se borró del storage.
 - **Talla** **(humano)**: el admin dejó de capturarla en `088a2e3`. ¿Vuelve al formulario?
 
@@ -252,7 +270,7 @@ Objetivo: que se vea como la GUI objetivo y que cambiar el diseño sea editar un
   ListRow, Badge y Card. Usan `clsx`.
 - **`ProductCard` estilo feed:**
   - foto grande de borde a borde, en 2 columnas en móvil;
-  - debajo: **marca** a la izquierda y **talla** a la derecha;
+  - debajo: **marca** (con tipo de prenda si cabe, truncado con «…») a la izquierda y **talla** a la derecha;
   - luego **precio** en negritas y **corazón** (que alimenta la wishlist real).
   - Se mantienen los estados vendida y apartada, que se muestran distinto a propósito.
 - **Header** partido en piezas. Categorías **desde la tabla `categories`** (una sola fuente) y el
@@ -265,13 +283,16 @@ Objetivo: que se vea como la GUI objetivo y que cambiar el diseño sea editar un
   - la guía de tallas explica las **medidas por pieza**;
   - legal pasa a i18n.
 - **Strings hardcodeados a `messages/`.** Se borran las ~108 claves sin uso.
+- **Moneda en `/en`:** mostrar MXN o dejar USD convertido **(humano)**.
 - **Flujos de una pieza:** `/cart` sin chrome duplicado (o se elimina, porque el drawer ya va a
   checkout), checkout partido en componentes, y cuenta con layout propio y estilo del modal de registro.
 
-### Etapa 3 — Ecommerce completo para el comprador (cierra Fase 1)
+### Etapa 3 — Ecommerce completo para el comprador (último código de Fase 1)
+
+La Fase 1 no se cierra al terminar esta etapa: se cierra cuando se cumple la puerta de OPEN § Puertas.
 
 - Wishlist real con corazón en la tarjeta y la ficha (localStorage; en DB si hay sesión).
-- Búsqueda por marca, talla y tienda, no solo por nombre.
+- Búsqueda por marca, talla y tienda. Hoy solo busca en nombre, descripción y categoría.
 - Pedidos de invitado ligados a la cuenta por email. La libreta de direcciones se usa en checkout.
 - Detalle de pedido con estado de pago y nombre del punto de entrega, no su id.
 - Correos transaccionales **(humano: proveedor)**.
@@ -286,11 +307,20 @@ Objetivo: que se vea como la GUI objetivo y que cambiar el diseño sea editar un
   agregar prenda. Reutiliza el patrón de filtro en la consulta que ya usa la vista de Mario.
 - **Pedidos:** `store_id` (y `owner`) como snapshot en `order_items`. Una tienda pausada saca sus
   prendas del catálogo y del checkout.
-- **Modelo Mario vs. tiendas** **(humano)**: `owner` es un enum `uzziel|mario` que impide cargar
-  prendas de un externo, y la cuenta Connect de Mario no tiene dónde vivir.
-- **Connect** (paquete E, carril L7): bloqueado por las preguntas de OPEN § Connect.
+- **Modelo Mario vs. tiendas** **(humano)**: `owner` es `text not null` con CHECK `uzziel|mario`
+  (`0010`), así que toda prenda, incluida la de una tienda externa, queda atribuida a Uzziel o a
+  Mario. Además, la cuenta Connect de Mario no tiene dónde vivir: `stripe_account_id` está en
+  `stores` y Mario no es tienda.
+- **Connect para tiendas externas.** El Connect de Mario **no** espera a esta etapa (ver abajo).
 - `/vender` se reescribe para tiendas de segunda mano y sin promesas falsas: hoy promete
   "comisiones competitivas, pagos puntuales, audiencia global".
+
+### En paralelo — Connect para Mario (paquete E, carril L7)
+
+No depende de las etapas ni de la puerta de Fase 2. En Fase 1 es el payout de Mario por
+`owner = 'mario'` con comisión 0 %, al marcar Entregado. Se abre solo cuando el humano responda
+OPEN § Connect (puntos 1 y 2) y escriba `L7 desbloqueado` en STATUS. Antes conviene haber cerrado
+la Etapa 1, porque el método de pago mal grabado afecta la conciliación.
 
 ### Etapa 5 — Fase 3
 
