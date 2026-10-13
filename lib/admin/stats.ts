@@ -431,3 +431,97 @@ export async function getMovements(actor: AdminActor, period: Period): Promise<M
     return []
   }
 }
+
+// ── Serie mensual ────────────────────────────────────────────────────────────
+
+export type MonthPoint = {
+  /** 'oct', 'nov'… para el eje. */
+  label: string
+  /** '2026-10', para distinguir años en el title. */
+  key: string
+  boughtPieces: number
+  boughtCost: number
+  soldPieces: number
+  soldRevenue: number
+  profit: number
+}
+
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+/**
+ * Últimos N meses, para las gráficas del tablero.
+ *
+ * Una sola consulta y el agrupado en memoria: con decenas o cientos de prendas
+ * sale más barato que N consultas, y evita depender de funciones de fecha de
+ * Postgres que cambiarían con la zona horaria del servidor.
+ *
+ * Las compras sin `acquired_on` no entran: no se sabe en qué mes ocurrieron.
+ */
+export async function getMonthlySeries(
+  actor: AdminActor,
+  months = 6
+): Promise<MonthPoint[]> {
+  const now = new Date()
+  const serie: MonthPoint[] = []
+  const indice = new Map<string, MonthPoint>()
+
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const punto: MonthPoint = {
+      label: MESES[d.getMonth()],
+      key,
+      boughtPieces: 0,
+      boughtCost: 0,
+      soldPieces: 0,
+      soldRevenue: 0,
+      profit: 0,
+    }
+    serie.push(punto)
+    indice.set(key, punto)
+  }
+
+  try {
+    const supabase = createAdminClient()
+    let query = supabase
+      .from('products')
+      .select('cost_mxn, price_mxn, sold_out, sold_at, acquired_on')
+
+    if (actor === 'mario') query = query.eq('owner', 'mario')
+
+    const { data, error } = await query
+    if (error || !data) return serie
+
+    /** 'YYYY-MM' de una fecha, respetando la hora local (ver toTime). */
+    const mesDe = (iso: string): string => {
+      const d = new Date(toTime(iso))
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    }
+
+    for (const row of data as unknown as StatsRow[]) {
+      const cost = num(row.cost_mxn)
+      const price = num(row.price_mxn)
+
+      if (row.acquired_on) {
+        const p = indice.get(mesDe(row.acquired_on))
+        if (p) {
+          p.boughtPieces += 1
+          if (cost != null) p.boughtCost += cost
+        }
+      }
+
+      if (row.sold_out && row.sold_at) {
+        const p = indice.get(mesDe(row.sold_at))
+        if (p) {
+          p.soldPieces += 1
+          if (price != null) p.soldRevenue += price
+          if (price != null && cost != null) p.profit += price - cost
+        }
+      }
+    }
+
+    return serie
+  } catch {
+    return serie
+  }
+}
