@@ -1,9 +1,10 @@
 # AGENTS.md
 
-Sistema operativo para agentes. **Empieza en [`docs/agents/README.md`](./docs/agents/README.md).**
+Sistema operativo para agentes. **Empieza en [`docs/PROYECTO.md`](./docs/PROYECTO.md)** (contexto, destino, hoja de ruta) y luego [`docs/agents/README.md`](./docs/agents/README.md).
 
 ## Lectura mínima
 
+0. [`docs/PROYECTO.md`](./docs/PROYECTO.md)
 1. [`docs/agents/STATUS.md`](./docs/agents/STATUS.md)
 2. [`docs/agents/FROZEN.md`](./docs/agents/FROZEN.md)
 3. [`docs/agents/OPEN.md`](./docs/agents/OPEN.md)

@@ -4,8 +4,9 @@ Este directorio es lo único que un agente nuevo debe leer **antes** de tocar c�
 
 El negocio (nombre de la plataforma, comisión futura, acuerdos con Mario, caja) vive en el vault de Obsidian. **No se inventa aquí.** Si un dato de negocio no está en `FROZEN.md`, no lo asumas: márcalo y sigue con lo que sí es código.
 
-## Orden de lectura (máximo 4 archivos)
+## Orden de lectura (máximo 5 archivos)
 
+0. [`../PROYECTO.md`](../PROYECTO.md) — qué es, a dónde va, diseño objetivo, hoja de ruta
 1. [`STATUS.md`](./STATUS.md) — qué existe hoy, qué falta, qué está roto
 2. [`FROZEN.md`](./FROZEN.md) — decisiones que no se reabren
 3. [`OPEN.md`](./OPEN.md) — lo que el humano todavía decide

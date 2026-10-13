@@ -43,6 +43,14 @@ Fuente de los porqués: Obsidian `Decisiones.md` + `Plataforma_MVP.md`.
 - Alias `@/`. `clsx` para clases condicionales.
 - Estética B/N, uppercase, tracking-wide. No introducir color de acento.
 
+## Agregado 2026-10-13 (humano)
+
+- Rumbo reconfirmado: **marketplace**. Viogi sigue como primera tienda. Plan y etapas en [`../PROYECTO.md`](../PROYECTO.md).
+- Referencia visual: **Grailed** (capturas en `docs/design/referencias/`). No es una copia: se adopta el feed y la tipografía. B/N y "sin color de acento" siguen vigentes hasta que el humano decida otra cosa (`PROYECTO.md` § 8). Las reglas tipográficas concretas (uppercase, tracking) se fijan en la Etapa 2 con una prueba visual aprobada.
+- La búsqueda visual **se queda**. No se quita en limpiezas.
+- `/archive` y `/pages/chapters` se borran (contenido inventado). Los entregables escolares (TMPI, CS50) salen del repo.
+- Corrección a "Dinero": la ventana de tarjeta mínima es **30 min** (piso de Stripe Checkout; ver `_done/G2`), no 20.
+
 ## Prohibido en Fase 1 de plataforma
 
 Registro abierto · reviews · Skydropx · recolección propia · Next 16 · segundo codebase · renombrar `VIO-` · borrar seeds de ejemplo que rompan `order_items`.

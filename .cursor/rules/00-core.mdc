@@ -9,7 +9,7 @@ Un solo repo Next.js 14. La web es la **plataforma**; Viogi es la **primera tien
 
 ## Lee esto, no la hidra
 
-Antes de código: `docs/agents/STATUS.md`, `FROZEN.md`, `OPEN.md`, y el paquete de tu carril. Plantilla: `docs/agents/PROMPT.md`.
+Antes de código: `docs/PROYECTO.md` (contexto, destino, hoja de ruta), `docs/agents/STATUS.md`, `FROZEN.md`, `OPEN.md`, y el paquete de tu carril. Plantilla: `docs/agents/PROMPT.md`.
 
 No uses como verdad: `PLAN.md` viejo, `CONTEXT.md` viejo, `RESEARCH-CONSOLIDADO.md`, `AUDITORIA-PRE-LANZAMIENTO.md`, `TESTING-PLAN.md`, `docs/archive/**`. Ante doc vs código, **gana el código**. Al cerrar, actualiza solo `docs/agents/STATUS.md`.
 

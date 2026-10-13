@@ -1,12 +1,13 @@
 # CLAUDE.md
 
-Streetwear de segunda mano → tienda hoy, marketplace después. Next.js 14 App Router, TypeScript strict, Tailwind, next-intl, Supabase, Stripe Checkout Sessions.
+Moda de segunda mano → tienda hoy (Viogi), marketplace estilo Grailed después. Next.js 14 App Router, TypeScript strict, Tailwind, next-intl, Supabase, Stripe Checkout Sessions.
 
 ## Qué leer
 
 | Doc | Rol |
 |---|---|
-| [`docs/agents/README.md`](./docs/agents/README.md) | **OS de agentes** — empieza aquí |
+| [`docs/PROYECTO.md`](./docs/PROYECTO.md) | **Empieza aquí** — contexto, destino, diseño objetivo y hoja de ruta |
+| [`docs/agents/README.md`](./docs/agents/README.md) | OS de agentes |
 | [`AGENTS.md`](./AGENTS.md) | Carriles y serialización |
 | [`docs/agents/STATUS.md`](./docs/agents/STATUS.md) | Estado real del código |
 | [`docs/agents/FROZEN.md`](./docs/agents/FROZEN.md) | Decisiones que no se reabren |
