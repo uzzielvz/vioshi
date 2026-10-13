@@ -41,7 +41,18 @@ Fuente de los porqués: Obsidian `Decisiones.md` + `Plataforma_MVP.md`.
 - `"use client"` solo si hace falta. Mutaciones = Server Actions, salvo webhooks / APIs públicas.
 - Contenido de producto en español. Código y comentarios en inglés.
 - Alias `@/`. `clsx` para clases condicionales.
-- Estética B/N, uppercase, tracking-wide. No introducir color de acento.
+- Estética: referencia **Grailed** — ⏳ **sin confirmar**, no es FROZEN todavía.
+  Se escribió aquí el 8 oct 2026, pero ese mismo día `828be81` descartó el rediseño
+  ("no convenció") y solo se mergeó la reportería. Vive en la rama del panel hasta
+  que Uzziel lo vea. Si se rechaza, vuelve "B/N uppercase, sin color de acento".
+  - Texto de contenido en **sentence case** y a tamaño legible (16 / 14 / 13 px).
+    Las mayúsculas con `tracking` quedan **solo** para botones, pestañas y navegación.
+    La jerarquía se construye con peso y tamaño, no poniendo todo en mayúsculas a 10px.
+  - **Azul funcional** (`--accent`): links, pestaña activa, foco de campo, estados
+    informativos. Nunca en fondos grandes ni como decoración.
+  - Gris de panel (`--panel`) para bloques secundarios; líneas de 1px como separador.
+  - Los valores viven en `app/globals.css` + `tailwind.config.ts`. **No se escriben
+    tamaños ni colores sueltos en los componentes.**
 
 ## Prohibido en Fase 1 de plataforma
 

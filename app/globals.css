@@ -9,6 +9,28 @@
   --background: #ffffff;
   --foreground: #000000;
   --font-logo: 'Bebas Neue', 'Impact', sans-serif;
+
+  /* ── Tokens de la interfaz ───────────────────────────────────────────────
+     Referencia: Grailed (FROZEN, 8 oct 2026). Texto legible en sentence case;
+     las mayúsculas se reservan para botones, pestañas y navegación.
+     UN solo lugar donde cambiar esto: antes vivía suelto en 569 estilos inline. */
+
+  /* Texto */
+  --ink:        #111111;  /* principal */
+  --ink-muted:  #666666;  /* secundario */
+  --ink-faint:  #8e8e8e;  /* metadatos, estados vacíos */
+
+  /* Acento FUNCIONAL: links, pestaña activa, foco. Nunca decorando. */
+  --accent:      #1a3ee8;
+  --accent-soft: #eef1fe;
+
+  /* Líneas y superficies */
+  --line:       #e5e7eb;  /* separador de sección */
+  --line-soft:  #f0f0f0;  /* separador de fila */
+  --surface:    #ffffff;  /* tarjetas */
+  --surface-alt:#fafafa;  /* fondo de trabajo */
+  --panel:      #f7f8fa;  /* bloques secundarios (filtros, avisos) */
+  --fill:       #f2f2f2;  /* marcos de imagen */
 }
 
 html {
