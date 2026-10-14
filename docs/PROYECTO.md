@@ -104,7 +104,7 @@ Next.js plano, sin monorepo.
 | `supabase/migrations/` | Esquema versionado `0001`… | No se puede reconstruir desde cero (ver Etapa 1) |
 | `messages/` | Diccionarios es/en | Mismo conjunto de claves en los dos |
 | `docs/agents/` | Sistema de trabajo para agentes | Ver § 7 |
-| `docs/design/referencias/` | Capturas de la GUI objetivo | Ver § 2 |
+| `docs/design/` | `referencias/` (capturas de la GUI objetivo) y `TOKENS.md` (colores, fuentes y medidas) | Ver § 2 y Etapa 2 |
 | `studio-assets/` | Referencias de estilo que Studio adjunta al prompt | **No es basura**; lo usa `lib/studio/catalogRefs.ts` |
 
 ### Cómo fluye una compra
@@ -188,7 +188,8 @@ Objetivo: que el repo diga la verdad y no tenga ruido.
   - Sacar del repo los entregables escolares. Quedan en el historial de git.
   - Borrar `.playwright-mcp/` y agregarlo a `.gitignore`.
   - `git rm --cached .claude/settings.local.json`.
-  - `public/products/*.png` **(humano)**.
+  - Mover `public/products/*.png` a `docs/archive/fotos/`. Se conservan, pero ya no se sirven en
+    `/products/*.png` (sus nombres traen precios).
 - **Docs.**
   - Un solo punto de entrada: este archivo → `docs/agents/README.md`.
   - Borrar las lápidas de la raíz: `PLAN`, `CONTEXT`, `RESEARCH-CONSOLIDADO`, `TESTING-PLAN`,
@@ -264,8 +265,9 @@ Cada punto lleva evidencia en la lectura del 2026-10-13. Verifica contra el cód
 
 Objetivo: que se vea como la GUI objetivo y que cambiar el diseño sea editar un solo lugar.
 
-- **Tokens en `tailwind.config.ts`**: color, tipografía, tamaños, radios (incluido el botón
-  píldora) y bordes finos. Las fuentes se cargan con `next/font`, no con `@import`. Se eliminan
+- **Tokens en `tailwind.config.ts`**, tomados de [`design/TOKENS.md`](./design/TOKENS.md):
+  color (azul `#0000FF` de acento, verde solo puntual), tipografía, tamaños, radios (incluido el
+  botón píldora) y bordes finos. Las fuentes se cargan con `next/font`, no con `@import`. Se eliminan
   los `fontFamily` y `style={}` inline.
 - **Primitivas en `components/ui/`**: Button (sólido, contorno, píldora), Input, Tabs (píldoras),
   ListRow, Badge y Card. Usan `clsx`.
@@ -354,9 +356,9 @@ Respuestas que desbloquean etapas. Las de negocio de largo plazo siguen en [`age
 | # | Pregunta | Bloquea |
 |---|---|---|
 | 1 | ~~¿Acento de color?~~ **Decidido 2026-10-14:** azul de Grailed como acento principal (CTA de registro, acciones primarias). Verde solo para cosas muy puntuales (promos, confirmaciones). La base sigue en B/N | — |
-| 2 | ¿Qué tipografías? **Rumbo decidido 2026-10-14:** lo más parecido posible a las de Grailed (sacar sus parámetros: familia, pesos, tamaños, tracking), sin perder las que ya usa la tienda (Helvetica Neue / Inter), que también gustan. Falta elegir las fuentes concretas con una prueba visual | Etapa 2 |
+| 2 | ¿Qué tipografías? **Rumbo decidido 2026-10-14:** lo más parecido a Grailed sin perder las de la tienda actual. Propuesta en [`design/TOKENS.md`](./design/TOKENS.md): Inter + Kode Mono + Oswald o Bebas. Falta: Inter o Helvetica primero, qué logotipo, y la prueba visual aprobada | Etapa 2 |
 | 3 | ~~¿La talla vuelve al formulario del admin?~~ **Decidido 2026-10-14: sí.** Vuelve como atributo `Talla` (FROZEN § Datos) | — |
-| 4 | `public/products/*.png` (13 fotos, 3.1 MB, sin uso): ¿se borran o se guardan fuera del repo? | Etapa 0 |
+| 4 | ~~`public/products/*.png`~~ **Decidido 2026-10-14:** se conservan, pero se mueven fuera de `public/` (a `docs/archive/fotos/`), para que dejen de servirse públicamente. Nada del código las usa | — |
 | 5 | Políticas reales de envío, devolución y contacto (WhatsApp, correo) para escribir las páginas | Etapa 2 |
 | 6 | ¿`/en` sigue mostrando USD convertido si Stripe cobra MXN? | Etapa 2 |
 | 7 | ~~¿Studio se sigue usando?~~ **Decidido 2026-10-14:** hoy no se usa, pero **no se borra**. Se deja como está (código, tablas, `studio-assets`) | — |
