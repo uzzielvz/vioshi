@@ -213,8 +213,8 @@ Objetivo: que el repo diga la verdad y no tenga ruido.
   - Exports: los muertos de `lib/constants.ts` (todos menos `STORAGE_KEYS`,
     `STANDARD_SHIPPING_COST` y `EXPRESS_SHIPPING_COST`; `DELIVERY_METHODS` solo tiene un import
     sin uso), `formatStripeClientError` (con su import sin uso en `checkout/page.tsx`) y el Proxy `stripe`.
-  - Studio: congelar, sacar del nav o conectar al inventario **(humano)**.
-  - `saveAttributes` **no** se borra hasta decidir la talla (Etapa 1).
+  - Studio: **no se borra** (decidido 2026-10-14). Solo se elimina `StyleRefsManager.tsx`, que ya no se importa en ningún lado.
+  - `saveAttributes` **no** se borra: lo usa la talla (Etapa 1).
   - `components/common/*` **no** se borra: se rehace en la Etapa 2.
 
 ### Etapa 1 — Dinero y seguridad (antes de más tráfico)
@@ -257,7 +257,8 @@ Cada punto lleva evidencia en la lectura del 2026-10-13. Verifica contra el cód
   - Fondos registra como "dinero sin pedido" **toda** transacción `funded` de saldo de cliente, así
     que probablemente cada pago SPEI normal aparece ahí (verificar contra eventos reales de Stripe).
   - Borrar una marca falla por la FK, pero el logo ya se borró del storage.
-- **Talla** **(humano)**: el admin dejó de capturarla en `088a2e3`. ¿Vuelve al formulario?
+- **Talla** (decidido 2026-10-14): vuelve al formulario del admin como atributo `Talla`
+  (`product_attributes`). Se reutiliza `saveAttributes`, que hoy está sin uso.
 
 ### Etapa 2 — Sistema de diseño (referencia Grailed)
 
@@ -352,12 +353,12 @@ Respuestas que desbloquean etapas. Las de negocio de largo plazo siguen en [`age
 
 | # | Pregunta | Bloquea |
 |---|---|---|
-| 1 | ¿Acento de color? Grailed usa azul y verde en registro y promos. FROZEN prohíbe acento | Etapa 2 |
-| 2 | ¿Qué tipografías? Hay que identificar o aproximar las de Grailed con fuentes libres (Google Fonts) y elegir con una prueba visual | Etapa 2 |
-| 3 | ¿La talla vuelve al formulario del admin? (la quitó `088a2e3`) | Etapa 1 |
+| 1 | ~~¿Acento de color?~~ **Decidido 2026-10-14:** azul de Grailed como acento principal (CTA de registro, acciones primarias). Verde solo para cosas muy puntuales (promos, confirmaciones). La base sigue en B/N | — |
+| 2 | ¿Qué tipografías? **Rumbo decidido 2026-10-14:** lo más parecido posible a las de Grailed (sacar sus parámetros: familia, pesos, tamaños, tracking), sin perder las que ya usa la tienda (Helvetica Neue / Inter), que también gustan. Falta elegir las fuentes concretas con una prueba visual | Etapa 2 |
+| 3 | ~~¿La talla vuelve al formulario del admin?~~ **Decidido 2026-10-14: sí.** Vuelve como atributo `Talla` (FROZEN § Datos) | — |
 | 4 | `public/products/*.png` (13 fotos, 3.1 MB, sin uso): ¿se borran o se guardan fuera del repo? | Etapa 0 |
 | 5 | Políticas reales de envío, devolución y contacto (WhatsApp, correo) para escribir las páginas | Etapa 2 |
 | 6 | ¿`/en` sigue mostrando USD convertido si Stripe cobra MXN? | Etapa 2 |
-| 7 | ¿Studio se sigue usando? Si no, se congela o se saca del nav | Etapa 0 |
+| 7 | ~~¿Studio se sigue usando?~~ **Decidido 2026-10-14:** hoy no se usa, pero **no se borra**. Se deja como está (código, tablas, `studio-assets`) | — |
 | 8 | ¿Proveedor de correo transaccional? | Etapa 3 |
 | 9 | ¿Cómo conviven `owner` (Mario) y las tiendas externas, y dónde vive la cuenta Connect de Mario? | Etapa 4 |

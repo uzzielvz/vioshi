@@ -41,15 +41,22 @@ Fuente de los porqués: Obsidian `Decisiones.md` + `Plataforma_MVP.md`.
 - `"use client"` solo si hace falta. Mutaciones = Server Actions, salvo webhooks / APIs públicas.
 - Contenido de producto en español. Código y comentarios en inglés.
 - Alias `@/`. `clsx` para clases condicionales.
-- Estética B/N, uppercase, tracking-wide. No introducir color de acento.
+- Estética B/N, uppercase, tracking-wide. No introducir color de acento. *(Reemplazado 2026-10-14: ver abajo.)*
 
 ## Agregado 2026-10-13 (humano)
 
 - Rumbo reconfirmado: **marketplace**. Viogi sigue como primera tienda. Plan y etapas en [`../PROYECTO.md`](../PROYECTO.md).
-- Referencia visual: **Grailed** (capturas en `docs/design/referencias/`). No es una copia: se adopta el feed y la tipografía. B/N y "sin color de acento" siguen vigentes hasta que el humano decida otra cosa (`PROYECTO.md` § 8). Las reglas tipográficas concretas (uppercase, tracking) se fijan en la Etapa 2 con una prueba visual aprobada.
+- Referencia visual: **Grailed** (capturas en `docs/design/referencias/`). No es una copia: se adopta el feed y la tipografía. Las reglas tipográficas concretas (uppercase, tracking) se fijan en la Etapa 2 con una prueba visual aprobada.
 - La búsqueda visual **se queda**. No se quita en limpiezas.
 - `/archive` y `/pages/chapters` se borran (contenido inventado). Los entregables escolares (TMPI, CS50) salen del repo.
 - Corrección a "Dinero": la ventana de tarjeta mínima es **30 min** (piso de Stripe Checkout; ver `_done/G2`), no 20.
+
+## Agregado 2026-10-14 (humano)
+
+- **Color:** se levanta "sin color de acento". El acento es el **azul de Grailed** (acciones primarias, CTA de registro). Un **verde** solo para casos muy puntuales (promos, confirmaciones). Todo lo demás sigue en B/N. Valores exactos: `docs/design/TOKENS.md` (Etapa 2).
+- **Tipografía:** lo más parecido a Grailed, conservando Helvetica Neue / Inter de la tienda actual. No se auto-hospedan fuentes propietarias de Grailed: se usan equivalentes libres.
+- **Talla:** vuelve al formulario del admin como atributo `Talla`.
+- **Studio:** no se usa hoy, pero **no se borra** (código, tablas ni `studio-assets`).
 
 ## Prohibido en Fase 1 de plataforma
 
