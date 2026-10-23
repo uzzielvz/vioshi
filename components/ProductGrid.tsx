@@ -1,4 +1,8 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import ProductCard from "./ProductCard";
+import type { GarmentType } from "@/lib/garments";
 
 interface Product {
   id: string;
@@ -9,41 +13,29 @@ interface Product {
   soldOut?: boolean;
   isNew?: boolean;
   size?: string;
-  availability?: 'disponible' | 'apartada' | 'vendida';
+  availability?: "disponible" | "apartada" | "vendida";
   reservedUntil?: string;
+  brand?: { name: string };
+  garmentType?: GarmentType;
 }
 
 interface ProductGridProps {
   products: Product[];
-  columns?: 2 | 3 | 4;
 }
 
-export default function ProductGrid({ products, columns = 4 }: ProductGridProps) {
+export default function ProductGrid({ products }: ProductGridProps) {
+  const t = useTranslations("ui.card");
+
   if (products.length === 0) {
     return (
-      <div className="text-center py-16">
-        <p
-          className="uppercase tracking-wide"
-          style={{
-            fontFamily: "var(--font-sans)",
-            fontSize: '11px',
-            fontWeight: 500
-          }}
-        >
-          No products available
-        </p>
+      <div className="px-4 py-16 text-center">
+        <p className="text-[13px] text-muted">{t("empty")}</p>
       </div>
     );
   }
 
-  const gridCols = {
-    2: "grid-cols-2",
-    3: "grid-cols-2 md:grid-cols-3",
-    4: "grid-cols-2 md:grid-cols-4",
-  };
-
   return (
-    <div className={`grid ${gridCols[columns]} gap-4 md:gap-6`}>
+    <div className="grid grid-cols-2 gap-x-[2px] gap-y-[22px] md:grid-cols-3 md:gap-[14px] lg:grid-cols-4">
       {products.map((product) => (
         <ProductCard
           key={product.id}
@@ -56,6 +48,8 @@ export default function ProductGrid({ products, columns = 4 }: ProductGridProps)
           isNew={product.isNew}
           size={product.size}
           availability={product.availability}
+          brand={product.brand}
+          garmentType={product.garmentType}
         />
       ))}
     </div>
