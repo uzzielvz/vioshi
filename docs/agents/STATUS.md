@@ -49,8 +49,11 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 | G2 settings-limpieza | L1 | **MERGEADO** (#9) |
 | H inventario + tablero + móvil | L5 | **MERGEADO** (#10) · `0018`–`0020` aplicadas y verificadas en prod |
 | E Connect | L7 | **BLOQUEADO** — ver `OPEN.md` y más abajo |
+| I front de rail | — | **EN RAMA** `claude/gifted-fermi-ku1xl3` (no mergeado a `main`) |
 
-**No hay paquete abierto.** El único que queda es E, y es humano, no código.
+**Paquete I, en la rama, sin merge.** Hecho: tarjeta de la feed (marca, tipo, talla, precio, corazón), `hooks/useWishlist.ts`, grid de 2/3/4 columnas, `CategoryTabs`, inicio y colecciones sin hero, ficha con galería y acordeones, bolsa sin cantidades y pieza única, portada collage en `/tienda/[slug]`, búsqueda también por marca, borrados `/archive`, `/pages/chapters` y `images.unsplash.com`. Pendiente (otro paquete): seguir, mensajes, ofertas, checkout y cuenta. **BLOQUEO:** no hay `.env.local`, así que no se revisó en el navegador y no se inventaron datos. `npm run build` compiló; al prerenderizar faltó `NEXT_PUBLIC_SUPABASE_URL`.
+
+E sigue bloqueado: es humano, no código.
 
 Worktrees libres: `../viogi-L1` (`agent/L1-settings`) y `../viogi-L5` (`agent/L5-entregado`),
 con `npm ci` hecho. El siguiente agente hace `git fetch` + `checkout -B <rama> origin/main`.
