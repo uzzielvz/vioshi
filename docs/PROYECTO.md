@@ -28,9 +28,11 @@ mientras alguien la paga.
 **rail: un marketplace social de moda de segunda mano para México, con la lógica de Grailed.** La
 plataforma es la web; las tiendas viven dentro, y Viogi es la primera.
 
-Funciona como **red social** (decidido 2026-10-23): la gente sigue tiendas, marcas y búsquedas;
-la feed «Para ti» sale de lo que sigue; cada tienda tiene perfil con portada y seguidores; cada
-persona tiene su perfil con guardados y compras. Ver el prototipo en § 2 «Cómo se ve».
+Funciona como **red social** (decidido 2026-10-23): la gente sigue perfiles, marcas y búsquedas;
+la feed «Para ti» sale de lo que sigue. **Todas las cuentas son iguales**: cualquiera compra, guarda,
+sigue, tiene portada y puede tener seguidores. Vender son tres pasos extra (perfil de vendedor,
+cobros con Stripe y revisión de rail). Hay **mensajes** entre quien compra y quien vende. Las
+**ofertas** están diseñadas y se activan cuando el humano lo decida. Ver el prototipo en § 2.
 
 Esto ya estaba congelado (FROZEN: "la web es la plataforma, Viogi es la primera tienda") y el
 humano lo reconfirmó el 2026-10-13 y el 2026-10-23. No se construye un segundo sitio ni un segundo codebase.
@@ -49,9 +51,9 @@ FROZEN § "Prohibido en Fase 1".
 ### Cómo se ve el destino
 
 **Diseño aprobado (2026-10-23): [`design/prototipo-rail.html`](./design/prototipo-rail.html).** Ábrelo en
-el navegador. Son 14 pantallas de teléfono: inicio, búsqueda, prenda, bolsa, pagar, pedido, perfil de
-tienda con portada, perfil de persona, siguiendo, actividad, entrar, intereses, mi tienda y subir
-prenda. Los valores (color, letra, componentes) están en [`design/TOKENS.md`](./design/TOKENS.md).
+el navegador. Tiene la entrada (app la primera vez, feed propuesto, web sin cuenta y con cuenta,
+prenda en escritorio), mensajes y ofertas, empezar a vender (3 pasos), ayuda, ajustes, errores y las
+pantallas de compra, perfil, siguiendo, actividad, cuenta y mi tienda. Los valores (color, letra, componentes) están en [`design/TOKENS.md`](./design/TOKENS.md).
 
 Las capturas de Grailed en [`design/referencias/`](./design/referencias/) son solo referencia de
 estructura. **No es una copia**: las primeras pruebas que copiaban su tratamiento visual se descartaron.
@@ -313,7 +315,9 @@ La Fase 1 no se cierra al terminar esta etapa: se cierra cuando se cumple la pue
   feed «Para ti» con lo que sigues; pantalla «Siguiendo»; «Actividad» (piezas nuevas de lo que
   sigues, pedido listo, una pieza guardada se vendió); perfil de persona; perfil de tienda con
   portada y seguidores. Necesita tablas nuevas (`follows`, portada en `stores`) con migración
-  numerada por el humano. **(humano: confirmar si entra antes o después de la Etapa 3 de compra)**
+  numerada por el humano. Va **en paralelo** con la compra (decidido 2026-10-23).
+- **Mensajes** entre quien compra y quien vende (decidido 2026-10-23), con el aviso «paga siempre
+  dentro de rail». Las **ofertas** se diseñaron dentro de la conversación y se activan después.
 - Búsqueda por marca, talla y tienda. Hoy solo busca en nombre, descripción y categoría.
 - Pedidos de invitado ligados a la cuenta por email. La libreta de direcciones se usa en checkout.
 - Detalle de pedido con estado de pago y nombre del punto de entrega, no su id.
@@ -376,8 +380,11 @@ Respuestas que desbloquean etapas. Las de negocio de largo plazo siguen en [`age
 | 1 | ~~¿Acento de color?~~ **Decidido 2026-10-14:** azul de Grailed como acento principal (CTA de registro, acciones primarias). Verde solo para cosas muy puntuales (promos, confirmaciones). La base sigue en B/N | — |
 | 2 | ~~¿Qué tipografías?~~ **Decidido 2026-10-23** con el prototipo aprobado: Inter en todo; logo «rail» en minúsculas con el punto de la i azul. Se descartaron Kode Mono, Oswald, píldoras y etiquetas colgantes | — |
 | 10 | ~~Nombre de la plataforma~~ **Decidido 2026-10-23: rail.** Falta dominio, Instagram y registro en IMPI (OPEN). Ojo: «rail» está dentro de «Grailed»; conviene revisarlo en la búsqueda de IMPI | Lanzar |
-| 11 | ¿Mensajes entre comprador y tienda? ¿Ofertas (otro precio)? ¿Una persona puede tener seguidores o solo las tiendas? | Etapa 3–5 |
-| 12 | ¿Lo social (seguir, Para ti, actividad) va antes o después de terminar la compra (Etapa 3)? | Etapa 3 |
+| 11 | ~~Mensajes, ofertas y seguidores~~ **Decidido 2026-10-23:** mensajes sí; ofertas diseñadas, se activan después; todas las cuentas son iguales y cualquiera puede tener seguidores; vender = 3 pasos extra | — |
+| 12 | ~~¿Lo social antes o después de la compra?~~ **Decidido 2026-10-23:** van parejo | — |
+| 13 | ¿Cuándo se activan las ofertas? | Etapa 3–5 |
+| 14 | Política de devoluciones y reclamos («Si algo sale mal» en Cómo funciona) | Lanzar |
+| 15 | ¿La revisión de rail (paso 3 de vender) se queda cuando rail abra a todos? | Fase 3 |
 | 3 | ~~¿La talla vuelve al formulario del admin?~~ **Decidido 2026-10-14: sí.** Vuelve como atributo `Talla` (FROZEN § Datos) | — |
 | 4 | ~~`public/products/*.png`~~ **Decidido 2026-10-14:** se conservan, pero se mueven fuera de `public/` (a `docs/archive/fotos/`), para que dejen de servirse públicamente. Nada del código las usa | — |
 | 5 | Políticas reales de envío, devolución y contacto (WhatsApp, correo) para escribir las páginas | Etapa 2 |

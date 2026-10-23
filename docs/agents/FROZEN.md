@@ -65,6 +65,12 @@ Fuente de los porqués: Obsidian `Decisiones.md` + `Plataforma_MVP.md`.
 - **Diseño aprobado:** [`../design/prototipo-rail.html`](../design/prototipo-rail.html) + [`../design/TOKENS.md`](../design/TOKENS.md). Reemplaza la dirección del 2026-10-14 («lo más parecido a Grailed»): no Kode Mono, no Oswald, no botones píldora, no etiquetas colgantes, no cinta métrica.
 - La tarjeta de la feed **no** muestra medidas ni estado. Las medidas van dentro de la prenda.
 
+## Agregado 2026-10-23, segunda parte (humano)
+
+- **Todas las cuentas son iguales.** Cualquiera compra, guarda, sigue y puede tener seguidores. Vender son tres pasos extra: perfil de vendedor, cobros (Stripe) y revisión de rail. La revisión mantiene vigente «registro de vendedores cerrado: aprobar es un acto de admin».
+- **Mensajes:** sí. **Ofertas:** diseñadas, sin implementar hasta que el humano lo decida.
+- Lo social y los arreglos de compra avanzan **en paralelo**.
+
 ## Prohibido en Fase 1 de plataforma
 
 Registro abierto · reviews · Skydropx · recolección propia · Next 16 · segundo codebase · renombrar `VIO-` · borrar seeds de ejemplo que rompan `order_items`.

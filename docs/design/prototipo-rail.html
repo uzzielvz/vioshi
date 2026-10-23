@@ -319,20 +319,592 @@ figcaption span { text-transform: none; letter-spacing: 0; font-weight: 400; }
 .sw i { width: 20px; height: 20px; border: 1px solid var(--line); display: block; }
 .sw span { color: var(--muted); font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: no-preference) { .btn, .follow, .chip, .pick button, .seg button { transition: background-color .15s, color .15s, border-color .15s; } }
+
+/* ---------- additions: entry, desktop, messages, selling, settings, errors ---------- */
+.badge-new { display: inline-block; margin-left: 8px; padding: 2px 6px; border-radius: 3px; background: var(--accent); color: var(--paper); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; vertical-align: 3px; }
+.pending { display: inline-block; font-size: 11px; font-weight: 600; color: var(--muted); border: 1px dashed var(--muted); padding: 2px 6px; border-radius: 3px; }
+
+/* welcome (app first open) */
+.wcol { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+.wcol .ph { aspect-ratio: 3 / 4; }
+.wbody { padding: 22px 22px 18px; display: grid; gap: 12px; }
+.wbody h4 { margin: 6px 0 0; font-size: 26px; font-weight: 700; line-height: 1.12; letter-spacing: -0.02em; text-wrap: balance; }
+.wbody p { margin: 0; font-size: 14px; color: var(--muted); }
+.wbody .textlink { justify-self: center; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; font-weight: 500; }
+
+/* feed modules */
+.mod { grid-column: 1 / -1; padding: 18px 0 20px; background: var(--carton); }
+.mod .sech { padding: 0 14px 12px; }
+.hscroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 14px; scrollbar-width: none; }
+.hscroll::-webkit-scrollbar { display: none; }
+.hscroll::after { content: ""; flex: none; width: 4px; }
+.pc { flex: none; width: 156px; background: var(--paper); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; display: grid; }
+.pc .cv { aspect-ratio: 16 / 8; background: var(--carton); overflow: hidden; }
+.pc .cv img { width: 100%; height: 100%; object-fit: cover; display: block; mix-blend-mode: multiply; }
+.pc .bd { padding: 0 10px 10px; display: grid; gap: 3px; }
+.pc .av { width: 40px; height: 40px; margin-top: -20px; border: 2px solid var(--paper); font-size: 15px; }
+.pc b { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc span { font-size: 11.5px; color: var(--muted); }
+.pc .follow { justify-self: start; margin-top: 4px; }
+.mini { flex: none; width: 112px; display: grid; gap: 5px; }
+.mini .ph { aspect-ratio: 3 / 4; }
+.mini b { font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* messages */
+.li .th2 { flex: none; width: 36px; height: 45px; }
+.li .th2 .ph { width: 100%; height: 100%; aspect-ratio: auto; }
+.li .txt .nm { display: flex; justify-content: space-between; gap: 8px; }
+.li .txt .nm time { margin: 0; }
+.li.unread .txt .pv { color: var(--ink); font-weight: 600; }
+.li .txt .pv { display: block; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pstrip { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--line); flex: none; }
+.pstrip .th { width: 36px; flex: none; }
+.pstrip .th .ph { aspect-ratio: 3 / 4; }
+.pstrip .tx { flex: 1; min-width: 0; font-size: 13px; }
+.pstrip .tx b { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pstrip .tx span { color: var(--muted); font-variant-numeric: tabular-nums; }
+.pstrip .btn { width: auto; height: 32px; padding: 0 12px; font-size: 12.5px; }
+.thread { padding: 12px 14px 16px; display: grid; gap: 8px; align-content: start; }
+.msg { max-width: 80%; padding: 9px 12px; font-size: 13.5px; line-height: 1.4; border-radius: 14px; }
+.msg.them { background: var(--carton); justify-self: start; border-bottom-left-radius: 4px; }
+.msg.me { background: var(--ink); color: var(--paper); justify-self: end; border-bottom-right-radius: 4px; }
+.when { justify-self: center; font-size: 11px; color: var(--muted); margin: 4px 0; }
+.offer { width: 80%; border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 4px; font-size: 13px; background: var(--paper); }
+.offer.me { justify-self: end; }
+.offer.them { justify-self: start; border-color: var(--ink); }
+.offer .k { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.offer b { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.offer span { color: var(--muted); font-size: 12px; }
+.offer .two2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+.offer .btn { height: 36px; font-size: 13px; padding: 0 8px; }
+.composer { flex: none; display: flex; gap: 8px; align-items: center; padding: 8px 10px 10px; border-top: 1px solid var(--line); background: var(--paper); }
+.composer .input { height: 40px; border-radius: 20px; font-size: 14px; }
+.send { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--paper); border: 0; display: grid; place-items: center; cursor: pointer; }
+.send svg { width: 18px; height: 18px; }
+.safety { margin: 0; padding: 8px 14px 0; font-size: 11.5px; color: var(--muted); text-align: center; }
+.hdr .who2 { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.hdr .who2 .av { width: 32px; height: 32px; font-size: 13px; }
+.hdr .who2 b { font-size: 15px; font-weight: 600; display: block; }
+.hdr .who2 span { font-size: 11.5px; color: var(--muted); display: block; }
+
+/* bottom sheet (offer) */
+.dim { position: absolute; inset: 0; background: rgba(17, 17, 17, .45); display: flex; align-items: flex-end; z-index: 2; }
+.sheet2 { width: 100%; background: var(--paper); border-radius: 16px 16px 0 0; padding: 10px 16px 16px; display: grid; gap: 12px; }
+.grab { width: 36px; height: 4px; border-radius: 2px; background: var(--line); justify-self: center; }
+.sheet2 h4 { margin: 4px 0 0; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+.sheet2 .ask { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.sheet2 .ask b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.bigin { width: 100%; height: 60px; border: 1px solid var(--ink); border-radius: 3px; padding: 0 14px; font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.quick button { height: 36px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer; }
+.quick button[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+
+/* selling steps */
+.prog { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 0 14px; }
+.prog i { height: 3px; background: var(--line); display: block; }
+.prog i.on { background: var(--ink); }
+.stepnote { padding: 8px 14px 0; font-size: 12px; color: var(--muted); }
+.lead { padding: 16px 14px 4px; display: grid; gap: 6px; }
+.lead h4 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.2; text-wrap: balance; }
+.lead p { margin: 0; font-size: 13.5px; color: var(--muted); }
+.how3 { display: grid; gap: 12px; padding: 12px 14px; counter-reset: s; }
+.how3 > div { display: grid; grid-template-columns: 26px 1fr; gap: 10px; font-size: 13.5px; }
+.how3 > div::before { counter-increment: s; content: counter(s); width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--ink); display: grid; place-items: center; font-size: 12px; font-weight: 600; }
+.how3 b { display: block; font-weight: 600; }
+.how3 span { color: var(--muted); font-size: 12.5px; }
+.how3 > div.done::before { content: ""; background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.5l2.3 2.3L9.5 3.8' fill='none' stroke='white' stroke-width='1.6'/%3E%3C/svg%3E") center / 12px no-repeat; }
+.coverpick { aspect-ratio: 16 / 7; border: 1px dashed var(--muted); border-radius: 3px; display: grid; place-items: center; gap: 4px; color: var(--muted); font-size: 12.5px; text-align: center; background: var(--carton); }
+.coverpick svg { width: 20px; height: 20px; margin: 0 auto; }
+.bul { margin: 0; padding: 0 14px; list-style: none; display: grid; gap: 10px; }
+.bul li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; font-size: 13.5px; }
+.bul li svg { width: 16px; height: 16px; margin-top: 2px; color: var(--accent); }
+.bigicon { width: 64px; height: 64px; border-radius: 50%; background: var(--carton); display: grid; place-items: center; }
+.bigicon svg { width: 28px; height: 28px; }
+
+/* how it works + settings */
+.doc { padding: 6px 14px 20px; display: grid; gap: 0; }
+.doc section { padding: 14px 0; border-bottom: 1px solid var(--line); display: grid; gap: 6px; }
+.doc h5 { margin: 0; font-size: 15px; font-weight: 700; }
+.doc p { margin: 0; font-size: 13.5px; color: var(--ink); }
+.doc p.mut { color: var(--muted); }
+.setgrp { padding: 0 14px 6px; }
+.setgrp h5 { margin: 16px 0 2px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.tg { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.tg span small { display: block; font-size: 12px; color: var(--muted); }
+.switch { width: 42px; height: 24px; border-radius: 12px; background: var(--line); border: 0; position: relative; cursor: pointer; flex: none; padding: 0; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.switch[aria-checked="true"] { background: var(--accent); }
+.switch[aria-checked="true"]::after { transform: translateX(18px); }
+@media (prefers-reduced-motion: no-preference) { .switch::after { transition: transform .15s; } }
+.tg.link::after { content: ""; width: 7px; height: 7px; border-top: 1.5px solid var(--ink); border-right: 1.5px solid var(--ink); transform: rotate(45deg); flex: none; }
+.tg .val { margin-left: auto; color: var(--muted); font-size: 13px; }
+.tg.out { color: #B42318; }
+.tg.out::after { display: none; }
+
+/* empty / error */
+.empty { padding: 36px 24px 24px; display: grid; gap: 10px; justify-items: center; text-align: center; }
+.empty h4 { margin: 6px 0 0; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+.empty p { margin: 0; color: var(--muted); font-size: 13.5px; max-width: 32ch; }
+.empty .btn { width: auto; }
+.sugg { padding: 6px 14px 0; display: grid; gap: 8px; }
+.sugg .lab { font-size: 12px; font-weight: 600; }
+
+/* desktop frames */
+.deskgroup { display: grid; gap: 28px; }
+.deskfig { margin: 0; display: grid; gap: 10px; max-width: none; }
+.desk-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: 0 18px 40px -30px rgba(0,0,0,0.35); }
+.desk { min-width: 1080px; }
+.chrome { height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 14px; background: var(--carton); border-bottom: 1px solid var(--line); }
+.chrome i { width: 10px; height: 10px; border-radius: 50%; background: #D6D4CE; display: block; }
+.chrome span { margin-left: 14px; padding: 3px 12px; background: var(--paper); border-radius: 4px; font-size: 11.5px; color: var(--muted); }
+.dhdr { display: flex; align-items: center; gap: 28px; height: 64px; padding: 0 32px; border-bottom: 1px solid var(--line); }
+.dhdr .searchbar { max-width: 460px; height: 40px; }
+.dhdr nav { margin-left: auto; display: flex; align-items: center; gap: 20px; font-size: 14px; font-weight: 600; }
+.dhdr nav svg { width: 22px; height: 22px; }
+.dhdr nav .btn { width: auto; height: 38px; padding: 0 16px; }
+.dhdr nav .av { width: 32px; height: 32px; font-size: 13px; }
+.cats { display: flex; gap: 24px; padding: 0 32px; height: 44px; align-items: center; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 500; color: var(--muted); }
+.cats b { color: var(--ink); font-weight: 600; }
+.hero { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; padding: 44px 32px 40px; }
+.hero h2 { margin: 0; font-size: 46px; line-height: 1.04; letter-spacing: -0.035em; font-weight: 800; font-variation-settings: 'opsz' 32; text-wrap: balance; }
+.hero p { margin: 14px 0 22px; font-size: 16px; color: var(--muted); max-width: 44ch; }
+.hero .acts2 { display: flex; gap: 10px; }
+.hero .acts2 .btn { width: auto; padding: 0 24px; }
+.collage { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.collage .ph:nth-child(2) { transform: translateY(26px); }
+.dsec { padding: 30px 32px 14px; display: flex; justify-content: space-between; align-items: baseline; }
+.dsec h3 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.015em; }
+.dsec a { font-size: 13px; font-weight: 600; color: var(--ink); }
+.dgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 14px; padding: 0 32px 24px; }
+.dgrid .row { padding: 0; }
+.dgrid .card .ph + .row { margin-top: 10px; }
+.people { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; padding: 0 32px 28px; }
+.people .pc { width: auto; }
+.how4 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; padding: 30px 32px 34px; background: var(--carton); }
+.how4 b { display: block; font-size: 15px; margin-bottom: 4px; }
+.how4 p { margin: 0; color: var(--muted); font-size: 13.5px; }
+.dfoot { padding: 18px 32px; display: flex; gap: 22px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+.dfoot .wm { font-size: 18px; color: var(--ink); margin-right: auto; }
+.dmain { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 36px; padding: 0 32px 32px; }
+.dmain .dgrid { padding: 0; }
+.dmain .chips { padding: 0; margin-bottom: 4px; }
+.dmain .stories { padding: 16px 0 14px; }
+.side { display: grid; gap: 22px; align-content: start; padding-top: 16px; }
+.side .box { border: 1px solid var(--line); border-radius: 4px; padding: 14px; display: grid; gap: 4px; }
+.side h4 { margin: 0 0 6px; font-size: 14px; font-weight: 700; }
+.side .li { padding: 9px 0; border-bottom: 0; }
+.side .li .av { width: 36px; height: 36px; font-size: 14px; }
+.dprod { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 44px; padding: 28px 32px 8px; align-items: start; }
+.dgal { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dinfo { display: grid; gap: 12px; align-content: start; }
+.dinfo h2 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; text-wrap: balance; }
+.dinfo .bigprice b { font-size: 30px; }
+.btnrow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dinfo .seller { margin: 4px 0 0; padding: 14px 0; }
+.dinfo .acc summary, .dinfo .acc .in { padding-left: 0; padding-right: 0; }
+.crumbs { padding: 16px 32px 0; font-size: 12.5px; color: var(--muted); }
+
+/* every account is the same kind of profile: round avatars for all */
+.av.store, .store-id .logo, .mine .logo { border-radius: 50%; }
 </style>
 
 <header class="top">
   <div class="wrap">
     <div>
       <h1><span class="wm" aria-label="rail">ra<span class="i">ı</span>l</span> Prueba visual</h1>
-      <p>rail es la plataforma y Viogi es una tienda dentro. Catorce pantallas que se pueden tocar. Nombres, seguidores, ventas y conteos son de ejemplo; los puntos de entrega y las reglas de pago son los reales.</p>
+      <p>rail es la plataforma y Viogi vende dentro. Las pantallas nuevas van primero y dicen «Nuevo». Nombres, perfiles, seguidores, ventas y conteos son de ejemplo; los puntos de entrega y las reglas de pago son los reales.</p>
     </div>
-    <nav class="jump" aria-label="Secciones"><a href="#comprar">Comprar</a><a href="#social">Social</a><a href="#cuenta">Cuenta</a><a href="#vender">Vender</a><a href="#falta">Qué falta</a></nav>
+    <nav class="jump" aria-label="Secciones"><a href="#entrada">Entrada y feed</a><a href="#mensajes">Mensajes</a><a href="#pasos">Empezar a vender</a><a href="#ayuda">Ayuda y errores</a><a href="#comprar">Comprar</a><a href="#social">Social</a><a href="#cuenta">Cuenta</a><a href="#vender">Mi tienda</a><a href="#falta">Decisiones</a></nav>
   </div>
 </header>
 
 <main>
   <div class="wrap">
+
+    <!-- ===================== ENTRADA Y FEED ===================== -->
+    <section class="group" id="entrada" aria-labelledby="h-entrada">
+      <h2 id="h-entrada">Entrada y feed <span class="badge-new">Nuevo</span></h2>
+      <p>Lo primero que ve una persona: en la app la primera vez, en la app con cuenta y en la web. La feed mezcla piezas con módulos sociales: perfiles para seguir y novedades de tus búsquedas.</p>
+      <div class="screens">
+
+        <figure>
+          <figcaption>App · primera vez</figcaption>
+          <div class="phone">
+            <div class="scr">
+              <div class="wcol" data-collage="6"></div>
+              <div class="wbody">
+                <span class="wm lg" aria-label="rail">ra<span class="i">ı</span>l</span>
+                <h4>Ropa de segunda mano de gente que vale la pena seguir.</h4>
+                <p>Cada pieza es única. Sigue perfiles y marcas, guarda lo que te gusta y compra con tarjeta, OXXO o SPEI.</p>
+                <button class="btn primary" type="button">Crear cuenta</button>
+                <button class="btn line" type="button">Entrar</button>
+                <a class="textlink" href="#entrada">Ver sin cuenta</a>
+              </div>
+            </div>
+          </div>
+        </figure>
+
+        <figure>
+          <figcaption>App · feed propuesto <span>· piezas + módulos sociales</span></figcaption>
+          <div class="phone">
+            <div class="hdr">
+              <span class="wm" aria-label="rail">ra<span class="i">ı</span>l</span>
+              <div class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-label="Buscar"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-label="Mensajes"><path d="M4 5h16v11H9l-5 4z"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-label="Actividad"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5h4"/></svg>
+              </div>
+            </div>
+            <div class="scr">
+              <div class="chips" role="group" aria-label="Feed">
+                <button class="chip" type="button" aria-current="true">Para ti</button>
+                <button class="chip" type="button">Siguiendo</button>
+                <button class="chip" type="button">Recientes</button>
+              </div>
+              <div class="stories" aria-label="Novedades de lo que sigues" data-stories></div>
+              <div class="sech"><h4>Para ti</h4><span>Por lo que sigues y tus tallas</span></div>
+              <div class="feed" data-feed-mix></div>
+            </div>
+            <nav class="bnav" data-nav="inicio"></nav>
+          </div>
+        </figure>
+
+      </div>
+
+      <div class="deskgroup" style="margin-top:32px">
+        <figure class="deskfig">
+          <figcaption>Web · sin cuenta <span>· lo que ve quien llega por primera vez</span></figcaption>
+          <div class="desk-wrap"><div class="desk">
+            <div class="chrome"><i></i><i></i><i></i><span>rail · ropa de segunda mano</span></div>
+            <div class="dhdr">
+              <span class="wm" aria-label="rail">ra<span class="i">ı</span>l</span>
+              <div class="searchbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><span style="color:var(--muted)">Busca marcas, prendas o perfiles</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-label="Buscar por foto"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+              <nav><span>Vender</span><span>Entrar</span><a class="btn primary" href="#entrada">Crear cuenta</a></nav>
+            </div>
+            <div class="cats"><b>Todo</b><span>Chamarras</span><span>Sudaderas</span><span>Playeras</span><span>Jeans</span><span>Pants</span><span>Accesorios</span><span>Drops</span></div>
+            <div class="hero">
+              <div>
+                <h2>Ropa de segunda mano de gente que vale la pena seguir.</h2>
+                <p>Cada pieza es única y está medida en plano. Sigue perfiles y marcas, guarda lo que te gusta y compra con tarjeta, OXXO o SPEI.</p>
+                <div class="acts2"><a class="btn primary" href="#entrada">Crear cuenta</a><a class="btn line" href="#entrada">Explorar piezas</a></div>
+              </div>
+              <div class="collage" data-collage="3"></div>
+            </div>
+            <div class="dsec"><h3>Lo nuevo en rail</h3><a href="#entrada">Ver todo</a></div>
+            <div class="dgrid" data-feed="all"></div>
+            <div class="dsec"><h3>Perfiles para seguir</h3><a href="#entrada">Ver más</a></div>
+            <div class="people" data-people></div>
+            <div class="how4">
+              <div><b>Cada pieza es única</b><p>Ves medidas reales en cm y el estado de cada prenda antes de comprar.</p></div>
+              <div><b>Pagas dentro de rail</b><p>Tarjeta siempre; OXXO y SPEI en compras de hasta $500. La pieza se aparta mientras pagas.</p></div>
+              <div><b>Recoges o te llega</b><p>Puntos de entrega en el Valle de Toluca o envío a tu casa.</p></div>
+            </div>
+            <div class="dfoot"><span class="wm" aria-label="rail">ra<span class="i">ı</span>l</span><span>Cómo funciona</span><span>Vender en rail</span><span>Ayuda</span><span>Términos</span><span>Privacidad</span></div>
+          </div></div>
+        </figure>
+
+        <figure class="deskfig">
+          <figcaption>Web · con cuenta <span>· feed con lo que sigues a un lado</span></figcaption>
+          <div class="desk-wrap"><div class="desk">
+            <div class="chrome"><i></i><i></i><i></i><span>rail · para ti</span></div>
+            <div class="dhdr">
+              <span class="wm" aria-label="rail">ra<span class="i">ı</span>l</span>
+              <div class="searchbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><span style="color:var(--muted)">Busca marcas, prendas o perfiles</span></div>
+              <nav>
+                <span>Vender</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-label="Mensajes"><path d="M4 5h16v11H9l-5 4z"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-label="Actividad"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5h4"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-label="Guardados"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-label="Bolsa"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>
+                <div class="av">M</div>
+              </nav>
+            </div>
+            <div class="dmain">
+              <div>
+                <div class="stories" data-stories></div>
+                <div class="chips" role="group" aria-label="Feed">
+                  <button class="chip" type="button" aria-current="true">Para ti</button>
+                  <button class="chip" type="button">Siguiendo</button>
+                  <button class="chip" type="button">Recientes</button>
+                </div>
+                <div class="dgrid" data-feed="all" style="margin-top:16px"></div>
+              </div>
+              <aside class="side">
+                <div class="box"><h4>Lo que sigues</h4><div class="list" data-side="follows"></div></div>
+                <div class="box"><h4>Perfiles para seguir</h4><div class="list" data-side="suggest"></div></div>
+              </aside>
+            </div>
+          </div></div>
+        </figure>
+
+        <figure class="deskfig">
+          <figcaption>Web · prenda <span>· comprar, ofertar o mandar mensaje</span></figcaption>
+          <div class="desk-wrap"><div class="desk">
+            <div class="chrome"><i></i><i></i><i></i><span>rail · Nike SB Chamarra</span></div>
+            <div class="dhdr">
+              <span class="wm" aria-label="rail">ra<span class="i">ı</span>l</span>
+              <div class="searchbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><span style="color:var(--muted)">Busca marcas, prendas o perfiles</span></div>
+              <nav><span>Vender</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-label="Bolsa"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><div class="av">M</div></nav>
+            </div>
+            <div class="crumbs">Chamarras · Nike SB</div>
+            <div class="dprod">
+              <div class="dgal" data-dgal></div>
+              <div class="dinfo">
+                <div class="brandl">Nike SB</div>
+                <h2>Chamarra de nylon con franjas reflejantes</h2>
+                <div class="meta"><span>Talla L</span><span>·</span><span>Buen estado</span></div>
+                <div class="bigprice"><b>$700</b><span class="saves"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/></svg>24 personas la guardaron</span></div>
+                <button class="btn primary" type="button">Agregar a la bolsa</button>
+                <div class="btnrow"><button class="btn line" type="button">Hacer oferta</button><button class="btn line" type="button">Mandar mensaje</button></div>
+                <div class="seller">
+                  <div class="av store">V</div>
+                  <div class="who"><b>Viogi</b><span>Toluca · 1,480 seguidores · 212 vendidas</span></div>
+                  <button class="follow" type="button" id="f-desk" aria-pressed="false"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg><span>Seguir</span></button>
+                </div>
+                <details class="acc" open><summary>Medidas</summary><div class="in"><dl><dt>Pecho</dt><dd>62 cm</dd><dt>Largo</dt><dd>70 cm</dd><dt>Manga</dt><dd>64 cm</dd></dl><p>Tomadas con la prenda en plano.</p></div></details>
+                <details class="acc"><summary>Estado de la prenda</summary><div class="in">Buen estado. Uso normal, sin manchas ni roturas.</div></details>
+                <details class="acc"><summary>Entrega y pago</summary><div class="in">Recoge en el Valle de Toluca o recíbela en casa. Tarjeta siempre; OXXO y SPEI hasta $500.</div></details>
+              </div>
+            </div>
+            <div class="dsec"><h3>Más de Viogi</h3><a href="#entrada">Ver perfil</a></div>
+            <div class="dgrid" data-feed="store4"></div>
+          </div></div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ===================== MENSAJES Y OFERTAS ===================== -->
+    <section class="group" id="mensajes" aria-labelledby="h-mensajes">
+      <h2 id="h-mensajes">Mensajes y ofertas <span class="badge-new">Nuevo</span></h2>
+      <p>Preguntar por una pieza y, si lo activamos, proponer otro precio. La oferta vive dentro de la conversación. La pieza no se aparta hasta que alguien paga.</p>
+      <div class="screens">
+
+        <figure>
+          <figcaption>Mensajes</figcaption>
+          <div class="phone">
+            <div class="hdr"><h3>Mensajes</h3></div>
+            <div class="scr">
+              <div class="chips" role="group" aria-label="Mensajes">
+                <button class="chip" type="button" aria-current="true">Comprando</button>
+                <button class="chip" type="button">Vendiendo</button>
+              </div>
+              <div class="list" data-inbox></div>
+            </div>
+            <nav class="bnav" data-nav="inicio"></nav>
+          </div>
+        </figure>
+
+        <figure>
+          <figcaption>Conversación <span>· con oferta adentro</span></figcaption>
+          <div class="phone">
+            <div class="hdr">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-label="Regresar"><path d="M15 5l-7 7 7 7"/></svg>
+              <div class="who2"><div class="av store">V</div><div><b>Viogi</b><span>Toluca</span></div></div>
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-label="Más opciones"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+            </div>
+            <div class="pstrip"><div class="th" data-th="nikesb"></div><div class="tx"><b>Nike SB Chamarra · Talla L</b><span>$700</span></div><button class="btn primary" type="button">Comprar</button></div>
+            <div class="scr">
+              <div class="thread">
+                <span class="when">Hoy, 12:10</span>
+                <div class="msg me">Hola, ¿cuánto mide de largo?</div>
+                <div class="msg them">Hola. Mide 70 cm de largo y 62 de pecho, en plano.</div>
+                <div class="offer me"><span class="k">Tu oferta</span><b>$600</b><span>Esperando respuesta · vence en 24 h</span></div>
+                <span class="when">12:24</span>
+                <div class="offer them"><span class="k">Contraoferta de Viogi</span><b>$650</b><span>Si aceptas, tienes 24 h para pagar.</span><div class="two2"><button class="btn primary" type="button">Aceptar</button><button class="btn line" type="button">Rechazar</button></div></div>
+              </div>
+            </div>
+            <p class="safety">Paga siempre dentro de rail. Así tu compra está protegida.</p>
+            <div class="composer"><input class="input" id="msg-in" aria-label="Escribe un mensaje" placeholder="Escribe un mensaje"><button class="send" type="button" aria-label="Enviar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button></div>
+          </div>
+        </figure>
+
+        <figure>
+          <figcaption>Hacer oferta <span>· si lo activamos</span></figcaption>
+          <div class="phone">
+            <div class="hdr">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-label="Regresar"><path d="M15 5l-7 7 7 7"/></svg>
+              <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 4v11M7.5 8.5L12 4l4.5 4.5"/><path d="M5 13v7h14v-7"/></svg></div>
+            </div>
+            <div class="scr">
+              <div class="gal"><div class="ph"><img data-img="nikesb" alt="Chamarra Nike SB" width="440" height="550"></div></div>
+            </div>
+            <div class="dim">
+              <div class="sheet2">
+                <span class="grab"></span>
+                <h4>Haz una oferta</h4>
+                <div class="ask"><span>Nike SB Chamarra · Talla L</span><span>Precio: <b>$700</b></span></div>
+                <input class="bigin" id="offer-in" aria-label="Tu oferta en pesos" value="$600">
+                <div class="quick" role="group" aria-label="Ofertas rápidas"><button type="button" aria-pressed="false">$670</button><button type="button" aria-pressed="false">$630</button><button type="button" aria-pressed="true">$600</button></div>
+                <p class="hint" style="font-size:12.5px">Viogi puede aceptar, rechazar o contraofertar. Si acepta, tienes 24 h para pagar. Mientras tanto, otra persona la puede comprar.</p>
+                <button class="btn primary" type="button">Enviar oferta de $600</button>
+              </div>
+            </div>
+          </div>
+        </figure>
+
+      </div>
+    </section>
+
+    <!-- ===================== VENDER: PASOS EXTRA ===================== -->
+    <section class="group" id="pasos" aria-labelledby="h-pasos">
+      <h2 id="h-pasos">Empezar a vender <span class="badge-new">Nuevo</span></h2>
+      <p>Todas las cuentas son iguales: cualquiera compra, guarda y sigue. Para vender se agregan tres pasos. La revisión del tercer paso se queda mientras rail esté por invitación.</p>
+      <div class="screens">
+
+        <figure>
+          <figcaption>Paso 1 · tu perfil de vendedor</figcaption>
+          <div class="phone">
+            <div class="hdr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-label="Cerrar"><path d="M6 6l12 12M18 6L6 18"/></svg><span class="mid">Vender en rail</span><span style="width:21px"></span></div>
+            <div class="prog" aria-label="Paso 1 de 3"><i class="on"></i><i></i><i></i></div>
+            <div class="stepnote">Paso 1 de 3</div>
+            <div class="scr">
+              <div class="lead"><h4>Así te van a ver quienes compran</h4><p>Usa tu mismo perfil. Solo agrega lo que necesita una tienda.</p></div>
+              <div class="form">
+                <div class="field"><span class="lab">Portada</span><div class="coverpick"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Sube una foto horizontal</div></div></div>
+                <div class="field"><label for="v-name">Nombre que verán</label><input class="input" id="v-name" value="Viogi"></div>
+                <div class="field"><label for="v-user">Usuario</label><input class="input" id="v-user" value="@viogi_"></div>
+                <div class="field"><span class="lab">Dónde entregas</span><div class="pick" data-pick="points"></div></div>
+              </div>
+            </div>
+            <div class="dock"><button class="btn primary" type="button">Siguiente</button></div>
+          </div>
+        </figure>
+
+        <figure>
+          <figcaption>Paso 2 · cobros</figcaption>
+          <div class="phone">
+            <div class="hdr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-label="Regresar"><path d="M15 5l-7 7 7 7"/></svg><span class="mid">Vender en rail</span><span style="width:21px"></span></div>
+            <div class="prog" aria-label="Paso 2 de 3"><i class="on"></i><i class="on"></i><i></i></div>
+            <div class="stepnote">Paso 2 de 3</div>
+            <div class="scr">
+              <div class="lead"><h4>Para recibir tu dinero</h4><p>Los cobros pasan por Stripe. rail no guarda tus datos bancarios.</p></div>
+              <ul class="bul" style="margin-top:12px">
+                <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 8.5l3 3L13 4.5"/></svg><span>Te pagamos cuando la persona recibe la pieza.</span></li>
+                <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 8.5l3 3L13 4.5"/></svg><span>Comisión de 0 % durante el piloto.</span></li>
+                <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 8.5l3 3L13 4.5"/></svg><span>Necesitas una identificación oficial y una cuenta bancaria con CLABE.</span></li>
+              </ul>
+              <p class="notebox" style="margin-top:16px">Pendiente: confirmar con el contador qué datos fiscales pide (RFC, RESICO) antes de abrir este paso.</p>
+            </div>
+            <div class="dock"><button class="btn primary" type="button">Conectar con Stripe</button><button class="btn soft" type="button">Lo hago después</button></div>
+          </div>
+        </figure>
+
+        <figure>
+          <figcaption>Paso 3 · revisión</figcaption>
+          <div class="phone">
+            <div class="hdr"><span style="width:21px"></span><span class="mid">Vender en rail</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-label="Cerrar"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            <div class="prog" aria-label="Paso 3 de 3"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+            <div class="stepnote">Paso 3 de 3</div>
+            <div class="scr">
+              <div class="empty" style="padding-top:40px">
+                <div class="bigicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></div>
+                <h4>Estamos revisando tu tienda</h4>
+                <p>Te avisamos en Actividad cuando quede lista. Mientras, puedes preparar tus prendas como borrador.</p>
+              </div>
+              <div class="how3">
+                <div class="done"><div><b>Perfil de vendedor</b><span>Listo</span></div></div>
+                <div class="done"><div><b>Cobros</b><span>Conectados con Stripe</span></div></div>
+                <div><div><b>Revisión de rail</b><span>Normalmente toma 1 o 2 días</span></div></div>
+              </div>
+            </div>
+            <div class="dock"><button class="btn primary" type="button">Preparar mi primera prenda</button></div>
+          </div>
+        </figure>
+
+      </div>
+    </section>
+
+    <!-- ===================== AYUDA Y AJUSTES ===================== -->
+    <section class="group" id="ayuda" aria-labelledby="h-ayuda">
+      <h2 id="h-ayuda">Ayuda, ajustes y errores <span class="badge-new">Nuevo</span></h2>
+      <p>Cómo funciona rail, los ajustes de la cuenta y dos pantallas para cuando algo no sale.</p>
+      <div class="screens">
+
+        <figure>
+          <figcaption>Cómo funciona rail</figcaption>
+          <div class="phone">
+            <div class="hdr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-label="Regresar"><path d="M15 5l-7 7 7 7"/></svg><span class="mid">Cómo funciona</span><span style="width:21px"></span></div>
+            <div class="scr">
+              <div class="doc">
+                <section><h5>Comprar</h5><p>Cada pieza es única. Antes de comprar ves sus medidas en cm, con la prenda en plano, y su estado: impecable, buen estado o con detalles.</p></section>
+                <section><h5>Pagar</h5><p>Pagas dentro de rail. Con tarjeta siempre, y con OXXO o SPEI en compras de hasta $500. La pieza se aparta mientras pagas y nadie más la puede comprar.</p></section>
+                <section><h5>Recibir</h5><p>Recoges en un punto de entrega del Valle de Toluca o te llega a casa. Te avisamos cuando está lista.</p></section>
+                <section><h5>Si algo sale mal</h5><p class="mut">Devoluciones y reclamos.</p><span class="pending">Texto por definir contigo</span></section>
+                <section><h5>Vender</h5><p>Cualquier cuenta puede vender después de tres pasos: perfil de vendedor, cobros y revisión.</p></section>
+                <section><h5>Mensajes</h5><p>Habla con quien vende para preguntar por una pieza. Nunca pagues fuera de rail.</p></section>
+              </div>
+            </div>
+            <nav class="bnav" data-nav="perfil"></nav>
+          </div>
+        </figure>
+
+        <figure>
+          <figcaption>Ajustes</figcaption>
+          <div class="phone">
+            <div class="hdr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-label="Regresar"><path d="M15 5l-7 7 7 7"/></svg><span class="mid">Ajustes</span><span style="width:21px"></span></div>
+            <div class="scr">
+              <div class="setgrp">
+                <h5>Cuenta</h5>
+                <div class="tg link"><span>Correo</span><span class="val">mariana@correo.com</span></div>
+                <div class="tg link"><span>Contraseña</span></div>
+                <div class="tg link"><span>Direcciones</span><span class="val">2</span></div>
+                <h5>Avisos</h5>
+                <div class="tg"><span>Piezas nuevas de lo que sigues</span><button class="switch" type="button" role="switch" id="sw-1" aria-checked="true" aria-label="Piezas nuevas de lo que sigues"></button></div>
+                <div class="tg"><span>Mensajes y ofertas</span><button class="switch" type="button" role="switch" id="sw-2" aria-checked="true" aria-label="Mensajes y ofertas"></button></div>
+                <div class="tg"><span>Mis pedidos</span><button class="switch" type="button" role="switch" id="sw-3" aria-checked="true" aria-label="Mis pedidos"></button></div>
+                <div class="tg"><span>Una pieza guardada se vende o se aparta<small>Para no perderte una que querías</small></span><button class="switch" type="button" role="switch" id="sw-4" aria-checked="false" aria-label="Una pieza guardada se vende o se aparta"></button></div>
+                <h5>General</h5>
+                <div class="tg link"><span>Idioma y moneda</span><span class="val">Español · MXN</span></div>
+                <div class="tg link"><span>Vender en rail</span></div>
+                <div class="tg link"><span>Cómo funciona rail</span></div>
+                <div class="tg out"><span>Cerrar sesión</span></div>
+              </div>
+            </div>
+            <nav class="bnav" data-nav="perfil"></nav>
+          </div>
+        </figure>
+
+        <figure>
+          <figcaption>Error · sin resultados</figcaption>
+          <div class="phone">
+            <div class="hdr">
+              <div class="searchbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><span>jersey 1998</span></div>
+              <span class="txt">Cancelar</span>
+            </div>
+            <div class="scr">
+              <div class="filters"><button class="filter on" type="button">Talla: XS</button><button class="filter" type="button">Marca</button><button class="filter" type="button">Precio</button></div>
+              <div class="empty">
+                <div class="bigicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></div>
+                <h4>Todavía no hay «jersey 1998» en talla XS</h4>
+                <p>Cada pieza es única y llegan nuevas todos los días. Síguela y te avisamos cuando aparezca.</p>
+                <button class="follow" type="button" id="follow-empty" aria-pressed="false" style="height:40px;padding:0 18px;font-size:14px"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg><span>Seguir esta búsqueda</span></button>
+              </div>
+              <div class="sugg"><span class="lab">Prueba con</span><div class="pick"><button type="button">Quitar talla XS</button><button type="button">jersey</button><button type="button">jersey Nike</button></div></div>
+            </div>
+            <nav class="bnav" data-nav="inicio"></nav>
+          </div>
+        </figure>
+
+        <figure>
+          <figcaption>Error · se acabó el tiempo para pagar</figcaption>
+          <div class="phone">
+            <div class="hdr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-label="Cerrar"><path d="M6 6l12 12M18 6L6 18"/></svg><span class="mid">Pagar</span><span style="width:21px"></span></div>
+            <div class="scr">
+              <div class="empty">
+                <div class="bigicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></div>
+                <h4>Se acabó el tiempo para pagar</h4>
+                <p>La <b>Playboy Sudadera</b> volvió a estar disponible y otra persona la apartó. No se hizo ningún cargo.</p>
+                <button class="btn primary" type="button">Ver piezas parecidas</button>
+                <button class="btn soft" type="button">Seguir a Viogi</button>
+              </div>
+              <div class="more"><h4>Parecidas</h4><div class="thumbs" data-similar></div></div>
+            </div>
+            <nav class="bnav" data-nav="bolsa"></nav>
+          </div>
+        </figure>
+
+      </div>
+    </section>
 
     <!-- ===================== COMPRAR ===================== -->
     <section class="group" id="comprar" aria-labelledby="h-comprar">
@@ -408,7 +980,7 @@ figcaption span { text-transform: none; letter-spacing: 0; font-weight: 400; }
               </div>
               <div class="seller">
                 <div class="av store">V</div>
-                <div class="who"><b>Viogi</b><span>Tienda · Toluca · 1,480 seguidores</span></div>
+                <div class="who"><b>Viogi</b><span>Toluca · 1,480 seguidores</span></div>
                 <button class="follow" type="button" id="f-detail" aria-pressed="false"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg><span>Seguir</span></button>
               </div>
               <details class="acc" open>
@@ -513,11 +1085,11 @@ figcaption span { text-transform: none; letter-spacing: 0; font-weight: 400; }
     <!-- ===================== SOCIAL ===================== -->
     <section class="group" id="social" aria-labelledby="h-social">
       <h2 id="h-social">Social</h2>
-      <p>Sigues tiendas, marcas y búsquedas. Las tiendas tienen portada y logo cuadrado; las personas, foto redonda.</p>
+      <p>Todas las cuentas son el mismo tipo de perfil y todas se pueden seguir. Quien vende muestra además sus piezas en venta. Todos pueden poner portada.</p>
       <div class="screens">
 
         <figure>
-          <figcaption>Perfil de tienda <span>· con portada</span></figcaption>
+          <figcaption>Perfil de alguien que vende <span>· con portada</span></figcaption>
           <div class="phone">
             <div class="scr">
               <div class="cover"><img data-img="cover" alt="Portada de Viogi con prendas en plano" width="960" height="315">
@@ -525,7 +1097,7 @@ figcaption span { text-transform: none; letter-spacing: 0; font-weight: 400; }
               </div>
               <div class="store-id">
                 <div class="logo">V</div>
-                <div><h4>Viogi</h4><div class="sub">Tienda en Toluca, Edo. Méx. · en rail desde 2026</div></div>
+                <div><h4>Viogi</h4><div class="sub">Toluca, Edo. Méx. · vende en rail desde 2026</div></div>
                 <div class="nums"><b>1,480</b> seguidores · <b>212</b> vendidas</div>
                 <p>Ropa de segunda mano curada. Cada pieza es única y se mide en plano.</p>
                 <div class="acts">
@@ -551,8 +1123,8 @@ figcaption span { text-transform: none; letter-spacing: 0; font-weight: 400; }
             <div class="scr">
               <div class="person">
                 <div class="id"><div class="av">M</div><div><h4>Mariana Ruiz</h4><div class="sub">Metepec · en rail desde octubre</div></div></div>
-                <div class="nums">Sigue a <b>24</b> · <b>3</b> compras</div>
-                <a class="btn line" href="#social" style="height:40px">Editar perfil</a>
+                <div class="nums"><b>8</b> seguidores · sigue a <b>24</b></div>
+                <div class="btnrow"><a class="btn line" href="#social" style="height:40px">Editar perfil</a><a class="btn soft" href="#pasos" style="height:40px">Empezar a vender</a></div>
               </div>
               <div class="chips" role="group" aria-label="Tu perfil">
                 <button class="chip" type="button" aria-current="true">Guardados <small>31</small></button>
@@ -572,7 +1144,7 @@ figcaption span { text-transform: none; letter-spacing: 0; font-weight: 400; }
             <div class="scr">
               <div class="chips" role="group" aria-label="Qué sigues">
                 <button class="chip" type="button" aria-current="true">Todo</button>
-                <button class="chip" type="button">Tiendas</button>
+                <button class="chip" type="button">Perfiles</button>
                 <button class="chip" type="button">Marcas</button>
                 <button class="chip" type="button">Búsquedas</button>
               </div>
@@ -717,24 +1289,23 @@ figcaption span { text-transform: none; letter-spacing: 0; font-weight: 400; }
       </div>
     </section>
 
-    <section class="notes" id="falta" aria-label="Qué falta">
+    <section class="notes" id="falta" aria-label="Decisiones">
       <div>
-        <h2>Qué más hace falta (propuesta)</h2>
+        <h2>Decidido el 23 de octubre</h2>
         <ul>
-          <li><b>Versión de escritorio</b> de inicio, prenda, tienda y pagar.</li>
-          <li><b>Abrir tienda en rail</b>: la solicitud para vender (hoy es /vender).</li>
-          <li><b>Cómo funciona rail</b>: compra protegida, entregas y devoluciones.</li>
-          <li><b>Ajustes</b>: direcciones, avisos y contraseña.</li>
-          <li><b>Pantallas de error</b>: sin resultados, o la pieza se vendió mientras pagabas.</li>
+          <li><b>Mensajes:</b> sí, entre quien compra y quien vende.</li>
+          <li><b>Ofertas:</b> diseñadas; se activan cuando lo decidas.</li>
+          <li><b>Todas las cuentas son iguales:</b> cualquiera compra, guarda, sigue y puede tener seguidores. Vender son tres pasos extra.</li>
+          <li><b>Orden:</b> lo social y los arreglos de compra avanzan parejo.</li>
         </ul>
       </div>
       <div>
-        <h2>Por decidir contigo</h2>
+        <h2>Todavía por decidir</h2>
         <ul>
-          <li><b>Mensajes</b> entre comprador y tienda para preguntar por una pieza.</li>
-          <li><b>Ofertas</b>: proponer otro precio, como en Grailed.</li>
-          <li><b>Reseñas</b> de tiendas (hoy están fuera de la fase 1).</li>
-          <li>Si una persona puede tener seguidores o solo las tiendas.</li>
+          <li>Política de devoluciones y reclamos («Si algo sale mal»).</li>
+          <li>Cuándo se activan las ofertas.</li>
+          <li>Qué datos fiscales pide el paso de cobros (contador).</li>
+          <li>Si la revisión del paso 3 se queda cuando rail abra a todos.</li>
         </ul>
       </div>
       <div>
@@ -776,7 +1347,8 @@ figcaption span { text-transform: none; letter-spacing: 0; font-weight: 400; }
     all: ['nikesb', 'tee', 'jersey', 'supreme', 'playboy', 'wrangler', 'adidas', 'tnf'],
     search: ['nikesb', 'adidas', 'playboy', 'jersey'],
     store: ['nikesb', 'tee', 'jersey', 'supreme', 'playboy', 'wrangler'],
-    saved: ['supreme', 'tnf', 'wrangler', 'jersey']
+    saved: ['supreme', 'tnf', 'wrangler', 'jersey'],
+    store4: ['adidas', 'tee', 'playboy', 'supreme']
   };
   function photo(p, extra) { return '<div class="ph">' + '<img src="' + IMG[p.img] + '" alt="' + esc(p.brand + ' ' + p.type) + '" width="440" height="550" loading="lazy">' + (extra || '') + '</div>'; }
   function badge(p) { return p.state === 'held' ? '<span class="badge">Apartada</span>' : p.state === 'sold' ? '<span class="badge sold">Vendida</span>' : ''; }
@@ -805,14 +1377,15 @@ figcaption span { text-transform: none; letter-spacing: 0; font-weight: 400; }
     if (s.search) return '<div class="av search">' + searchSvg + '</div>';
     return '<div class="av"><img src="' + IMG[s.img] + '" alt=""></div>';
   }
-  document.querySelector('[data-stories]').innerHTML = stories.map(function (s) {
+  var storiesHtml = stories.map(function (s) {
     return '<div class="story' + (s.isNew ? ' new' : '') + (s.search ? ' search' : '') + '"><span class="ring">' + avatar(s) + '</span><span>' + esc(s.name) + '</span></div>';
   }).join('');
+  document.querySelectorAll('[data-stories]').forEach(function (el) { el.innerHTML = storiesHtml; });
 
   document.querySelector('[data-thumbs]').innerHTML = ['adidas', 'playboy', 'tee'].map(function (k) { return photo(P[k], badge(P[k])); }).join('');
 
   var follows = [
-    { name: 'Viogi', sub: 'Tienda · <em>3 piezas nuevas</em>', mark: 'V', store: true },
+    { name: 'Viogi', sub: 'Perfil · <em>3 piezas nuevas</em>', mark: 'V', store: true },
     { name: 'Stüssy', sub: 'Marca · <em>5 piezas nuevas</em>', img: 'tee' },
     { name: 'Nike', sub: 'Marca · <em>2 piezas nuevas</em>', img: 'jersey' },
     { name: 'jersey 2002', sub: 'Búsqueda · <em>1 pieza nueva</em>', search: true },
@@ -851,7 +1424,8 @@ figcaption span { text-transform: none; letter-spacing: 0; font-weight: 400; }
   var picks = {
     brands: [['Nike', 1], ['Stüssy', 1], ['Supreme', 0], ['Carhartt', 1], ['The North Face', 0], ['Adidas', 0], ['Polo Ralph Lauren', 0], ["Levi's", 0], ['Champion', 0], ['Wrangler', 0]],
     sizes: [['S', 0], ['M', 1], ['L', 1], ['XL', 0], ['30', 0], ['32', 1], ['34', 0]],
-    cats: [['Chamarras', 1], ['Sudaderas', 1], ['Playeras', 0], ['Jeans', 0], ['Accesorios', 0]]
+    cats: [['Chamarras', 1], ['Sudaderas', 1], ['Playeras', 0], ['Jeans', 0], ['Accesorios', 0]],
+    points: [['Rectoría — Maneki', 1], ['Pick Up Colón', 1], ['Cieuto Metepec', 0], ['Envío a domicilio', 1]]
   };
   document.querySelectorAll('[data-pick]').forEach(function (el) {
     el.innerHTML = picks[el.getAttribute('data-pick')].map(function (x) {
@@ -874,8 +1448,86 @@ figcaption span { text-transform: none; letter-spacing: 0; font-weight: 400; }
   });
   document.querySelectorAll('[data-img]').forEach(function (im) { im.src = IMG[im.getAttribute('data-img')]; });
 
+
+  // ---------- additions ----------
+  var ORDER = ['nikesb', 'tee', 'jersey', 'supreme', 'playboy', 'wrangler', 'adidas', 'tnf'];
+  document.querySelectorAll('[data-collage]').forEach(function (el) {
+    var n = +el.getAttribute('data-collage');
+    var keys = n === 3 ? ['tee', 'nikesb', 'jersey'] : ORDER.concat(['adidas']).slice(0, n);
+    el.innerHTML = keys.map(function (k) { return photo(P[k]); }).join('');
+  });
+  document.querySelectorAll('[data-th]').forEach(function (el) { el.innerHTML = photo(P[el.getAttribute('data-th')]); });
+
+  var people = [
+    { name: 'Viogi', meta: 'Toluca · 1,480 seguidores', mark: 'V', store: true, cover: 'cover' },
+    { name: 'Segunda Ronda', meta: 'Vende · 320 seguidores', mark: 'S', cover: 'wrangler' },
+    { name: 'Archivo TLC', meta: 'Vende · 510 seguidores', mark: 'A', cover: 'jersey' },
+    { name: 'Mariana Ruiz', meta: 'Compra · 8 seguidores', mark: 'M', cover: 'supreme' }
+  ];
+  function pcard(p, i, pre) {
+    return '<div class="pc"><div class="cv"><img src="' + IMG[p.cover] + '" alt=""></div><div class="bd">' +
+      '<div class="av' + (p.store ? ' store' : '') + '">' + p.mark + '</div><b>' + esc(p.name) + '</b><span>' + esc(p.meta) + '</span>' +
+      '<button class="follow" type="button" id="' + pre + '-' + i + '" aria-pressed="false">' + check + '<span>Seguir</span></button></div></div>';
+  }
+  document.querySelectorAll('[data-people]').forEach(function (el) { el.innerHTML = people.map(function (p, i) { return pcard(p, i, 'pp'); }).join(''); });
+
+  var mix = document.querySelector('[data-feed-mix]');
+  if (mix) {
+    var html = ['nikesb', 'tee', 'jersey', 'supreme'].map(function (k) { return card(P[k]); }).join('');
+    html += '<div class="mod"><div class="sech"><h4>Perfiles para seguir</h4><span>Cerca de Toluca</span></div><div class="hscroll">' +
+      people.slice(1).map(function (p, i) { return pcard(p, i, 'mx'); }).join('') + '</div></div>';
+    html += ['playboy', 'wrangler', 'adidas', 'tnf'].map(function (k) { return card(P[k]); }).join('');
+    html += '<div class="mod"><div class="sech"><h4>«jersey 2002» · 3 nuevas</h4><span>Tu búsqueda</span></div><div class="hscroll">' +
+      ['jersey', 'tee', 'adidas'].map(function (k) { return '<div class="mini">' + photo(P[k]) + '<b>$' + fmt.format(P[k].price) + '</b></div>'; }).join('') + '</div></div>';
+    html += ['tee', 'nikesb'].map(function (k) { return card(P[k]); }).join('');
+    mix.innerHTML = html;
+  }
+
+  var sideFollows = [
+    { name: 'Viogi', sub: '<em>3 piezas nuevas</em>', mark: 'V', store: true },
+    { name: 'Stüssy', sub: '<em>5 piezas nuevas</em>', img: 'tee' },
+    { name: 'jersey 2002', sub: '<em>1 pieza nueva</em>', search: true },
+    { name: 'Nike', sub: 'Sin novedades', img: 'jersey' }
+  ];
+  document.querySelectorAll('[data-side]').forEach(function (el) {
+    if (el.getAttribute('data-side') === 'follows') {
+      el.innerHTML = sideFollows.map(function (f) { return '<div class="li">' + avatar(f) + '<div class="who"><b>' + esc(f.name) + '</b><span>' + f.sub + '</span></div></div>'; }).join('');
+    } else {
+      el.innerHTML = people.slice(1).map(function (p, i) {
+        return '<div class="li"><div class="av">' + p.mark + '</div><div class="who"><b>' + esc(p.name) + '</b><span>' + esc(p.meta) + '</span></div>' +
+          '<button class="follow" type="button" id="side-' + i + '" aria-pressed="false">' + check + '<span>Seguir</span></button></div>';
+      }).join('');
+    }
+  });
+
+  var dg = document.querySelector('[data-dgal]');
+  if (dg) {
+    dg.innerHTML = photo(P.nikesb) +
+      photo(P.nikesb).replace('<img ', '<img style="transform:scale(1.9);transform-origin:38% 22%" ');
+  }
+
+  var inbox = [
+    { mark: 'V', store: true, name: 'Viogi', pv: 'Contraoferta: $650', time: '12:24', th: 'nikesb', unread: true },
+    { mark: 'S', name: 'Segunda Ronda', pv: 'Sí, la entrego en Pick Up Colón.', time: 'Ayer', th: 'wrangler' },
+    { mark: 'A', name: 'Archivo TLC', pv: 'Tú: ¿tiene alguna mancha?', time: 'Lun', th: 'jersey' },
+    { mark: 'V', store: true, name: 'Viogi', pv: 'Ya está lista para recoger.', time: '18 oct', th: 'tee' }
+  ];
+  var ib = document.querySelector('[data-inbox]');
+  if (ib) ib.innerHTML = inbox.map(function (m) {
+    return '<div class="li' + (m.unread ? ' unread' : '') + '"><div class="av' + (m.store ? ' store' : '') + '">' + m.mark + '</div>' +
+      '<div class="txt"><span class="nm"><b>' + esc(m.name) + '</b><time>' + m.time + '</time></span><span class="pv">' + esc(m.pv) + '</span></div>' +
+      '<div class="th2">' + photo(P[m.th]) + '</div></div>';
+  }).join('');
+
+  var sim = document.querySelector('[data-similar]');
+  if (sim) sim.innerHTML = ['adidas', 'nikesb', 'tee'].map(function (k) { return photo(P[k]); }).join('');
+
   document.addEventListener('click', function (e) {
-    var a = e.target.closest('.bnav a, .rows a, .mine a, .place a, .textlink, .legal a, .person a');
+    var sw = e.target.closest('.switch');
+    if (sw) { sw.setAttribute('aria-checked', sw.getAttribute('aria-checked') === 'true' ? 'false' : 'true'); return; }
+    var q = e.target.closest('.quick button');
+    if (q) { q.parentElement.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === q ? 'true' : 'false'); }); var inp = document.getElementById('offer-in'); if (inp) inp.value = q.textContent; var sb = q.closest('.sheet2').querySelector('.btn.primary'); if (sb) sb.textContent = 'Enviar oferta de ' + q.textContent; return; }
+    var a = e.target.closest('.bnav a, .rows a, .mine a, .place a, .textlink, .legal a, .person a, .hero a, .dsec a, .dhdr a, .wbody a');
     if (a) { e.preventDefault(); return; }
     var h = e.target.closest('.heart');
     if (h) { h.setAttribute('aria-pressed', h.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); return; }

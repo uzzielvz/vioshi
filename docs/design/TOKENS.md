@@ -63,8 +63,8 @@ Contraste: blanco sobre `accent` 7.4:1; `muted` sobre blanco 5.4:1. No se usa ve
 - **Filtros (búsqueda):** caja de 32 px con borde `line` y flechita; el filtro activo con borde `ink`.
 - **Badge de estado sobre la foto:** «Apartada» (blanco, borde `ink`) y «Vendida» (`ink` con texto
   blanco), 10 px, mayúsculas. Se ven distintos a propósito. La foto vendida va en gris.
-- **Avatar:** tienda = cuadrado (radio 4 px, fondo `ink`); persona y marca = redondo; búsqueda =
-  redondo con lupa.
+- **Avatar:** redondo para todos los perfiles (todas las cuentas son iguales); búsqueda = redondo
+  con lupa. Sin foto: inicial sobre `ink` o `carton`.
 - **Historias (inicio):** círculos de 60 px. Aro azul de 2 px si hay piezas nuevas; gris si no;
   punteado si es una búsqueda.
 - **Tarjeta de la feed:** foto 3:4 sobre `carton` (las fotos de fondo blanco se mezclan en
@@ -76,8 +76,14 @@ Contraste: blanco sobre `accent` 7.4:1; `muted` sobre blanco 5.4:1. No se usa ve
 - **Mi tienda:** la misma portada con el botón «Cambiar portada».
 - **Barra inferior:** Inicio · Siguiendo · Vender · Bolsa · Perfil.
 - **Avisos:** filas de texto simple. Sin cuadritos ni filetes de color a la izquierda.
+- **Mensajes:** burbujas; las mías en `ink` con texto blanco, las de la otra persona en `carton`.
+  La pieza va fija arriba con «Comprar». La oferta es una tarjeta dentro del chat.
+- **Interruptores (ajustes):** 42 × 24 px, encendido en `accent`.
+- **Escritorio:** encabezado de 64 px con buscador; grid de 4 columnas con 14 px entre columnas;
+  con sesión, columna derecha de 300 px con «Lo que sigues» y «Perfiles para seguir».
 
 ## Pendiente
 
-- [ ] Versión de escritorio de inicio, prenda, tienda y pagar.
+- [x] Escritorio de inicio (sin cuenta y con cuenta) y de prenda, en el prototipo.
+- [ ] Escritorio de perfil y de pagar.
 - [ ] Pasar estos tokens a `tailwind.config.ts` (Etapa 2).
