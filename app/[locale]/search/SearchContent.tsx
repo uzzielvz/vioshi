@@ -35,6 +35,7 @@ export default function SearchContent({ initialProducts }: { initialProducts: Pr
       list = list.filter((p) => {
         return (
           p.name.toLowerCase().includes(q) ||
+          (p.brand?.name.toLowerCase().includes(q) ?? false) ||
           (p.description?.toLowerCase().includes(q) ?? false) ||
           (p.category?.toLowerCase().includes(q) ?? false)
         );
