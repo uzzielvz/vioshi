@@ -1,118 +1,83 @@
-# Tokens de diseño — referencia Grailed
+# Tokens de diseño — rail
 
-> Valores para la **Etapa 2** (`docs/PROYECTO.md` § 6). Investigado el 2026-10-14.
+> Diseño aprobado el 2026-10-23: [`prototipo-rail.html`](./prototipo-rail.html) (ábrelo en el
+> navegador; las 14 pantallas son la referencia). Este archivo guarda los valores para pasarlos a
+> `tailwind.config.ts` en la **Etapa 2** (`docs/PROYECTO.md` § 6).
 >
-> **Ningún valor viene del CSS de Grailed**: grailed.com está bloqueado desde el entorno de los
-> agentes. Los colores y las medidas salen de muestrear píxeles de:
-> - las capturas de `referencias/`, que son de la app iOS;
-> - una captura de escritorio de grailed.com de 2025, de un dataset público.
->
-> La identificación de fuentes sale del índice público de `fonts.grailed.com` y de comparar glyphs
-> contra más de 60 fuentes libres.
->
-> Confianza: **probable** = medición sólida · **aprox.** = medición con ruido (texto chico,
-> líneas de 1 px). Antes de pasar estos valores a `tailwind.config.ts` hay que hacer la prueba
-> visual y que el humano la apruebe.
+> Historia: la versión del 2026-10-14 copiaba el tratamiento visual de Grailed (azul `#0000FF`,
+> Kode Mono, Oswald, botones píldora) y se descartó porque se veía como copia. Después se probaron
+> y descartaron la cinta métrica, las medidas en la tarjeta de la feed, las etiquetas colgantes y
+> los avisos con cuadritos. De Grailed solo se queda la **estructura** (feed de 2 columnas, seguir,
+> panel de vendedor).
 
-## Cómo sacar los valores exactos (5 min, en tu computadora)
+## Marca
 
-1. Abre grailed.com en Chrome de escritorio y luego DevTools (`Cmd+Opt+I`).
-2. **Network → filtro "Font" → recarga.** Los nombres de los `.woff2` dan las familias reales,
-   sobre todo la de botones, que todavía no está identificada.
-3. **Elements:** selecciona el botón "Sign up", un título de prenda, un precio y un encabezado.
-   En **Computed** copia `font-family`, `font-size`, `font-weight`, `letter-spacing`,
-   `line-height`, `border-radius`, `height` y `background-color`.
-4. **Styles de `<html>` / `:root`:** copia las variables `--color-*` y `--font-*` si existen.
-5. Copia el color calculado del texto verde de "free shipping".
-
-Pega los valores en el chat o en este archivo y se reemplazan los aproximados.
-
----
+- Nombre de plataforma: **rail**, en minúsculas. Sale de `lib/brand.ts` (`NEXT_PUBLIC_BRAND_NAME`).
+- Logo: «rail» en Inter 800, tracking −0.05em, corte display (`opsz` 32). La i se escribe sin punto
+  (`ı`, U+0131) y el punto se dibuja aparte en azul `accent` (círculo de 0.18em, a 0.09em del tope
+  de la caja de línea). Ver `.wm` en el prototipo.
+- Las tiendas (Viogi) tienen su propio logo y portada. No se mezclan con la marca de la plataforma.
 
 ## Color
 
-Base B/N. Azul para la acción principal. Verde solo para casos muy puntuales (FROZEN 2026-10-14).
+Base blanca con tinta casi negra. El azul es el único color de acción.
 
-| Token | Valor | Uso | Confianza |
+| Token | Valor | Uso |
+|---|---|---|
+| `accent` | `#1F2BFF` | Botón principal, «Seguir», links, corazón guardado, aro de historias con piezas nuevas, punto del logo |
+| `accent-press` | `#1620D6` | Hover y presionado del azul |
+| `accent-wash` | `#F1F2FF` | Fondo de avisos sin leer en Actividad |
+| `ink` | `#111111` | Texto, pestaña activa, botón de contorno, logo de tienda, badge «Vendida» |
+| `paper` | `#FFFFFF` | Fondo |
+| `carton` | `#F3F2EE` | Fondo de foto mientras carga, botón suave, avatar sin foto, caja de resumen, notas |
+| `line` | `#E4E2DC` | Divisores, bordes de campos y filtros |
+| `muted` | `#6B6B66` | Texto secundario, pestañas inactivas, «Siguiendo» (ya seguido) |
+
+Contraste: blanco sobre `accent` 7.4:1; `muted` sobre blanco 5.4:1. No se usa verde por ahora.
+
+## Letra
+
+**Inter** en todo, cargada con `next/font/google` (`axes: ['opsz']`). Sin mono, sin condensadas.
+
+| Elemento | Tamaño | Peso | Notas |
 |---|---|---|---|
-| `accent` | `#0000FF` | CTA principal (píldora sólida) y links. Texto blanco encima (contraste 8.6:1) | probable (`#0000FE` en ~5,700 px) |
-| `on-accent` | `#FFFFFF` | Texto sobre azul | probable |
-| `promo` | `#1B7A5E` | **Solo** promos y confirmaciones (texto chico en mayúsculas). Rango medido `#1B7A5E`–`#217F63` | aprox. |
-| `promo-bg` | `#F4F8F7` | Franja de fondo detrás del texto verde | probable |
-| `ink` | `#000000` | Texto, logo, botones negros, pestaña activa | probable |
-| `bg` | `#FFFFFF` | Fondo de página y de botones contorno | probable |
-| `surface` | `#FAFAFA` | Tarjetas de aviso, sin borde | probable |
-| `placeholder` | `#F7F7F7` | Fondo de la foto mientras carga | probable |
-| `chip` | `#F5F5F5` | Pestañas y filtros inactivos | probable |
-| `border` | `#E1E1E1` | Líneas finas, divisores, bordes de botón claro | probable |
-| `border-strong` | `#B3B3B3` | Borde de la píldora secundaria (medido entre `#B3B3B3` y `#CCCCCC`) | aprox. |
-| `text-muted` | `#737373` | Texto secundario y placeholders (contraste 4.7:1) | probable |
-| `text-faint` | `#B3B3B3` | Solo decorativo: contraste 2.1:1, no pasa WCAG para texto | probable |
-| `alert` | `#BB2928` | Punto de notificación | aprox. |
+| Título de pantalla («Siguiendo», «Bolsa») | 20 px | 700 | tracking −0.015em |
+| Título de prenda / perfil | 20–22 px | 700 | `text-wrap: balance` |
+| Precio grande (prenda) | 24 px | 700 | `tabular-nums` |
+| Título de sección («Lo nuevo de lo que sigues») | 17 px | 700 | |
+| Cuerpo | 13–14 px | 400 | interlineado 1.45 |
+| Tarjeta: marca + tipo | 13 px | 600 + 400 | una línea con «…» |
+| Tarjeta: talla | 13 px | 500 | a la derecha, texto simple |
+| Tarjeta: precio | 13 px | 700 | `tabular-nums` |
+| Pestañas | 13 px | 500 / 600 activa | |
+| Botones | 14 px | 600 | tipo oración, nunca mayúsculas espaciadas |
+| Etiqueta de sección («ENTREGA», «ESTE MES») | 11–12 px | 600 | mayúsculas, tracking 0.1em, `muted` |
+| Barra inferior | 10 px | 500 / 600 activa | |
 
-**Descartados:**
-- `#4A9ADE`, `#0E2252` y `#B3833F`: paleta de Brandfetch, vieja y no reclamada; no aparece en la UI.
-- `#3B5998`: el azul de Facebook en su botón de login.
+## Componentes
 
-## Tipografía
-
-Las fuentes de Grailed son **comerciales o no identificadas**. No se copian ni se auto-hospedan
-(FROZEN). Se usan equivalentes libres (OFL) que se cargan con `next/font/google` y existen en
-`next@14.2.35`.
-
-| Rol | Grailed (lo que se sabe) | Equivalente libre | Pesos |
-|---|---|---|---|
-| **Texto, títulos, nav, precio** | Web: sans tipo sistema/SF, sin confirmar. iOS: parece SF Pro. Hay archivos de Neue Haas Grotesk en `fonts.grailed.com` (2022), pero las proporciones medidas **no** son las de NHG | **Inter**, con eje `opsz`, que activa el corte Display en tamaños grandes | 400, 500, 600, 700 |
-| **Botones, pestañas, chips, etiquetas** (mayúsculas cuadradas) | **No identificada**; probablemente propia. Rasgos: V de lados rectos, W de base plana, O rectangular redondeada | **Kode Mono** (mejor de 65 fuentes comparadas). Alternativa: **Tektur**, que es proporcional | 700 (600–700 en CTA grande) |
-| **Logotipo** (solo el nombre de la tienda o plataforma) | Wordmark GRAILED: grotesca condensada pesada con mucho tracking, diseño propio y marca registrada | **Oswald 700**, la más cercana medida. O **Bebas Neue**, la que ya usa la tienda (~18 % más angosta) | 700 / 400 |
-
-**Helvetica Neue:** la tienda hoy usa `'Helvetica Neue', 'Inter', …`, así que en Mac y iPhone se
-ve Helvetica y en lo demás Inter. Lo medido de Grailed queda **más cerca de Inter**: proporción
-altura-x/mayúscula ~0.77 contra 0.75 de Inter y ~0.72 de Helvetica/NHG. **Recomendación:** Inter
-primero en todos lados, para que haya un solo look. Si se prefiere Helvetica en Apple, se acepta
-la diferencia. **(humano)**
-
-### Escala propuesta
-
-| Elemento | Fuente | Tamaño / interlineado | Peso | Tracking | Caja |
-|---|---|---|---|---|---|
-| Título hero | Inter | 34 px / 1.15 | 700 | −0.01em | Oración |
-| Título de sección ("Lo nuevo") | Inter | 15 px / 1.15 | 700 | +0.04em (Grailed) o 0 (más apretado) | Oración |
-| Nav de categorías | Inter | 12 px / 1 | 600 | +0.04em | MAYÚSCULAS |
-| Cuerpo | Inter | 14 px / 1.45 | 400 | 0 | Oración |
-| Tarjeta: marca · talla | Inter | 13 px | 400 | 0 | Una línea con «…»; talla a la derecha |
-| Tarjeta: precio | Inter | 13–14 px | 700 | 0 | `tabular-nums` |
-| Botón, pestaña, chip, etiqueta | Kode Mono | 11 px / 1 | 700 | 0.05em si es una palabra; 0–0.02em si son varias | MAYÚSCULAS |
-| Etiqueta en CTA píldora (móvil) | Kode Mono | 12 px / 1 | 700 | igual que arriba | MAYÚSCULAS |
-| CTA grande | Kode Mono | 18 px / 1 | 600–700 | 0–0.02em | MAYÚSCULAS |
-| Logotipo | Oswald / Bebas | según diseño | 700 / 400 | 0.10–0.12em | MAYÚSCULAS |
-
-Kode Mono es monoespaciada: los espacios y las comas salen más anchos que en Grailed. Conviene
-etiquetas cortas. Si en la prueba se notan los huecos, se prueba Tektur.
-
-## Formas y layout
-
-- **CTA en móvil:** píldora completa (`rounded-full`), ~44 px de alto, ancho completo con ~20 px
-  de margen. La primaria es azul; la secundaria es blanca con borde `border-strong`.
-- **Botones chicos** (Seguir, Agregar): rectángulo **sin redondear**, contorno de 1 px o negro sólido.
-- **Pestañas:** chips píldora. La activa es `ink` con texto blanco; las inactivas, `chip` con texto `ink`.
-- **Escritorio:** grailed.com usa **esquinas rectas** en botones (captura de 2025). La diferencia
-  píldora/recto es de plataforma, no de época. Decidir por componente en la prueba visual.
-- **Feed:** 2 columnas en móvil, de borde a borde y sin margen exterior. Separación de 2–4 px.
-  Foto cuadrada sin borde, radio ni sombra, con fondo `placeholder` mientras carga.
-
-## Licencias
-
-- Inter, Kode Mono, Tektur, Oswald y Bebas Neue: SIL OFL. Se pueden auto-hospedar con `next/font`.
-- Neue Haas Grotesk, Proxima Nova, Neue Haas Unica, Noe Display y Function Pro: comerciales. SF Pro
-  solo se permite en UI de plataformas Apple.
-- El logotipo propio **no** imita letra por letra el wordmark de Grailed. Solo se adopta el género
-  (condensada pesada con tracking amplio).
+- **Botón:** rectángulo de 48 px de alto, radio 3 px. Variantes: azul (`accent`), contorno (`ink`)
+  y suave (`carton`). Uno azul por pantalla como máximo.
+- **Seguir:** botón azul chico de 30 px («Seguir»). Ya seguido: texto `muted` con palomita, sin caja.
+- **Pestañas:** texto; la activa en `ink`, 600 y subrayado de 2 px. Sin píldoras ni puntos.
+- **Filtros (búsqueda):** caja de 32 px con borde `line` y flechita; el filtro activo con borde `ink`.
+- **Badge de estado sobre la foto:** «Apartada» (blanco, borde `ink`) y «Vendida» (`ink` con texto
+  blanco), 10 px, mayúsculas. Se ven distintos a propósito. La foto vendida va en gris.
+- **Avatar:** tienda = cuadrado (radio 4 px, fondo `ink`); persona y marca = redondo; búsqueda =
+  redondo con lupa.
+- **Historias (inicio):** círculos de 60 px. Aro azul de 2 px si hay piezas nuevas; gris si no;
+  punteado si es una búsqueda.
+- **Tarjeta de la feed:** foto 3:4 sobre `carton` (las fotos de fondo blanco se mezclan en
+  multiplicar), marca + tipo y talla, precio y corazón. **Nada más**: sin medidas ni estado.
+- **Grid de la feed:** 2 columnas en móvil, de borde a borde, 2 px entre columnas y 22 px entre filas.
+- **Perfil de tienda:** portada 16:7, logo cuadrado de 68 px montado sobre la portada, nombre,
+  ciudad, «seguidores · vendidas», bio, «Seguir» + Instagram, pestañas «En venta · Vendidas ·
+  Información» y la misma feed de tarjetas (no la cuadrícula de Instagram).
+- **Mi tienda:** la misma portada con el botón «Cambiar portada».
+- **Barra inferior:** Inicio · Siguiendo · Vender · Bolsa · Perfil.
+- **Avisos:** filas de texto simple. Sin cuadritos ni filetes de color a la izquierda.
 
 ## Pendiente
 
-- [ ] Confirmar con DevTools: la fuente de botones, el verde, el borde de la píldora secundaria y los tamaños reales.
-- [ ] **(humano)** Inter primero o Helvetica Neue primero.
-- [ ] **(humano)** Logotipo: Oswald (más Grailed) o Bebas Neue (el actual).
-- [ ] Prueba visual (tarjeta del feed, CTA, pestañas, título, nav) aprobada por el humano. Después,
-  los tokens pasan a `tailwind.config.ts`.
+- [ ] Versión de escritorio de inicio, prenda, tienda y pagar.
+- [ ] Pasar estos tokens a `tailwind.config.ts` (Etapa 2).

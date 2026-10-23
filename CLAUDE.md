@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Moda de segunda mano → tienda hoy (Viogi), marketplace estilo Grailed después. Next.js 14 App Router, TypeScript strict, Tailwind, next-intl, Supabase, Stripe Checkout Sessions.
+**rail**: marketplace social de moda de segunda mano (lógica de Grailed). Hoy una tienda dentro: Viogi. Diseño aprobado en `docs/design/prototipo-rail.html`. Next.js 14 App Router, TypeScript strict, Tailwind, next-intl, Supabase, Stripe Checkout Sessions.
 
 ## Qué leer
 

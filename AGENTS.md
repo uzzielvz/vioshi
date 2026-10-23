@@ -35,4 +35,4 @@ Rama `agent/L#-…` + PR a `main`. Nunca push/merge a `main`. Detalle: [`docs/ag
 
 ## Producto (resumen)
 
-Plataforma ≠ tienda Viogi. Mario dentro de Viogi (`owner`). Comisión 0 %. IVA incluido. Stripe Checkout Sessions. Marca por env. Registro de vendedores cerrado.
+Plataforma = **rail** (red social de moda de segunda mano) ≠ tienda Viogi. Mario dentro de Viogi (`owner`). Comisión 0 %. IVA incluido. Stripe Checkout Sessions. Marca por env. Registro de vendedores cerrado.

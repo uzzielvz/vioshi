@@ -12,10 +12,11 @@
 
 ## 1. Qué es
 
-Un **ecommerce de moda de segunda mano (streetwear y diseñador)** hecho en Next.js 14 + Supabase +
-Stripe, en producción en `vioshi.vercel.app`.
+**rail**: una plataforma de moda de segunda mano (streetwear y diseñador) que funciona como red
+social, hecha en Next.js 14 + Supabase + Stripe, en producción en `vioshi.vercel.app`. El nombre
+de la plataforma se decidió el 2026-10-23 y se configura por env (`NEXT_PUBLIC_BRAND_NAME=rail`).
 
-Hoy opera **una sola tienda: Viogi**. Es el negocio real de Uzziel, que antes vendía solo por
+Hoy opera **una sola tienda dentro de rail: Viogi**. Es el negocio real de Uzziel, que antes vendía solo por
 Instagram ([@viogi_](https://www.instagram.com/viogi_/)). Mario (socio) vende piezas **dentro** de
 Viogi. Su parte se separa con `products.owner` (`uzziel` | `mario`), no es una tienda aparte.
 
@@ -24,11 +25,15 @@ mientras alguien la paga.
 
 ## 2. Destino
 
-**Un marketplace de moda de segunda mano para México, con la experiencia de Grailed.** La
+**rail: un marketplace social de moda de segunda mano para México, con la lógica de Grailed.** La
 plataforma es la web; las tiendas viven dentro, y Viogi es la primera.
 
+Funciona como **red social** (decidido 2026-10-23): la gente sigue tiendas, marcas y búsquedas;
+la feed «Para ti» sale de lo que sigue; cada tienda tiene perfil con portada y seguidores; cada
+persona tiene su perfil con guardados y compras. Ver el prototipo en § 2 «Cómo se ve».
+
 Esto ya estaba congelado (FROZEN: "la web es la plataforma, Viogi es la primera tienda") y el
-humano lo reconfirmó el 2026-10-13. No se construye un segundo sitio ni un segundo codebase.
+humano lo reconfirmó el 2026-10-13 y el 2026-10-23. No se construye un segundo sitio ni un segundo codebase.
 
 Se llega por **puertas de producto**, no por fechas. El detalle está en [`agents/OPEN.md`](./agents/OPEN.md) § Puertas.
 
@@ -41,10 +46,15 @@ Se llega por **puertas de producto**, no por fechas. El detalle está en [`agent
 **Regla:** un agente no adelanta una fase porque el código sea fácil. Lo prohibido en Fase 1 está en
 FROZEN § "Prohibido en Fase 1".
 
-### Cómo se ve el destino (referencia Grailed)
+### Cómo se ve el destino
 
-Capturas en [`design/referencias/`](./design/referencias/). **No es una copia.** Se toma el
-lenguaje visual (sobre todo el **feed** y la **tipografía**) y se adaptan los flujos.
+**Diseño aprobado (2026-10-23): [`design/prototipo-rail.html`](./design/prototipo-rail.html).** Ábrelo en
+el navegador. Son 14 pantallas de teléfono: inicio, búsqueda, prenda, bolsa, pagar, pedido, perfil de
+tienda con portada, perfil de persona, siguiendo, actividad, entrar, intereses, mi tienda y subir
+prenda. Los valores (color, letra, componentes) están en [`design/TOKENS.md`](./design/TOKENS.md).
+
+Las capturas de Grailed en [`design/referencias/`](./design/referencias/) son solo referencia de
+estructura. **No es una copia**: las primeras pruebas que copiaban su tratamiento visual se descartaron.
 
 | Captura | Qué enseña | Cuándo aplica |
 |---|---|---|
@@ -261,16 +271,18 @@ Cada punto lleva evidencia en la lectura del 2026-10-13. Verifica contra el cód
 - **Talla** (decidido 2026-10-14): vuelve al formulario del admin como atributo `Talla`
   (`product_attributes`). Se reutiliza `saveAttributes`, que hoy está sin uso.
 
-### Etapa 2 — Sistema de diseño (referencia Grailed)
+### Etapa 2 — Sistema de diseño (prototipo rail)
 
-Objetivo: que se vea como la GUI objetivo y que cambiar el diseño sea editar un solo lugar.
+Objetivo: que la web se vea como [`design/prototipo-rail.html`](./design/prototipo-rail.html) y que
+cambiar el diseño sea editar un solo lugar.
 
-- **Tokens en `tailwind.config.ts`**, tomados de [`design/TOKENS.md`](./design/TOKENS.md):
-  color (azul `#0000FF` de acento, verde solo puntual), tipografía, tamaños, radios (incluido el
-  botón píldora) y bordes finos. Las fuentes se cargan con `next/font`, no con `@import`. Se eliminan
-  los `fontFamily` y `style={}` inline.
-- **Primitivas en `components/ui/`**: Button (sólido, contorno, píldora), Input, Tabs (píldoras),
-  ListRow, Badge y Card. Usan `clsx`.
+- **Tokens en `tailwind.config.ts`**, tomados de [`design/TOKENS.md`](./design/TOKENS.md): color
+  (azul `#1F2BFF` de acento), Inter con `next/font` (no `@import`), radios de 3 px y bordes finos.
+  Se eliminan los `fontFamily` y `style={}` inline.
+- **Primitivas en `components/ui/`**: Button (azul, contorno, suave; recto y en tipo oración),
+  Follow, Input, Tabs (subrayadas), ListRow, Badge (Apartada / Vendida) y Avatar (tienda cuadrado,
+  persona redondo). Usan `clsx`.
+- **Logo «rail»** en minúsculas con el punto de la i en azul. El nombre sale de `lib/brand.ts`.
 - **`ProductCard` estilo feed:**
   - foto grande de borde a borde, en 2 columnas en móvil;
   - debajo: **marca** (con tipo de prenda si cabe, truncado con «…») a la izquierda y **talla** a la derecha;
@@ -278,8 +290,10 @@ Objetivo: que se vea como la GUI objetivo y que cambiar el diseño sea editar un
   - Se mantienen los estados vendida y apartada, que se muestran distinto a propósito.
 - **Header** partido en piezas. Categorías **desde la tabla `categories`** (una sola fuente) y el
   input de búsqueda visual siempre montado.
-- **Home = feed.** Saludo si hay sesión ("Bienvenido, {nombre}"), secciones ("Lo nuevo",
-  "Para ti" cuando exista) y grid.
+- **Home = feed.** Pestañas «Para ti · Recientes · Drops», fila de novedades de lo que sigues
+  (círculos) y grid. Sin saludo tipo Grailed.
+- **La tarjeta de la feed no lleva medidas ni estado**: foto, marca + tipo, talla, precio y corazón.
+  Las medidas van dentro de la prenda (decidido 2026-10-23).
 - **Páginas reales** en lugar de placeholders:
   - envíos y devoluciones leen `settings` y `pickup_points`;
   - soporte con el contacto real;
@@ -294,7 +308,12 @@ Objetivo: que se vea como la GUI objetivo y que cambiar el diseño sea editar un
 
 La Fase 1 no se cierra al terminar esta etapa: se cierra cuando se cumple la puerta de OPEN § Puertas.
 
-- Wishlist real con corazón en la tarjeta y la ficha (localStorage; en DB si hay sesión).
+- Wishlist real («Guardados») con corazón en la tarjeta y la ficha (localStorage; en DB si hay sesión).
+- **Social básico (decidido 2026-10-23, antes era Fase 3):** seguir tiendas, marcas y búsquedas;
+  feed «Para ti» con lo que sigues; pantalla «Siguiendo»; «Actividad» (piezas nuevas de lo que
+  sigues, pedido listo, una pieza guardada se vendió); perfil de persona; perfil de tienda con
+  portada y seguidores. Necesita tablas nuevas (`follows`, portada en `stores`) con migración
+  numerada por el humano. **(humano: confirmar si entra antes o después de la Etapa 3 de compra)**
 - Búsqueda por marca, talla y tienda. Hoy solo busca en nombre, descripción y categoría.
 - Pedidos de invitado ligados a la cuenta por email. La libreta de direcciones se usa en checkout.
 - Detalle de pedido con estado de pago y nombre del punto de entrega, no su id.
@@ -327,9 +346,8 @@ la Etapa 1, porque el método de pago mal grabado afecta la conciliación.
 
 ### Etapa 5 — Fase 3
 
-Seguir diseñadores, vendedores y búsquedas (`01-follows.png`), feed personalizado, preferencia de
-departamento (`04-onboarding-preferencia.png`), ofertas, reviews, comisión automática, Skydropx y
-registro abierto.
+Ofertas, reviews, mensajes entre comprador y tienda (por decidir), comisión automática, Skydropx y
+registro abierto de tiendas. Seguir y la feed personalizada ya no esperan a esta fase (ver Etapa 3).
 
 ---
 
@@ -356,7 +374,10 @@ Respuestas que desbloquean etapas. Las de negocio de largo plazo siguen en [`age
 | # | Pregunta | Bloquea |
 |---|---|---|
 | 1 | ~~¿Acento de color?~~ **Decidido 2026-10-14:** azul de Grailed como acento principal (CTA de registro, acciones primarias). Verde solo para cosas muy puntuales (promos, confirmaciones). La base sigue en B/N | — |
-| 2 | ¿Qué tipografías? **Rumbo decidido 2026-10-14:** lo más parecido a Grailed sin perder las de la tienda actual. Propuesta en [`design/TOKENS.md`](./design/TOKENS.md): Inter + Kode Mono + Oswald o Bebas. Falta: Inter o Helvetica primero, qué logotipo, y la prueba visual aprobada | Etapa 2 |
+| 2 | ~~¿Qué tipografías?~~ **Decidido 2026-10-23** con el prototipo aprobado: Inter en todo; logo «rail» en minúsculas con el punto de la i azul. Se descartaron Kode Mono, Oswald, píldoras y etiquetas colgantes | — |
+| 10 | ~~Nombre de la plataforma~~ **Decidido 2026-10-23: rail.** Falta dominio, Instagram y registro en IMPI (OPEN). Ojo: «rail» está dentro de «Grailed»; conviene revisarlo en la búsqueda de IMPI | Lanzar |
+| 11 | ¿Mensajes entre comprador y tienda? ¿Ofertas (otro precio)? ¿Una persona puede tener seguidores o solo las tiendas? | Etapa 3–5 |
+| 12 | ¿Lo social (seguir, Para ti, actividad) va antes o después de terminar la compra (Etapa 3)? | Etapa 3 |
 | 3 | ~~¿La talla vuelve al formulario del admin?~~ **Decidido 2026-10-14: sí.** Vuelve como atributo `Talla` (FROZEN § Datos) | — |
 | 4 | ~~`public/products/*.png`~~ **Decidido 2026-10-14:** se conservan, pero se mueven fuera de `public/` (a `docs/archive/fotos/`), para que dejen de servirse públicamente. Nada del código las usa | — |
 | 5 | Políticas reales de envío, devolución y contacto (WhatsApp, correo) para escribir las páginas | Etapa 2 |
