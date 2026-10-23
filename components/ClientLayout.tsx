@@ -22,19 +22,21 @@ export function ClientLayout({
   userEmail?: string | null;
 }) {
   const path = getPathWithoutLocale(usePathname());
-  const isCheckout = path.includes('/checkout');
-  // Login and password screens are standalone; a signed-in profile keeps the shell.
-  const isAuth =
-    AUTH_PATHS.some((p) => path.startsWith(p)) || (path.replace(/\/$/, '') === '/account' && !userEmail);
-  const showBottomNav = !isCheckout && !isAuth;
+  const route = path.replace(/\/$/, '');
+  // The payment form, login and password screens run without the store shell
+  // (they bring their own bar). Order pages after paying keep it.
+  const isStandalone =
+    route === '/checkout' ||
+    AUTH_PATHS.some((p) => route.startsWith(p)) ||
+    (route === '/account' && !userEmail);
 
   return (
     // The bottom nav is fixed on phones; the padding keeps the footer visible above it.
-    <div className={clsx('flex min-h-screen flex-col', showBottomNav && 'pb-[60px] md:pb-0')}>
-      {!isAuth && <Header userEmail={userEmail ?? null} />}
-      <main className={clsx('flex-1', !isAuth && 'pt-14 md:pt-16')}>{children}</main>
-      {!isCheckout && !isAuth && <Footer />}
-      {showBottomNav && <BottomNav />}
+    <div className={clsx('flex min-h-screen flex-col', !isStandalone && 'pb-[60px] md:pb-0')}>
+      {!isStandalone && <Header userEmail={userEmail ?? null} />}
+      <main className={clsx('flex-1', !isStandalone && 'pt-14 md:pt-16')}>{children}</main>
+      {!isStandalone && <Footer />}
+      {!isStandalone && <BottomNav />}
       <CartDrawer />
     </div>
   );

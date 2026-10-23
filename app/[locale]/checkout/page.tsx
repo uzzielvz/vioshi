@@ -3,10 +3,11 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useLocaleContext } from '@/hooks/useLocaleContext';
-import { formatPrice } from '@/lib/formatters';
+import clsx from 'clsx';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLocaleContext } from '@/hooks/useLocaleContext';
+import { formatPrice } from '@/lib/formatters';
 import { useCart } from '@/store/cartStore';
 import {
   formatAvailabilityLabel,
@@ -15,11 +16,7 @@ import {
   toDateInputValue,
 } from '@/lib/pickup';
 import type { PickupPoint } from '@/types/delivery';
-import {
-  DELIVERY_METHODS,
-  EXPRESS_SHIPPING_COST,
-  STANDARD_SHIPPING_COST,
-} from '@/lib/constants';
+import { EXPRESS_SHIPPING_COST, STANDARD_SHIPPING_COST } from '@/lib/constants';
 import { lookupCP, type MexicoCPData } from '@/lib/mexico';
 import { loadStripe } from '@stripe/stripe-js';
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
@@ -30,11 +27,15 @@ import {
   cancelCheckoutAction,
   syncCartFromDbAction,
 } from './actions';
-import { brand } from '@/lib/brand';
+import { logCheckoutDebug } from '@/lib/stripe/formatPaymentError';
+import { CardIcon, ChevronIcon, LockIcon } from '@/components/ui/icons';
 import {
-  formatStripeClientError,
-  logCheckoutDebug,
-} from '@/lib/stripe/formatPaymentError';
+  buttonClass,
+  inputClass,
+  labelClass,
+  noteClass,
+  sectionLabelClass,
+} from '@/components/ui/styles';
 
 // ─── Stripe setup ────────────────────────────────────────────────────────────
 
@@ -60,26 +61,19 @@ function PasoDePago({
   cardOnly: boolean;
   onBack: () => void;
 }) {
-  const t = useTranslations('checkout');
+  const t = useTranslations('ui.checkout');
+  const tLegacy = useTranslations('checkout');
   const restante = useCuentaRegresiva(reservedUntil);
 
   return (
-    <div className="space-y-6">
+    <div className="grid gap-4">
       {/* Urgencia real, no inventada: la prenda está literalmente apartada. */}
-      <div className="border border-gray-200 bg-gray-50 px-4 py-3 space-y-1">
-        <p className="text-[11px] uppercase tracking-widest font-medium">
-          {t('unique_piece_title')}
-        </p>
-        <p className="text-[11px] text-gray-600 leading-relaxed">
-          {t('unique_piece_body', { tiempo: restante })}
-        </p>
+      <div className={noteClass}>
+        <b className="block text-[13.5px] font-semibold">{t('hold_title')}</b>
+        {t('hold_body', { time: restante })}
       </div>
 
-      {cardOnly && (
-        <p className="text-[10px] text-gray-500 leading-relaxed">
-          {t('card_only_notice')}
-        </p>
-      )}
+      {cardOnly && <p className="text-[12.5px] text-muted">{tLegacy('card_only_notice')}</p>}
 
       <div id="checkout-embebido">
         <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret }}>
@@ -87,11 +81,7 @@ function PasoDePago({
         </EmbeddedCheckoutProvider>
       </div>
 
-      <button
-        type="button"
-        onClick={onBack}
-        className="w-full text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors py-2"
-      >
+      <button type="button" onClick={onBack} className={buttonClass('soft', 'md', 'w-full')}>
         {t('back_to_details')}
       </button>
     </div>
@@ -100,104 +90,100 @@ function PasoDePago({
 
 /** Cuenta regresiva legible: "28 minutos", "2 horas", "mañana". */
 function useCuentaRegresiva(hasta: string): string {
+  const t = useTranslations('ui.checkout');
   const [texto, setTexto] = useState('');
 
   useEffect(() => {
     const calcular = () => {
       const ms = new Date(hasta).getTime() - Date.now();
-      if (ms <= 0) return 'unos momentos';
+      if (ms <= 0) return t('time_moments');
       const mins = Math.ceil(ms / 60000);
-      if (mins < 60) return `${mins} ${mins === 1 ? 'minuto' : 'minutos'}`;
+      if (mins < 60) return t('time_minutes', { count: mins });
       const horas = Math.round(mins / 60);
-      if (horas < 24) return `${horas} ${horas === 1 ? 'hora' : 'horas'}`;
-      const dias = Math.round(horas / 24);
-      return `${dias} ${dias === 1 ? 'día' : 'días'}`;
+      if (horas < 24) return t('time_hours', { count: horas });
+      return t('time_days', { count: Math.round(horas / 24) });
     };
     setTexto(calcular());
     const id = setInterval(() => setTexto(calcular()), 30_000);
     return () => clearInterval(id);
-  }, [hasta]);
+  }, [hasta, t]);
 
   return texto;
 }
 
-// ─── Shared primitive styles ────────────────────────────────────────────────
+// ─── Form primitives ─────────────────────────────────────────────────────────
 
-const INPUT =
-  'w-full py-3.5 border-b border-gray-200 bg-transparent focus:outline-none focus:border-black placeholder:text-gray-300 placeholder:text-[11px] placeholder:tracking-widest text-sm transition-colors duration-200';
-
-const INPUT_READONLY =
-  'w-full py-3.5 border-b border-gray-100 bg-transparent text-gray-400 text-sm cursor-not-allowed select-none';
-
-const SECTION_LABEL =
-  'text-[11px] uppercase tracking-widest text-black font-medium';
-
-// Custom select — wraps native <select> with a clean chevron
-function CustomSelect({
-  children,
-  className = '',
-  ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
   return (
-    <div className="relative border-b border-gray-200 focus-within:border-black transition-colors duration-200">
-      <select
-        className={`w-full py-3.5 bg-transparent appearance-none focus:outline-none text-sm pr-6 cursor-pointer ${className}`}
-        {...props}
-      >
-        {children}
-      </select>
-      <svg
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none text-gray-400"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-      </svg>
+    <div className="grid gap-1.5">
+      <label htmlFor={id} className={labelClass}>
+        {label}
+      </label>
+      {children}
     </div>
   );
 }
 
-// Custom radio card — replaces native radio with a minimal dot indicator
-function RadioCard({
-  checked,
-  label,
-  description,
-  onChange,
+function SelectInput({ className, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <div className="relative">
+      <select className={clsx(inputClass, 'cursor-pointer appearance-none pr-9', className)} {...props}>
+        {children}
+      </select>
+      <ChevronIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 rotate-90 text-muted" />
+    </div>
+  );
+}
+
+function FieldError({ children }: { children: React.ReactNode }) {
+  return (
+    <p data-error role="alert" className="rounded-btn border border-ink px-3 py-2.5 text-[13px] text-ink">
+      {children}
+    </p>
+  );
+}
+
+// Radio card from the prototype («.opt»): the checked one gets an ink border.
+function OptionCard({
   name,
   value,
+  checked,
+  onChange,
+  title,
+  description,
+  price,
+  nested = false,
 }: {
-  checked: boolean;
-  label: string;
-  description?: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   name: string;
   value: string;
+  checked: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  title: string;
+  description?: string;
+  price?: string;
+  nested?: boolean;
 }) {
   return (
-    <label className="flex items-center gap-3 py-3.5 border-b border-gray-100 cursor-pointer group hover:border-gray-300 transition-colors">
-      <span
-        className={`w-3.5 h-3.5 border rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
-          checked ? 'border-black' : 'border-gray-300 group-hover:border-gray-500'
-        }`}
-      >
-        {checked && <span className="w-1.5 h-1.5 rounded-full bg-black" />}
-      </span>
+    <label
+      className={clsx(
+        'grid cursor-pointer grid-cols-[18px_1fr_auto] items-start gap-2.5 rounded-btn border text-[13px]',
+        nested ? 'ml-6 px-3 py-2.5' : 'p-3',
+        checked ? 'border-ink ring-1 ring-inset ring-ink' : 'border-line'
+      )}
+    >
       <input
         type="radio"
         name={name}
         value={value}
         checked={checked}
         onChange={onChange}
-        className="sr-only"
+        className="mt-0.5 h-4 w-4 accent-accent"
       />
-      <div>
-        <span className="text-xs">{label}</span>
-        {description && (
-          <p className="text-[10px] text-gray-400 mt-0.5">{description}</p>
-        )}
-      </div>
+      <span className="min-w-0">
+        <b className="block font-semibold text-ink">{title}</b>
+        {description && <span className="text-[12px] text-muted">{description}</span>}
+      </span>
+      {price && <span className="font-semibold tabular-nums text-ink">{price}</span>}
     </label>
   );
 }
@@ -206,7 +192,6 @@ function RadioCard({
 
 interface CheckoutFormData {
   email: string;
-  emailNews: boolean;
   deliveryMethod: 'home' | 'pickup';
   country: string;
   firstName: string;
@@ -221,16 +206,18 @@ interface CheckoutFormData {
   pickupPointId: string;
   pickupDate: string;
   pickupTimeSlot: string;
-  saveInfo: boolean;
   agreeToTerms: boolean;
   shippingMethod: string;
 }
+
+type CheckoutSettings = Awaited<ReturnType<typeof getCheckoutSettingsAction>>;
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
   const router = useRouter();
   const t = useTranslations('checkout');
+  const tc = useTranslations('ui.checkout');
   const { locale } = useLocaleContext();
   const { cart: cartData, closeCart, updateShippingCost, replaceItems } = useCart();
   const cart = cartData.items;
@@ -239,8 +226,6 @@ export default function CheckoutPage() {
   const total = cartData.total;
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showShippingMethods, setShowShippingMethods] = useState(false);
-  const [showOrderSummary, setShowOrderSummary] = useState(false);
 
   // Stripe payment state
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -249,6 +234,8 @@ export default function CheckoutPage() {
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [reservedUntil, setReservedUntil] = useState<string | null>(null);
   const [cardOnly, setCardOnly] = useState(false);
+  // Threshold and hold windows come from /admin/settings; null until loaded.
+  const [checkoutSettings, setCheckoutSettings] = useState<CheckoutSettings | null>(null);
 
   const [cpData, setCpData] = useState<MexicoCPData | null>(null);
   const [cpLoading, setCpLoading] = useState(false);
@@ -303,6 +290,7 @@ export default function CheckoutPage() {
     getCheckoutSettingsAction().then((settings) => {
       if (cancelled) return;
       setHomeShippingMxn(settings.homeShippingMxn);
+      setCheckoutSettings(settings);
     });
     return () => {
       cancelled = true;
@@ -311,8 +299,7 @@ export default function CheckoutPage() {
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     email: '',
-    emailNews: true,
-    deliveryMethod: 'home',
+    deliveryMethod: 'pickup',
     country: 'MX',
     firstName: '',
     lastName: '',
@@ -326,7 +313,6 @@ export default function CheckoutPage() {
     pickupPointId: '',
     pickupDate: '',
     pickupTimeSlot: '',
-    saveInfo: false,
     agreeToTerms: false,
     shippingMethod: 'standard',
   });
@@ -421,14 +407,6 @@ export default function CheckoutPage() {
       ...(name === 'pickupPointId' ? { pickupDate: '' } : {}),
     };
     setFormData(updatedFormData);
-
-    if (['address', 'colonia', 'state', 'zipCode', 'deliveryMethod', 'pickupPointId'].includes(name)) {
-      const shouldShow =
-        updatedFormData.deliveryMethod === 'home'
-          ? !!(updatedFormData.address && updatedFormData.colonia && updatedFormData.state && updatedFormData.zipCode)
-          : !!updatedFormData.pickupPointId;
-      setShowShippingMethods(shouldShow);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -532,520 +510,481 @@ export default function CheckoutPage() {
 
   if (cart.length === 0) return null;
 
-  return (
-    <div
-      className="min-h-screen bg-white"
-      style={{ fontFamily: "var(--font-sans)" }}
-    >
+  const money = (amount: number) => formatPrice(amount, locale, false);
+  const pieceCount = cart.reduce((n, item) => n + item.quantity, 0);
+  const pickupAreas = pickupByMunicipality.map(([municipio]) => municipio).join(' · ');
+  const cheapestPickup = pickupPoints.length
+    ? Math.min(...pickupPoints.map((p) => p.additionalCost))
+    : null;
+  const isPickup = formData.deliveryMethod === 'pickup';
+  const cardOnlyByTotal = checkoutSettings ? total > checkoutSettings.cardOnlyThreshold : false;
+  const submitLabel = isProcessing ? tc('processing') : tc('continue', { total: money(total) });
+  const holdNote = checkoutSettings ? tc('hold_note', { minutes: checkoutSettings.cardReserveMinutes }) : null;
 
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); closeCart(); window.location.href = `/${locale}`; }}
-              className="text-base font-bold text-black hover:opacity-50 transition-opacity cursor-pointer"
-              style={{
-                fontFamily: "var(--font-sans)",
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
-              }}
-            >
-              {brand.name}
-            </button>
-            {/* Back to cart */}
-            <button
-              type="button"
-              onClick={() => { closeCart(); router.push(`/${locale}/cart`); }}
-              className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
-              aria-label={t('back_to_cart_aria')}
-            >
-              ← {t('back_to_cart_aria')}
-            </button>
-            {/* Locale switcher */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => { if (locale !== 'es') window.location.href = `/es/checkout`; }}
-                className={`text-[10px] uppercase tracking-widest transition-colors ${locale === 'es' ? 'text-black' : 'text-gray-300 hover:text-gray-500'}`}
-              >
-                ES
-              </button>
-              <span className="text-gray-200 text-[10px]">/</span>
-              <button
-                type="button"
-                onClick={() => { if (locale !== 'en') window.location.href = `/en/checkout`; }}
-                className={`text-[10px] uppercase tracking-widest transition-colors ${locale === 'en' ? 'text-black' : 'text-gray-300 hover:text-gray-500'}`}
-              >
-                EN
-              </button>
-            </div>
-          </div>
+  const deliveryLine = isPickup
+    ? selectedPickupPoint
+      ? tc('delivery_at', { place: selectedPickupPoint.name })
+      : tc('delivery')
+    : tc('home');
+  const deliveryValue = isPickup
+    ? selectedPickupPoint
+      ? selectedPickupPoint.additionalCost > 0
+        ? money(selectedPickupPoint.additionalCost)
+        : tc('free')
+      : tc('choose_point')
+    : money(shipping);
+
+  const legalLink = (chunks: React.ReactNode) => (
+    <Link href={`/${locale}/pages/legal`} className="text-ink underline underline-offset-2">
+      {chunks}
+    </Link>
+  );
+
+  return (
+    <div className="min-h-screen bg-paper pb-36 md:pb-16">
+      {/* The store header is hidden here: paying gets its own focused bar. */}
+      <header className="sticky top-0 z-40 border-b border-line bg-paper">
+        <div className="mx-auto grid h-14 max-w-[1100px] grid-cols-[1fr_auto_1fr] items-center px-4 md:h-16 md:px-8">
+          <button
+            type="button"
+            onClick={() => {
+              closeCart();
+              router.push(`/${locale}/cart`);
+            }}
+            className="inline-flex items-center gap-1 justify-self-start text-[13px] font-medium text-ink"
+            aria-label={tc('back')}
+          >
+            <ChevronIcon className="h-5 w-5 rotate-180" />
+            <span className="hidden md:inline">{tc('back')}</span>
+          </button>
+          <h1 className="text-[15px] font-semibold text-ink">{tc('title')}</h1>
+          <span className="inline-flex items-center gap-1.5 justify-self-end text-[12px] text-muted">
+            <LockIcon className="h-5 w-5 text-ink" />
+            <span className="hidden md:inline">{tc('secure')}</span>
+          </span>
         </div>
       </header>
 
-      <main className="pt-16">
-        <div className="max-w-7xl mx-auto lg:px-4 lg:py-12">
-          <div className="grid lg:grid-cols-2 lg:gap-20">
+      <div className="mx-auto max-w-[1100px] md:grid md:grid-cols-[minmax(0,1fr)_360px] md:items-start md:gap-12 md:px-8 md:pt-6">
+        <div className="px-4 md:px-0">
+          {clientSecret ? (
+            <section className="pt-4">
+              <h2 className={clsx(sectionLabelClass, 'pb-3')}>{tc('payment')}</h2>
+              <PasoDePago
+                key={clientSecret}
+                clientSecret={clientSecret}
+                reservedUntil={reservedUntil ?? new Date().toISOString()}
+                cardOnly={cardOnly}
+                onBack={() => {
+                  // Volver atrás libera la prenda: no tiene por qué
+                  // quedarse apartada mientras el cliente lo piensa.
+                  if (pendingOrderId) void cancelCheckoutAction(pendingOrderId);
+                  setClientSecret(null);
+                  setPendingOrderNumber(null);
+                  setPendingGuestToken(null);
+                  setPendingOrderId(null);
+                  setReservedUntil(null);
+                  isSubmittingRef.current = false;
+                }}
+              />
+            </section>
+          ) : (
+            <form id="checkout-form" onSubmit={handleSubmit} noValidate className="grid gap-2">
+              {/* Entrega */}
+              <section className="grid gap-2">
+                <h2 className={clsx(sectionLabelClass, 'pb-1 pt-4')}>{tc('delivery')}</h2>
 
-            {/* ── Left: Form ─────────────────────────────────────────── */}
-            <div className="order-2 lg:order-1 px-6 sm:px-8 lg:px-0 mt-10 lg:mt-0 pb-12 lg:pb-0">
-              <form id="checkout-form" onSubmit={handleSubmit} className="space-y-10 pb-24 lg:pb-0">
+                <OptionCard
+                  name="deliveryMethod"
+                  value="pickup"
+                  checked={isPickup}
+                  onChange={handleInputChange}
+                  title={tc('pickup')}
+                  description={pickupAreas || tc('pickup_desc')}
+                  price={
+                    cheapestPickup === null
+                      ? undefined
+                      : cheapestPickup > 0
+                        ? tc('from', { price: money(cheapestPickup) })
+                        : tc('free')
+                  }
+                />
 
-                {/* 01 Contact */}
-                <section>
-                  <div className="flex items-center justify-between mb-6 pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-3">
-                      <span className="text-[9px] text-gray-300 tracking-widest">01</span>
-                      <p className={SECTION_LABEL}>{t('contact')}</p>
-                    </div>
-                    <Link href={`/${locale}/account`} className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
-                      {t('sign_in')}
-                    </Link>
-                  </div>
-                  <div className="space-y-1">
-                    <input
-                      id="checkout-email"
-                      type="email"
-                      name="email"
-                      autoComplete="email"
-                      placeholder={t('email_placeholder')}
-                      required
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className={INPUT}
-                    />
-                    <label className="flex items-center gap-2.5 pt-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="emailNews"
-                        checked={formData.emailNews}
-                        onChange={handleInputChange}
-                        className="sr-only peer"
-                      />
-                      <span className="w-3.5 h-3.5 border border-gray-300 peer-checked:bg-black peer-checked:border-black flex items-center justify-center flex-shrink-0 transition-colors">
-                        {formData.emailNews && (
-                          <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </span>
-                      <span className="text-[11px] text-gray-400">{t('email_news')}</span>
-                    </label>
-                  </div>
-                </section>
-
-                {/* 02 Delivery */}
-                <section>
-                  <div className="flex items-center gap-3 mb-6 pt-4 border-t border-gray-100">
-                    <span className="text-[9px] text-gray-300 tracking-widest">02</span>
-                    <p className={SECTION_LABEL}>{t('delivery')}</p>
-                  </div>
-
-                  {/* Method selector */}
-                  <div className="mb-6">
-                    <RadioCard
-                      name="deliveryMethod"
-                      value="home"
-                      checked={formData.deliveryMethod === 'home'}
-                      onChange={handleInputChange}
-                      label={t('delivery_home')}
-                      description={t('delivery_home_desc')}
-                    />
-                    <RadioCard
-                      name="deliveryMethod"
-                      value="pickup"
-                      checked={formData.deliveryMethod === 'pickup'}
-                      onChange={handleInputChange}
-                      label={t('delivery_pickup')}
-                      description={t('delivery_pickup_desc')}
-                    />
-                  </div>
-
-                  {/* Home delivery fields */}
-                  {formData.deliveryMethod === 'home' && (
-                    <div className="space-y-1">
-                      <CustomSelect name="country" value={formData.country} onChange={handleInputChange}>
-                        <option value="MX">México</option>
-                        <option value="US">United States</option>
-                      </CustomSelect>
-
-                      <div className="grid grid-cols-2 gap-x-6">
-                        <input type="text" name="firstName" placeholder={t('first_name')} required value={formData.firstName} onChange={handleInputChange} className={INPUT} />
-                        <input type="text" name="lastName" placeholder={t('last_name')} required value={formData.lastName} onChange={handleInputChange} className={INPUT} />
-                      </div>
-
-                      <input type="text" name="address" placeholder={t('address')} required value={formData.address} onChange={handleInputChange} className={INPUT} />
-                      <input type="text" name="apartment" placeholder={t('apartment')} value={formData.apartment} onChange={handleInputChange} className={INPUT} />
-
-                      {/* CP → SEPOMEX */}
-                      <div className="relative">
-                        <input
-                          type="text"
-                          name="zipCode"
-                          placeholder={t('zip_code')}
-                          required
-                          maxLength={5}
-                          value={formData.zipCode}
-                          onChange={handleInputChange}
-                          className={INPUT}
-                        />
-                        {cpLoading && (
-                          <span className="absolute right-0 top-4 w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin" />
-                        )}
-                      </div>
-
-                      {/* Colonia — dropdown SEPOMEX */}
-                      {cpData && (
-                        <CustomSelect name="colonia" value={formData.colonia} onChange={handleInputChange} required>
-                          <option value="">{t('select_colonia')}</option>
-                          {cpData.colonias.map((c) => (
-                            <option key={c} value={c}>{c}</option>
+                {isPickup && (
+                  <div className="grid gap-2">
+                    {pickupPointsLoading ? (
+                      <p className="ml-6 text-[12.5px] text-muted">{tc('points_loading')}</p>
+                    ) : pickupByMunicipality.length === 0 ? (
+                      <p className="ml-6 text-[12.5px] text-ink">{tc('points_empty')}</p>
+                    ) : (
+                      pickupByMunicipality.map(([municipio, points]) => (
+                        <div key={municipio} role="radiogroup" aria-label={municipio} className="grid gap-2">
+                          {pickupByMunicipality.length > 1 && (
+                            <p className="ml-6 pt-1 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">
+                              {municipio}
+                            </p>
+                          )}
+                          {points.map((point) => (
+                            <OptionCard
+                              key={point.id}
+                              nested
+                              name="pickupPointId"
+                              value={point.id}
+                              checked={formData.pickupPointId === point.id}
+                              onChange={handleInputChange}
+                              title={point.name}
+                              description={[`${point.address}, ${point.city}`, point.availableHours]
+                                .filter(Boolean)
+                                .join(' · ')}
+                              price={point.additionalCost > 0 ? money(point.additionalCost) : tc('free')}
+                            />
                           ))}
-                        </CustomSelect>
-                      )}
-
-                      {/* Colonia fallback — texto libre */}
-                      {cpError && (
-                        <input type="text" name="colonia" placeholder={t('colonia')} required value={formData.colonia} onChange={handleInputChange} className={INPUT} />
-                      )}
-
-                      {/* Municipio + Estado — readonly auto-llenados */}
-                      {cpData && (
-                        <div className="grid grid-cols-2 gap-x-6">
-                          <div>
-                            <p className={`${SECTION_LABEL} pt-3 pb-1`}>{t('municipality')}</p>
-                            <input type="text" value={formData.municipio} readOnly tabIndex={-1} className={INPUT_READONLY} />
-                          </div>
-                          <div>
-                            <p className={`${SECTION_LABEL} pt-3 pb-1`}>{t('state')}</p>
-                            <input type="text" value={formData.state} readOnly tabIndex={-1} className={INPUT_READONLY} />
-                          </div>
                         </div>
-                      )}
+                      ))
+                    )}
 
-                      {/* Municipio + Estado fallback */}
-                      {cpError && (
-                        <div className="grid grid-cols-2 gap-x-6">
-                          <input type="text" name="municipio" placeholder={t('municipality')} value={formData.municipio} onChange={handleInputChange} className={INPUT} />
-                          <input type="text" name="state" placeholder={t('state')} value={formData.state} onChange={handleInputChange} className={INPUT} />
-                        </div>
-                      )}
+                    {formErrors.pickup && <FieldError>{formErrors.pickup}</FieldError>}
 
-                      <input type="tel" name="phone" placeholder={t('phone')} required value={formData.phone} onChange={handleInputChange} className={INPUT} />
-                      {formErrors.address && (
-                        <p data-error className="text-[10px] text-red-500 mt-2">{formErrors.address}</p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Pickup fields */}
-                  {formData.deliveryMethod === 'pickup' && (
-                    <div className="space-y-1">
-                      <div className="grid grid-cols-2 gap-x-6">
-                        <input type="text" name="firstName" placeholder={t('first_name')} required value={formData.firstName} onChange={handleInputChange} className={INPUT} />
-                        <input type="text" name="lastName" placeholder={t('last_name')} required value={formData.lastName} onChange={handleInputChange} className={INPUT} />
-                      </div>
-                      <input type="tel" name="phone" placeholder={t('phone')} required value={formData.phone} onChange={handleInputChange} className={INPUT} />
-
-                      <div className="pt-2">
-                        <p className={`${SECTION_LABEL} mb-3`}>{t('select_pickup_point_label')}</p>
-                        {pickupPointsLoading ? (
-                          <p className="text-[10px] text-gray-400 uppercase tracking-widest">
-                            {t('pickup_points_loading')}
-                          </p>
-                        ) : pickupByMunicipality.length === 0 ? (
-                          <p className="text-[10px] text-red-500">{t('pickup_points_empty')}</p>
-                        ) : (
-                          <CustomSelect name="pickupPointId" value={formData.pickupPointId} onChange={handleInputChange} required>
-                            <option value="">{t('select_pickup_point_placeholder')}</option>
-                            {pickupByMunicipality.map(([municipio, points]) => (
-                              <optgroup key={municipio} label={municipio.toUpperCase()}>
-                                {points.map((point) => (
-                                  <option key={point.id} value={point.id}>
-                                    {point.name}
-                                    {point.additionalCost > 0
-                                      ? ` (+${formatPrice(point.additionalCost, locale)})`
-                                      : ''}
-                                  </option>
-                                ))}
-                              </optgroup>
-                            ))}
-                          </CustomSelect>
+                    {selectedPickupPoint && (
+                      <div className="ml-6 grid gap-2.5 pt-1">
+                        {pickupAvailabilityLabel && (
+                          <p className="text-[12.5px] text-muted">{pickupAvailabilityLabel}</p>
                         )}
-                        {formErrors.pickup && (
-                          <p data-error className="text-[10px] text-red-500 mt-2">{formErrors.pickup}</p>
-                        )}
-                      </div>
-
-                      {formData.pickupPointId && selectedPickupPoint && (
-                        <div className="pt-4 pl-1 space-y-0.5">
-                          <p className="text-[11px] font-medium">{selectedPickupPoint.name}</p>
-                          <p className="text-[10px] text-gray-400">
-                            {selectedPickupPoint.address}, {selectedPickupPoint.city},{' '}
-                            {selectedPickupPoint.state}
-                          </p>
-                          <p className="text-[10px] text-gray-400">{pickupAvailabilityLabel}</p>
-                          {selectedPickupPoint.availableHours && (
-                            <p className="text-[10px] text-gray-400">{selectedPickupPoint.availableHours}</p>
-                          )}
-                          {selectedPickupPoint.isDropoff && (
-                            <p className="text-[10px] text-gray-500 uppercase tracking-widest">
-                              {t('pickup_dropoff_hub')}
-                            </p>
-                          )}
-                          {selectedPickupPoint.additionalCost > 0 && (
-                            <p className="text-[10px] text-gray-400">
-                              {t('cost')} {formatPrice(selectedPickupPoint.additionalCost, locale)}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      {formData.pickupPointId && (
-                        <div className="grid grid-cols-2 gap-x-6 pt-2">
-                          <div>
-                            <p className={`${SECTION_LABEL} mb-3`}>{t('pickup_date_label')}</p>
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <Field id="pickupDate" label={tc('pickup_date')}>
                             <input
+                              id="pickupDate"
                               type="date"
                               name="pickupDate"
                               value={formData.pickupDate}
                               onChange={handleInputChange}
                               min={pickupMinDate}
-                              className={INPUT}
+                              className={inputClass}
                             />
-                          </div>
-                          <div>
-                            <p className={`${SECTION_LABEL} mb-3`}>{t('pickup_time_label')}</p>
-                            <CustomSelect name="pickupTimeSlot" value={formData.pickupTimeSlot} onChange={handleInputChange}>
-                              <option value="">{t('pickup_time_any')}</option>
-                              <option value="morning">{t('pickup_time_morning')}</option>
-                              <option value="afternoon">{t('pickup_time_afternoon')}</option>
-                              <option value="evening">{t('pickup_time_evening')}</option>
-                            </CustomSelect>
-                          </div>
+                          </Field>
+                          <Field id="pickupTimeSlot" label={tc('pickup_time')}>
+                            <SelectInput
+                              id="pickupTimeSlot"
+                              name="pickupTimeSlot"
+                              value={formData.pickupTimeSlot}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">{tc('time_any')}</option>
+                              <option value="morning">{tc('time_morning')}</option>
+                              <option value="afternoon">{tc('time_afternoon')}</option>
+                              <option value="evening">{tc('time_evening')}</option>
+                            </SelectInput>
+                          </Field>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </section>
-
-                {/* 03 Shipping method */}
-                <section>
-                  <div className="flex items-center gap-3 mb-6 pt-4 border-t border-gray-100">
-                    <span className="text-[9px] text-gray-300 tracking-widest">03</span>
-                    <p className={SECTION_LABEL}>{t('shipping_method')}</p>
+                      </div>
+                    )}
                   </div>
-                  {!showShippingMethods ? (
-                    <p className="text-[11px] text-gray-300 tracking-wide">{t('shipping_address_required')}</p>
-                  ) : (
-                    <>
-                      <RadioCard
+                )}
+
+                <OptionCard
+                  name="deliveryMethod"
+                  value="home"
+                  checked={!isPickup}
+                  onChange={handleInputChange}
+                  title={tc('home')}
+                  description={tc('home_desc')}
+                  price={tc('from', { price: money(homeShippingMxn) })}
+                />
+
+                {!isPickup && (
+                  <div className="grid gap-3 pt-1">
+                    <div className="grid gap-2">
+                      <OptionCard
+                        nested
                         name="shippingMethod"
                         value="standard"
                         checked={formData.shippingMethod === 'standard'}
                         onChange={handleInputChange}
-                        label={`${t('shipping_standard')} — ${formatPrice(homeShippingMxn, locale)}`}
+                        title={tc('shipping_standard')}
+                        price={money(homeShippingMxn)}
                       />
-                      <RadioCard
+                      <OptionCard
+                        nested
                         name="shippingMethod"
                         value="express"
                         checked={formData.shippingMethod === 'express'}
                         onChange={handleInputChange}
-                        label={`${t('shipping_express')} — ${formatPrice(EXPRESS_SHIPPING_COST, locale)}`}
+                        title={tc('shipping_express')}
+                        price={money(EXPRESS_SHIPPING_COST)}
                       />
-                    </>
-                  )}
-                </section>
+                    </div>
 
-                {/* 04 Payment */}
-                <section>
-                  <div className="flex items-center gap-3 mb-6 pt-4 border-t border-gray-100">
-                    <span className="text-[9px] text-gray-300 tracking-widest">04</span>
-                    <p className={SECTION_LABEL}>{t('payment')}</p>
+                    <Field id="country" label={tc('country')}>
+                      <SelectInput id="country" name="country" value={formData.country} onChange={handleInputChange}>
+                        <option value="MX">México</option>
+                        <option value="US">United States</option>
+                      </SelectInput>
+                    </Field>
+
+                    <div className="grid grid-cols-[120px_1fr] gap-2.5">
+                      <Field id="zipCode" label={tc('zip')}>
+                        <div className="relative">
+                          <input
+                            id="zipCode"
+                            type="text"
+                            name="zipCode"
+                            inputMode="numeric"
+                            autoComplete="postal-code"
+                            maxLength={5}
+                            required
+                            value={formData.zipCode}
+                            onChange={handleInputChange}
+                            className={inputClass}
+                          />
+                          {cpLoading && (
+                            <span className="absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin rounded-full border border-muted border-t-transparent" />
+                          )}
+                        </div>
+                      </Field>
+
+                      {cpData && (
+                        <Field id="colonia" label={tc('colonia')}>
+                          <SelectInput
+                            id="colonia"
+                            name="colonia"
+                            value={formData.colonia}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">{tc('select_colonia')}</option>
+                            {cpData.colonias.map((c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                          </SelectInput>
+                        </Field>
+                      )}
+
+                      {cpError && (
+                        <Field id="colonia" label={tc('colonia')}>
+                          <input
+                            id="colonia"
+                            type="text"
+                            name="colonia"
+                            required
+                            value={formData.colonia}
+                            onChange={handleInputChange}
+                            className={inputClass}
+                          />
+                        </Field>
+                      )}
+                    </div>
+
+                    {(cpData || cpError) && (
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <Field id="municipio" label={tc('municipality')}>
+                          <input
+                            id="municipio"
+                            type="text"
+                            name="municipio"
+                            value={formData.municipio}
+                            onChange={handleInputChange}
+                            disabled={Boolean(cpData)}
+                            className={inputClass}
+                          />
+                        </Field>
+                        <Field id="state" label={tc('state')}>
+                          <input
+                            id="state"
+                            type="text"
+                            name="state"
+                            value={formData.state}
+                            onChange={handleInputChange}
+                            disabled={Boolean(cpData)}
+                            className={inputClass}
+                          />
+                        </Field>
+                      </div>
+                    )}
+
+                    <Field id="address" label={tc('street')}>
+                      <input
+                        id="address"
+                        type="text"
+                        name="address"
+                        autoComplete="address-line1"
+                        required
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        className={inputClass}
+                      />
+                    </Field>
+                    <Field id="apartment" label={tc('apartment')}>
+                      <input
+                        id="apartment"
+                        type="text"
+                        name="apartment"
+                        autoComplete="address-line2"
+                        value={formData.apartment}
+                        onChange={handleInputChange}
+                        className={inputClass}
+                      />
+                    </Field>
+
+                    {formErrors.address && <FieldError>{formErrors.address}</FieldError>}
                   </div>
+                )}
+              </section>
 
-                  {clientSecret ? (
-                    <PasoDePago
-                      key={clientSecret}
-                      clientSecret={clientSecret}
-                      reservedUntil={reservedUntil ?? new Date().toISOString()}
-                      cardOnly={cardOnly}
-                      onBack={() => {
-                        // Volver atrás libera la prenda: no tiene por qué
-                        // quedarse apartada mientras el cliente lo piensa.
-                        if (pendingOrderId) void cancelCheckoutAction(pendingOrderId);
-                        setClientSecret(null);
-                        setPendingOrderNumber(null);
-                        setPendingGuestToken(null);
-                        setPendingOrderId(null);
-                        setReservedUntil(null);
-                        isSubmittingRef.current = false;
-                      }}
+              {/* Contacto */}
+              <section className="grid gap-3">
+                <h2 className={clsx(sectionLabelClass, 'pt-5')}>{tc('contact')}</h2>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Field id="firstName" label={tc('first_name')}>
+                    <input
+                      id="firstName"
+                      type="text"
+                      name="firstName"
+                      autoComplete="given-name"
+                      required
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      className={inputClass}
                     />
-                  ) : (
-                    <p className="text-[11px] text-gray-300 tracking-wide">
-                      {t('payment_enter_details')}
-                    </p>
-                  )}
-                </section>
-
-                {/* Terms + submit — only shown before Stripe payment step */}
-                {!clientSecret && <section className="space-y-5 pt-4 border-t border-gray-100">
-                  <label className="flex items-center gap-2.5 cursor-pointer">
-                    <input type="checkbox" name="saveInfo" checked={formData.saveInfo} onChange={handleInputChange} className="sr-only peer" />
-                    <span className="w-3.5 h-3.5 border border-gray-300 peer-checked:bg-black peer-checked:border-black flex items-center justify-center flex-shrink-0 transition-colors">
-                      {formData.saveInfo && (
-                        <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </span>
-                    <span className="text-[11px] text-gray-400">{t('save_info_title')}</span>
-                  </label>
-
-                  <label className="flex items-start gap-2.5 cursor-pointer">
-                    <input type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleInputChange} required className="sr-only peer" />
-                    <span className="w-3.5 h-3.5 mt-0.5 border border-gray-300 peer-checked:bg-black peer-checked:border-black flex items-center justify-center flex-shrink-0 transition-colors">
-                      {formData.agreeToTerms && (
-                        <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </span>
-                    <span className="text-[11px] text-gray-400 leading-relaxed">
-                      {t('terms_confirmation')}{' '}
-                      <Link href={`/${locale}/pages/legal`} className="underline underline-offset-2 text-black">{t('terms_and_conditions')}</Link>
-                      {' '}{t('and')}{' '}
-                      <Link href={`/${locale}/pages/legal`} className="underline underline-offset-2 text-black">{t('privacy_policy')}</Link>.
-                    </span>
-                  </label>
-                  {formErrors.terms && (
-                    <p data-error className="text-[10px] text-red-500 -mt-3">{formErrors.terms}</p>
-                  )}
-
-                  {formErrors.general && (
-                    <div className="bg-red-50 border border-red-200 px-4 py-3">
-                      <p className="text-[11px] text-red-600">{formErrors.general}</p>
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={isProcessing || !formData.agreeToTerms}
-                    className="w-full bg-black text-white py-4 text-[12px] uppercase tracking-widest font-medium hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
-                  >
-                    {isProcessing ? t('processing') : t('continue_to_payment')}
-                  </button>
-                </section>}
-
-              </form>
-            </div>
-
-            {/* ── Right: Order Summary ────────────────────────────────── */}
-            <div className="order-1 lg:order-2 lg:sticky lg:top-24 lg:h-fit">
-
-              {/* Mobile toggle */}
-              <button
-                onClick={() => setShowOrderSummary(!showOrderSummary)}
-                className="lg:hidden w-full flex items-center justify-between px-6 py-4 border-b border-gray-100"
-              >
-                <span className="text-[11px] uppercase tracking-widest text-gray-500">{t('order_summary')}</span>
-                <div className="flex items-center gap-3">
-                  <span className="text-lg font-light">{formatPrice(total, locale)}</span>
-                  <svg className={`w-3 h-3 text-gray-400 transition-transform ${showOrderSummary ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
+                  </Field>
+                  <Field id="lastName" label={tc('last_name')}>
+                    <input
+                      id="lastName"
+                      type="text"
+                      name="lastName"
+                      autoComplete="family-name"
+                      required
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      className={inputClass}
+                    />
+                  </Field>
                 </div>
-              </button>
+                <Field id="phone" label={tc('phone')}>
+                  <input
+                    id="phone"
+                    type="tel"
+                    name="phone"
+                    autoComplete="tel"
+                    required
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className={inputClass}
+                  />
+                </Field>
+                <Field id="checkout-email" label={tc('email')}>
+                  <input
+                    id="checkout-email"
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    required
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className={inputClass}
+                  />
+                </Field>
+              </section>
 
-              <div className={`${showOrderSummary ? 'block' : 'hidden'} lg:block px-6 py-6 lg:p-0 space-y-8`}>
+              {/* Pago */}
+              <section className="grid gap-2">
+                <h2 className={clsx(sectionLabelClass, 'pt-5')}>{tc('payment')}</h2>
+                <p className="flex items-center gap-2.5 text-[14px] font-medium text-ink">
+                  <CardIcon className="h-5 w-5" />
+                  {cardOnlyByTotal ? tc('pay_methods_card') : tc('pay_methods_all')}
+                </p>
+                {checkoutSettings && (
+                  <p className={noteClass}>
+                    {cardOnlyByTotal
+                      ? tc('pay_note_card_only', { threshold: money(checkoutSettings.cardOnlyThreshold) })
+                      : tc('pay_note_all', { hours: checkoutSettings.voucherHours })}
+                  </p>
+                )}
+              </section>
 
-                {/* Items */}
-                <div className="space-y-5">
-                  {cart.map((item) => (
-                    <div key={item.id} className="flex gap-4">
-                      <div className="relative w-16 h-16 flex-shrink-0 bg-gray-50 overflow-hidden">
-                        <Image src={item.image} alt={item.productName} fill className="object-contain" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] uppercase tracking-wide truncate">{item.productName}</p>
-                        <p className="text-[10px] text-gray-300 uppercase mt-0.5">
-                          {[item.color, item.size].filter(Boolean).join(' / ')}
-                        </p>
-                        <p className="text-[10px] text-gray-300 mt-0.5">× {item.quantity}</p>
-                      </div>
-                      <p className="text-[11px] text-gray-500 flex-shrink-0">{formatPrice(item.price * item.quantity, locale)}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Totals */}
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-[11px] uppercase tracking-widest text-gray-500">{t('subtotal')}</span>
-                    <span className="text-[12px]">{formatPrice(subtotal, locale)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[11px] uppercase tracking-widest text-gray-500">
-                      {formData.deliveryMethod === 'home' ? t('shipping_label') : t('pickup_cost_label')}
-                    </span>
-                    <span className="text-[10px] text-gray-400">
-                      {formData.deliveryMethod === 'home' ? (
-                        showShippingMethods ? formatPrice(shipping, locale) : t('complete_address')
-                      ) : (
-                        formData.pickupPointId && selectedPickupPoint
-                          ? selectedPickupPoint.additionalCost > 0 ? formatPrice(selectedPickupPoint.additionalCost, locale) : t('free')
-                          : t('select_point')
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-baseline pt-4 border-t border-gray-100">
-                    <span className="text-[10px] uppercase tracking-widest">{t('total')}</span>
-                    <span className="text-xl font-light">{formatPrice(total, locale)}</span>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-          </div>
+              <section className="grid gap-3 pt-4">
+                <label className="flex cursor-pointer items-start gap-2.5 text-[13px] text-ink">
+                  <input
+                    type="checkbox"
+                    name="agreeToTerms"
+                    checked={formData.agreeToTerms}
+                    onChange={handleInputChange}
+                    className="mt-0.5 h-4 w-4 flex-none accent-accent"
+                  />
+                  <span>{tc.rich('terms', { terms: legalLink, privacy: legalLink })}</span>
+                </label>
+                {formErrors.terms && <FieldError>{formErrors.terms}</FieldError>}
+                {formErrors.general && <FieldError>{formErrors.general}</FieldError>}
+              </section>
+            </form>
+          )}
         </div>
-      </main>
 
-      {/* Mobile sticky submit bar — hidden once Stripe Payment Element is shown */}
+        {/* Resumen */}
+        <aside className="mt-6 border-t border-line px-4 pt-4 md:sticky md:top-24 md:mt-0 md:rounded-btn md:border md:p-5">
+          <h2 className={sectionLabelClass}>{tc('summary')}</h2>
+          <ul className="mt-3 grid gap-3">
+            {cart.map((item) => (
+              <li key={item.id} className="flex items-center gap-3">
+                <div className="relative h-16 w-12 flex-none overflow-hidden bg-carton">
+                  <Image src={item.image} alt="" fill sizes="48px" className="object-cover mix-blend-multiply" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-semibold text-ink">{item.productName}</p>
+                  {item.size && <p className="text-[12px] text-muted">{tc('size', { size: item.size })}</p>}
+                </div>
+                <p className="text-[13px] font-semibold tabular-nums text-ink">
+                  {money(item.price * item.quantity)}
+                </p>
+              </li>
+            ))}
+          </ul>
+          <dl className="mt-4 grid gap-1.5 border-t border-line pt-3 text-[13.5px]">
+            <div className="flex justify-between gap-3">
+              <dt>{tc('pieces', { count: pieceCount })}</dt>
+              <dd className="tabular-nums">{money(subtotal)}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="min-w-0">{deliveryLine}</dt>
+              <dd className="flex-none tabular-nums">{deliveryValue}</dd>
+            </div>
+            <div className="mt-1 flex justify-between gap-3 border-t border-line pt-2 text-[15px] font-bold">
+              <dt>{tc('total')}</dt>
+              <dd className="tabular-nums">{money(total)}</dd>
+            </div>
+          </dl>
+
+          {!clientSecret && (
+            <div className="mt-4 hidden gap-2 md:grid">
+              <button
+                type="submit"
+                form="checkout-form"
+                disabled={isProcessing}
+                className={buttonClass('primary', 'md', 'w-full')}
+              >
+                {submitLabel}
+              </button>
+              {holdNote && <p className="text-center text-[11.5px] text-muted">{holdNote}</p>}
+            </div>
+          )}
+        </aside>
+      </div>
+
+      {/* Mobile dock: hidden once Stripe takes over */}
       {!clientSecret && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 px-6 py-4">
+        <div className="fixed inset-x-0 bottom-0 z-40 grid gap-2 border-t border-line bg-paper px-3.5 pb-[max(12px,env(safe-area-inset-bottom))] pt-2.5 md:hidden">
           <button
             type="submit"
             form="checkout-form"
-            disabled={isProcessing || !formData.agreeToTerms}
-            className="w-full bg-black text-white py-4 text-[12px] uppercase tracking-widest font-medium hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+            disabled={isProcessing}
+            className={buttonClass('primary', 'md', 'w-full')}
           >
-            {isProcessing ? t('processing') : t('continue_to_payment')}
+            {submitLabel}
           </button>
+          {holdNote && <p className="text-center text-[11.5px] text-muted">{holdNote}</p>}
         </div>
       )}
-
-      {/* Footer */}
-      <footer className="border-t border-gray-100 py-8 mt-12">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex flex-wrap gap-x-8 gap-y-2">
-            {[
-              { href: `/${locale}/pages/shipping-payments-returns`, label: t('footer_shipping') },
-              { href: `/${locale}/pages/locaciones`, label: t('footer_pickup_points') },
-              { href: `/${locale}/pages/legal`, label: t('footer_privacy') },
-              { href: `/${locale}/pages/legal`, label: t('footer_terms') },
-            ].map(({ href, label }) => (
-              <Link key={label} href={href} className="text-[9px] uppercase tracking-widest text-gray-300 hover:text-black transition-colors">
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </footer>
-
     </div>
   );
 }
