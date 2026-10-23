@@ -589,7 +589,7 @@ export default function CheckoutPage() {
               />
             </section>
           ) : (
-            <form id="checkout-form" onSubmit={handleSubmit} noValidate className="grid gap-2">
+            <form id="checkout-form" onSubmit={handleSubmit} className="grid gap-2">
               {/* Entrega */}
               <section className="grid gap-2">
                 <h2 className={clsx(sectionLabelClass, 'pb-1 pt-4')}>{tc('delivery')}</h2>
