@@ -49,7 +49,8 @@ export default function ProductCard({
   const sold = estado === "vendida";
   const reserved = estado === "apartada";
 
-  const typeLabel = garmentType
+  // "otro" is an internal bucket, not something a buyer should read on the card.
+  const typeLabel = garmentType && garmentType !== "otro"
     ? (locale === "en" ? GARMENT_TYPE_LABELS_EN : GARMENT_TYPE_LABELS)[garmentType]
     : undefined;
   const title = brand?.name

@@ -165,7 +165,7 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
             )}
           </div>
 
-          <div className="hidden md:grid md:grid-cols-2 md:gap-1.5">
+          <div className={clsx("hidden md:grid md:gap-1.5", galleryImages.length > 1 ? "md:grid-cols-2" : "md:max-w-[560px] md:grid-cols-1")}>
             {galleryImages.map((img, index) => (
               <div key={index} className="relative aspect-[3/4] overflow-hidden bg-carton">
                 {img ? (

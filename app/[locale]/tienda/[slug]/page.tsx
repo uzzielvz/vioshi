@@ -57,7 +57,7 @@ export default async function StorePage({ params }: PageProps) {
 
   return (
     <div className="bg-paper">
-      <div className="relative aspect-[16/7] overflow-hidden bg-carton">
+      <div className="relative aspect-[16/7] overflow-hidden bg-carton md:aspect-[16/5]">
         {covers.length > 0 && (
           <div
             className={
