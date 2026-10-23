@@ -3,7 +3,7 @@
 import { useFormState, useFormStatus } from 'react-dom'
 import { updateSettingsAction } from '../actions'
 
-const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
+const font = { fontFamily: "var(--font-sans)" }
 
 export type Settings = {
   card_only_threshold_mxn: number

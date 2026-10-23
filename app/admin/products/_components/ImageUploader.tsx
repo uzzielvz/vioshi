@@ -4,7 +4,7 @@ import Image from 'next/image'
 
 type ExistingImage = { id: string; url: string; is_primary: boolean }
 
-const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
+const font = { fontFamily: "var(--font-sans)" }
 
 export default function ImageUploader({ existingImages = [] }: { existingImages?: ExistingImage[] }) {
   const inputRef = useRef<HTMLInputElement>(null)

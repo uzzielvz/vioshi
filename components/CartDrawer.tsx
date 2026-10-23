@@ -1,295 +1,114 @@
 "use client";
 
-import { useCart } from "@/store/cartStore";
-import { useTranslations } from 'next-intl';
-import { useLocaleContext } from '@/hooks/useLocaleContext';
-import { formatPrice } from '@/lib/formatters';
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useCart } from "@/store/cartStore";
+import { useLocaleContext } from "@/hooks/useLocaleContext";
+import { formatPrice } from "@/lib/formatters";
+import { CloseIcon } from "@/components/ui/icons";
 
 export default function CartDrawer() {
-  const { cart, isCartOpen, closeCart, updateQuantity, removeItem } = useCart();
-  const t = useTranslations('cart');
+  const { cart, isCartOpen, closeCart, removeItem } = useCart();
+  const t = useTranslations("ui.bag");
+  const tNav = useTranslations("ui.nav");
   const { locale } = useLocaleContext();
 
   if (!isCartOpen) return null;
 
+  const count = cart.items.length;
+  const totalLabel = formatPrice(cart.subtotal, locale, false);
+
   return (
     <>
-      {/* OVERLAY GRIS - Click para cerrar con cursor X */}
-      <div
+      <button
+        type="button"
+        aria-label={tNav("close")}
         onClick={closeCart}
-        className="fixed inset-0 bg-black bg-opacity-40 z-40 search-overlay-cursor"
-        style={{ cursor: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M18 6L6 18M6 6l12 12' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E\") 12 12, pointer" }}
+        className="fixed inset-0 z-40 bg-ink/40"
       />
 
-      {/* CART DRAWER */}
-      <div
-        className="fixed top-0 right-0 h-full w-full md:w-[540px] bg-white z-50 shadow-2xl flex flex-col animate-slide-in"
-      >
-        {/* HEADER */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200">
-          <h2
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '11px',
-              fontWeight: 800,
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase'
-            }}
-          >
-            {t('title')}
-          </h2>
-          <button
-            onClick={closeCart}
-            className="text-black hover:opacity-60 transition-opacity duration-200"
-            style={{
-              fontSize: '28px',
-              lineHeight: '1',
-              fontWeight: '300'
-            }}
-          >
-            ×
-          </button>
+      <div className="fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-paper shadow-2xl animate-slide-in md:w-[420px]">
+        <div className="flex h-14 flex-none items-center justify-between border-b border-line px-3.5">
+          <h2 className="text-[20px] font-bold tracking-[-0.015em] text-ink">{t("title")}</h2>
+          <div className="flex items-center gap-4">
+            {count > 0 && <span className="text-[14px] font-semibold text-muted">{t("count", { count })}</span>}
+            <button type="button" onClick={closeCart} aria-label={tNav("close")} className="text-ink">
+              <CloseIcon className="h-[21px] w-[21px]" />
+            </button>
+          </div>
         </div>
 
-        {/* CART ITEMS */}
-        <div className="flex-1 overflow-y-auto px-8 py-8">
-          {cart.items.length === 0 ? (
-            <div className="flex flex-col flex-1">
-              <p
-                className="text-center text-black py-8"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase'
-                }}
+        <div className="flex-1 overflow-y-auto">
+          {count === 0 ? (
+            <div className="grid justify-items-center gap-3 px-6 py-16 text-center">
+              <p className="text-[19px] font-bold tracking-[-0.01em] text-ink">{t("empty")}</p>
+              <Link
+                href={`/${locale}`}
+                onClick={closeCart}
+                className="text-[14px] font-semibold text-accent"
               >
-                {t('empty')}
-              </p>
-              <p
-                className="text-center"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '10px',
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase',
-                  lineHeight: 1.5,
-                  color: '#666'
-                }}
-              >
-                {t('free_shipping_note')}
-              </p>
+                {t("empty_cta")}
+              </Link>
             </div>
           ) : (
-            <div className="space-y-8">
+            <ul>
               {cart.items.map((item) => (
-                <div key={item.id} className="flex gap-6">
-                  {/* IMAGEN */}
-                  <div className="w-32 h-32 flex-shrink-0 bg-gray-100 relative">
-                    {item.image && (
+                <li key={item.id} className="flex gap-3 border-b border-line px-3.5 py-3">
+                  <Link
+                    href={`/${locale}/products/${item.slug || item.productId}`}
+                    onClick={closeCart}
+                    className="relative h-20 w-16 flex-none overflow-hidden bg-carton"
+                  >
+                    {item.image ? (
                       <Image
                         src={item.image}
                         alt={item.productName}
                         fill
-                        className="object-cover"
+                        className="object-cover mix-blend-multiply"
+                        sizes="64px"
                       />
-                    )}
+                    ) : null}
+                  </Link>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-semibold text-ink">{item.productName}</p>
+                    {item.size ? (
+                      <p className="text-[12.5px] text-muted">{t("size", { size: item.size })}</p>
+                    ) : null}
                   </div>
-
-                  {/* INFO */}
-                  <div className="flex-1 flex flex-col">
-                    <div className="flex-1">
-                      <h3
-                        style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                          fontSize: '11px',
-                          fontWeight: 800,
-                          letterSpacing: '0.02em',
-                          textTransform: 'uppercase',
-                          marginBottom: '6px'
-                        }}
-                      >
-                        {item.productName}
-                      </h3>
-                      <p
-                        style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                          fontSize: '11px',
-                          letterSpacing: '0.02em',
-                          color: '#666',
-                          textTransform: 'uppercase',
-                          marginBottom: '8px'
-                        }}
-                      >
-                        {item.color} / {item.size}
-                      </p>
-                      <p
-                        style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          letterSpacing: '0.02em'
-                        }}
-                      >
-                        {formatPrice(item.price, locale)}
-                      </p>
-                    </div>
-
-                    {/* QUANTITY CONTROLS */}
-                    <div className="flex items-center gap-2 mt-4">
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="w-10 h-10 border border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors duration-200"
-                        style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                          fontSize: '18px',
-                          fontWeight: 300
-                        }}
-                      >
-                        −
-                      </button>
-                      <input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => {
-                          const newQty = parseInt(e.target.value) || 1;
-                          updateQuantity(item.id, Math.max(1, newQty));
-                        }}
-                        className="w-16 h-10 text-center border border-black outline-none"
-                        style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                          fontSize: '11px',
-                          fontWeight: 600
-                        }}
-                        min="1"
-                      />
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-10 h-10 border border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors duration-200"
-                        style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                          fontSize: '18px',
-                          fontWeight: 300
-                        }}
-                      >
-                        +
-                      </button>
-                    </div>
+                  <div className="grid content-between justify-items-end">
+                    <p className="text-[13px] font-bold tabular-nums text-ink">
+                      {formatPrice(item.price, locale, false)}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.id)}
+                      className="text-[12px] text-muted underline"
+                    >
+                      {t("remove")}
+                    </button>
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
-          )}
-
-          {/* SHIPPING INFO */}
-          {cart.items.length > 0 && (
-            <div className="mt-8 pt-8 border-t border-gray-200">
-              <p
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '10px',
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase',
-                  marginBottom: '12px',
-                  fontWeight: 600,
-                  lineHeight: '1.5'
-                }}
-              >
-                {t('taxes_shipping_note')}
-              </p>
-              <p
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '10px',
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase',
-                  lineHeight: '1.5',
-                  color: '#666'
-                }}
-              >
-                {t('free_shipping_note')}
-              </p>
-            </div>
+            </ul>
           )}
         </div>
 
-        {/* FOOTER - Empty cart: Continue Shopping | Full cart: Subtotal + buttons */}
-        {cart.items.length === 0 ? (
-          <div className="border-t border-gray-200 px-8 py-6 mt-auto">
-            <Link href={`/${locale}/collections/all`} onClick={closeCart}>
-              <button
-                className="w-full py-4 bg-black text-white hover:opacity-80 transition-opacity duration-200"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase'
-                }}
-              >
-                {t('continue_shopping')}
-              </button>
+        {count > 0 && (
+          <div className="flex-none border-t border-line px-3.5 py-3">
+            <div className="flex items-baseline justify-between text-[13.5px] text-ink">
+              <span>{t("subtotal")}</span>
+              <span className="font-bold tabular-nums">{totalLabel}</span>
+            </div>
+            <p className="mt-1.5 text-[12.5px] text-muted">{t("delivery_note")}</p>
+            <p className="mt-3 bg-carton p-3 text-[12.5px] leading-relaxed text-ink">{t("unique_note")}</p>
+            <Link
+              href={`/${locale}/checkout`}
+              onClick={closeCart}
+              className="mt-3 flex h-12 items-center justify-center rounded-btn bg-accent text-[14px] font-semibold text-paper hover:bg-accent-press"
+            >
+              {t("checkout", { total: totalLabel })}
             </Link>
-          </div>
-        ) : (
-          <div className="border-t border-gray-200 px-8 py-6">
-            {/* SUBTOTAL */}
-            <div className="flex items-center justify-between mb-6">
-              <span
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase'
-                }}
-              >
-                {t('subtotal')}
-              </span>
-              <span
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  letterSpacing: '0.02em'
-                }}
-              >
-                {formatPrice(cart.subtotal, locale)}
-              </span>
-            </div>
-
-            {/* BUTTONS */}
-            <div className="flex gap-3">
-              <button
-                onClick={closeCart}
-                className="flex-1 py-4 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors duration-200"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase'
-                }}
-              >
-                {t('continue_shopping')}
-              </button>
-              <Link href={`/${locale}/checkout`} onClick={closeCart} className="flex-1">
-                <button
-                  className="w-full py-4 bg-black text-white hover:opacity-80 transition-opacity duration-200"
-                  style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    letterSpacing: '0.02em',
-                    textTransform: 'uppercase'
-                  }}
-                >
-                  {t('checkout')}
-                </button>
-              </Link>
-            </div>
           </div>
         )}
       </div>

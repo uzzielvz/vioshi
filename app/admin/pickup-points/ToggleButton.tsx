@@ -1,7 +1,7 @@
 'use client'
 import { togglePickupPoint } from './actions'
 
-const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
+const font = { fontFamily: "var(--font-sans)" }
 
 export default function ToggleButton({ id, isActive }: { id: string; isActive: boolean }) {
   async function handleToggle() {

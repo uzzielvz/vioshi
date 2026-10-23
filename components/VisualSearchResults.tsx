@@ -83,7 +83,7 @@ export default function VisualSearchResults({ results, aiDescription }: VisualSe
   }
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+    fontFamily: "var(--font-sans)",
     fontSize: '11px',
     fontWeight: 500,
     letterSpacing: '0.02em',
@@ -99,7 +99,7 @@ export default function VisualSearchResults({ results, aiDescription }: VisualSe
           <p
             className="mt-3 max-w-2xl"
             style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontSize: '12px',
               lineHeight: 1.5,
               color: '#666',

@@ -1,14 +1,18 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import clsx from "clsx";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ProductData as Product } from "@/lib/products";
 import { useCart } from "@/store/cartStore";
 import { generateId } from "@/lib/utils";
 import { formatPrice } from "@/lib/formatters";
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
+import { useWishlist } from "@/hooks/useWishlist";
+import ProductGrid from "@/components/ProductGrid";
+import { HeartIcon } from "@/components/ui/icons";
 import {
   CONDITION_LABELS,
   CONDITION_LABELS_EN,
@@ -20,23 +24,52 @@ import {
 
 interface ProductContentProps {
   product: Product;
-  allProducts: Product[];
+  more: Product[];
+  payThreshold: string;
 }
 
-// Misma familia que el resto de la ficha. El sistema de diseño va después.
-const BASE_FONT = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-} as const;
+function Accordion({
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
 
-export default function ProductContent({ product, allProducts }: ProductContentProps) {
-  const tCart = useTranslations("cart");
+  return (
+    <details
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+      className="group border-b border-line"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between py-3.5 text-[13px] font-semibold text-ink [&::-webkit-details-marker]:hidden">
+        {title}
+        <span
+          aria-hidden
+          className={clsx(
+            "h-[7px] w-[7px] border-b-[1.5px] border-r-[1.5px] border-current",
+            open ? "translate-y-[1px] rotate-[225deg]" : "-translate-y-[1px] rotate-45"
+          )}
+        />
+      </summary>
+      <div className="pb-3.5 text-[13px] leading-relaxed text-ink">{children}</div>
+    </details>
+  );
+}
+
+export default function ProductContent({ product, more, payThreshold }: ProductContentProps) {
   const t = useTranslations("product");
+  const tUi = useTranslations("ui.product");
   const { locale } = useLocaleContext();
-  const [selectedSize, setSelectedSize] = useState<string>(product.size || "");
   const [isAdding, setIsAdding] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { addItem, openCart } = useCart();
+  const { addItem, openCart, cart } = useCart();
+  const { has, toggle } = useWishlist();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saved = has(product.id);
 
   useEffect(() => {
     return () => {
@@ -44,26 +77,18 @@ export default function ProductContent({ product, allProducts }: ProductContentP
     };
   }, []);
 
-  // Use images array if available, otherwise use single image
-  const galleryImages = product.images || [product.image];
+  const galleryImages = product.images && product.images.length > 0 ? product.images : [product.image];
+  const measurementLabels = locale === "en" ? MEASUREMENT_LABELS_EN : MEASUREMENT_LABELS;
+  const conditionLabels = locale === "en" ? CONDITION_LABELS_EN : CONDITION_LABELS;
+  const estado = product.availability ?? (product.soldOut ? "vendida" : "disponible");
+  const inBag = cart.items.some((item) => item.productId === product.id);
 
-  // Etiquetas de medidas y estado viven junto al modelo de dominio
-  // (lib/garments) para no duplicar el mapa tipo → medidas en los mensajes.
-  const measurementLabels = locale === 'en' ? MEASUREMENT_LABELS_EN : MEASUREMENT_LABELS;
-  const conditionLabels   = locale === 'en' ? CONDITION_LABELS_EN   : CONDITION_LABELS;
-
-  const estado = product.availability ?? (product.soldOut ? 'vendida' : 'disponible');
-
-  // Orden estable y explícito: el que define el tipo de prenda, no el del objeto.
   const measurementEntries = requiredMeasurements(product.garmentType)
     .map((key) => [key, product.measurements?.[key]] as const)
-    .filter((entry): entry is readonly [MeasurementKey, number] => typeof entry[1] === 'number');
-
-  const currentIndex = allProducts.findIndex(p => p.id === product.id);
-  const prevProduct = currentIndex > 0 ? allProducts[currentIndex - 1] : null;
-  const nextProduct = currentIndex < allProducts.length - 1 ? allProducts[currentIndex + 1] : null;
+    .filter((entry): entry is readonly [MeasurementKey, number] => typeof entry[1] === "number");
 
   const handleAddToCart = () => {
+    if (inBag) return;
     setIsAdding(true);
     addItem({
       id: generateId(),
@@ -73,7 +98,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
       price: product.price,
       image: product.image,
       slug: product.slug,
-      size: selectedSize || undefined,
+      size: product.size,
     });
 
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -83,343 +108,242 @@ export default function ProductContent({ product, allProducts }: ProductContentP
     }, 500);
   };
 
-  const CAT_KEYS: Record<string, string> = {
-    new: 'cat_new', hoodie: 'cat_hoodie', chamarra: 'cat_chamarra',
-    pants: 'cat_pants', jeans: 'cat_jeans', camisas: 'cat_camisas',
-    playeras: 'cat_playeras', accesorios: 'cat_accesorios', bolsos: 'cat_bolsos',
-  };
-  const catKey = (CAT_KEYS[product.category || ''] ?? 'cat_default') as Parameters<typeof t>[0];
-  const categoryName = t(catKey);
+  const initial = product.store?.name.trim().charAt(0).toUpperCase() || "";
 
   return (
-    <main className="flex-1 pt-16">
-      {/* Navigation - Desktop only */}
-      <div className="hidden md:flex items-center justify-between px-8 py-4">
-        <Link
-          href={`/${locale}/collections/${product.category || 'all'}`}
-          className="flex items-center gap-2 hover:opacity-60 transition-opacity"
-          style={{
-            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-            fontSize: '11px',
-            fontWeight: 500,
-            letterSpacing: '0.02em',
-            textTransform: 'uppercase'
-          }}
-        >
-          <span>{'<'}</span> {t('back_to')} {categoryName}
-        </Link>
-
-        {nextProduct && (
-          <Link
-            href={`/${locale}/products/${nextProduct.slug}`}
-            className="flex items-center gap-2 hover:opacity-60 transition-opacity"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '11px',
-              fontWeight: 500,
-              letterSpacing: '0.02em',
-              textTransform: 'uppercase'
-            }}
-          >
-            {t('next_product')} <span>{'>'}</span>
-          </Link>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 md:h-[calc(100vh-120px)] md:overflow-hidden">
-        {/* Image Gallery - Left side (Desktop: Vertical scroll, Mobile: Horizontal scroll) */}
-        <div className="relative bg-[#F5F5F5] md:overflow-y-auto md:h-full scrollbar-hide">
-          {/* Desktop: Vertical scrollable gallery */}
-          <div className="hidden md:block">
-            <div className="flex flex-col">
-              {galleryImages.map((img, index) => (
-                <div key={index} className="relative w-full" style={{ height: '100vh' }}>
-                  <Image
-                    src={img}
-                    alt={`${product.name} - Image ${index + 1}`}
-                    fill
-                    className="object-cover"
-                    priority={index === 0}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Mobile: Horizontal swipeable carousel */}
-          <div className="md:hidden relative aspect-[3/4] overflow-hidden">
+    <div>
+      <div className="md:grid md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] md:items-start md:gap-11 md:px-8 md:pt-7">
+        <div>
+          <div className="relative aspect-[4/5] overflow-hidden bg-carton md:hidden">
             <div
-              className="flex transition-transform duration-300 h-full"
+              className="flex h-full transition-transform duration-300"
               style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
             >
               {galleryImages.map((img, index) => (
-                <div key={index} className="relative min-w-full h-full">
-                  <Image
-                    src={img}
-                    alt={`${product.name} - Image ${index + 1}`}
-                    fill
-                    className="object-cover"
-                    priority={index === 0}
-                  />
+                <div key={index} className="relative h-full min-w-full">
+                  {img ? (
+                    <Image
+                      src={img}
+                      alt={product.name}
+                      fill
+                      className={clsx(
+                        "object-cover mix-blend-multiply",
+                        estado === "vendida" && "opacity-45 grayscale"
+                      )}
+                      priority={index === 0}
+                    />
+                  ) : null}
                 </div>
               ))}
             </div>
 
-            {/* Carousel navigation dots */}
             {galleryImages.length > 1 && (
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                {galleryImages.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentImageIndex ? 'bg-black w-6' : 'bg-gray-400'
-                    }`}
-                    aria-label={`Go to image ${index + 1}`}
-                  />
-                ))}
-              </div>
+              <span className="absolute bottom-2.5 right-2.5 bg-paper px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-ink">
+                {tUi("photo", { n: currentImageIndex + 1, total: galleryImages.length })}
+              </span>
             )}
 
-            {/* Swipe buttons for mobile */}
-            {galleryImages.length > 1 && (
-              <>
-                {currentImageIndex > 0 && (
-                  <button
-                    onClick={() => setCurrentImageIndex(currentImageIndex - 1)}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full"
-                    aria-label="Previous image"
-                  >
-                    <span className="text-black">{'<'}</span>
-                  </button>
-                )}
-                {currentImageIndex < galleryImages.length - 1 && (
-                  <button
-                    onClick={() => setCurrentImageIndex(currentImageIndex + 1)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full"
-                    aria-label="Next image"
-                  >
-                    <span className="text-black">{'>'}</span>
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Info - Right side */}
-        <div className="p-8 md:p-12 flex flex-col md:overflow-y-auto md:h-full scrollbar-hide">
-          <div className="flex-1">
-            <h1
-              className="uppercase tracking-wide mb-4"
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                fontSize: '13px',
-                fontWeight: 800,
-                letterSpacing: '0.05em'
-              }}
-            >
-              {product.name}
-            </h1>
-
-            <p
-              className={product.store ? 'mb-2' : 'mb-8'}
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                fontSize: '13px',
-                fontWeight: 400
-              }}
-            >
-              {formatPrice(product.price, locale)}
-            </p>
-
-            {/* Quién vende la prenda. Hoy siempre Viogi; el link ya existe para
-                cuando haya más de una tienda. */}
-            {product.store && (
-              <p className="mb-8" style={{ ...BASE_FONT, fontSize: '11px', color: '#666' }}>
-                {t('sold_by')}{' '}
-                <Link
-                  href={`/${locale}/tienda/${product.store.slug}`}
-                  className="underline hover:opacity-60 transition-opacity"
-                  style={{ color: '#000' }}
-                >
-                  {product.store.name}
-                </Link>
-              </p>
-            )}
-
-            {/* Talla, medidas y estado — visibles sin abrir acordeón.
-                En segunda mano son el dato que decide la compra. */}
-            {(product.size || measurementEntries.length > 0 || product.condition) && (
-              <div className="mb-8 space-y-2">
-                {product.size && (
-                  <p style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 500 }}>
-                    <span style={{ color: '#666' }}>{t('size_marked')}: </span>
-                    {product.size}
-                  </p>
-                )}
-
-                {measurementEntries.length > 0 && (
-                  <p style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 400 }}>
-                    {measurementEntries
-                      .map(([key, value]) => `${measurementLabels[key]} ${value} cm`)
-                      .join(' · ')}
-                  </p>
-                )}
-
-                {product.condition && (
-                  <p style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 400 }}>
-                    <span style={{ color: '#666' }}>{t('condition')}: </span>
-                    {conditionLabels[product.condition]}
-                  </p>
-                )}
-
-                {/* Misma prominencia que las medidas: esconder los defectos es
-                    lo que rompe la confianza en segunda mano. */}
-                {product.condition === 'con_detalles' && product.defectNotes && (
-                  <p style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 400 }}>
-                    <span style={{ color: '#666' }}>{t('flaws')}: </span>
-                    {product.defectNotes}
-                  </p>
-                )}
-
-                {measurementEntries.length > 0 && (
-                  <p
-                    style={{
-                      ...BASE_FONT,
-                      fontSize: '10px',
-                      lineHeight: 1.5,
-                      color: '#666',
-                      paddingTop: '4px',
-                    }}
-                  >
-                    {t('measurement_note')}
-                  </p>
-                )}
-              </div>
-            )}
-
-            <p
-              className="mb-8"
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                fontSize: "10px",
-                letterSpacing: "0.02em",
-                textTransform: "uppercase",
-                lineHeight: 1.5,
-                color: "#666",
-              }}
-            >
-              {tCart("free_shipping_note")}
-            </p>
-
-            {/* Collapsible sections */}
-            <div className="space-y-4 mb-8">
-              <details className="group border-b border-gray-200 pb-4">
-                <summary
-                  className="flex justify-between items-center cursor-pointer uppercase tracking-wide list-none"
-                  style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                    fontSize: '11px',
-                    fontWeight: 500,
-                    letterSpacing: '0.05em'
-                  }}
-                >
-                  {t('product_details')}
-                  <span className="text-xs text-gray-400 font-light">+</span>
-                </summary>
-                <div className="mt-4 space-y-4">
-                  {product.description && (
-                    <p
-                      className="text-gray-600 leading-relaxed"
-                      style={{
-                        fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                        fontSize: '11px'
-                      }}
-                    >
-                      {product.description}
-                    </p>
-                  )}
-
-                  {product.attributes && product.attributes.length > 0 && (
-                    <dl className="space-y-2 pt-2">
-                      {product.attributes.map(({ key, value }) => (
-                        <div key={key} className="flex gap-4">
-                          <dt
-                            className="uppercase tracking-widest text-gray-400 shrink-0"
-                            style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif", fontSize: '10px', minWidth: '80px' }}
-                          >
-                            {key}
-                          </dt>
-                          <dd
-                            className="text-gray-800"
-                            style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif", fontSize: '11px' }}
-                          >
-                            {value}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  )}
-                </div>
-              </details>
-
-            </div>
-          </div>
-
-          {/* Add to Bag - Fixed at bottom */}
-          <div className="mt-auto space-y-3">
-            {estado === 'vendida' ? (
-              <>
-                {/* La ficha de una prenda vendida NO da 404: el link ya circuló
-                    por WhatsApp y va a seguir recibiendo visitas. Se muestra
-                    marcada, con salida hacia lo que sí está disponible. */}
-                <button
-                  disabled
-                  className="w-full bg-gray-100 text-gray-500 py-4 uppercase tracking-wide cursor-not-allowed border border-gray-200"
-                  style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}
-                >
-                  {t('sold_out')}
-                </button>
-                <p style={{ ...BASE_FONT, fontSize: '11px', color: '#666', lineHeight: 1.6 }}>
-                  {t('sold_note')}
-                </p>
-                <Link
-                  href={`/${locale}/collections/all`}
-                  className="block w-full border border-black text-black py-4 uppercase tracking-wide text-center hover:bg-black hover:text-white transition-colors"
-                  style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}
-                >
-                  {t('see_others')}
-                </Link>
-              </>
-            ) : estado === 'apartada' ? (
-              <>
-                {/* APARTADA no es VENDIDA: puede liberarse, así que el mensaje
-                    invita a esperar en vez de cerrar la puerta. */}
-                <button
-                  disabled
-                  className="w-full bg-white text-black py-4 uppercase tracking-wide cursor-not-allowed border border-black"
-                  style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}
-                >
-                  {t('reserved')}
-                </button>
-                <p style={{ ...BASE_FONT, fontSize: '11px', color: '#666', lineHeight: 1.6 }}>
-                  {t('reserved_note')}
-                </p>
-              </>
-            ) : (
+            {galleryImages.length > 1 && currentImageIndex > 0 && (
               <button
-                onClick={handleAddToCart}
-                disabled={isAdding}
-                className="w-full py-4 uppercase tracking-wide transition-colors bg-black text-white hover:bg-gray-800"
-                style={{ ...BASE_FONT, fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}
+                type="button"
+                onClick={() => setCurrentImageIndex((index) => index - 1)}
+                className="absolute left-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-paper/90 text-ink"
+                aria-label={tUi("prev_photo")}
               >
-                {isAdding ? t('adding') : t('add_to_bag')}
+                <span aria-hidden className="h-[7px] w-[7px] rotate-[135deg] border-r-[1.5px] border-t-[1.5px] border-current" />
+              </button>
+            )}
+            {galleryImages.length > 1 && currentImageIndex < galleryImages.length - 1 && (
+              <button
+                type="button"
+                onClick={() => setCurrentImageIndex((index) => index + 1)}
+                className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-paper/90 text-ink"
+                aria-label={tUi("next_photo")}
+              >
+                <span aria-hidden className="h-[7px] w-[7px] -rotate-45 border-r-[1.5px] border-t-[1.5px] border-current" />
               </button>
             )}
           </div>
+
+          <div className={clsx("hidden md:grid md:gap-1.5", galleryImages.length > 1 ? "md:grid-cols-2" : "md:max-w-[560px] md:grid-cols-1")}>
+            {galleryImages.map((img, index) => (
+              <div key={index} className="relative aspect-[3/4] overflow-hidden bg-carton">
+                {img ? (
+                  <Image
+                    src={img}
+                    alt={product.name}
+                    fill
+                    className={clsx(
+                      "object-cover mix-blend-multiply",
+                      estado === "vendida" && "opacity-45 grayscale"
+                    )}
+                    priority={index === 0}
+                    sizes="40vw"
+                  />
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid content-start gap-2.5 px-3.5 py-4 md:px-0 md:py-0">
+          {product.brand?.name && (
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+              {product.brand.name}
+            </p>
+          )}
+
+          <h1 className="text-balance text-[20px] font-bold leading-tight tracking-[-0.01em] text-ink md:text-[28px]">
+            {product.name}
+          </h1>
+
+          {(product.size || product.condition) && (
+            <p className="text-[13px] text-muted">
+              {product.size ? tUi("size", { size: product.size }) : null}
+              {product.size && product.condition ? " · " : null}
+              {product.condition ? conditionLabels[product.condition] : null}
+            </p>
+          )}
+
+          <p className="text-[24px] font-bold tabular-nums text-ink md:text-[30px]">
+            {formatPrice(product.price, locale, false)}
+          </p>
+
+          {estado === "vendida" ? (
+            <div className="grid gap-2.5">
+              <button
+                type="button"
+                disabled
+                className="h-12 w-full cursor-not-allowed rounded-btn bg-carton text-[14px] font-semibold text-muted"
+              >
+                {t("sold_out")}
+              </button>
+              <p className="text-[13px] leading-relaxed text-muted">{t("sold_note")}</p>
+              <Link
+                href={`/${locale}/collections/all`}
+                className="flex h-12 items-center justify-center rounded-btn border border-ink text-[14px] font-semibold text-ink"
+              >
+                {t("see_others")}
+              </Link>
+            </div>
+          ) : estado === "apartada" ? (
+            <div className="grid gap-2.5">
+              <button
+                type="button"
+                disabled
+                className="h-12 w-full cursor-not-allowed rounded-btn border border-ink bg-paper text-[14px] font-semibold text-ink"
+              >
+                {t("reserved")}
+              </button>
+              <p className="text-[13px] leading-relaxed text-muted">{t("reserved_note")}</p>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={isAdding || inBag}
+              className="h-12 w-full rounded-btn bg-accent text-[14px] font-semibold text-paper hover:bg-accent-press disabled:opacity-80"
+            >
+              {isAdding ? tUi("adding") : inBag ? tUi("in_bag") : tUi("add_to_bag")}
+            </button>
+          )}
+
+          <button
+            type="button"
+            aria-pressed={saved}
+            onClick={() => toggle(product.id)}
+            className="inline-flex w-fit items-center gap-1.5 text-[13px] font-semibold text-ink"
+          >
+            <HeartIcon
+              className={clsx("h-4 w-4", saved ? "fill-accent text-accent" : "fill-none text-ink")}
+            />
+            {saved ? tUi("saved") : tUi("save")}
+          </button>
+
+          {product.condition === "con_detalles" && product.defectNotes && (
+            <p className="text-[13px] leading-relaxed text-ink">{product.defectNotes}</p>
+          )}
+
+          {product.store && (
+            <Link
+              href={`/${locale}/tienda/${product.store.slug}`}
+              className="mt-1 flex items-center gap-3 border-y border-line py-3.5"
+            >
+              <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-ink text-[17px] font-bold text-paper">
+                {initial}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+                  {tUi("sold_by")}
+                </span>
+                <span className="block truncate text-[14px] font-semibold text-ink">
+                  {product.store.name}
+                </span>
+              </span>
+            </Link>
+          )}
+
+          <div className={product.store ? "" : "mt-1 border-t border-line"}>
+            <Accordion title={tUi("measurements")} defaultOpen>
+              {measurementEntries.length > 0 && (
+                <dl className="mb-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5">
+                  {measurementEntries.map(([key, value]) => (
+                    <Fragment key={key}>
+                      <dt className="text-muted">{measurementLabels[key]}</dt>
+                      <dd className="tabular-nums">{value} cm</dd>
+                    </Fragment>
+                  ))}
+                </dl>
+              )}
+              <p className="text-[12px] text-muted">{t("measurement_note")}</p>
+            </Accordion>
+
+            {product.condition && (
+              <Accordion title={tUi("condition")}>
+                <p>{conditionLabels[product.condition]}</p>
+              </Accordion>
+            )}
+
+            {(product.description || (product.attributes && product.attributes.length > 0)) && (
+              <Accordion title={tUi("details")}>
+                {product.description && <p>{product.description}</p>}
+                {product.attributes && product.attributes.length > 0 && (
+                  <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5">
+                    {product.attributes.map(({ key, value }) => (
+                      <Fragment key={key}>
+                        <dt className="text-muted">{key}</dt>
+                        <dd>{value}</dd>
+                      </Fragment>
+                    ))}
+                  </dl>
+                )}
+              </Accordion>
+            )}
+
+            <Accordion title={tUi("delivery")}>
+              <p>{tUi("delivery_body")}</p>
+              <p className="mt-2 text-muted">{tUi("pay_threshold", { threshold: payThreshold })}</p>
+            </Accordion>
+          </div>
         </div>
       </div>
-    </main>
+
+      {more.length > 0 && product.store && (
+        <section className="px-0 py-6 md:px-8">
+          <div className="mb-3 flex items-baseline justify-between gap-3 px-3.5 md:px-0">
+            <h2 className="text-[17px] font-bold text-ink">
+              {tUi("more_from", { store: product.store.name })}
+            </h2>
+            <Link
+              href={`/${locale}/tienda/${product.store.slug}`}
+              className="text-[13px] font-semibold text-ink"
+            >
+              {tUi("see_profile")}
+            </Link>
+          </div>
+          <ProductGrid products={more} />
+        </section>
+      )}
+    </div>
   );
 }

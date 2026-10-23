@@ -26,7 +26,7 @@ const OWNER_LABELS: Record<'uzziel' | 'mario', string> = {
   mario: 'Mario',
 }
 
-const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
+const font = { fontFamily: "var(--font-sans)" }
 
 function money(value: number) {
   return formatPrice(value, 'es', false)

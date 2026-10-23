@@ -8,7 +8,7 @@ import DeleteButton from './DeleteButton'
 import SoldToggle from './SoldToggle'
 
 const fontStyle = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 }
 
 export const dynamic = 'force-dynamic'

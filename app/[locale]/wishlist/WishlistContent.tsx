@@ -10,7 +10,7 @@ import { ProductData } from '@/lib/products';
 import { STORAGE_KEYS } from '@/lib/constants';
 
 const fontStyle = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 };
 
 export default function WishlistContent({ allProducts }: { allProducts: ProductData[] }) {

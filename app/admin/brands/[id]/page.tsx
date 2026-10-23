@@ -6,7 +6,7 @@ import BrandForm from '../_components/BrandForm'
 import { updateBrand } from '../actions'
 
 const font = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 }
 
 export default async function EditBrandPage({ params }: { params: Promise<{ id: string }> }) {

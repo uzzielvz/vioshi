@@ -7,7 +7,7 @@ import DeleteBrandButton from './DeleteBrandButton'
 export const dynamic = 'force-dynamic'
 
 const font = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 }
 
 export default async function BrandsAdminPage() {

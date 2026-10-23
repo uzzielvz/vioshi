@@ -1,18 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useTranslations } from 'next-intl';
-import { useLocaleContext } from '@/hooks/useLocaleContext';
+import { useTranslations } from "next-intl";
+import clsx from "clsx";
+import { useLocaleContext } from "@/hooks/useLocaleContext";
 import { useCart } from "@/store/cartStore";
-import { brand } from "@/lib/brand";
-// VisualSearchPanel removed (VS-09): inline panel replaced by full-screen /visual-search route
-// File handoff across layout shells uses sessionStorage (see handoffToVisualSearch)
+import { STORE_CATEGORIES } from "@/lib/categories";
+import Wordmark from "@/components/ui/Wordmark";
+import { BagIcon, CameraIcon, CloseIcon, MenuIcon, SearchIcon } from "@/components/ui/icons";
 
-// Pathname sin prefijo de locale para comparaciones (evita hydration mismatch server vs client)
-function getPathnameWithoutLocale(pathname: string): string {
-  return pathname.replace(/^\/[a-z]{2}/, '') || '/';
+function pathWithoutLocale(pathname: string): string {
+  return pathname.replace(/^\/[a-z]{2}(?=\/|$)/, "") || "/";
 }
 
 interface HeaderProps {
@@ -22,1263 +22,227 @@ interface HeaderProps {
 export default function Header({ userEmail = null }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const pathnameWithoutLocale = getPathnameWithoutLocale(pathname);
-  const tHeader = useTranslations('header');
-  const tCommon = useTranslations('common');
-  const tSearch = useTranslations('search');
-  const { locale, currency } = useLocaleContext();
-
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [shopOpen, setShopOpen] = useState(false);
-  const [supportOpen, setSupportOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currencyOpen, setCurrencyOpen] = useState(false);
-  const [mobileShopOpen, setMobileShopOpen] = useState(false);
-  const [mobileSupportOpen, setMobileSupportOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  // vsFile local state + VisualSearchPanel removed (VS-08/VS-09).
-  // Camera selection now hands off via sessionStorage to the standalone /visual-search shell
-  // (React Context cannot cross [locale] layout vs visual-search/layout per RESEARCH §3.2 shells).
-  const vsInputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations("ui.nav");
+  const tCats = useTranslations("ui.cats");
+  const { locale } = useLocaleContext();
   const { itemCount, openCart } = useCart();
 
-  // Evitar hydration mismatch: pathname/locale pueden diferir server vs client al cambiar idioma
+  const [query, setQuery] = useState("");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Always mounted so every camera button can open the picker.
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const path = pathWithoutLocale(pathname);
+
   useEffect(() => {
-    setMounted(true);
+    setMenuOpen(false);
+    setMobileSearchOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        setMobileSearchOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  const language = locale.toUpperCase();
-  const country = tCommon('country');
-
-  const switchLocale = (newLocale: 'es' | 'en') => {
-    if (newLocale === locale) return;
-    const newPath = `/${newLocale}${pathnameWithoutLocale === '/' ? '' : pathnameWithoutLocale}`;
-    // Full page navigation evita el error removeChild de React al cambiar locale (next-intl + App Router)
-    window.location.href = newPath;
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    setQuery("");
+    setMobileSearchOpen(false);
+    router.push(`/${locale}/search?q=${encodeURIComponent(q)}`);
   };
 
-  // Fijar submenú basado en la ruta actual (solo después de montar para evitar hydration mismatch)
-  useEffect(() => {
-    if (!mounted) return;
-    const isShopRoute = pathnameWithoutLocale.includes('/collections') || pathnameWithoutLocale.endsWith('/collections/all');
-    const isSupportRoute = (pathnameWithoutLocale.includes('/pages/') && !pathnameWithoutLocale.endsWith('/pages/chapters')) || pathnameWithoutLocale.includes('/support');
-    
-    if (isShopRoute) {
-      setShopOpen(true);
-      setSupportOpen(false);
-    } else if (isSupportRoute) {
-      setSupportOpen(true);
-      setShopOpen(false);
-    } else {
-      setShopOpen(false);
-      setSupportOpen(false);
-    }
-  }, [pathnameWithoutLocale, mounted]);
-
-  // Solo usar pathname para estilos/activo después de montar (evita hydration al cambiar idioma)
-  const isShopPage = mounted && (pathnameWithoutLocale.includes('/collections') || pathnameWithoutLocale.endsWith('/collections/all'));
-  const isSupportPage = mounted && ((pathnameWithoutLocale.includes('/pages/') && !pathnameWithoutLocale.endsWith('/pages/chapters')) || pathnameWithoutLocale.includes('/support'));
-
-  // Manejar click en SHOP
-  const handleShopClick = (e: React.MouseEvent) => {
-    if (!isShopPage) {
-      // Si NO estamos en la página de SHOP, toggle el menú
-      e.preventDefault(); // Prevenir navegación
-      setShopOpen(!shopOpen);
-      setSupportOpen(false);
-    }
-    // Si estamos en la página de SHOP, dejar que navegue
+  // Full reload avoids the React removeChild error when next-intl switches locale.
+  const switchLocale = (next: "es" | "en") => {
+    if (next === locale) return;
+    window.location.href = `/${next}${path === "/" ? "" : path}`;
   };
 
-  // Manejar click en SOPORTE
-  const handleSupportClick = (e: React.MouseEvent) => {
-    if (!isSupportPage) {
-      // Si NO estamos en la página de SOPORTE, toggle el menú
-      e.preventDefault(); // Prevenir navegación
-      setSupportOpen(!supportOpen);
-      setShopOpen(false);
+  // The visual search page reads the photo from sessionStorage; the event
+  // tells it to reload when we are already on that route.
+  const onPhotoPicked = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      sessionStorage.setItem(
+        "__viogi_vs_pending",
+        JSON.stringify({ name: file.name, type: file.type, dataUrl })
+      );
+    } catch {
+      // The page shows its own upload state if the handoff fails.
     }
-    // Si estamos en la página de SOPORTE, dejar que navegue
+    setMobileSearchOpen(false);
+    router.push(`/${locale}/visual-search`);
+    window.dispatchEvent(new Event("viogi:vs-new"));
   };
 
-  // Cerrar menús al hacer click fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('[data-nav-menu="true"]') && !isShopPage && !isSupportPage) {
-        setShopOpen(false);
-        setSupportOpen(false);
-      }
-    };
+  const openPhotoPicker = () => photoInputRef.current?.click();
 
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [isShopPage, isSupportPage]);
+  const searchField = (mobile: boolean) => (
+    <form
+      onSubmit={submitSearch}
+      className="flex h-10 flex-1 items-center gap-2.5 rounded-btn bg-carton px-3"
+      role="search"
+    >
+      <SearchIcon className="h-[17px] w-[17px] flex-none text-muted" />
+      <input
+        id={mobile ? "header-search-mobile" : "header-search"}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={t("search_placeholder")}
+        aria-label={t("search")}
+        autoFocus={mobile}
+        className="min-w-0 flex-1 bg-transparent text-[16px] text-ink outline-none placeholder:text-muted md:text-[14px]"
+      />
+      <button type="button" onClick={openPhotoPicker} aria-label={t("visual_search")} className="flex-none text-ink">
+        <CameraIcon className="h-5 w-5" />
+      </button>
+    </form>
+  );
 
-  // Cerrar búsqueda con ESC
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && searchOpen) {
-        setSearchOpen(false);
-        setSearchQuery("");
-      }
-      if (e.key === 'Escape' && currencyOpen) {
-        setCurrencyOpen(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [searchOpen, currencyOpen]);
+  const menuLink = (href: string, label: string, active = false) => (
+    <Link
+      key={href}
+      href={href}
+      className={clsx("block border-b border-line py-3.5 text-[16px]", active && "font-semibold")}
+    >
+      {label}
+    </Link>
+  );
 
   return (
-    <header
-      className="fixed top-0 left-0 right-0 z-40"
-      style={{
-        background: (searchOpen || mobileMenuOpen) ? 'white' : 'transparent',
-        borderBottom: 'none',
-        transition: 'background-color 0.2s ease-in-out'
-      }}
-    >
-      {/* ROW 1 - HEADER PRINCIPAL */}
-      <div 
-        className="flex items-center justify-between px-8 h-14" 
-        style={{ 
-          background: (searchOpen || mobileMenuOpen) ? 'white' : 'transparent',
-          transition: 'background-color 0.2s ease-in-out'
-        }}
-      >
-        
-        {/* LEFT - LOGO + ESPACIO MÍNIMO + NAV */}
-        <div className="flex items-center min-w-0">
-          <Link
-            href={`/${locale}`}
-            className="text-lg font-bold text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap shrink-0"
-            style={{ 
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-            }}
-          >
-            {brand.name}
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-line bg-paper">
+      <div className="flex h-14 items-center gap-4 px-4 md:h-16 md:gap-7 md:px-8">
+        <Link href={`/${locale}`} className="flex-none text-ink" aria-label={t("home")}>
+          <Wordmark className="text-[25px] md:text-[26px]" />
+        </Link>
+
+        <div className="hidden max-w-[460px] flex-1 md:flex">{searchField(false)}</div>
+
+        <nav className="ml-auto flex items-center gap-4 md:gap-6" aria-label={t("menu")}>
+          <Link href={`/${locale}/vender`} className="hidden text-[14px] font-semibold md:inline">
+            {t("sell")}
           </Link>
-          {/* Espacio fijo mínimo entre logo y enlaces */}
-          <span className="hidden md:inline-block shrink-0 min-w-[4rem]" aria-hidden />
-          {/* CENTER - NAVEGACIÓN */}
-          <nav className="hidden md:flex items-center gap-8 ml-0" data-nav-menu="true">
-          
-          {/* SHOP */}
-          <div>
-            <Link
-              href={`/${locale}/collections/all`}
-              onClick={handleShopClick}
-              className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 flex items-center gap-1"
-              style={{ 
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                letterSpacing: '0.02em',
-                fontSize: '11px',
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-              }}
-            >
-              {tHeader('shop')}
-              {/* CHEVRON que rota */}
-              <svg 
-                className="w-3 h-3 transition-transform duration-200" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
-                strokeWidth={2.5}
-                style={{
-                  transform: shopOpen ? 'rotate(90deg)' : 'rotate(0deg)'
-                }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-
-          {/* ARCHIVO */}
-          <Link 
-            href={`/${locale}/archive`}
-            className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
-            style={{ 
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              letterSpacing: '0.02em',
-              fontSize: '11px',
-              padding: '0',
-              margin: '0'
-            }}
-          >
-            {tHeader('archive')}
+          <Link href={`/${locale}/account`} className="hidden text-[14px] font-semibold md:inline">
+            {userEmail ? t("account") : t("login")}
           </Link>
-
-          {/* SOPORTE */}
-          <div>
-            <Link
-              href={`/${locale}/pages/customer-support`}
-              onClick={handleSupportClick}
-              className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 flex items-center gap-1"
-              style={{ 
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                letterSpacing: '0.02em',
-                fontSize: '11px',
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-              }}
-            >
-              {tHeader('support')}
-              {/* CHEVRON que rota */}
-              <svg 
-                className="w-3 h-3 transition-transform duration-200" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
-                strokeWidth={2.5}
-                style={{
-                  transform: supportOpen ? 'rotate(90deg)' : 'rotate(0deg)'
-                }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-        </nav>
-        </div>
-
-        {/* RIGHT SIDE - TEXT */}
-        <div className="flex items-center gap-6">
-          {/* VISUAL SEARCH - Desktop only. Opens the same file picker as the camera icon. */}
           <button
             type="button"
-            onClick={() => vsInputRef.current?.click()}
-            className="hidden md:inline text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              letterSpacing: '0.02em',
-              fontSize: '11px',
-              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-            }}
+            onClick={() => switchLocale(locale === "es" ? "en" : "es")}
+            className="hidden text-[13px] font-semibold text-muted md:inline"
+            aria-label={t("switch_language")}
           >
-            {tCommon('visual_search')}
+            {locale === "es" ? "EN" : "ES"}
           </button>
 
-          {/* BUSCAR / CERRAR */}
           <button
-            onClick={() => {
-              if (searchOpen) {
-                setSearchOpen(false);
-                setSearchQuery("");
-                // vsFile state removed; any pending storage cleared by target page on consumption
-              } else {
-                setSearchOpen(true);
-                setMobileMenuOpen(false); // Cerrar menú móvil al abrir búsqueda
-              }
-            }}
-            className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              letterSpacing: '0.02em',
-              fontSize: '11px',
-              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-            }}
+            type="button"
+            onClick={() => setMobileSearchOpen((v) => !v)}
+            className="md:hidden"
+            aria-label={t("search")}
+            aria-expanded={mobileSearchOpen}
           >
-            {searchOpen ? tCommon('close') : tCommon('search')}
+            <SearchIcon className="h-[22px] w-[22px]" />
+          </button>
+          <button type="button" onClick={openPhotoPicker} className="md:hidden" aria-label={t("visual_search")}>
+            <CameraIcon className="h-[22px] w-[22px]" />
           </button>
 
-          {/* IDIOMA / MONEDA */}
-          <button 
-            onClick={() => setCurrencyOpen(!currencyOpen)}
-            className="hidden md:flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200 relative"
-            style={{ 
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              letterSpacing: '0.02em',
-              fontSize: '11px'
-            }}
-          >
-            {language} / {currency}
-            {/* CHEVRON que rota */}
-            <svg 
-              className="w-3 h-3 transition-transform duration-200" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24" 
-              strokeWidth={2.5}
-              style={{
-                transform: currencyOpen ? 'rotate(90deg)' : 'rotate(0deg)'
-              }}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-          
-          {/* DROPDOWN COMPACTO */}
-          {currencyOpen && (
-            <div 
-              className="hidden md:block absolute border"
-              style={{
-                top: '100%',
-                right: 0,
-                marginTop: '4px',
-                minWidth: '120px',
-                zIndex: 50,
-                background: 'rgba(255, 255, 255, 0.98)',
-                borderColor: 'rgba(232, 232, 232, 0.3)'
-              }}
-            >
-              <button
-                onClick={() => {
-                  switchLocale('es');
-                  setCurrencyOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 hover:opacity-60 transition-opacity duration-200"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase',
-                  opacity: locale === 'es' ? 1 : 0.6,
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                ES / MXN
-              </button>
-              <button
-                onClick={() => {
-                  switchLocale('en');
-                  setCurrencyOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 hover:opacity-60 transition-opacity duration-200"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase',
-                  opacity: locale === 'en' ? 1 : 0.6,
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                EN / USD
-              </button>
-            </div>
-          )}
-
-          {/* LOG IN / MI CUENTA */}
-          <Link
-            href={`/${locale}/account`}
-            title={userEmail ?? undefined}
-            className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              letterSpacing: '0.02em',
-              fontSize: '11px',
-              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-            }}
-          >
-            {userEmail ? tCommon('myAccount') : tCommon('logIn')}
-          </Link>
-
-          {/* BAG */}
           <button
+            type="button"
             onClick={openCart}
-            className="text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              letterSpacing: '0.02em',
-              fontSize: '11px',
-              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-            }}
+            className="relative hidden md:block"
+            aria-label={t("bag_count", { count: itemCount })}
           >
-            {/* Desktop: BAG (1), Mobile: BAG 1 - Solo mostrar contador después de montar para evitar hydration mismatch */}
-            <span className="hidden md:inline">{tCommon('bag')} {mounted && itemCount > 0 && `(${itemCount})`}</span>
-            <span className="inline md:hidden">{tCommon('bag')} {mounted && itemCount > 0 && itemCount}</span>
+            <BagIcon className="h-[22px] w-[22px]" />
+            {itemCount > 0 && (
+              <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold text-paper">
+                {itemCount}
+              </span>
+            )}
           </button>
 
-          {/* MENU - Mobile only */}
           <button
-            className="md:hidden text-xs font-medium uppercase tracking-wide text-black hover:opacity-60 transition-opacity duration-200"
-            onClick={() => {
-              setMobileMenuOpen(!mobileMenuOpen);
-              setSearchOpen(false); // Cerrar búsqueda al abrir menú móvil
-              setSearchQuery("");
-            }}
-            aria-label="Menu"
-            style={{ 
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              letterSpacing: '0.02em',
-              fontSize: '11px',
-              textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-            }}
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            className="md:hidden"
+            aria-label={menuOpen ? t("close") : t("menu")}
+            aria-expanded={menuOpen}
           >
-            {mobileMenuOpen ? tCommon('close') : tCommon('menu')}
+            {menuOpen ? <CloseIcon className="h-[22px] w-[22px]" /> : <MenuIcon className="h-[22px] w-[22px]" />}
           </button>
-        </div>
+        </nav>
       </div>
 
-      {/* ROW 2 - SUBHEADER (Se expande, NO overlay, SIN border-top) */}
-      {(shopOpen || supportOpen) && (
-        <div 
-          data-submenu="true"
-          data-nav-menu="true"
-          className="hidden md:flex items-center gap-4 py-3"
-          style={{
-            background: 'transparent',
-            paddingLeft: '128px',
-            transition: 'opacity 0.2s ease-in-out'
-          }}
-        >
-          {shopOpen && (
-            <>
-              <Link
-                href={`/${locale}/collections/hoodie`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  padding: '0',
-                  margin: '0',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/collections/hoodie') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/hoodie') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/collections/hoodie') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('hoodie')}
-              </Link>
-              <Link
-                href={`/${locale}/collections/chamarra`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/collections/chamarra') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/chamarra') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/collections/chamarra') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('jacket')}
-              </Link>
-              <Link
-                href={`/${locale}/collections/pants`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/collections/pants') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/pants') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/collections/pants') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('pants')}
-              </Link>
-              <Link
-                href={`/${locale}/collections/jeans`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/collections/jeans') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/jeans') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/collections/jeans') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('jeans')}
-              </Link>
-              <Link
-                href={`/${locale}/collections/camisas`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/collections/camisas') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/camisas') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/collections/camisas') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('shirts')}
-              </Link>
-              <Link
-                href={`/${locale}/collections/playeras`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/collections/playeras') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/playeras') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/collections/playeras') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('tees')}
-              </Link>
-              <Link
-                href={`/${locale}/collections/accesorios`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/collections/accesorios') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/accesorios') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/collections/accesorios') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('accessories')}
-              </Link>
-              <Link
-                href={`/${locale}/collections/bolsos`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/collections/bolsos') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/collections/bolsos') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/collections/bolsos') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('bags')}
-              </Link>
-            </>
-          )}
-
-          {supportOpen && (
-            <>
-              <Link
-                href={`/${locale}/pages/customer-support`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/pages/customer-support') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/customer-support') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/pages/customer-support') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('customer_support')}
-              </Link>
-              <Link
-                href={`/${locale}/pages/locaciones`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/pages/locaciones') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/locaciones') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/pages/locaciones') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('locations')}
-              </Link>
-              <Link
-                href={`/${locale}/pages/shipping-payments-returns`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/pages/shipping-payments-returns') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/shipping-payments-returns') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/pages/shipping-payments-returns') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('shipping_payments_returns')}
-              </Link>
-              <Link
-                href={`/${locale}/pages/accessibility`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/pages/accessibility') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/accessibility') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/pages/accessibility') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('accessibility')}
-              </Link>
-              <Link
-                href={`/${locale}/pages/legal`}
-                className="text-xs font-medium uppercase tracking-wide transition-all duration-200 whitespace-nowrap hover:text-black hover:border-b hover:border-black submenu-link"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  lineHeight: '1',
-                  color: (mounted && pathnameWithoutLocale === '/pages/legal') ? '#000' : '#666',
-                  borderBottom: (mounted && pathnameWithoutLocale === '/pages/legal') ? '1px solid #000' : '1px solid transparent',
-                  textShadow: (mounted && pathnameWithoutLocale === '/pages/legal') ? '0 0 0.5px rgba(0, 0, 0, 0.8)' : 'none'
-                }}
-              >
-                {tHeader('legal')}
-              </Link>
-            </>
-          )}
+      {mobileSearchOpen && (
+        <div className="flex items-center gap-3 border-t border-line bg-paper px-4 py-2 md:hidden">
+          {searchField(true)}
+          <button type="button" onClick={() => setMobileSearchOpen(false)} className="text-[14px] font-semibold text-muted">
+            {t("cancel")}
+          </button>
         </div>
       )}
 
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={onPhotoPicked}
+        aria-hidden="true"
+        tabIndex={-1}
+      />
 
-      {/* SEARCH MODAL - Estilo Stüssy */}
-      {searchOpen && (
-        <>
-          {/* SEARCH BAR */}
-          <div
-            className="fixed left-0 right-0"
-            style={{
-              top: '56px',
-              background: 'white',
-              zIndex: 39,
-              borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
-            }}
-          >
-            <form
-              className="flex items-center gap-4 py-4 px-8 md:px-0"
-              style={{ paddingLeft: '32px', background: 'white' }}
-              onSubmit={(e) => {
-                e.preventDefault();
-                const q = searchQuery.trim();
-                if (!q) return;
-                setSearchOpen(false);
-                setSearchQuery('');
-                router.push(`/${locale}/search?q=${encodeURIComponent(q)}`);
-              }}
-            >
-              {/* LUPA - Mobile: alineada al borde, Desktop: alineada con SHOP */}
-              <svg
-                className="w-5 h-5 text-black flex-shrink-0 md:ml-24"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
+      {menuOpen && (
+        <div className="fixed inset-x-0 bottom-0 top-14 z-40 overflow-y-auto bg-paper md:hidden">
+          <nav className="px-4 pb-24 pt-2" aria-label={t("categories")}>
+            <p className="pb-1 pt-4 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">{t("categories")}</p>
+            {menuLink(`/${locale}/collections/all`, tCats("all"), path === "/collections/all")}
+            {STORE_CATEGORIES.map((slug) =>
+              menuLink(`/${locale}/collections/${slug}`, tCats(slug), path === `/collections/${slug}`)
+            )}
 
-              {/* INPUT — 16px para evitar zoom en iOS */}
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={tHeader('search_placeholder')}
-                className="flex-1 text-black outline-none search-input-placeholder"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '16px',
-                  fontWeight: 400,
-                  letterSpacing: '0.02em',
-                  background: 'white',
-                  color: '#000'
-                }}
-                autoFocus
-              />
+            <p className="pb-1 pt-6 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">{t("account")}</p>
+            {menuLink(`/${locale}/account`, userEmail ? t("account") : t("login"))}
+            {menuLink(`/${locale}/wishlist`, t("saved"))}
+            {menuLink(`/${locale}/vender`, t("sell"))}
+            {menuLink(`/${locale}/pages/customer-support`, t("help"))}
 
-              {/* LIMPIAR — sólo cuando hay texto, no reemplaza nada */}
-              {searchQuery && (
+            <p className="pb-2 pt-6 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">{t("language")}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {(["es", "en"] as const).map((l) => (
                 <button
+                  key={l}
                   type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="flex-shrink-0 text-gray-500 hover:text-black transition-colors duration-200"
-                  style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                    fontSize: '11px',
-                    fontWeight: 500,
-                    letterSpacing: '0.02em',
-                    textTransform: 'uppercase',
-                  }}
-                  aria-label={tSearch('clear')}
+                  onClick={() => switchLocale(l)}
+                  aria-pressed={locale === l}
+                  className={clsx(
+                    "h-11 rounded-btn border text-[14px]",
+                    locale === l ? "border-ink font-semibold" : "border-line text-muted"
+                  )}
                 >
-                  {tSearch('clear')}
+                  {l === "es" ? t("lang_es") : t("lang_en")}
                 </button>
-              )}
-
-              {/* ÍCONO CÁMARA - Búsqueda visual (ahora navega a flujo full-screen) */}
-              <button
-                type="button"
-                onClick={() => vsInputRef.current?.click()}
-                className="flex-shrink-0 text-black hover:opacity-60 transition-opacity duration-200"
-                title="Buscar por imagen"
-                aria-label="Búsqueda visual"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                  <circle cx="12" cy="13" r="4" />
-                </svg>
-              </button>
-
-              {/* Input de imagen oculto - VS-10: handoff a /[locale]/visual-search via sessionStorage. */}
-              <input
-                ref={vsInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  if (f) {
-                    try {
-                      const dataUrl = await new Promise<string>((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => resolve(reader.result as string);
-                        reader.onerror = reject;
-                        reader.readAsDataURL(f);
-                      });
-                      const payload = JSON.stringify({
-                        name: f.name,
-                        type: f.type,
-                        dataUrl,
-                      });
-                      sessionStorage.setItem('__viogi_vs_pending', payload);
-                    } catch {
-                      // Fallback: still navigate; page will show its own upload UI
-                    }
-                    setSearchOpen(false);
-                    setSearchQuery('');
-                    router.push(`/${locale}/visual-search`);
-                    // If already on /visual-search, the push won't remount the
-                    // page — notify it so it reloads the new file and resets.
-                    window.dispatchEvent(new Event('viogi:vs-new'));
-                  }
-                  // Reset input so same file can be re-selected
-                  e.target.value = '';
-                }}
-              />
-
-              {/* X CERRAR - Grande (oculta en móvil) */}
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchOpen(false);
-                  setSearchQuery("");
-                  // No vsFile to clear (handoff via storage consumed by target page or GC'd)
-                }}
-                className="hidden md:block text-black hover:opacity-60 transition-opacity duration-200 flex-shrink-0 mr-6"
-                style={{
-                  fontSize: '28px',
-                  lineHeight: '1',
-                  fontWeight: '300'
-                }}
-              >
-                ×
-              </button>
-            </form>
-          </div>
-
-          {/* OVERLAY GRIS - Click para cerrar con cursor X */}
-          <div
-            onClick={() => {
-              setSearchOpen(false);
-              setSearchQuery("");
-              // No vsFile state to clear (storage handoff is one-shot consumed on /visual-search mount)
-            }}
-            className="fixed inset-0 search-overlay-cursor"
-            style={{
-              top: '112px',
-              zIndex: 37,
-              background: 'rgba(0, 0, 0, 0.4)'
-            }}
-          />
-        </>
-      )}
-
-      {/* Mobile Fullscreen Menu - Estilo Stüssy */}
-      {mobileMenuOpen && (
-        <div 
-          className="md:hidden fixed inset-0 z-50 overflow-y-auto"
-          style={{ 
-            top: '56px',
-            background: 'white'
-          }}
-        >
-          <nav className="flex flex-col">
-            {/* SHOP - Acordeón */}
-            <div className="border-b" style={{ borderColor: 'rgba(0, 0, 0, 0.08)' }}>
-              <button
-                onClick={() => setMobileShopOpen(!mobileShopOpen)}
-                className="w-full flex items-center justify-between px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 mobile-menu-button"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase',
-                  WebkitTapHighlightColor: 'transparent',
-                  backgroundColor: 'white'
-                }}
-              >
-                {tHeader('shop')}
-                <svg
-                  className="w-3 h-3 transition-transform duration-200"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                  style={{
-                    transform: mobileShopOpen ? 'rotate(90deg)' : 'rotate(0deg)'
-                  }}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {mobileShopOpen && (
-                <div className="pb-3">
-                  <Link
-                    href={`/${locale}/collections/all`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('all')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/collections/hoodie`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('hoodie')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/collections/chamarra`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('jacket')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/collections/pants`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('pants')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/collections/jeans`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('jeans')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/collections/camisas`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('shirts')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/collections/playeras`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('tees')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/collections/accesorios`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('accessories')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/collections/bolsos`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('bags')}
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* SUPPORT - Acordeón */}
-            <div className="border-b" style={{ borderColor: 'rgba(0, 0, 0, 0.08)' }}>
-              <button
-                onClick={() => setMobileSupportOpen(!mobileSupportOpen)}
-                className="w-full flex items-center justify-between px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 mobile-menu-button"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase',
-                  WebkitTapHighlightColor: 'transparent',
-                  backgroundColor: 'white'
-                }}
-              >
-                {tHeader('support')}
-                <svg 
-                  className="w-3 h-3 transition-transform duration-200" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24" 
-                  strokeWidth={2.5}
-                  style={{
-                    transform: mobileSupportOpen ? 'rotate(90deg)' : 'rotate(0deg)'
-                  }}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {mobileSupportOpen && (
-                <div className="pb-3">
-                  <Link
-                    href={`/${locale}/pages/customer-support`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('customer_support')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/pages/locaciones`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('locations')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/pages/shipping-payments-returns`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('shipping_payments_returns')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/pages/size-guide`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('size_guide')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/pages/legal`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('legal')}
-                  </Link>
-                  <Link
-                    href={`/${locale}/pages/accessibility`}
-                    className="block px-6 py-3 text-black hover:opacity-60 transition-opacity duration-200"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      letterSpacing: '0.02em',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                    }}
-                  >
-                    {tHeader('accessibility')}
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* LOG IN / MI CUENTA */}
-            <Link
-              href={`/${locale}/account`}
-              className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                letterSpacing: '0.02em',
-                fontSize: '11px',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                borderColor: 'rgba(0, 0, 0, 0.08)',
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-              }}
-            >
-              {userEmail ? tCommon('myAccount') : tCommon('logIn')}
-            </Link>
-
-            {/* CAPÍTULOS */}
-            <Link
-              href={`/${locale}/pages/chapters`}
-              className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                letterSpacing: '0.02em',
-                fontSize: '11px',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                borderColor: 'rgba(0, 0, 0, 0.08)',
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-              }}
-            >
-              {tHeader('chapters')}
-            </Link>
-            {/* ARCHIVO */}
-            <Link
-              href={`/${locale}/archive`}
-              className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b"
-              onClick={() => setMobileMenuOpen(false)}
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                letterSpacing: '0.02em',
-                fontSize: '11px',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                borderColor: 'rgba(0, 0, 0, 0.08)',
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-              }}
-            >
-              {tHeader('archive')}
-            </Link>
-
-            {/* VISUAL SEARCH — opens file picker (same flow as camera icon) */}
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                vsInputRef.current?.click();
-              }}
-              className="px-6 py-5 text-black hover:opacity-60 transition-opacity duration-200 border-b text-left"
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                letterSpacing: '0.02em',
-                fontSize: '11px',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                borderColor: 'rgba(0, 0, 0, 0.08)',
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-              }}
-            >
-              {tCommon('visual_search')}
-            </button>
-
-            {/* SHIPPING TO - Selector de País/Moneda */}
-            <div className="px-6 py-5 flex items-center justify-between border-b" style={{ borderColor: 'rgba(0, 0, 0, 0.08)' }}>
-              <p 
-                style={{ 
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                  textTransform: 'uppercase'
-                }}
-              >
-                {tHeader('language')} {country} / {currency}
-              </p>
-              <button
-                onClick={() => setCurrencyOpen(!currencyOpen)}
-                className="text-black hover:opacity-60 transition-opacity duration-200"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  letterSpacing: '0.02em',
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-                }}
-              >
-                {tHeader('change')}
-              </button>
+              ))}
             </div>
           </nav>
-
-          {/* MODAL DE IDIOMA/MONEDA EN MOBILE */}
-          {currencyOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
-              <div className="bg-white rounded-lg p-8 max-w-sm w-full mx-4">
-                <h3
-                  className="mb-6"
-                  style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    letterSpacing: '0.02em',
-                    textTransform: 'uppercase'
-                  }}
-                >
-                  {tHeader('select_language_currency')}
-                </h3>
-                <div className="space-y-3">
-                  <button
-                    onClick={() => {
-                      switchLocale('es');
-                      setCurrencyOpen(false);
-                    }}
-                    className="w-full text-left p-4 border border-gray-200 rounded hover:opacity-60 transition-opacity duration-200"
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      letterSpacing: '0.02em',
-                      textTransform: 'uppercase',
-                      opacity: locale === 'es' ? 1 : 0.6
-                    }}
-                  >
-                    ES / MXN
-                  </button>
-                  <button
-                    onClick={() => {
-                      switchLocale('en');
-                      setCurrencyOpen(false);
-                    }}
-                    className="w-full text-left p-4 border border-gray-200 rounded hover:opacity-60 transition-opacity duration-200"
-                    style={{
-                      fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      letterSpacing: '0.02em',
-                      textTransform: 'uppercase',
-                      opacity: locale === 'en' ? 1 : 0.6
-                    }}
-                  >
-                    EN / USD
-                  </button>
-                </div>
-                <button
-                  onClick={() => setCurrencyOpen(false)}
-                  className="mt-6 w-full p-3 bg-black text-white hover:opacity-80 transition-opacity duration-200"
-                  style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    letterSpacing: '0.02em',
-                    textTransform: 'uppercase'
-                  }}
-                >
-                  {tCommon('close')}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </header>
   );
 }
-

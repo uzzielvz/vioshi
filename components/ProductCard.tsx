@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useCart } from "@/store/cartStore";
-import { useLocaleContext } from "@/hooks/useLocaleContext";
+import clsx from "clsx";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { generateId } from "@/lib/utils";
+import { useLocaleContext } from "@/hooks/useLocaleContext";
+import { useWishlist } from "@/hooks/useWishlist";
 import { formatPrice } from "@/lib/formatters";
+import {
+  GARMENT_TYPE_LABELS,
+  GARMENT_TYPE_LABELS_EN,
+  type GarmentType,
+} from "@/lib/garments";
+import { HeartIcon } from "@/components/ui/icons";
 
 interface ProductCardProps {
   id: string;
@@ -18,153 +23,112 @@ interface ProductCardProps {
   soldOut?: boolean;
   isNew?: boolean;
   size?: string;
-  availability?: 'disponible' | 'apartada' | 'vendida';
+  availability?: "disponible" | "apartada" | "vendida";
+  brand?: { name: string };
+  garmentType?: GarmentType;
 }
 
-export default function ProductCard({ id, name, price, image, slug, soldOut, isNew, size, availability }: ProductCardProps) {
-  const { addItem, openCart } = useCart();
+export default function ProductCard({
+  id,
+  name,
+  price,
+  image,
+  slug,
+  soldOut,
+  size,
+  availability,
+  brand,
+  garmentType,
+}: ProductCardProps) {
   const { locale } = useLocaleContext();
-  const t = useTranslations("product");
-  const [isHovered, setIsHovered] = useState(false);
+  const t = useTranslations("ui.card");
+  const { has, toggle } = useWishlist();
+  const saved = has(id);
 
-  // `availability` manda; soldOut queda como respaldo para llamadas viejas.
-  const estado = availability ?? (soldOut ? 'vendida' : 'disponible');
+  const estado = availability ?? (soldOut ? "vendida" : "disponible");
+  const sold = estado === "vendida";
+  const reserved = estado === "apartada";
 
-  const handleQuickAdd = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    addItem({
-      id: generateId(),
-      productId: id,
-      productName: name,
-      quantity: 1,
-      price,
-      image,
-      slug,
-    });
-    openCart();
-  };
+  // "otro" is an internal bucket, not something a buyer should read on the card.
+  const typeLabel = garmentType && garmentType !== "otro"
+    ? (locale === "en" ? GARMENT_TYPE_LABELS_EN : GARMENT_TYPE_LABELS)[garmentType]
+    : undefined;
+  const title = brand?.name
+    ? typeLabel
+      ? `${brand.name} ${typeLabel}`
+      : brand.name
+    : name;
 
   return (
-    <div className="group">
+    <article className="min-w-0">
       <Link href={`/${locale}/products/${slug}`} className="block">
-        <div
-          className="relative aspect-[3/4] bg-[#F5F5F5] overflow-hidden mb-3"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
+        <div className="relative aspect-[3/4] overflow-hidden bg-carton">
           {image ? (
             <Image
               src={image}
-              alt={name}
+              alt={title}
               fill
-              className="object-cover"
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              className={clsx(
+                "object-cover mix-blend-multiply",
+                sold && "opacity-45 grayscale"
+              )}
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
-          ) : (
-            <div className="absolute inset-0 bg-[#EBEBEB]" />
-          )}
+          ) : null}
 
-          {isNew && estado === 'disponible' && (
-            <div
-              className="absolute top-3 left-3"
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                fontSize: '10px',
-                fontWeight: 500
-              }}
-            >
-              <span className="bg-black text-white px-2 py-1 uppercase tracking-wide">
-                {t("new")}
-              </span>
-            </div>
+          {reserved && (
+            <span className="absolute left-2 top-2 border border-ink bg-paper px-1.5 py-1 text-[10px] font-semibold uppercase leading-none tracking-[0.08em] text-ink">
+              {t("reserved")}
+            </span>
           )}
-
-          {/* VENDIDA: se apaga la foto, la pieza no vuelve. */}
-          {estado === 'vendida' && (
-            <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-              <span
-                className="text-black uppercase tracking-wide"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '11px',
-                  fontWeight: 500
-                }}
-              >
-                {t("sold_out")}
-              </span>
-            </div>
-          )}
-
-          {/* APARTADA: la foto se ve completa. Puede liberarse, así que el
-              objetivo es que el cliente se quede, no que se vaya. */}
-          {estado === 'apartada' && (
-            <div className="absolute top-3 right-3">
-              <span
-                className="bg-white/95 text-black px-2 py-1 uppercase tracking-wide border border-black"
-                style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                  fontSize: '10px',
-                  fontWeight: 500
-                }}
-              >
-                {t("reserved")}
-              </span>
-            </div>
-          )}
-
-          {estado === 'disponible' && isHovered && (
-            <button
-              onClick={handleQuickAdd}
-              className="absolute bottom-0 left-0 right-0 bg-black text-white py-3 text-center uppercase tracking-wide transition-opacity duration-200"
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                fontSize: '11px',
-                fontWeight: 500
-              }}
-            >
-              {t("quick_add")}
-            </button>
+          {sold && (
+            <span className="absolute left-2 top-2 bg-ink px-1.5 py-1 text-[10px] font-semibold uppercase leading-none tracking-[0.08em] text-paper">
+              {t("sold")}
+            </span>
           )}
         </div>
       </Link>
 
-      <div className="space-y-1">
-        <Link href={`/${locale}/products/${slug}`}>
-          <h3
-            className="uppercase tracking-wide hover:opacity-60 transition-opacity"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '11px',
-              fontWeight: 500
-            }}
-          >
-            {name}
-          </h3>
-        </Link>
-        {size && (
-          <p
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '11px',
-              fontWeight: 400,
-              color: '#666'
-            }}
-          >
-            {size}
-          </p>
-        )}
-        <p
-          style={{
-            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-            fontSize: '11px',
-            fontWeight: 400
-          }}
-        >
-          {formatPrice(price, locale)}
+      <div className="mt-[9px] flex items-center justify-between gap-2 px-2.5 md:px-0">
+        <p className="min-w-0 truncate text-[13px] leading-tight text-ink">
+          {brand?.name ? (
+            <>
+              <span className="font-semibold">{brand.name}</span>
+              {typeLabel ? <span className="font-normal"> {typeLabel}</span> : null}
+            </>
+          ) : (
+            <span className="font-semibold">{name}</span>
+          )}
         </p>
+        {size ? (
+          <span className="flex-none text-[13px] font-medium tabular-nums text-ink">{size}</span>
+        ) : null}
       </div>
-    </div>
+
+      <div className="flex items-center justify-between gap-2 px-2.5 md:px-0">
+        <p
+          className={clsx(
+            "text-[13px] font-bold tabular-nums",
+            sold ? "text-muted line-through" : "text-ink"
+          )}
+        >
+          {formatPrice(price, locale, false)}
+        </p>
+        <button
+          type="button"
+          aria-pressed={saved}
+          aria-label={saved ? t("unsave", { name: title }) : t("save", { name: title })}
+          onClick={() => toggle(id)}
+          className="grid h-9 w-9 flex-none place-items-center"
+        >
+          <HeartIcon
+            className={clsx(
+              "h-[18px] w-[18px]",
+              saved ? "fill-accent text-accent" : "fill-none text-ink"
+            )}
+          />
+        </button>
+      </div>
+    </article>
   );
 }

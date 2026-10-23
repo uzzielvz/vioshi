@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { toggleSoldAction } from '../reservas/actions'
 
-const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
+const font = { fontFamily: "var(--font-sans)" }
 
 /** Marcar vendida / disponible en UN clic. Para ventas presenciales. */
 export default function SoldToggle({

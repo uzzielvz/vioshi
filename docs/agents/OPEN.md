@@ -6,7 +6,7 @@ Si tu paquete depende de una fila ⏳, **no inventes el valor**. Deja un setting
 
 | Tema | Estado | ¿Bloquea código? |
 |---|---|---|
-| Nombre de la plataforma (dominio + IG + IMPI) | ⏳ | No. Ya es env (`NEXT_PUBLIC_BRAND_*`) |
+| Nombre de la plataforma | ✅ **rail** (2026-10-23). Falta: dominio, IG, registro IMPI (revisar parecido con «Grailed») y poner `NEXT_PUBLIC_BRAND_NAME=rail` en Vercel | No. Ya es env (`NEXT_PUBLIC_BRAND_*`) |
 | Consulta fiscal / retenciones / estructura legal | ⏳ Mario | **Sí para Connect (L7)** |
 | Hoja de sociedad (quién decide qué) | ⏳ | No para tienda; sí antes de vendedores externos |
 | % que le toca a Mario por prenda suya | ⏳ | No. `owner` basta hasta Connect |

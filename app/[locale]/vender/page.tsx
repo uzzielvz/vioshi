@@ -8,7 +8,7 @@ import { brand } from '@/lib/brand';
 import { submitSellerApplication } from './actions';
 
 const fontStyle: React.CSSProperties = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 };
 
 // The action returns codes, not copy; the message follows the active locale.

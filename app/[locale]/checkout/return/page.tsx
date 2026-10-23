@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 import { resolveCheckoutReturnAction } from '../actions';
 
-const FONT = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" };
+const FONT = { fontFamily: "var(--font-sans)" };
 
 function CheckoutReturnContent() {
   const router = useRouter();

@@ -3,6 +3,7 @@ import { brand } from '@/lib/brand'
 import { peekAdminActor } from '@/lib/admin/session'
 import '../globals.css'
 import AdminHeader from './_components/AdminHeader'
+import { inter } from '@/lib/fonts'
 
 export const metadata: Metadata = {
   title: `${brand.name} Admin`,
@@ -13,14 +14,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (!actor) {
     return (
-      <html lang="es">
+      <html lang="es" className={inter.variable}>
         <body className="antialiased bg-white">{children}</body>
       </html>
     )
   }
 
   return (
-    <html lang="es">
+    <html lang="es" className={inter.variable}>
       {/*
         Mismo esqueleto que la tienda (components/ClientLayout): header fijo de
         56px arriba, fondo blanco y el scroll normal de la página. El panel es

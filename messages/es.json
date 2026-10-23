@@ -508,5 +508,101 @@
     "archivos_download": "Descargar",
     "archivos_back": "Volver a Mi Cuenta",
     "back_to_store": "← Volver a la Tienda"
+  },
+  "ui": {
+    "nav": {
+      "home": "Inicio",
+      "search": "Buscar",
+      "sell": "Vender",
+      "bag": "Bolsa",
+      "bag_count": "Bolsa, {count, plural, one {# pieza} other {# piezas}}",
+      "account": "Cuenta",
+      "login": "Entrar",
+      "menu": "Menú",
+      "close": "Cerrar",
+      "cancel": "Cancelar",
+      "visual_search": "Buscar por foto",
+      "search_placeholder": "Busca marcas o prendas",
+      "categories": "Categorías",
+      "saved": "Guardados",
+      "help": "Ayuda",
+      "language": "Idioma y moneda",
+      "lang_es": "Español · MXN",
+      "lang_en": "English · USD",
+      "switch_language": "Cambiar a inglés"
+    },
+    "cats": {
+      "all": "Todo",
+      "new": "Nuevo",
+      "hoodie": "Hoodies",
+      "chamarra": "Chamarras",
+      "pants": "Pants",
+      "jeans": "Jeans",
+      "camisas": "Camisas",
+      "playeras": "Playeras",
+      "accesorios": "Accesorios",
+      "bolsos": "Bolsas"
+    },
+    "home": {
+      "title": "Lo nuevo",
+      "intro": "Ropa de segunda mano. Cada pieza es única.",
+      "count": "{count, plural, one {# pieza} other {# piezas}}"
+    },
+    "card": {
+      "save": "Guardar {name}",
+      "unsave": "Quitar {name} de guardados",
+      "reserved": "Apartada",
+      "sold": "Vendida",
+      "empty": "No hay piezas por ahora."
+    },
+    "product": {
+      "add_to_bag": "Agregar a la bolsa",
+      "adding": "Agregando…",
+      "in_bag": "Ya está en tu bolsa",
+      "size": "Talla {size}",
+      "measurements": "Medidas",
+      "condition": "Estado de la prenda",
+      "details": "Detalles",
+      "delivery": "Entrega y pago",
+      "delivery_body": "Recoge en un punto del Valle de Toluca o recíbela en casa.",
+      "pay_threshold": "Tarjeta siempre. OXXO y SPEI en compras de hasta {threshold}.",
+      "pay_all": "Tarjeta, OXXO o SPEI.",
+      "sold_by": "Vende",
+      "more_from": "Más de {store}",
+      "see_profile": "Ver perfil",
+      "save": "Guardar",
+      "saved": "Guardado",
+      "see_others": "Ver otras piezas",
+      "photo": "Foto {n} de {total}",
+      "prev_photo": "Foto anterior",
+      "next_photo": "Foto siguiente"
+    },
+    "bag": {
+      "title": "Bolsa",
+      "count": "{count, plural, one {# pieza} other {# piezas}}",
+      "empty": "Tu bolsa está vacía.",
+      "empty_cta": "Ver lo nuevo",
+      "remove": "Quitar",
+      "subtotal": "Subtotal",
+      "delivery_note": "La entrega se elige al pagar.",
+      "unique_note": "Cada pieza es única. Te la apartamos cuando empiezas a pagar, no antes.",
+      "checkout": "Ir a pagar · {total}",
+      "size": "Talla {size}"
+    },
+    "footer": {
+      "sell": "Vender",
+      "shipping": "Envíos y pagos",
+      "help": "Ayuda",
+      "size_guide": "Guía de tallas",
+      "legal": "Legal",
+      "instagram": "Instagram"
+    },
+    "store": {
+      "pieces": "{count, plural, one {# pieza en venta} other {# piezas en venta}}",
+      "on_sale": "En venta",
+      "instagram": "Instagram",
+      "empty": "Todavía no hay piezas publicadas.",
+      "sells_on": "Vende en {brand}"
+    }
   }
 }

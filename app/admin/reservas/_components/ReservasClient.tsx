@@ -11,7 +11,7 @@ import {
   markOrderDeliveredAction,
 } from '../actions'
 
-const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
+const font = { fontFamily: "var(--font-sans)" }
 
 export type Reserva = {
   id: string

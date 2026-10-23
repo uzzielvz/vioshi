@@ -6,7 +6,7 @@ import type { Locale } from '@/i18n';
 import { signOutAction } from '../actions';
 
 const FONT: React.CSSProperties = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 };
 
 interface NavItem {

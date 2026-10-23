@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
 @tailwind base;
@@ -7,8 +6,10 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #000000;
+  --foreground: #111111;
   --font-logo: 'Bebas Neue', 'Impact', sans-serif;
+  /* Inter comes from next/font (lib/fonts.ts) through --font-inter. */
+  --font-sans: var(--font-inter, 'Inter'), 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 html {
@@ -18,10 +19,9 @@ html {
 body {
   color: var(--foreground);
   background: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: 0.01em;
 }
 
 @layer utilities {
@@ -39,7 +39,7 @@ body {
 .search-input-placeholder::placeholder {
   color: rgba(0, 0, 0, 0.35);
   font-weight: 400;
-  font-family: 'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: 10px;
   letter-spacing: 0.02em;
 }

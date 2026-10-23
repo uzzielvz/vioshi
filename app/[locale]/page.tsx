@@ -1,46 +1,26 @@
+import CategoryTabs from "@/components/CategoryTabs";
 import ProductGrid from "@/components/ProductGrid";
 import { getProducts } from "@/lib/products";
-import { brand } from "@/lib/brand";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 export default async function Home({
-  params: { locale }
+  params: { locale },
 }: {
   params: { locale: string };
 }) {
-  const products = await getProducts();
+  const [products, t] = await Promise.all([
+    getProducts(),
+    getTranslations("ui.home"),
+  ]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-        {/* Hero Section - Ultra Minimal */}
-        <section className="flex items-center justify-center py-32 md:py-48 px-8">
-          <div className="text-center">
-            <h1
-              className="text-6xl md:text-8xl font-bold mb-12 uppercase tracking-wider"
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
-              }}
-            >
-              {brand.name}
-            </h1>
-            <Link
-              href={`/${locale}/collections/all`}
-              className="inline-block bg-black text-white px-12 py-4 text-xs uppercase tracking-wide hover:opacity-80 transition-opacity"
-              style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-                fontSize: '11px',
-                fontWeight: 800,
-                letterSpacing: '0.05em'
-              }}
-            >
-              SHOP NOW
-            </Link>
-          </div>
-        </section>
-
-      {/* Products Section */}
-      <section className="px-8 py-16 md:py-24">
+    <div className="bg-paper">
+      <div className="flex items-baseline justify-between gap-3 px-3.5 pb-1 pt-4 md:px-8">
+        <h1 className="text-[17px] font-bold tracking-[-0.01em] text-ink">{t("title")}</h1>
+        <p className="text-[12px] text-muted">{t("count", { count: products.length })}</p>
+      </div>
+      <CategoryTabs locale={locale} active="all" />
+      <section className="px-0 py-4 md:px-8">
         <ProductGrid products={products} />
       </section>
     </div>

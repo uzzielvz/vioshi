@@ -3,6 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import ProductGrid from "@/components/ProductGrid";
+import { InstagramIcon } from "@/components/ui/icons";
 import { getProductsByStoreId } from "@/lib/products";
 import { getStoreBySlug } from "@/lib/stores";
 import { brand } from "@/lib/brand";
@@ -12,22 +13,6 @@ interface PageProps {
     slug: string;
     locale: string;
   };
-}
-
-const BASE_FONT = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-} as const;
-
-/** The seed stores a full profile URL; the header shows the @handle. */
-function instagramHandle(url: string): string | null {
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-  if (trimmed.startsWith("@")) return trimmed;
-
-  const withoutQuery = trimmed.split("?")[0];
-  const segments = withoutQuery.split("/").filter(Boolean);
-  const handle = segments[segments.length - 1];
-  return handle && !handle.includes(".") ? `@${handle}` : null;
 }
 
 function instagramHref(url: string): string {
@@ -62,84 +47,90 @@ export default async function StorePage({ params }: PageProps) {
     notFound();
   }
 
-  const [products, t, tCollections] = await Promise.all([
+  const [products, t] = await Promise.all([
     getProductsByStoreId(store.id),
-    getTranslations("pages.store"),
-    getTranslations("pages.collections"),
+    getTranslations("ui.store"),
   ]);
 
-  const handle = store.instagram ? instagramHandle(store.instagram) : null;
+  const covers = products.map((product) => product.image).filter(Boolean).slice(0, 3);
+  const initial = store.name.trim().charAt(0).toUpperCase();
 
   return (
-    <div className="px-4 md:px-8 py-8 md:py-12">
-      <header className="border-b border-gray-200 pb-8 mb-8 md:mb-12">
-        <div className="flex items-start gap-5">
-          {store.logo_url && (
-            <div className="relative w-16 h-16 md:w-20 md:h-20 shrink-0 bg-[#F5F5F5]">
-              <Image
-                src={store.logo_url}
-                alt={store.name}
-                fill
-                className="object-contain"
-                sizes="80px"
-              />
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <h1
-              className="uppercase tracking-wide"
-              style={{ ...BASE_FONT, fontSize: "13px", fontWeight: 800, letterSpacing: "0.05em" }}
-            >
-              {store.name}
-            </h1>
-
-            {store.bio && (
-              <p
-                className="max-w-xl"
-                style={{ ...BASE_FONT, fontSize: "11px", color: "#666", lineHeight: 1.7 }}
-              >
-                {store.bio}
-              </p>
-            )}
-
-            {store.instagram && (
-              <a
-                href={instagramHref(store.instagram)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block underline hover:opacity-60 transition-opacity"
-                style={{ ...BASE_FONT, fontSize: "11px" }}
-              >
-                {handle ?? t("instagram")}
-              </a>
-            )}
+    <div className="bg-paper">
+      <div className="relative aspect-[16/7] overflow-hidden bg-carton md:aspect-[16/5]">
+        {covers.length > 0 && (
+          <div
+            className={
+              covers.length === 1
+                ? "grid h-full grid-cols-1"
+                : covers.length === 2
+                  ? "grid h-full grid-cols-2"
+                  : "grid h-full grid-cols-3"
+            }
+          >
+            {covers.map((src, index) => (
+              <div key={`${src}-${index}`} className="relative h-full">
+                <Image
+                  src={src}
+                  alt=""
+                  fill
+                  className="object-cover mix-blend-multiply"
+                  sizes="40vw"
+                  priority={index === 0}
+                />
+              </div>
+            ))}
           </div>
-        </div>
-      </header>
-
-      <div className="flex items-center justify-between mb-8">
-        <h2
-          className="uppercase tracking-wide"
-          style={{ ...BASE_FONT, fontSize: "11px", fontWeight: 500 }}
-        >
-          {t("pieces")}
-        </h2>
-        <p className="text-gray-500" style={{ ...BASE_FONT, fontSize: "11px" }}>
-          {tCollections("product_count", { count: products.length })}
-        </p>
+        )}
       </div>
 
-      {products.length === 0 ? (
-        <p
-          className="text-center py-16 uppercase tracking-wide"
-          style={{ ...BASE_FONT, fontSize: "11px", color: "#666" }}
-        >
-          {t("empty")}
-        </p>
-      ) : (
-        <ProductGrid products={products} />
-      )}
+      <div className="px-3.5 pb-4 md:px-8">
+        <div className="relative -mt-[34px] h-[68px] w-[68px] overflow-hidden rounded-full border-[3px] border-paper bg-ink">
+          {store.logo_url ? (
+            <Image
+              src={store.logo_url}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="68px"
+            />
+          ) : (
+            <span className="grid h-full w-full place-items-center text-[26px] font-extrabold text-paper">
+              {initial}
+            </span>
+          )}
+        </div>
+
+        <h1 className="mt-2 text-[21px] font-bold tracking-[-0.015em] text-ink">{store.name}</h1>
+        <p className="mt-1 text-[13px] text-muted">{t("pieces", { count: products.length })}</p>
+        {store.bio && <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-ink">{store.bio}</p>}
+
+        {store.instagram && (
+          <a
+            href={instagramHref(store.instagram)}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t("instagram")}
+            className="mt-3 grid h-10 w-10 place-items-center rounded-btn border border-ink text-ink"
+          >
+            <InstagramIcon className="h-[18px] w-[18px]" />
+          </a>
+        )}
+      </div>
+
+      <div className="border-b border-line px-3.5 md:px-8">
+        <span className="-mb-px inline-flex h-[42px] items-center border-b-2 border-ink text-[13px] font-semibold text-ink">
+          {t("on_sale")}
+        </span>
+      </div>
+
+      <section className="px-0 py-4 md:px-8">
+        {products.length === 0 ? (
+          <p className="px-4 py-16 text-center text-[13px] text-muted">{t("empty")}</p>
+        ) : (
+          <ProductGrid products={products} />
+        )}
+      </section>
     </div>
   );
 }

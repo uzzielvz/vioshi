@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 
 const fontStyle = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 };
 
 const links = [

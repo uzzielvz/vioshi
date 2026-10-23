@@ -33,7 +33,7 @@ export default function VisualSearchAnalyzer({
   }, [file]);
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+    fontFamily: "var(--font-sans)",
     fontSize: '11px',
     fontWeight: 500,
     letterSpacing: '0.08em',

@@ -4,7 +4,7 @@ import SettingsForm, { type Settings } from './_components/SettingsForm'
 
 export const dynamic = 'force-dynamic'
 
-const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
+const font = { fontFamily: "var(--font-sans)" }
 
 const COLUMNS =
   'card_only_threshold_mxn, card_reserve_minutes, spei_reserve_minutes, voucher_hours, manual_hold_days, home_shipping_mxn'
