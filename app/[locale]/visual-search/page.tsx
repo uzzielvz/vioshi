@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import VisualSearchAnalyzer from '@/components/VisualSearchAnalyzer';
 import VisualSearchResults from '@/components/VisualSearchResults';
+import EmptyState from '@/components/ui/EmptyState';
+import { CameraIcon } from '@/components/ui/icons';
+import { buttonClass } from '@/components/ui/styles';
 
 type VSResult = {
   id: string;
@@ -31,7 +34,11 @@ type Stage = 'looking' | 'results';
 export default function VisualSearchPage() {
   const router = useRouter();
   const locale = useLocale();
-  const t = useTranslations('search');
+  const t = useTranslations('ui.visual');
+  // Plain strings so a new `t` identity never re-fires the (paid) search.
+  const busyMessage = t('error_busy');
+  const failedMessage = t('error_body');
+  const offlineMessage = t('error_offline');
 
   const [stage, setStage] = useState<Stage>('looking');
   const [file, setFile] = useState<File | null>(null);
@@ -128,12 +135,9 @@ export default function VisualSearchPage() {
         if (cancelled) return;
 
         if (!res.ok) {
-          if (res.status === 429) {
-            setError(data?.message || 'Demasiadas búsquedas. Intenta más tarde.');
-            return;
-          }
-          const serverMsg = data?.message || data?.error;
-          setError(serverMsg ? `Error del servidor: ${serverMsg}` : 'No se pudo procesar la imagen.');
+          // Server details go to the console; people get plain copy.
+          console.error('[visual-search] API error', res.status, data?.message || data?.error);
+          setError(res.status === 429 ? busyMessage : failedMessage);
           return;
         }
 
@@ -163,11 +167,7 @@ export default function VisualSearchPage() {
         if (e?.name === 'AbortError') return;
         console.error('Visual search fetch error:', e);
         if (!cancelled) {
-          setError(
-            navigator.onLine
-              ? 'Error de conexión con el servidor. Revisa tu GEMINI_API_KEY y los logs del servidor.'
-              : 'Sin conexión a internet.'
-          );
+          setError(navigator.onLine ? failedMessage : offlineMessage);
         }
       }
     }
@@ -177,7 +177,7 @@ export default function VisualSearchPage() {
       cancelled = true;
       controller.abort();
     };
-  }, [file]);
+  }, [file, busyMessage, failedMessage, offlineMessage]);
 
   function handleBack() {
     try {
@@ -188,34 +188,27 @@ export default function VisualSearchPage() {
 
   if (error) {
     return (
-      <main className="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-white px-6 text-center">
-        <div className="max-w-md">
-          <p className="text-2xl mb-4">⚠️</p>
-          <p className="uppercase tracking-widest text-sm mb-6">{error}</p>
-          <button
-            onClick={() => router.replace(`/${locale}`)}
-            className="uppercase text-xs tracking-widest border-b border-black pb-0.5 hover:opacity-60"
-          >
-            {t('back')}
-          </button>
-        </div>
-      </main>
+      <EmptyState icon={<CameraIcon />} title={t('error_title')} body={error} className="py-20">
+        <button type="button" onClick={() => router.replace(`/${locale}`)} className={buttonClass('primary')}>
+          {t('back')}
+        </button>
+      </EmptyState>
     );
   }
 
   if (!file || !previewUrl) {
-    return <div className="min-h-[calc(100vh-64px)] bg-white" />;
+    return <div className="min-h-[calc(100vh-64px)] bg-paper" />;
   }
 
   return (
-    <div className="bg-white">
+    <div className="bg-paper">
       {stage === 'looking' && (
         <VisualSearchAnalyzer file={file} onBack={handleBack} />
       )}
 
       {stage === 'results' && (
         <div className="vs-fade-in-slow">
-          <VisualSearchResults results={results} aiDescription={aiDescription} />
+          <VisualSearchResults results={results} aiDescription={aiDescription} previewUrl={previewUrl} />
         </div>
       )}
     </div>
