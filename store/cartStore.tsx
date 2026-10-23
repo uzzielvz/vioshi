@@ -13,6 +13,9 @@ interface CartContextType {
   replaceItems: (items: CartItem[]) => void;
   clearCart: () => void;
   itemCount: number;
+  /** True once the saved cart was read from localStorage. Child effects run
+   * before this provider's, so anything that acts on an empty cart waits for it. */
+  isReady: boolean;
   isCartOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
@@ -138,6 +141,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         replaceItems,
         clearCart,
         itemCount,
+        isReady: isInitialized,
         isCartOpen,
         openCart,
         closeCart,

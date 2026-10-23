@@ -93,8 +93,10 @@ export function formatAvailabilityLabel(point: PickupPoint, from: Date = new Dat
   }
 
   const dayName = DAY_NAMES_ES[point.transferDay] ?? 'el día de traslado';
+  // lunes–viernes already end in "s" and don't change in plural.
+  const plural = dayName.endsWith('s') ? dayName : `${dayName}s`;
   const next = nextAvailableDate(point.transferDay, from);
-  return `Disponible a partir del ${formatDateEs(next)} (traslado los ${dayName}s)`;
+  return `Disponible a partir del ${formatDateEs(next)} (traslado los ${plural})`;
 }
 
 export function toDateInputValue(date: Date): string {

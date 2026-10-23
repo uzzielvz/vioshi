@@ -219,7 +219,7 @@ export default function CheckoutPage() {
   const t = useTranslations('checkout');
   const tc = useTranslations('ui.checkout');
   const { locale } = useLocaleContext();
-  const { cart: cartData, closeCart, updateShippingCost, replaceItems } = useCart();
+  const { cart: cartData, closeCart, updateShippingCost, replaceItems, isReady } = useCart();
   const cart = cartData.items;
   const subtotal = cartData.subtotal;
   const shipping = cartData.shipping;
@@ -342,7 +342,7 @@ export default function CheckoutPage() {
   const paymentStepActive = Boolean(clientSecret || pendingOrderNumber);
 
   useEffect(() => {
-    if (paymentStepActive) return;
+    if (!isReady || paymentStepActive) return;
     if (
       typeof window !== 'undefined' &&
       sessionStorage.getItem('viogi_checkout_payment') === '1'
@@ -352,7 +352,7 @@ export default function CheckoutPage() {
     if (cart.length === 0 && !isSubmittingRef.current) {
       router.push(`/${locale}/cart`);
     }
-  }, [cart, router, locale, paymentStepActive]);
+  }, [cart, router, locale, paymentStepActive, isReady]);
 
   // CP → colonia/municipio/estado lookup via SEPOMEX.
   // Only re-runs when zipCode changes — other formData fields are intentionally excluded
@@ -650,7 +650,7 @@ export default function CheckoutPage() {
                         {pickupAvailabilityLabel && (
                           <p className="text-[12.5px] text-muted">{pickupAvailabilityLabel}</p>
                         )}
-                        <div className="grid grid-cols-2 gap-2.5">
+                        <div className="grid gap-2.5 sm:grid-cols-2">
                           <Field id="pickupDate" label={tc('pickup_date')}>
                             <input
                               id="pickupDate"

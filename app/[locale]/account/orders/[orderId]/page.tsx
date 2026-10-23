@@ -28,14 +28,15 @@ export default async function OrderDetailPage({ params }: Props) {
   const order = await getOrderById(orderId);
   if (!order) notFound();
 
-  const [pickup, t] = await Promise.all([
+  const [pickup, t, { data: profile }] = await Promise.all([
     loadOrderPickupPoint(order.delivery_method === 'pickup' ? order.pickup_point_id : null),
     getTranslations('ui.order'),
+    supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
   ]);
 
   return (
     <AccountSubpage backHref={`/${locale}/account/orders`} backLabel={t('back')}>
-      <OrderView order={order} locale={locale} pickup={pickup} />
+      <OrderView order={order} locale={locale} pickup={pickup} customerName={profile?.name ?? null} />
       <p className="mt-6 text-[13px] text-ink">
         {t.rich('help', {
           link: (chunks) => (
