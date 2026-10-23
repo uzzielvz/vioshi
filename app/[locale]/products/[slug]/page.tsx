@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { getProductBySlug, getProducts } from "@/lib/products";
+import { getProductBySlug, getProductsByStoreId, type ProductData } from "@/lib/products";
+import { getStoreBySlug } from "@/lib/stores";
+import { getSettings } from "@/lib/settings";
 import { brand } from "@/lib/brand";
 import { notFound } from "next/navigation";
 import ProductContent from "./ProductContent";
@@ -65,7 +67,17 @@ export default async function ProductPage({ params }: PageProps) {
     notFound();
   }
 
-  const allProducts = await getProducts();
+  const settings = await getSettings();
+  const payThreshold = formatMxn(settings.card_only_threshold_mxn);
 
-  return <ProductContent product={product} allProducts={allProducts} />;
+  let more: ProductData[] = [];
+  if (product.store) {
+    const store = await getStoreBySlug(product.store.slug);
+    if (store) {
+      const siblings = await getProductsByStoreId(store.id);
+      more = siblings.filter((item) => item.id !== product.id).slice(0, 4);
+    }
+  }
+
+  return <ProductContent product={product} more={more} payThreshold={payThreshold} />;
 }
