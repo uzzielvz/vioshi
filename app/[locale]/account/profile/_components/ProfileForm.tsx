@@ -1,23 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
+import { useTranslations } from 'next-intl';
+import { buttonClass, hintClass, inputClass, labelClass } from '@/components/ui/styles';
 import { updateProfileAction, type ProfileUpdateState } from '../actions';
 
-const INPUT =
-  'w-full py-3 border-b border-gray-200 bg-transparent focus:outline-none focus:border-black disabled:text-gray-400 disabled:cursor-not-allowed text-[11px] transition-colors';
-
-const LABEL = 'text-[9px] uppercase tracking-widest text-gray-400 mb-1';
-
-function SaveButton({ disabled }: { disabled: boolean }) {
+function SaveButton({ idle, busy }: { idle: string; busy: string }) {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending || disabled}
-      className="flex-1 bg-black text-white py-2.5 text-[11px] uppercase tracking-widest font-medium hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-    >
-      {pending ? 'Guardando...' : 'Guardar cambios'}
+    <button type="submit" disabled={pending} className={buttonClass('primary', 'md', 'w-full md:w-auto')}>
+      {pending ? busy : idle}
     </button>
   );
 }
@@ -29,119 +21,63 @@ interface Props {
 }
 
 export default function ProfileForm({ email, initialName, initialPhone }: Props) {
-  const [state, formAction] = useFormState<ProfileUpdateState, FormData>(
-    updateProfileAction,
-    null
-  );
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(initialName);
-  const [phone, setPhone] = useState(initialPhone);
-
-  useEffect(() => {
-    if (state && 'ok' in state) {
-      setIsEditing(false);
-    }
-  }, [state]);
-
-  const cancelEdit = () => {
-    setName(initialName);
-    setPhone(initialPhone);
-    setIsEditing(false);
-  };
+  const t = useTranslations('ui.profile');
+  const [state, formAction] = useFormState<ProfileUpdateState, FormData>(updateProfileAction, null);
 
   return (
-    <form action={formAction} className="space-y-8">
-      <div>
-        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-black mb-5">
-          Información personal
-        </h2>
-        <div>
-          <label htmlFor="name" className={LABEL}>
-            Nombre completo
-          </label>
-          <input
-            id="name"
-            type="text"
-            name="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={!isEditing}
-            required
-            className={INPUT}
-          />
-        </div>
+    <form action={formAction} className="grid gap-3.5">
+      <div className="grid gap-1.5">
+        <label htmlFor="name" className={labelClass}>
+          {t('name')}
+        </label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          defaultValue={initialName}
+          autoComplete="name"
+          required
+          className={inputClass}
+        />
       </div>
 
-      <div>
-        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-black mb-5">
-          Información de contacto
-        </h2>
-        <div className="space-y-5">
-          <div>
-            <label htmlFor="email" className={LABEL}>
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              disabled
-              className={INPUT}
-            />
-            <p className="text-[10px] text-gray-400 mt-1">
-              El email no se puede cambiar desde aquí.
-            </p>
-          </div>
+      <div className="grid gap-1.5">
+        <label htmlFor="phone" className={labelClass}>
+          {t('phone')}
+        </label>
+        <input
+          id="phone"
+          name="phone"
+          type="tel"
+          defaultValue={initialPhone}
+          autoComplete="tel"
+          placeholder="722 123 4567"
+          className={inputClass}
+        />
+      </div>
 
-          <div>
-            <label htmlFor="phone" className={LABEL}>
-              Teléfono (opcional)
-            </label>
-            <input
-              id="phone"
-              type="tel"
-              name="phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              disabled={!isEditing}
-              placeholder="+52 55 1234 5678"
-              className={INPUT}
-            />
-          </div>
-        </div>
+      <div className="grid gap-1.5">
+        <label htmlFor="email" className={labelClass}>
+          {t('email')}
+        </label>
+        <input id="email" type="email" value={email} disabled aria-describedby="email-hint" className={inputClass} />
+        <p id="email-hint" className={hintClass}>
+          {t('email_hint')}
+        </p>
       </div>
 
       {state && 'error' in state && (
-        <p className="text-[10px] text-red-500">{state.error}</p>
+        <p role="alert" className="rounded-btn border border-ink px-3 py-2.5 text-[13px] text-ink">
+          {state.error}
+        </p>
+      )}
+      {state && 'ok' in state && (
+        <p role="status" className="bg-carton p-3 text-[13px] text-ink">
+          {t('saved_ok')}
+        </p>
       )}
 
-      {state && 'ok' in state && !isEditing && (
-        <p className="text-[10px] text-green-600">Perfil actualizado correctamente.</p>
-      )}
-
-      <div className="flex gap-3 pt-4 border-t border-gray-100">
-        {!isEditing ? (
-          <button
-            type="button"
-            onClick={() => setIsEditing(true)}
-            className="flex-1 bg-black text-white py-2.5 text-[11px] uppercase tracking-widest font-medium hover:opacity-80 transition-opacity"
-          >
-            Editar perfil
-          </button>
-        ) : (
-          <>
-            <SaveButton disabled={!name.trim()} />
-            <button
-              type="button"
-              onClick={cancelEdit}
-              className="flex-1 border border-black text-black py-2.5 text-[11px] uppercase tracking-widest font-medium hover:bg-black hover:text-white transition-colors"
-            >
-              Cancelar
-            </button>
-          </>
-        )}
-      </div>
+      <SaveButton idle={t('save')} busy={t('saving')} />
     </form>
   );
 }

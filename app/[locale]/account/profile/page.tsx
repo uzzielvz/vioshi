@@ -1,10 +1,14 @@
 import Link from 'next/link';
+import clsx from 'clsx';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import type { Locale } from '@/i18n';
-import AccountShell from '../_components/AccountShell';
-import { getAccountDisplayName } from '../_components/accountDisplayName';
+import { buttonClass, sectionLabelClass } from '@/components/ui/styles';
+import AccountSubpage from '../_components/AccountSubpage';
+import { signOutAction } from '../actions';
 import ProfileForm from './_components/ProfileForm';
+import PasswordLinkForm from './_components/PasswordLinkForm';
 
 export default async function ProfilePage({
   params,
@@ -22,48 +26,66 @@ export default async function ProfilePage({
     redirect(`/${locale}/account`);
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name, phone')
-    .eq('id', user.id)
-    .maybeSingle();
+  const [{ data: profile }, t, tNav] = await Promise.all([
+    supabase.from('profiles').select('name, phone').eq('id', user.id).maybeSingle(),
+    getTranslations('ui.profile'),
+    getTranslations('ui.nav'),
+  ]);
 
-  const displayName = getAccountDisplayName(user, profile?.name ?? null);
+  const section = 'grid gap-3 border-t border-line pt-5';
 
   return (
-    <AccountShell
-      locale={locale}
-      displayName={displayName}
-      email={user.email ?? ''}
-    >
-      <div>
-        <header className="mb-8 pb-6 border-b border-gray-200">
-          <h1 className="text-[11px] font-semibold uppercase tracking-widest text-black">
-            Mi Perfil
-          </h1>
-        </header>
+    <AccountSubpage backHref={`/${locale}/account`} backLabel={t('back')} title={t('edit_title')}>
+      <div className="grid gap-7">
+        <section className="grid gap-3">
+          <h2 className={sectionLabelClass}>{t('details_title')}</h2>
+          <ProfileForm
+            email={user.email ?? ''}
+            initialName={profile?.name ?? ''}
+            initialPhone={profile?.phone ?? ''}
+          />
+        </section>
 
-        <ProfileForm
-          email={user.email ?? ''}
-          initialName={profile?.name ?? ''}
-          initialPhone={profile?.phone ?? ''}
-        />
+        <section className={section}>
+          <h2 className={sectionLabelClass}>{t('password_title')}</h2>
+          <PasswordLinkForm locale={locale} email={user.email ?? ''} />
+        </section>
 
-        <div className="mt-10 pt-8 border-t border-gray-200">
-          <h2 className="text-[11px] font-semibold uppercase tracking-widest text-black mb-3">
-            Contraseña
-          </h2>
-          <p className="text-[11px] text-gray-400 mb-5 max-w-md">
-            Para cambiar tu contraseña te enviaremos un enlace de recuperación a tu correo.
-          </p>
-          <Link
-            href={`/${locale}/account/forgot-password`}
-            className="inline-block border border-black text-black px-6 py-2.5 text-[11px] uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
-          >
-            Cambiar contraseña
-          </Link>
-        </div>
+        <section className={section}>
+          <h2 className={sectionLabelClass}>{t('language_title')}</h2>
+          {/* Plain links reload the page, which next-intl needs to switch locale cleanly. */}
+          <div className="grid grid-cols-2 gap-2 md:max-w-[360px]">
+            {(['es', 'en'] as const).map((l) => (
+              <a
+                key={l}
+                href={`/${l}/account/profile`}
+                aria-current={locale === l ? 'true' : undefined}
+                className={clsx(
+                  'grid h-11 place-items-center rounded-btn border text-[14px]',
+                  locale === l ? 'border-ink font-semibold text-ink' : 'border-line text-muted'
+                )}
+              >
+                {l === 'es' ? tNav('lang_es') : tNav('lang_en')}
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section className={section}>
+          <h2 className={sectionLabelClass}>{t('session_title')}</h2>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/${locale}/vender`} className={buttonClass('soft', 'sm')}>
+              {t('start_selling')}
+            </Link>
+            <form action={signOutAction}>
+              <input type="hidden" name="locale" value={locale} />
+              <button type="submit" className={buttonClass('line', 'sm')}>
+                {t('sign_out')}
+              </button>
+            </form>
+          </div>
+        </section>
       </div>
-    </AccountShell>
+    </AccountSubpage>
   );
 }

@@ -1,13 +1,17 @@
 import { createClient } from '@/lib/supabase/server';
-import { getOrdersByUser } from '@/lib/orders';
+import { getProducts } from '@/lib/products';
 import type { Locale } from '@/i18n';
-import LoginForm from './_components/LoginForm';
+import LoginForm, { type LoginNotice } from './_components/LoginForm';
 import AccountDashboard from './_components/AccountDashboard';
+
+const NOTICES: LoginNotice[] = ['oauth', 'reset_expired'];
 
 export default async function AccountPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: Locale }>;
+  searchParams: { error?: string };
 }) {
   const { locale } = await params;
   const supabase = createClient();
@@ -17,24 +21,21 @@ export default async function AccountPage({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return <LoginForm locale={locale} />;
+    const notice = NOTICES.find((n) => n === searchParams.error);
+    return <LoginForm locale={locale} notice={notice} />;
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  const orders = await getOrdersByUser();
-  const recentOrders = orders.slice(0, 3);
+  const [{ data: profile }, products] = await Promise.all([
+    supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
+    getProducts(),
+  ]);
 
   return (
     <AccountDashboard
       user={user}
       profileName={profile?.name ?? null}
       locale={locale}
-      recentOrders={recentOrders}
+      products={products}
     />
   );
 }

@@ -1,157 +1,70 @@
-'use client';
-
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import type { User } from '@supabase/supabase-js';
+import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@/i18n';
-import { signOutAction } from '../actions';
+import { brand } from '@/lib/brand';
+import Avatar from '@/components/ui/Avatar';
+import UnderlineTabs from '@/components/ui/UnderlineTabs';
+import { buttonClass } from '@/components/ui/styles';
+import { getAccountDisplayName } from './accountDisplayName';
 
-const FONT: React.CSSProperties = {
-  fontFamily: "var(--font-sans)",
-};
+export type AccountTab = 'saved' | 'purchases' | 'addresses';
 
-interface NavItem {
-  href: string;
-  label: string;
-  match: (pathname: string) => boolean;
-}
-
-function buildNav(locale: Locale): NavItem[] {
-  return [
-    {
-      href: `/${locale}/account`,
-      label: 'Overview',
-      match: (p) => p === `/${locale}/account` || p === `/${locale}/account/`,
-    },
-    {
-      href: `/${locale}/account/orders`,
-      label: 'Pedidos',
-      match: (p) => p.startsWith(`/${locale}/account/orders`),
-    },
-    {
-      href: `/${locale}/wishlist`,
-      label: 'Wishlist',
-      match: (p) => p.startsWith(`/${locale}/wishlist`),
-    },
-    {
-      href: `/${locale}/account/addresses`,
-      label: 'Direcciones',
-      match: (p) => p.startsWith(`/${locale}/account/addresses`),
-    },
-    {
-      href: `/${locale}/account/profile`,
-      label: 'Perfil',
-      match: (p) => p.startsWith(`/${locale}/account/profile`),
-    },
-  ];
-}
-
-function NavLink({
-  href,
-  label,
-  active,
-}: {
-  href: string;
-  label: string;
-  active: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`block text-[11px] uppercase tracking-widest transition-opacity ${
-        active
-          ? 'text-black font-semibold'
-          : 'text-gray-400 hover:text-black hover:opacity-80'
-      }`}
-    >
-      {label}
-    </Link>
-  );
-}
-
-export default function AccountShell({
+// A person's profile («Tu perfil» in the prototype). Every account is the
+// same kind of profile; selling is an extra step reached from here.
+export default async function AccountShell({
   locale,
-  displayName,
-  email,
+  user,
+  profileName,
+  active,
   children,
 }: {
   locale: Locale;
-  displayName: string;
-  email: string;
+  user: User;
+  profileName: string | null;
+  active: AccountTab;
   children: React.ReactNode;
 }) {
-  const pathname = usePathname() ?? '';
-  const nav = buildNav(locale);
+  const t = await getTranslations('ui.profile');
+  const displayName = getAccountDisplayName(user, profileName);
+  const since = new Intl.DateTimeFormat(locale === 'es' ? 'es-MX' : 'en-US', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(user.created_at));
+
+  const tabs = [
+    { key: 'saved', href: `/${locale}/account`, label: t('saved') },
+    { key: 'purchases', href: `/${locale}/account/orders`, label: t('purchases') },
+    { key: 'addresses', href: `/${locale}/account/addresses`, label: t('addresses') },
+  ] as const;
 
   return (
-    <div className="min-h-screen bg-white pt-16" style={FONT}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        <div className="flex flex-col md:flex-row md:gap-12 lg:gap-16">
-          {/* Sidebar */}
-          <aside className="md:w-48 lg:w-56 flex-shrink-0 mb-8 md:mb-0">
-            <div className="mb-6 md:mb-8 pb-4 border-b border-gray-200">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-black truncate">
-                {displayName}
-              </p>
-              <p className="text-[10px] text-gray-400 mt-1 truncate">{email}</p>
-            </div>
-
-            {/* Desktop nav */}
-            <nav className="hidden md:flex flex-col gap-4">
-              {nav.map((item) => (
-                <NavLink
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  active={item.match(pathname)}
-                />
-              ))}
-              <form action={signOutAction} className="pt-2 mt-2 border-t border-gray-100">
-                <input type="hidden" name="locale" value={locale} />
-                <button
-                  type="submit"
-                  className="text-[11px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
-                >
-                  Cerrar sesión
-                </button>
-              </form>
-            </nav>
-
-            {/* Mobile nav */}
-            <nav className="md:hidden -mx-4 px-4 overflow-x-auto">
-              <div className="flex items-center gap-5 pb-3 border-b border-gray-200 min-w-max">
-                {nav.map((item) => {
-                  const active = item.match(pathname);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`text-[10px] uppercase tracking-widest whitespace-nowrap pb-3 -mb-px border-b-2 transition-colors ${
-                        active
-                          ? 'border-black text-black font-semibold'
-                          : 'border-transparent text-gray-400 hover:text-black'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
-                <form action={signOutAction} className="pb-3">
-                  <input type="hidden" name="locale" value={locale} />
-                  <button
-                    type="submit"
-                    className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-black whitespace-nowrap"
-                  >
-                    Salir
-                  </button>
-                </form>
-              </div>
-            </nav>
-          </aside>
-
-          {/* Content */}
-          <main className="flex-1 min-w-0">{children}</main>
+    <div className="mx-auto w-full max-w-[1280px] pb-10">
+      <section className="grid gap-3 px-4 pb-4 pt-5 md:px-8 md:pt-8">
+        <div className="flex items-center gap-3.5">
+          <Avatar name={displayName} className="h-[72px] w-[72px] text-[28px]" />
+          <div className="min-w-0">
+            <h1 className="truncate text-[20px] font-bold tracking-[-0.01em] text-ink">{displayName}</h1>
+            <p className="truncate text-[12.5px] text-muted">{user.email}</p>
+            <p className="text-[12.5px] text-muted">{t('since', { brand: brand.name, date: since })}</p>
+          </div>
         </div>
-      </div>
+        <div className="grid grid-cols-2 gap-2 md:max-w-[420px]">
+          <Link href={`/${locale}/account/profile`} className={buttonClass('line', 'sm')}>
+            {t('edit')}
+          </Link>
+          <Link href={`/${locale}/vender`} className={buttonClass('soft', 'sm')}>
+            {t('start_selling')}
+          </Link>
+        </div>
+      </section>
+
+      <UnderlineTabs
+        label={t('tabs_label')}
+        tabs={tabs.map((tab) => ({ href: tab.href, label: tab.label, active: tab.key === active }))}
+      />
+
+      <div className="pt-4 md:px-8">{children}</div>
     </div>
   );
 }

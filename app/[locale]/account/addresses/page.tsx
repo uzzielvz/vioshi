@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { Locale } from '@/i18n';
 import AccountShell from '../_components/AccountShell';
-import { getAccountDisplayName } from '../_components/accountDisplayName';
 import AddressesClient, { type AddressRow } from './_components/AddressesClient';
 
 interface Props {
@@ -35,23 +34,10 @@ export default async function AddressesPage({ params }: Props) {
     .order('created_at', { ascending: true });
 
   const addresses = (data ?? []) as AddressRow[];
-  const displayName = getAccountDisplayName(user, profile?.name ?? null);
 
   return (
-    <AccountShell
-      locale={locale}
-      displayName={displayName}
-      email={user.email ?? ''}
-    >
-      <div>
-        <header className="mb-8 pb-6 border-b border-gray-200">
-          <h1 className="text-[11px] font-semibold uppercase tracking-widest text-black">
-            Mis Direcciones
-          </h1>
-        </header>
-
-        <AddressesClient initial={addresses} />
-      </div>
+    <AccountShell locale={locale} user={user} profileName={profile?.name ?? null} active="addresses">
+      <AddressesClient initial={addresses} />
     </AccountShell>
   );
 }
