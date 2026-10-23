@@ -36,7 +36,7 @@ const archiveCollections: Record<
 };
 
 const fontStyle = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 };
 
 export default async function ArchiveDetailPage({ params }: ArchivePageProps) {

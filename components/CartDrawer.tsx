@@ -31,7 +31,7 @@ export default function CartDrawer() {
         <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200">
           <h2
             style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontSize: '11px',
               fontWeight: 800,
               letterSpacing: '0.05em',
@@ -60,7 +60,7 @@ export default function CartDrawer() {
               <p
                 className="text-center text-black py-8"
                 style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: '11px',
                   letterSpacing: '0.02em',
                   textTransform: 'uppercase'
@@ -71,7 +71,7 @@ export default function CartDrawer() {
               <p
                 className="text-center"
                 style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: '10px',
                   letterSpacing: '0.02em',
                   textTransform: 'uppercase',
@@ -103,7 +103,7 @@ export default function CartDrawer() {
                     <div className="flex-1">
                       <h3
                         style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                          fontFamily: "var(--font-sans)",
                           fontSize: '11px',
                           fontWeight: 800,
                           letterSpacing: '0.02em',
@@ -115,7 +115,7 @@ export default function CartDrawer() {
                       </h3>
                       <p
                         style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                          fontFamily: "var(--font-sans)",
                           fontSize: '11px',
                           letterSpacing: '0.02em',
                           color: '#666',
@@ -127,7 +127,7 @@ export default function CartDrawer() {
                       </p>
                       <p
                         style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                          fontFamily: "var(--font-sans)",
                           fontSize: '11px',
                           fontWeight: 600,
                           letterSpacing: '0.02em'
@@ -143,7 +143,7 @@ export default function CartDrawer() {
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         className="w-10 h-10 border border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors duration-200"
                         style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                          fontFamily: "var(--font-sans)",
                           fontSize: '18px',
                           fontWeight: 300
                         }}
@@ -159,7 +159,7 @@ export default function CartDrawer() {
                         }}
                         className="w-16 h-10 text-center border border-black outline-none"
                         style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                          fontFamily: "var(--font-sans)",
                           fontSize: '11px',
                           fontWeight: 600
                         }}
@@ -169,7 +169,7 @@ export default function CartDrawer() {
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         className="w-10 h-10 border border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors duration-200"
                         style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                          fontFamily: "var(--font-sans)",
                           fontSize: '18px',
                           fontWeight: 300
                         }}
@@ -188,7 +188,7 @@ export default function CartDrawer() {
             <div className="mt-8 pt-8 border-t border-gray-200">
               <p
                 style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: '10px',
                   letterSpacing: '0.02em',
                   textTransform: 'uppercase',
@@ -201,7 +201,7 @@ export default function CartDrawer() {
               </p>
               <p
                 style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: '10px',
                   letterSpacing: '0.02em',
                   textTransform: 'uppercase',
@@ -222,7 +222,7 @@ export default function CartDrawer() {
               <button
                 className="w-full py-4 bg-black text-white hover:opacity-80 transition-opacity duration-200"
                 style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: '11px',
                   fontWeight: 800,
                   letterSpacing: '0.02em',
@@ -239,7 +239,7 @@ export default function CartDrawer() {
             <div className="flex items-center justify-between mb-6">
               <span
                 style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: '11px',
                   fontWeight: 800,
                   letterSpacing: '0.02em',
@@ -250,7 +250,7 @@ export default function CartDrawer() {
               </span>
               <span
                 style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: '11px',
                   fontWeight: 800,
                   letterSpacing: '0.02em'
@@ -266,7 +266,7 @@ export default function CartDrawer() {
                 onClick={closeCart}
                 className="flex-1 py-4 border border-black bg-white text-black hover:bg-black hover:text-white transition-colors duration-200"
                 style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: '11px',
                   fontWeight: 800,
                   letterSpacing: '0.02em',
@@ -279,7 +279,7 @@ export default function CartDrawer() {
                 <button
                   className="w-full py-4 bg-black text-white hover:opacity-80 transition-opacity duration-200"
                   style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                    fontFamily: "var(--font-sans)",
                     fontSize: '11px',
                     fontWeight: 800,
                     letterSpacing: '0.02em',

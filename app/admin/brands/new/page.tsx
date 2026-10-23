@@ -4,7 +4,7 @@ import BrandForm from '../_components/BrandForm'
 import { createBrand } from '../actions'
 
 const font = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 }
 
 export default async function NewBrandPage() {

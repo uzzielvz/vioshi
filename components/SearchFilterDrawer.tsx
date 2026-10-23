@@ -26,7 +26,7 @@ const CATEGORIES = [
 ];
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
   fontSize: '11px',
   fontWeight: 500,
   letterSpacing: '0.02em',
@@ -34,7 +34,7 @@ const labelStyle: React.CSSProperties = {
 };
 
 const sectionTitleStyle: React.CSSProperties = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
   fontSize: '13px',
   fontWeight: 600,
   letterSpacing: '0.02em',
@@ -140,7 +140,7 @@ export default function SearchFilterDrawer({
                       </span>
                       <span
                         style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                          fontFamily: "var(--font-sans)",
                           fontSize: '13px',
                           fontWeight: 400,
                         }}
@@ -181,7 +181,7 @@ export default function SearchFilterDrawer({
                       </span>
                       <span
                         style={{
-                          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                          fontFamily: "var(--font-sans)",
                           fontSize: '13px',
                           fontWeight: 400,
                         }}

@@ -9,7 +9,7 @@ export default function LogoutButton() {
         type="submit"
         className="uppercase whitespace-nowrap text-black/50 hover:opacity-60 transition-opacity duration-200"
         style={{
-          fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           letterSpacing: '0.02em',
           fontSize: '11px',
         }}

@@ -18,7 +18,7 @@ export default async function Home({
             <h1
               className="text-6xl md:text-8xl font-bold mb-12 uppercase tracking-wider"
               style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)'
               }}
             >
@@ -28,7 +28,7 @@ export default async function Home({
               href={`/${locale}/collections/all`}
               className="inline-block bg-black text-white px-12 py-4 text-xs uppercase tracking-wide hover:opacity-80 transition-opacity"
               style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontSize: '11px',
                 fontWeight: 800,
                 letterSpacing: '0.05em'

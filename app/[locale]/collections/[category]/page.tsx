@@ -34,7 +34,7 @@ export default async function CategoryPage({
         <h1
           className="uppercase tracking-wide"
           style={{
-            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontSize: "11px",
             fontWeight: 500,
           }}
@@ -44,7 +44,7 @@ export default async function CategoryPage({
         <p
           className="text-gray-500"
           style={{
-            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontSize: "11px",
           }}
         >

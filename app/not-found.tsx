@@ -9,7 +9,7 @@ export default function NotFound() {
             <div className="text-center">
               <h1
                 style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: '11px',
                   fontWeight: 800,
                   letterSpacing: '0.05em',
@@ -22,7 +22,7 @@ export default function NotFound() {
               <Link
                 href="/"
                 style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: '11px',
                   fontWeight: 800,
                   letterSpacing: '0.05em',

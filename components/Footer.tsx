@@ -1,54 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useTranslations } from 'next-intl';
-import { useLocaleContext } from '@/hooks/useLocaleContext';
-import { brand } from '@/lib/brand';
+import { useTranslations } from "next-intl";
+import { useLocaleContext } from "@/hooks/useLocaleContext";
+import { brand } from "@/lib/brand";
+import Wordmark from "@/components/ui/Wordmark";
 
 export default function Footer() {
-  const t = useTranslations('footer');
+  const t = useTranslations("ui.footer");
   const { locale } = useLocaleContext();
-  const currentYear = new Date().getFullYear();
+  const year = new Date().getFullYear();
+
+  const links = [
+    { href: `/${locale}/vender`, label: t("sell") },
+    { href: `/${locale}/pages/shipping-payments-returns`, label: t("shipping") },
+    { href: `/${locale}/pages/size-guide`, label: t("size_guide") },
+    { href: `/${locale}/pages/customer-support`, label: t("help") },
+    { href: `/${locale}/pages/legal`, label: t("legal") },
+  ];
 
   return (
-    <footer className="bg-white text-black mt-auto border-t border-gray-200">
-      <div className="flex items-center justify-between px-6 md:px-8 py-4">
-        <div className="flex items-center gap-6">
-          <a
-            href={brand.instagramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="uppercase tracking-wide hover:opacity-60 transition-opacity"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '10px',
-              fontWeight: 500
-            }}
-          >
-            {t('instagram')}
+    <footer className="mt-auto border-t border-line bg-paper text-ink">
+      <div className="flex flex-col gap-5 px-4 py-8 md:flex-row md:items-center md:gap-10 md:px-8">
+        <Wordmark className="text-[20px]" />
+        <nav className="flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-muted" aria-label={brand.name}>
+          {links.map((l) => (
+            <Link key={l.href} href={l.href} className="hover:text-ink">
+              {l.label}
+            </Link>
+          ))}
+          <a href={brand.instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-ink">
+            {t("instagram")}
           </a>
-          <Link
-            href={`/${locale}/vender`}
-            className="uppercase tracking-wide hover:opacity-60 transition-opacity"
-            style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-              fontSize: '10px',
-              fontWeight: 500
-            }}
-          >
-            {t('sell_with_us')}
-          </Link>
-        </div>
-        <p
-          className="uppercase tracking-wide"
-          style={{
-            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
-            fontSize: '10px',
-            fontWeight: 500
-          }}
-          suppressHydrationWarning
-        >
-          © {currentYear} {brand.name}
+        </nav>
+        <p className="text-[12px] text-muted md:ml-auto" suppressHydrationWarning>
+          © {year} {brand.name}
         </p>
       </div>
     </footer>

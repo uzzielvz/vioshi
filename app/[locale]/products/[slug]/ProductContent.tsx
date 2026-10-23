@@ -25,7 +25,7 @@ interface ProductContentProps {
 
 // Misma familia que el resto de la ficha. El sistema de diseño va después.
 const BASE_FONT = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 } as const;
 
 export default function ProductContent({ product, allProducts }: ProductContentProps) {
@@ -99,7 +99,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
           href={`/${locale}/collections/${product.category || 'all'}`}
           className="flex items-center gap-2 hover:opacity-60 transition-opacity"
           style={{
-            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontSize: '11px',
             fontWeight: 500,
             letterSpacing: '0.02em',
@@ -114,7 +114,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
             href={`/${locale}/products/${nextProduct.slug}`}
             className="flex items-center gap-2 hover:opacity-60 transition-opacity"
             style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontSize: '11px',
               fontWeight: 500,
               letterSpacing: '0.02em',
@@ -213,7 +213,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
             <h1
               className="uppercase tracking-wide mb-4"
               style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontSize: '13px',
                 fontWeight: 800,
                 letterSpacing: '0.05em'
@@ -225,7 +225,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
             <p
               className={product.store ? 'mb-2' : 'mb-8'}
               style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontSize: '13px',
                 fontWeight: 400
               }}
@@ -302,7 +302,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
             <p
               className="mb-8"
               style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontSize: "10px",
                 letterSpacing: "0.02em",
                 textTransform: "uppercase",
@@ -319,7 +319,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
                 <summary
                   className="flex justify-between items-center cursor-pointer uppercase tracking-wide list-none"
                   style={{
-                    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                    fontFamily: "var(--font-sans)",
                     fontSize: '11px',
                     fontWeight: 500,
                     letterSpacing: '0.05em'
@@ -333,7 +333,7 @@ export default function ProductContent({ product, allProducts }: ProductContentP
                     <p
                       className="text-gray-600 leading-relaxed"
                       style={{
-                        fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                        fontFamily: "var(--font-sans)",
                         fontSize: '11px'
                       }}
                     >
@@ -347,13 +347,13 @@ export default function ProductContent({ product, allProducts }: ProductContentP
                         <div key={key} className="flex gap-4">
                           <dt
                             className="uppercase tracking-widest text-gray-400 shrink-0"
-                            style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif", fontSize: '10px', minWidth: '80px' }}
+                            style={{ fontFamily: "var(--font-sans)", fontSize: '10px', minWidth: '80px' }}
                           >
                             {key}
                           </dt>
                           <dd
                             className="text-gray-800"
-                            style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif", fontSize: '11px' }}
+                            style={{ fontFamily: "var(--font-sans)", fontSize: '11px' }}
                           >
                             {value}
                           </dd>

@@ -77,7 +77,7 @@ export default function SearchContent({ initialProducts }: { initialProducts: Pr
   }
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+    fontFamily: "var(--font-sans)",
     fontSize: '11px',
     fontWeight: 500,
     letterSpacing: '0.02em',

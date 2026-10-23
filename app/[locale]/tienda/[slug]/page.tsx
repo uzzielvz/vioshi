@@ -15,7 +15,7 @@ interface PageProps {
 }
 
 const BASE_FONT = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 } as const;
 
 /** The seed stores a full profile URL; the header shows the @handle. */

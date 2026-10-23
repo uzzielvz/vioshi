@@ -17,7 +17,7 @@ interface Props {
   };
 }
 
-const fontStyle = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" };
+const fontStyle = { fontFamily: "var(--font-sans)" };
 
 const STATUS_LABELS: Record<string, string> = {
   pending:    'Pendiente',

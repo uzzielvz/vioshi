@@ -6,7 +6,7 @@ export default function AdminError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
+  const font = { fontFamily: "var(--font-sans)" }
 
   return (
     <div className="max-w-md">

@@ -70,7 +70,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
             <div
               className="absolute top-3 left-3"
               style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontSize: '10px',
                 fontWeight: 500
               }}
@@ -87,7 +87,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
               <span
                 className="text-black uppercase tracking-wide"
                 style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: '11px',
                   fontWeight: 500
                 }}
@@ -104,7 +104,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
               <span
                 className="bg-white/95 text-black px-2 py-1 uppercase tracking-wide border border-black"
                 style={{
-                  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: '10px',
                   fontWeight: 500
                 }}
@@ -119,7 +119,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
               onClick={handleQuickAdd}
               className="absolute bottom-0 left-0 right-0 bg-black text-white py-3 text-center uppercase tracking-wide transition-opacity duration-200"
               style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontSize: '11px',
                 fontWeight: 500
               }}
@@ -135,7 +135,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
           <h3
             className="uppercase tracking-wide hover:opacity-60 transition-opacity"
             style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontSize: '11px',
               fontWeight: 500
             }}
@@ -146,7 +146,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
         {size && (
           <p
             style={{
-              fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontSize: '11px',
               fontWeight: 400,
               color: '#666'
@@ -157,7 +157,7 @@ export default function ProductCard({ id, name, price, image, slug, soldOut, isN
         )}
         <p
           style={{
-            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontSize: '11px',
             fontWeight: 400
           }}

@@ -535,7 +535,7 @@ export default function CheckoutPage() {
   return (
     <div
       className="min-h-screen bg-white"
-      style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }}
+      style={{ fontFamily: "var(--font-sans)" }}
     >
 
       {/* Header */}
@@ -548,7 +548,7 @@ export default function CheckoutPage() {
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); closeCart(); window.location.href = `/${locale}`; }}
               className="text-base font-bold text-black hover:opacity-50 transition-opacity cursor-pointer"
               style={{
-                fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
               }}
             >

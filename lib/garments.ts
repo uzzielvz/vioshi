@@ -85,6 +85,17 @@ export const GARMENT_TYPE_LABELS: Record<GarmentType, string> = {
   otro:     'Otro',
 };
 
+export const GARMENT_TYPE_LABELS_EN: Record<GarmentType, string> = {
+  playera:  'Tee',
+  hoodie:   'Hoodie',
+  sudadera: 'Sweatshirt',
+  chamarra: 'Jacket',
+  pants:    'Pants',
+  jeans:    'Jeans',
+  shorts:   'Shorts',
+  otro:     'Other',
+};
+
 /** Etiqueta corta para la ficha pública: "Pecho 58 cm · Largo 74 cm". */
 export const MEASUREMENT_LABELS: Record<MeasurementKey, string> = {
   chest_cm:  'Pecho',

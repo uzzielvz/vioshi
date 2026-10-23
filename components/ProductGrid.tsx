@@ -25,7 +25,7 @@ export default function ProductGrid({ products, columns = 4 }: ProductGridProps)
         <p
           className="uppercase tracking-wide"
           style={{
-            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontSize: '11px',
             fontWeight: 500
           }}

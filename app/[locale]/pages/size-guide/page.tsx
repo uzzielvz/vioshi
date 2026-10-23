@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 
 const fontStyle = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 };
 
 export default async function SizeGuidePage() {

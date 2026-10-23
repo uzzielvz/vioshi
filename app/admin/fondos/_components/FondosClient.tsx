@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { resolveOrphanFundAction } from '../../reservas/actions'
 
-const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
+const font = { fontFamily: "var(--font-sans)" }
 
 export type Fondo = {
   id: string

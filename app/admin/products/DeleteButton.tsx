@@ -11,7 +11,7 @@ export default function DeleteButton({ id }: { id: string }) {
     <button
       onClick={handleClick}
       className="uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors"
-      style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif", fontSize: '10px' }}
+      style={{ fontFamily: "var(--font-sans)", fontSize: '10px' }}
     >
       ×
     </button>

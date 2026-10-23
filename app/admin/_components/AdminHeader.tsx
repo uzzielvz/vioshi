@@ -18,7 +18,7 @@ import type { AdminActor } from '@/lib/admin/session'
  */
 
 const FONT = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
   letterSpacing: '0.02em',
   fontSize: '11px',
   textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
@@ -68,7 +68,7 @@ export default function AdminHeader({ actor }: { actor: AdminActor }) {
           href="/admin"
           className="text-lg font-bold text-black hover:opacity-60 transition-opacity duration-200 whitespace-nowrap shrink-0"
           style={{
-            fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             textShadow: '0 0 0.5px rgba(0, 0, 0, 0.8)',
           }}
         >

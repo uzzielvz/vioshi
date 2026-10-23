@@ -5,7 +5,7 @@ import { loginAction } from './actions'
 import { brand } from '@/lib/brand'
 
 const fontStyle = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 }
 
 function SubmitButton() {
@@ -15,7 +15,7 @@ function SubmitButton() {
       type="submit"
       disabled={pending}
       className="w-full bg-black text-white uppercase tracking-widest py-4 md:py-3 min-h-[48px] hover:bg-gray-800 transition-colors disabled:opacity-50"
-      style={{ fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif", fontSize: '11px', fontWeight: 500 }}
+      style={{ fontFamily: "var(--font-sans)", fontSize: '11px', fontWeight: 500 }}
     >
       {pending ? 'Entrando…' : 'Entrar'}
     </button>

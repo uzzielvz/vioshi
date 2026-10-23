@@ -18,7 +18,7 @@ export default function CartPage() {
   const router = useRouter();
 
   const fontStyle = {
-    fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+    fontFamily: "var(--font-sans)",
   };
 
   if (itemCount === 0) {

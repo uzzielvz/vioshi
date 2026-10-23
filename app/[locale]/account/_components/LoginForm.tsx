@@ -8,7 +8,7 @@ import { brand } from '@/lib/brand';
 import { signInAction, signInWithGoogleAction, type AuthState } from '../actions';
 
 const FONT: React.CSSProperties = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 };
 
 const LOGO: React.CSSProperties = {

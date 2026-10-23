@@ -14,7 +14,7 @@ import { formatPrice } from '@/lib/formatters'
 
 export const dynamic = 'force-dynamic'
 
-const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
+const font = { fontFamily: "var(--font-sans)" }
 
 const OWNER_LABELS: Record<'uzziel' | 'mario', string> = {
   uzziel: 'Uzziel',

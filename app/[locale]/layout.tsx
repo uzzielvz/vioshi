@@ -4,6 +4,7 @@ import { CartProvider } from "@/store/cartStore";
 import { locales } from '@/i18n';
 import { ClientLayout } from "@/components/ClientLayout";
 import { createClient } from "@/lib/supabase/server";
+import { inter } from "@/lib/fonts";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -25,8 +26,8 @@ export default async function LocaleLayout({
   } = await supabase.auth.getUser();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body className="antialiased" suppressHydrationWarning>
+    <html lang={locale} className={inter.variable} suppressHydrationWarning>
+      <body className="antialiased bg-paper text-ink" suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <CartProvider>
             <ClientLayout userEmail={user?.email ?? null}>

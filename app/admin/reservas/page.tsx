@@ -9,7 +9,7 @@ import ReservasClient, {
 
 export const dynamic = 'force-dynamic'
 
-const font = { fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif" }
+const font = { fontFamily: "var(--font-sans)" }
 
 export default async function AdminReservasPage() {
   await requireFullAdmin()

@@ -508,5 +508,101 @@
     "archivos_download": "Download",
     "archivos_back": "Back to My Account",
     "back_to_store": "← Back to Store"
+  },
+  "ui": {
+    "nav": {
+      "home": "Home",
+      "search": "Search",
+      "sell": "Sell",
+      "bag": "Bag",
+      "bag_count": "Bag, {count, plural, one {# piece} other {# pieces}}",
+      "account": "Account",
+      "login": "Log in",
+      "menu": "Menu",
+      "close": "Close",
+      "cancel": "Cancel",
+      "visual_search": "Search by photo",
+      "search_placeholder": "Search brands or pieces",
+      "categories": "Categories",
+      "saved": "Saved",
+      "help": "Help",
+      "language": "Language and currency",
+      "lang_es": "Español · MXN",
+      "lang_en": "English · USD",
+      "switch_language": "Switch to Spanish"
+    },
+    "cats": {
+      "all": "All",
+      "new": "New",
+      "hoodie": "Hoodies",
+      "chamarra": "Jackets",
+      "pants": "Pants",
+      "jeans": "Jeans",
+      "camisas": "Shirts",
+      "playeras": "Tees",
+      "accesorios": "Accessories",
+      "bolsos": "Bags"
+    },
+    "home": {
+      "title": "New in",
+      "intro": "Second-hand clothing. Every piece is one of a kind.",
+      "count": "{count, plural, one {# piece} other {# pieces}}"
+    },
+    "card": {
+      "save": "Save {name}",
+      "unsave": "Remove {name} from saved",
+      "reserved": "On hold",
+      "sold": "Sold",
+      "empty": "No pieces right now."
+    },
+    "product": {
+      "add_to_bag": "Add to bag",
+      "adding": "Adding…",
+      "in_bag": "Already in your bag",
+      "size": "Size {size}",
+      "measurements": "Measurements",
+      "condition": "Condition",
+      "details": "Details",
+      "delivery": "Delivery and payment",
+      "delivery_body": "Pick it up in the Toluca Valley or get it delivered.",
+      "pay_threshold": "Card always. OXXO and SPEI on orders up to {threshold}.",
+      "pay_all": "Card, OXXO or SPEI.",
+      "sold_by": "Sold by",
+      "more_from": "More from {store}",
+      "see_profile": "See profile",
+      "save": "Save",
+      "saved": "Saved",
+      "see_others": "See other pieces",
+      "photo": "Photo {n} of {total}",
+      "prev_photo": "Previous photo",
+      "next_photo": "Next photo"
+    },
+    "bag": {
+      "title": "Bag",
+      "count": "{count, plural, one {# piece} other {# pieces}}",
+      "empty": "Your bag is empty.",
+      "empty_cta": "See what's new",
+      "remove": "Remove",
+      "subtotal": "Subtotal",
+      "delivery_note": "You choose delivery at checkout.",
+      "unique_note": "Every piece is one of a kind. We hold it for you once you start paying, not before.",
+      "checkout": "Checkout · {total}",
+      "size": "Size {size}"
+    },
+    "footer": {
+      "sell": "Sell",
+      "shipping": "Shipping and payment",
+      "help": "Help",
+      "size_guide": "Size guide",
+      "legal": "Legal",
+      "instagram": "Instagram"
+    },
+    "store": {
+      "pieces": "{count, plural, one {# piece for sale} other {# pieces for sale}}",
+      "on_sale": "For sale",
+      "instagram": "Instagram",
+      "empty": "No pieces published yet.",
+      "sells_on": "Sells on {brand}"
+    }
   }
 }

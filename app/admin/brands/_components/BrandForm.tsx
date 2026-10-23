@@ -17,7 +17,7 @@ type FormAction = (
 ) => Promise<{ error: string } | null>
 
 const font = {
-  fontFamily: "'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif",
+  fontFamily: "var(--font-sans)",
 }
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
