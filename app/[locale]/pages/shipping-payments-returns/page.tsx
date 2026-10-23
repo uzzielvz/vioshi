@@ -1,145 +1,73 @@
-import SupportNav from '@/components/SupportNav';
+import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import type { Locale } from '@/i18n';
+import { brand } from '@/lib/brand';
+import { EXPRESS_SHIPPING_COST } from '@/lib/constants';
+import { formatMxn } from '@/lib/formatters';
+import { getActivePickupPoints } from '@/lib/pickupPoints';
+import { getSettings } from '@/lib/settings';
+import HelpLayout, { HelpList, HelpSection } from '@/components/help/HelpLayout';
+import { textLinkClass } from '@/components/ui/styles';
 
-const fontStyle = {
-  fontFamily: "var(--font-sans)",
-};
+export const revalidate = 60;
 
-export default async function ShippingPage() {
-  const t = await getTranslations('shipping');
+// Every number here comes from settings, pickup_points or lib/constants:
+// the same sources the checkout charges from.
+export default async function ShippingPage({ params }: { params: { locale: string } }) {
+  const locale = params.locale as Locale;
+  const [t, settings, points] = await Promise.all([
+    getTranslations('ui.help'),
+    getSettings(),
+    getActivePickupPoints(),
+  ]);
+  const money = (amount: number) => formatMxn(amount, locale);
+
+  const row = (label: string, value: string) => (
+    <div key={label} className="flex justify-between gap-3 py-2.5">
+      <dt className="min-w-0">{label}</dt>
+      <dd className="flex-none font-semibold tabular-nums">{value}</dd>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="md:hidden">
-        <SupportNav />
-      </div>
-      <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
+    <HelpLayout locale={locale} active="shipping" title={t('shipping_title')}>
+      <HelpSection title={t('pickup_title')}>
+        <p>{t('pickup_body')}</p>
+        {points.length > 0 && (
+          <dl className="divide-y divide-line border-y border-line">
+            {points.map((p) => row(p.name, p.additionalCost > 0 ? money(p.additionalCost) : t('free')))}
+          </dl>
+        )}
+        <Link href={`/${locale}/pages/locaciones`} className={`justify-self-start text-[14px] ${textLinkClass}`}>
+          {t('points_link')}
+        </Link>
+      </HelpSection>
 
-          {/* Left column: Shipping & Handling */}
-          <div>
-            <h2
-              className="uppercase tracking-wide mb-8 border-b border-gray-200 pb-4"
-              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
-            >
-              {t('shipping_title')}
-            </h2>
+      <HelpSection title={t('home_title')}>
+        <dl className="divide-y divide-line border-y border-line">
+          {row(t('home_standard'), money(settings.home_shipping_mxn))}
+          {row(t('home_express'), money(EXPRESS_SHIPPING_COST))}
+        </dl>
+        <p className="text-muted">{t('home_note')}</p>
+      </HelpSection>
 
-            <div className="space-y-8">
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-3"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('processing_title')}
-                </p>
-                <p style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
-                  {t('processing_body')}
-                </p>
-                <p className="mt-2" style={{ ...fontStyle, fontSize: '11px', color: '#999', lineHeight: '1.7' }}>
-                  {t('processing_note')}
-                </p>
-              </div>
+      <HelpSection title={t('payments_title')}>
+        <HelpList
+          items={[
+            t('pay_card'),
+            t('pay_deferred', {
+              threshold: money(settings.card_only_threshold_mxn),
+              hours: settings.voucher_hours,
+            }),
+            t('pay_hold', { minutes: settings.card_reserve_minutes }),
+            t('pay_inside', { brand: brand.name }),
+          ]}
+        />
+      </HelpSection>
 
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-3"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('standard_title')}
-                </p>
-                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>{t('standard_time')}</p>
-                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>{t('standard_free')}</p>
-                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>{t('standard_cost')}</p>
-              </div>
-
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-3"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('express_title')}
-                </p>
-                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>{t('express_time')}</p>
-                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>{t('express_cost')}</p>
-              </div>
-
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-3"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('payment_title')}
-                </p>
-                <ul className="space-y-1">
-                  {([1, 2, 3, 4, 5] as const).map((i) => (
-                    <li key={i} style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
-                      {t(`payment_${i}` as `payment_${typeof i}`)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* Right column: Return Guidelines */}
-          <div>
-            <h2
-              className="uppercase tracking-wide mb-8 border-b border-gray-200 pb-4"
-              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
-            >
-              {t('returns_title')}
-            </h2>
-
-            <div className="space-y-8">
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-3"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('return_policy_title')}
-                </p>
-                <ul className="space-y-2">
-                  {([1, 2, 3, 4, 5, 6, 7] as const).map((i) => (
-                    <li key={i} style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.6' }}>
-                      {t(`return_${i}` as `return_${typeof i}`)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-3"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('return_process_title')}
-                </p>
-                <ol className="space-y-2">
-                  {([1, 2, 3, 4] as const).map((i) => (
-                    <li key={i} style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
-                      {i}. {t(`return_step_${i}` as `return_step_${typeof i}`)}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-3"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('exchanges_title')}
-                </p>
-                <p style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
-                  {t('exchanges_body')}
-                </p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
+      <HelpSection title={t('returns_title')}>
+        <p>{t('trouble_body')}</p>
+      </HelpSection>
+    </HelpLayout>
   );
 }

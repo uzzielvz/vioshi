@@ -1,117 +1,68 @@
-import SupportNav from '@/components/SupportNav';
 import { getTranslations } from 'next-intl/server';
+import type { Locale } from '@/i18n';
+import { formatMxn } from '@/lib/formatters';
+import { groupPickupPointsByMunicipality } from '@/lib/pickup';
+import { getActivePickupPoints } from '@/lib/pickupPoints';
+import HelpLayout, { HelpSection } from '@/components/help/HelpLayout';
+import { buttonClass } from '@/components/ui/styles';
 
-const fontStyle = {
-  fontFamily: "var(--font-sans)",
-};
+export const revalidate = 60;
 
-export default async function LocacionesPage() {
-  const t = await getTranslations('locaciones');
+export default async function LocacionesPage({ params }: { params: { locale: string } }) {
+  const locale = params.locale as Locale;
+  const [t, points] = await Promise.all([getTranslations('ui.help'), getActivePickupPoints()]);
+  const groups = groupPickupPointsByMunicipality(points);
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="md:hidden">
-        <SupportNav />
-      </div>
-      <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
+    <HelpLayout locale={locale} active="points" title={t('points_title')} lead={t('points_lead')}>
+      {groups.length === 0 && <p className="text-[14px] text-muted">{t('points_empty')}</p>}
 
-          {/* Left: Flagship Store */}
-          <div>
-            <h2
-              className="uppercase tracking-wide mb-8 border-b border-gray-200 pb-4"
-              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
-            >
-              {t('flagship_title')}
-            </h2>
-
-            <div className="space-y-5">
-              <p
-                className="uppercase tracking-wide"
-                style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-              >
-                {t('flagship_name')}
-              </p>
-              <p
-                style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7', whiteSpace: 'pre-line' }}
-              >
-                {t('flagship_address')}
-              </p>
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-1"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('flagship_hours_label')}
-                </p>
-                <p
-                  style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7', whiteSpace: 'pre-line' }}
-                >
-                  {t('flagship_hours')}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Sales Points */}
-          <div>
-            <h2
-              className="uppercase tracking-wide mb-8 border-b border-gray-200 pb-4"
-              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
-            >
-              {t('sales_points_title')}
-            </h2>
-
-            <div className="space-y-8">
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-2"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('monterrey_name')}
-                </p>
-                <p
-                  style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7', whiteSpace: 'pre-line' }}
-                >
-                  {t('monterrey_address')}
-                </p>
-              </div>
-
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-2"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('guadalajara_name')}
-                </p>
-                <p
-                  style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7', whiteSpace: 'pre-line' }}
-                >
-                  {t('guadalajara_address')}
-                </p>
-              </div>
-
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-3"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('stockists_title')}
-                </p>
-                <p className="mb-2" style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
-                  {t('stockists_note')}
-                </p>
-                <ul className="space-y-1">
-                  <li style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>Tier Zero — CDMX</li>
-                  <li style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>Lust — Monterrey</li>
-                  <li style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>Common People — Guadalajara</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
+      {groups.map(([municipio, list]) => (
+        <HelpSection key={municipio} title={municipio}>
+          <ul className="grid gap-3">
+            {list.map((p) => (
+              <li key={p.id} className="grid gap-2 rounded-btn border border-line p-3.5">
+                <div>
+                  <p className="text-[15px] font-semibold">{p.name}</p>
+                  <p className="text-[13px] text-muted">
+                    {p.address}, {p.city}
+                  </p>
+                </div>
+                <dl className="grid gap-1 text-[13px]">
+                  {p.availableHours && (
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted">{t('points_hours')}</dt>
+                      <dd className="text-right">{p.availableHours}</dd>
+                    </div>
+                  )}
+                  {p.estimatedDays && (
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted">{t('points_estimate')}</dt>
+                      <dd className="text-right">{p.estimatedDays}</dd>
+                    </div>
+                  )}
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-muted">{t('points_cost')}</dt>
+                    <dd className="font-semibold tabular-nums">
+                      {p.additionalCost > 0 ? formatMxn(p.additionalCost, locale) : t('free')}
+                    </dd>
+                  </div>
+                </dl>
+                {p.mapsUrl && (
+                  <a
+                    href={p.mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={buttonClass('line', 'sm', 'mt-1 w-full')}
+                  >
+                    {t('points_maps')}
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </HelpSection>
+      ))}
+    </HelpLayout>
   );
 }

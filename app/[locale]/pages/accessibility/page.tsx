@@ -1,108 +1,32 @@
-import SupportNav from '@/components/SupportNav';
 import { getTranslations } from 'next-intl/server';
+import { brand } from '@/lib/brand';
+import HelpLayout, { HelpList, HelpSection } from '@/components/help/HelpLayout';
 
-const fontStyle = {
-  fontFamily: "var(--font-sans)",
-};
-
-export default async function AccessibilityPage() {
-  const t = await getTranslations('accessibility');
+export default async function AccessibilityPage({ params: { locale } }: { params: { locale: string } }) {
+  const t = await getTranslations('ui.help');
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="md:hidden">
-        <SupportNav />
-      </div>
-      <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16">
-        <h1
-          className="uppercase tracking-wide mb-12"
-          style={{ ...fontStyle, fontSize: '13px', fontWeight: 500 }}
-        >
-          {t('title')}
-        </h1>
-
-        <div className="max-w-2xl space-y-10">
-
-          <div>
-            <h2
-              className="uppercase tracking-wide mb-4 border-b border-gray-200 pb-3"
-              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
-            >
-              {t('commitment_title')}
-            </h2>
-            <p style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
-              {t('commitment_body')}
-            </p>
-          </div>
-
-          <div>
-            <h2
-              className="uppercase tracking-wide mb-4 border-b border-gray-200 pb-3"
-              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
-            >
-              {t('standards_title')}
-            </h2>
-            <p className="mb-3" style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
-              {t('standards_body')}
-            </p>
-            <ul className="space-y-1">
-              {([1, 2, 3, 4, 5] as const).map((i) => (
-                <li key={i} style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
-                  {t(`standards_${i}` as `standards_${typeof i}`)}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h2
-              className="uppercase tracking-wide mb-4 border-b border-gray-200 pb-3"
-              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
-            >
-              {t('features_title')}
-            </h2>
-            <div className="space-y-5">
-              {[
-                { title: t('feature_keyboard_title'), body: t('feature_keyboard_body') },
-                { title: t('feature_screen_reader_title'), body: t('feature_screen_reader_body') },
-                { title: t('feature_zoom_title'), body: t('feature_zoom_body') },
-              ].map(({ title, body }) => (
-                <div key={title}>
-                  <p
-                    className="uppercase tracking-wide mb-1"
-                    style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                  >
-                    {title}
-                  </p>
-                  <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
-                    {body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h2
-              className="uppercase tracking-wide mb-4 border-b border-gray-200 pb-3"
-              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
-            >
-              {t('feedback_title')}
-            </h2>
-            <p className="mb-3" style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.7' }}>
-              {t('feedback_body')}
-            </p>
-            <a
-              href={`mailto:${t('feedback_email')}`}
-              className="hover:opacity-60 transition-opacity"
-              style={{ ...fontStyle, fontSize: '11px', color: '#000', fontWeight: 500 }}
-            >
-              {t('feedback_email')}
-            </a>
-          </div>
-
-        </div>
-      </div>
-    </div>
+    <HelpLayout
+      locale={locale}
+      active="a11y"
+      title={t('a11y_title')}
+      lead={t('a11y_p1', { brand: brand.name })}
+    >
+      <HelpSection title={t('a11y_list_title')}>
+        <HelpList items={[t('a11y_1'), t('a11y_2'), t('a11y_3'), t('a11y_4'), t('a11y_5')]} />
+      </HelpSection>
+      <HelpSection title={t('a11y_feedback_title')}>
+        <p>
+          {t.rich('a11y_feedback_p', {
+            email: brand.supportEmail,
+            link: (chunks) => (
+              <a href={`mailto:${brand.supportEmail}`} className="font-semibold text-accent">
+                {chunks}
+              </a>
+            ),
+          })}
+        </p>
+      </HelpSection>
+    </HelpLayout>
   );
 }
