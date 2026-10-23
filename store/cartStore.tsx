@@ -68,28 +68,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback((newItem: CartItem) => {
     setCart((prevCart) => {
-      const existingItemIndex = prevCart.items.findIndex(
-        (item) =>
-          item.productId === newItem.productId &&
-          item.color === newItem.color &&
-          item.size === newItem.size
-      );
-
-      let updatedItems: CartItem[];
-
-      if (existingItemIndex > -1) {
-        // Item exists, update quantity
-        updatedItems = [...prevCart.items];
-        updatedItems[existingItemIndex] = {
-          ...updatedItems[existingItemIndex],
-          quantity: updatedItems[existingItemIndex].quantity + newItem.quantity,
-        };
-      } else {
-        // New item, add to cart
-        updatedItems = [...prevCart.items, newItem];
+      // One piece per product. A second add neither duplicates the row nor bumps quantity.
+      if (prevCart.items.some((item) => item.productId === newItem.productId)) {
+        return prevCart;
       }
 
-      return calculateTotals(updatedItems, prevCart.shipping);
+      return calculateTotals(
+        [...prevCart.items, { ...newItem, quantity: 1 }],
+        prevCart.shipping
+      );
     });
   }, []);
 
