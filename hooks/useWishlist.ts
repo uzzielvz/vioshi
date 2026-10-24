@@ -27,9 +27,12 @@ function writeIds(ids: string[]) {
 
 export function useWishlist() {
   const [ids, setIds] = useState<string[]>([]);
+  // False until localStorage was read, so lists don't flash their empty state.
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setIds(readIds());
+    setReady(true);
 
     const sync = () => setIds(readIds());
     window.addEventListener("storage", sync);
@@ -52,5 +55,5 @@ export function useWishlist() {
 
   const has = useCallback((id: string) => ids.includes(id), [ids]);
 
-  return { ids, has, toggle };
+  return { ids, ready, has, toggle };
 }

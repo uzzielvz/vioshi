@@ -49,9 +49,22 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 | G2 settings-limpieza | L1 | **MERGEADO** (#9) |
 | H inventario + tablero + móvil | L5 | **MERGEADO** (#10) · `0018`–`0020` aplicadas y verificadas en prod |
 | E Connect | L7 | **BLOQUEADO** — ver `OPEN.md` y más abajo |
-| I front de rail | — | **EN RAMA** `claude/gifted-fermi-ku1xl3` (no mergeado a `main`) |
+| I front de rail | — | **MERGEADO** (#16) |
+| J front de rail: cuenta, pagar y lo demás | — | **EN RAMA** `claude/gifted-fermi-ku1xl3` (sin merge) |
 
-**Paquete I, en la rama, sin merge.** Hecho: tarjeta de la feed (marca, tipo, talla, precio, corazón), `hooks/useWishlist.ts`, grid de 2/3/4 columnas, `CategoryTabs`, inicio y colecciones sin hero, ficha con galería y acordeones, bolsa sin cantidades y pieza única, portada collage en `/tienda/[slug]`, búsqueda también por marca, borrados `/archive`, `/pages/chapters` y `images.unsplash.com`. Pendiente (otro paquete): seguir, mensajes, ofertas, checkout y cuenta. **BLOQUEO:** no hay `.env.local`, así que no se revisó en el navegador y no se inventaron datos. `npm run build` compiló; al prerenderizar faltó `NEXT_PUBLIC_SUPABASE_URL`.
+**Paquete I, mergeado en #16.** Tarjeta de la feed, `useWishlist`, grid, `CategoryTabs`, inicio y colecciones, ficha, bolsa sin cantidades, portada collage en `/tienda/[slug]`, búsqueda por marca; borrados `/archive`, `/pages/chapters` y Unsplash.
+
+**Paquete J, en la rama, sin merge.** El resto de la tienda con la guía (`docs/design/`):
+
+- **Cuenta:** entrar, crear cuenta, recuperar y nueva contraseña sin header. Perfil de persona con pestañas Guardados · Compras · Direcciones; editar perfil (contraseña por enlace al correo, idioma, cerrar sesión). `/wishlist` manda al perfil si hay sesión. Se borró `/account/archivos` (facturas de ejemplo).
+- **Pagar:** barra propia, entrega en tarjetas de opción (puntos reales y envío a domicilio), contacto, pago con el umbral de `settings`, resumen y «Continuar al pago · $X». `checkout/actions.ts` sin tocar. Pedido pagado y retorno con `components/order/OrderView.tsx`; «pagado» solo si `payment_status = completed`.
+- **Búsqueda** con filtros de categoría, talla, marca y orden; **búsqueda por foto** y **/vender** (tres pasos, la solicitud es el paso 1).
+- **Ayuda:** cómo funciona, envíos y pagos (de `settings`, `pickup_points` y `EXPRESS_SHIPPING_COST`), medidas, puntos de entrega (de la tabla), legal y accesibilidad en i18n. 404 y error dentro de `[locale]`.
+- **Arreglo:** el carrito expone `isReady`; antes, abrir `/checkout` directo mandaba a `/cart` y el carrito podía volver después de pagar.
+- Primitivas en `components/ui/` (`styles.ts`, `Avatar`, `UnderlineTabs`, `EmptyState`). Se borraron `components/common` y los namespaces de mensajes sin uso.
+- Verificado: type-check, lint, build y capturas a 390 y 1280 px contra un PostgREST simulado (sin scroll horizontal).
+
+Pendiente: seguir, mensajes, ofertas, «Qué te interesa», portada editable y los pasos 2 y 3 de vender (necesitan base de datos). **Humano:** política de devoluciones (PROYECTO § 8, #14; la página dice «la estamos terminando»), correo y WhatsApp de soporte reales (`NEXT_PUBLIC_BRAND_SUPPORT_EMAIL`, `NEXT_PUBLIC_BRAND_WHATSAPP`; sin el segundo no se muestra WhatsApp).
 
 E sigue bloqueado: es humano, no código.
 

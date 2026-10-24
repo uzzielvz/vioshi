@@ -1,10 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import ProductGrid from '@/components/ProductGrid';
-import SearchFilterDrawer, { type SortKey } from '@/components/SearchFilterDrawer';
-import type { ProductData } from '@/lib/products';
+import { screenTitleClass } from '@/components/ui/styles';
 
 interface VSResult {
   id: string;
@@ -18,131 +16,41 @@ interface VSResult {
 interface VisualSearchResultsProps {
   /** Results already sorted by similarity desc from the API */
   results: VSResult[];
-  /** Gemini's one-sentence description of the uploaded garment (demo observability) */
+  /** Model's one-sentence description of the uploaded garment */
   aiDescription?: string;
+  /** Object URL of the uploaded photo */
+  previewUrl: string;
 }
 
-/**
- * VisualSearchResults (VS-09 / VS-10)
- * Renders the API results using the exact same post-PRO-12 layout as /search:
- * - Title row with visual_title + left counter + single right FILTRAR (underlined)
- * - ProductGrid
- * - SearchFilterDrawer (client-side sort + category filter over the small result set)
- *
- * No URL param sync (transient results). Empty state delegated to ProductGrid.
- * CartProvider + NextIntlClientProvider are inherited from the [locale] layout shell.
- */
-export default function VisualSearchResults({ results, aiDescription }: VisualSearchResultsProps) {
-  const t = useTranslations('search');
+// Results keep the API order (best match first), so there is no sort here.
+export default function VisualSearchResults({ results, aiDescription, previewUrl }: VisualSearchResultsProps) {
+  const t = useTranslations('ui.visual');
+  const tSearch = useTranslations('ui.search');
 
-  const topSimilarity = results.length
-    ? Math.round((results[0]?.similarity ?? 0) * 100)
-    : 0;
-
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [sort, setSort] = useState<SortKey>('newest');
-  const [category, setCategory] = useState<string>('all');
-
-  // Convert API shape → ProductData shape expected by ProductGrid
-  const baseProducts: ProductData[] = results.map((r) => ({
+  const products = results.map((r) => ({
     id: r.id,
     name: r.name,
     price: r.price_mxn,
     image: r.image_url ?? '',
     slug: r.slug,
-    // description / category not critical for the grid cards in this context
   }));
 
-  // Client-side filter + sort (identical logic to SearchContent post-PRO-12)
-  const products = useMemo(() => {
-    let list = [...baseProducts];
-
-    if (category && category !== 'all') {
-      list = list.filter((p) => p.category === category);
-    }
-
-    const sorted = [...list];
-    switch (sort) {
-      case 'price_asc':
-        sorted.sort((a, b) => a.price - b.price);
-        break;
-      case 'price_desc':
-        sorted.sort((a, b) => b.price - a.price);
-        break;
-      case 'newest':
-      default:
-        // keep API similarity order for 'newest' (already best-match first)
-        break;
-    }
-    return sorted;
-  }, [baseProducts, sort, category]);
-
-  function handleDrawerChange(next: { sort: SortKey; category: string }) {
-    setSort(next.sort);
-    setCategory(next.category);
-  }
-
-  const labelStyle: React.CSSProperties = {
-    fontFamily: "var(--font-sans)",
-    fontSize: '11px',
-    fontWeight: 500,
-    letterSpacing: '0.02em',
-    textTransform: 'uppercase',
-  };
-
   return (
-    <div className="px-4 md:px-8 py-8 md:py-12">
-      {/* Title for visual search results (no emoji per request) */}
-      <div className="mb-6 md:mb-8">
-        <h1 style={labelStyle}>{t('visual_title')}</h1>
-        {aiDescription && (
-          <p
-            className="mt-3 max-w-2xl"
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontSize: '12px',
-              lineHeight: 1.5,
-              color: '#666',
-            }}
-          >
-            <span style={{ color: '#000', fontWeight: 500 }}>Gemini:</span>{' '}
-            “{aiDescription}”
-            {topSimilarity > 0 && (
-              <span style={{ color: '#999' }}>
-                {' '}· {topSimilarity}% match
-              </span>
-            )}
-          </p>
-        )}
+    <div className="mx-auto w-full max-w-[1280px] pb-10 md:px-8">
+      <div className="flex items-center gap-3.5 px-4 pb-4 pt-5 md:px-0 md:pt-8">
+        <div className="h-[72px] w-14 flex-none overflow-hidden bg-carton">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={previewUrl} alt={t('your_photo')} className="h-full w-full object-cover" />
+        </div>
+        <div className="min-w-0">
+          <h1 className={screenTitleClass}>{t('title')}</h1>
+          {aiDescription && <p className="mt-0.5 text-[13px] leading-[1.45] text-muted">{aiDescription}</p>}
+        </div>
       </div>
-
-      {/* Identical post-PRO-12 title row: counter + single FILTRAR */}
-      <div
-        className="flex items-center justify-between mb-8 md:mb-10 pb-4 border-b"
-        style={{ borderColor: 'rgba(0,0,0,0.08)' }}
-      >
-        <span style={{ ...labelStyle, fontWeight: 400, color: '#999' }}>
-          {t('showing_results', { count: products.length })}
-        </span>
-        <button
-          type="button"
-          onClick={() => setDrawerOpen(true)}
-          style={{ ...labelStyle, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: '4px' }}
-          className="hover:opacity-60 transition-opacity"
-        >
-          {t('filter')}
-        </button>
-      </div>
-
+      <p className="px-4 pb-3 text-[13px] font-semibold tabular-nums text-ink md:px-0">
+        {tSearch('count', { count: products.length })}
+      </p>
       <ProductGrid products={products} />
-
-      <SearchFilterDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        sort={sort}
-        category={category}
-        onChange={handleDrawerChange}
-      />
     </div>
   );
 }

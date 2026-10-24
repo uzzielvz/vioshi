@@ -1,156 +1,78 @@
-'use client';
+import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
+import type { Locale } from '@/i18n';
+import { brand } from '@/lib/brand';
+import { formatMxn } from '@/lib/formatters';
+import { getSettings } from '@/lib/settings';
+import HelpLayout, { HelpSection } from '@/components/help/HelpLayout';
+import { ChevronIcon } from '@/components/ui/icons';
+import { buttonClass } from '@/components/ui/styles';
 
-import { useState } from 'react';
-import SupportNav from '@/components/SupportNav';
-import { useTranslations } from 'next-intl';
+export const revalidate = 60;
 
-const fontStyle = {
-  fontFamily: "var(--font-sans)",
-};
+export default async function CustomerSupportPage({ params }: { params: { locale: string } }) {
+  const locale = params.locale as Locale;
+  const [t, settings] = await Promise.all([getTranslations('ui.help'), getSettings()]);
 
-const faqs = [1, 2, 3, 4, 5, 6, 7, 8] as const;
-
-export default function CustomerSupportPage() {
-  const t = useTranslations('support');
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const contacts = [
+    { label: t('instagram'), value: brand.instagramUrl.replace(/^https?:\/\/(www\.)?/, '').replace(/\?.*$/, ''), href: brand.instagramUrl },
+    { label: t('email'), value: brand.supportEmail, href: `mailto:${brand.supportEmail}` },
+    ...(brand.whatsapp
+      ? [{ label: t('whatsapp'), value: `+${brand.whatsapp}`, href: `https://wa.me/${brand.whatsapp}` }]
+      : []),
+  ];
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="md:hidden">
-        <SupportNav />
-      </div>
-      <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
-
-          {/* Left column: Contact */}
-          <div>
-            <h2
-              className="uppercase tracking-wide mb-8 border-b border-gray-200 pb-4"
-              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
-            >
-              {t('contact_title')}
-            </h2>
-
-            <div className="space-y-8">
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-1"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('whatsapp_label')}
-                </p>
-                <a
-                  href={`https://wa.me/${t('whatsapp_number').replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:opacity-60 transition-opacity"
-                  style={{ ...fontStyle, fontSize: '11px', color: '#666' }}
-                >
-                  {t('whatsapp_cta')}
-                </a>
-                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
-                  {t('whatsapp_number')}
-                </p>
-              </div>
-
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-1"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('email_label')}
-                </p>
-                <a
-                  href={`mailto:${t('email_value')}`}
-                  className="hover:opacity-60 transition-opacity"
-                  style={{ ...fontStyle, fontSize: '11px', color: '#666' }}
-                >
-                  {t('email_value')}
-                </a>
-              </div>
-
-              <div>
-                <p
-                  className="uppercase tracking-wide mb-1"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('hours_label')}
-                </p>
-                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
-                  {t('hours_value')}
-                </p>
-                <p style={{ ...fontStyle, fontSize: '11px', color: '#666' }}>
-                  {t('hours_note')}
-                </p>
-              </div>
-
-              <div className="flex gap-6">
-                <a
-                  href="https://www.instagram.com/viogi_/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="uppercase tracking-wide hover:opacity-60 transition-opacity"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('instagram')}
-                </a>
-                <a
-                  href="https://www.tiktok.com/@viogi"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="uppercase tracking-wide hover:opacity-60 transition-opacity"
-                  style={{ ...fontStyle, fontSize: '11px', fontWeight: 500, color: '#000' }}
-                >
-                  {t('tiktok')}
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Right column: FAQ */}
-          <div>
-            <h2
-              className="uppercase tracking-wide mb-8 border-b border-gray-200 pb-4"
-              style={{ ...fontStyle, fontSize: '11px', fontWeight: 500 }}
-            >
-              {t('faq_title')}
-            </h2>
-
-            <div>
-              {faqs.map((i) => (
-                <div key={i} className="border-b border-gray-200">
-                  <button
-                    className="w-full flex items-center justify-between py-4 text-left"
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  >
-                    <span
-                      className="uppercase tracking-wide pr-4"
-                      style={{ ...fontStyle, fontSize: '11px', fontWeight: openFaq === i ? 500 : 400, color: '#000' }}
-                    >
-                      {t(`faq_${i}_q` as `faq_${typeof i}_q`)}
-                    </span>
-                    <span
-                      className="flex-shrink-0 transition-transform duration-200"
-                      style={{ transform: openFaq === i ? 'rotate(45deg)' : 'none', fontSize: '16px', lineHeight: 1 }}
-                    >
-                      +
-                    </span>
-                  </button>
-                  {openFaq === i && (
-                    <p
-                      className="pb-4"
-                      style={{ ...fontStyle, fontSize: '11px', color: '#666', lineHeight: '1.6' }}
-                    >
-                      {t(`faq_${i}_a` as `faq_${typeof i}_a`)}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
+    <HelpLayout
+      locale={locale}
+      active="help"
+      title={t('help_title', { brand: brand.name })}
+      lead={t('help_lead')}
+    >
+      <HelpSection title={t('buy_title')}>
+        <p>{t('buy_body')}</p>
+      </HelpSection>
+      <HelpSection title={t('pay_title')}>
+        <p>
+          {t('pay_body', {
+            brand: brand.name,
+            threshold: formatMxn(settings.card_only_threshold_mxn, locale),
+          })}
+        </p>
+      </HelpSection>
+      <HelpSection title={t('receive_title')}>
+        <p>{t('receive_body')}</p>
+      </HelpSection>
+      <HelpSection title={t('trouble_title')}>
+        <p>{t('trouble_body')}</p>
+      </HelpSection>
+      <HelpSection title={t('sell_title')}>
+        <p>{t('sell_body')}</p>
+        <Link href={`/${locale}/vender`} className={buttonClass('soft', 'sm', 'justify-self-start')}>
+          {t('sell_cta')}
+        </Link>
+      </HelpSection>
+      <HelpSection title={t('contact_title')}>
+        <p className="text-muted">{t('contact_body')}</p>
+        <ul className="divide-y divide-line border-y border-line">
+          {contacts.map((c) => (
+            <li key={c.label}>
+              <a
+                href={c.href}
+                target={c.href.startsWith('http') ? '_blank' : undefined}
+                rel={c.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                className="flex items-center justify-between gap-3 py-3"
+              >
+                <span className="font-semibold">{c.label}</span>
+                <span className="flex min-w-0 items-center gap-1.5 text-muted">
+                  <span className="truncate">{c.value}</span>
+                  <ChevronIcon className="h-4 w-4 flex-none" />
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </HelpSection>
+    </HelpLayout>
   );
 }

@@ -1,7 +1,11 @@
 'use client';
 
-import { useOptimistic, useTransition, useState } from 'react';
+import { useCallback, useEffect, useOptimistic, useState, useTransition } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
+import { useTranslations } from 'next-intl';
+import clsx from 'clsx';
+import EmptyState from '@/components/ui/EmptyState';
+import { buttonClass, inputClass, labelClass } from '@/components/ui/styles';
 import {
   addAddressAction,
   deleteAddressAction,
@@ -26,13 +30,6 @@ export interface AddressRow {
   is_default: boolean;
 }
 
-// ─── Shared styles ────────────────────────────────────────────────────────────
-
-const INPUT =
-  'w-full py-3 border-b border-gray-200 bg-transparent focus:outline-none focus:border-black placeholder:text-gray-300 placeholder:text-[11px] placeholder:tracking-widest text-sm transition-colors duration-200';
-
-const LABEL = 'text-[9px] uppercase tracking-widest text-gray-400';
-
 // ─── Add form ─────────────────────────────────────────────────────────────────
 
 /**
@@ -41,102 +38,110 @@ const LABEL = 'text-[9px] uppercase tracking-widest text-gray-400';
  * siempre devolvería `pending: false`.
  */
 function AddFormActions({ onCancel }: { onCancel: () => void }) {
+  const t = useTranslations('ui.addresses');
   const { pending } = useFormStatus();
 
   return (
-    <div className="flex gap-3 pt-2">
-      <button
-        type="submit"
-        disabled={pending}
-        className="flex-1 bg-black text-white py-3 text-[11px] uppercase tracking-widest hover:bg-gray-900 transition-colors disabled:bg-gray-200 disabled:text-gray-400"
-      >
-        {pending ? 'Guardando...' : 'Guardar Dirección'}
+    <div className="grid grid-cols-2 gap-2 pt-1">
+      <button type="submit" disabled={pending} className={buttonClass('primary')}>
+        {pending ? t('saving') : t('save')}
       </button>
-      <button
-        type="button"
-        onClick={onCancel}
-        disabled={pending}
-        className="flex-1 border border-gray-300 text-black py-3 text-[11px] uppercase tracking-widest hover:border-black transition-colors"
-      >
-        Cancelar
+      <button type="button" onClick={onCancel} disabled={pending} className={buttonClass('line')}>
+        {t('cancel')}
       </button>
     </div>
   );
 }
 
-function AddAddressForm({ onCancel }: { onCancel: () => void }) {
+function Field({
+  name,
+  label,
+  type = 'text',
+  required = false,
+  autoComplete,
+  inputMode,
+  maxLength,
+}: {
+  name: string;
+  label: string;
+  type?: string;
+  required?: boolean;
+  autoComplete?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  maxLength?: number;
+}) {
+  const id = `address-${name}`;
+  return (
+    <div className="grid gap-1.5">
+      <label htmlFor={id} className={labelClass}>
+        {label}
+      </label>
+      <input
+        id={id}
+        name={name}
+        type={type}
+        required={required}
+        autoComplete={autoComplete}
+        inputMode={inputMode}
+        maxLength={maxLength}
+        className={inputClass}
+      />
+    </div>
+  );
+}
+
+function AddAddressForm({ onDone }: { onDone: () => void }) {
+  const t = useTranslations('ui.addresses');
   // `useFormState` de react-dom, no `useActionState`: eso es React 19 y aquí
   // corre React 18.3, donde el import no existe y la página revienta al
   // renderizarse.
   const [state, action] = useFormState<AddressActionState, FormData>(addAddressAction, null);
 
+  useEffect(() => {
+    if (state && 'success' in state) onDone();
+  }, [state, onDone]);
+
   return (
-    <form action={action} className="border border-gray-200 p-6 mb-6 space-y-4">
-      <p className="text-[11px] uppercase tracking-widest font-medium">Nueva Dirección</p>
+    <form action={action} className="mb-5 grid gap-3.5 rounded-btn border border-line p-4">
+      <p className="text-[15px] font-bold text-ink">{t('new_title')}</p>
 
-      <div className="grid grid-cols-2 gap-x-6">
-        <div>
-          <p className={LABEL}>Nombre</p>
-          <input type="text" name="first_name" required placeholder="NOMBRE" className={INPUT} />
-        </div>
-        <div>
-          <p className={LABEL}>Apellido</p>
-          <input type="text" name="last_name" required placeholder="APELLIDO" className={INPUT} />
-        </div>
+      <div className="grid grid-cols-2 gap-2.5">
+        <Field name="first_name" label={t('first_name')} required autoComplete="given-name" />
+        <Field name="last_name" label={t('last_name')} required autoComplete="family-name" />
       </div>
-
-      <div>
-        <p className={LABEL}>Teléfono</p>
-        <input type="tel" name="phone" required placeholder="TELÉFONO" className={INPUT} />
+      <Field name="phone" label={t('phone')} type="tel" required autoComplete="tel" />
+      <Field name="street" label={t('street')} required autoComplete="address-line1" />
+      <div className="grid grid-cols-2 gap-2.5">
+        <Field name="apartment" label={t('apartment')} autoComplete="address-line2" />
+        <Field name="colony" label={t('colony')} />
       </div>
-
-      <div>
-        <p className={LABEL}>Calle y número</p>
-        <input type="text" name="street" required placeholder="CALLE Y NÚMERO" className={INPUT} />
-      </div>
-
-      <div>
-        <p className={LABEL}>Apartamento / Suite (opcional)</p>
-        <input type="text" name="apartment" placeholder="APTO, SUITE, ETC." className={INPUT} />
-      </div>
-
-      <div>
-        <p className={LABEL}>Colonia (opcional)</p>
-        <input type="text" name="colony" placeholder="COLONIA" className={INPUT} />
-      </div>
-
-      <div className="grid grid-cols-3 gap-x-6">
-        <div>
-          <p className={LABEL}>Ciudad</p>
-          <input type="text" name="city" required placeholder="CIUDAD" className={INPUT} />
-        </div>
-        <div>
-          <p className={LABEL}>Estado</p>
-          <input type="text" name="state" required placeholder="ESTADO" className={INPUT} />
-        </div>
-        <div>
-          <p className={LABEL}>Código Postal</p>
-          <input type="text" name="zip_code" required placeholder="CP" maxLength={5} className={INPUT} />
-        </div>
+      <div className="grid grid-cols-[1fr_1fr_110px] gap-2.5">
+        <Field name="city" label={t('city')} required autoComplete="address-level2" />
+        <Field name="state" label={t('state')} required autoComplete="address-level1" />
+        <Field
+          name="zip_code"
+          label={t('zip')}
+          required
+          autoComplete="postal-code"
+          inputMode="numeric"
+          maxLength={5}
+        />
       </div>
 
       <input type="hidden" name="country" value="MX" />
 
-      <label className="flex items-center gap-2.5 pt-2 cursor-pointer">
-        <input type="checkbox" name="is_default" className="sr-only peer" />
-        <span className="w-3.5 h-3.5 border border-gray-300 peer-checked:bg-black peer-checked:border-black flex items-center justify-center flex-shrink-0 transition-colors">
-          <svg className="w-2 h-2 text-white hidden peer-checked:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        </span>
-        <span className="text-[11px] text-gray-400">Establecer como dirección predeterminada</span>
+      <label className="flex cursor-pointer items-center gap-2.5 text-[13.5px] text-ink">
+        <input type="checkbox" name="is_default" className="h-4 w-4 accent-accent" />
+        {t('make_default_check')}
       </label>
 
       {state && 'error' in state && (
-        <p className="text-[11px] text-red-500">{state.error}</p>
+        <p role="alert" className="rounded-btn border border-ink px-3 py-2.5 text-[13px] text-ink">
+          {state.error}
+        </p>
       )}
 
-      <AddFormActions onCancel={onCancel} />
+      <AddFormActions onCancel={onDone} />
     </form>
   );
 }
@@ -154,47 +159,55 @@ function AddressCard({
   onSetDefault: (id: string) => void;
   isPending: boolean;
 }) {
-  return (
-    <div className="border border-gray-200 p-5 relative">
-      {address.is_default && (
-        <span className="absolute top-4 right-4 text-[9px] uppercase tracking-widest text-gray-400">
-          Predeterminada
-        </span>
-      )}
+  const t = useTranslations('ui.addresses');
 
-      <div className="space-y-0.5 pr-24">
-        <p style={{ fontSize: '11px', fontWeight: 600, color: '#000' }}>
-          {address.first_name} {address.last_name}
+  return (
+    <div
+      className={clsx(
+        'grid gap-3 rounded-btn border p-4 text-[13.5px]',
+        address.is_default ? 'border-ink' : 'border-line'
+      )}
+    >
+      <div className="grid gap-0.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="font-semibold text-ink">
+            {address.first_name} {address.last_name}
+          </p>
+          {address.is_default && (
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink">
+              {t('default_badge')}
+            </span>
+          )}
+        </div>
+        <p className="text-muted">
+          {address.street}
+          {address.apartment ? `, ${address.apartment}` : ''}
         </p>
-        <p style={{ fontSize: '11px', color: '#666' }}>{address.street}</p>
-        {address.apartment && (
-          <p style={{ fontSize: '11px', color: '#666' }}>{address.apartment}</p>
-        )}
-        {address.colony && (
-          <p style={{ fontSize: '11px', color: '#666' }}>{address.colony}</p>
-        )}
-        <p style={{ fontSize: '11px', color: '#666' }}>
+        {address.colony && <p className="text-muted">{address.colony}</p>}
+        <p className="text-muted">
           {address.city}, {address.state} {address.zip_code}
         </p>
-        <p style={{ fontSize: '11px', color: '#666' }} className="pt-1">{address.phone}</p>
+        <p className="text-muted">{address.phone}</p>
       </div>
 
-      <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
+      <div className="flex gap-5 border-t border-line pt-3 text-[13px] font-semibold">
         {!address.is_default && (
           <button
+            type="button"
             onClick={() => onSetDefault(address.id)}
             disabled={isPending}
-            className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-black transition-colors disabled:opacity-40"
+            className="text-ink disabled:opacity-40"
           >
-            Predeterminar
+            {t('make_default')}
           </button>
         )}
         <button
+          type="button"
           onClick={() => onDelete(address.id)}
           disabled={isPending}
-          className="text-[10px] uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors disabled:opacity-40 ml-auto"
+          className="ml-auto text-muted hover:text-ink disabled:opacity-40"
         >
-          Eliminar
+          {t('delete')}
         </button>
       </div>
     </div>
@@ -204,6 +217,7 @@ function AddressCard({
 // ─── Main client component ────────────────────────────────────────────────────
 
 export default function AddressesClient({ initial }: { initial: AddressRow[] }) {
+  const t = useTranslations('ui.addresses');
   const [isAdding, setIsAdding] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -239,48 +253,37 @@ export default function AddressesClient({ initial }: { initial: AddressRow[] }) 
     });
   };
 
+  const closeForm = useCallback(() => setIsAdding(false), []);
+
   return (
-    <div>
-      {/* Toolbar */}
-      <div className="flex items-center justify-between mb-6">
-        <p style={{ fontSize: '11px', color: '#999' }}>
-          {optimisticAddresses.length === 0
-            ? 'Sin direcciones guardadas'
-            : `${optimisticAddresses.length} dirección${optimisticAddresses.length !== 1 ? 'es' : ''}`}
-        </p>
-        {!isAdding && (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="text-[11px] uppercase tracking-widest text-black hover:opacity-60 transition-opacity"
-          >
-            + Nueva Dirección
-          </button>
-        )}
-      </div>
+    <div className="px-4 md:max-w-[720px] md:px-0">
+      {optimisticAddresses.length > 0 && (
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <p className="text-[13px] font-semibold text-ink">{t('count', { count: optimisticAddresses.length })}</p>
+          {!isAdding && (
+            <button type="button" onClick={() => setIsAdding(true)} className={buttonClass('line', 'sm')}>
+              {t('add')}
+            </button>
+          )}
+        </div>
+      )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 px-4 py-3 mb-4">
-          <p className="text-[11px] text-red-600">{error}</p>
-        </div>
+        <p role="alert" className="mb-4 rounded-btn border border-ink px-3 py-2.5 text-[13px] text-ink">
+          {error}
+        </p>
       )}
 
-      {/* Add form */}
-      {isAdding && (
-        <AddAddressForm onCancel={() => setIsAdding(false)} />
-      )}
+      {isAdding && <AddAddressForm onDone={closeForm} />}
 
-      {/* List */}
       {optimisticAddresses.length === 0 && !isAdding ? (
-        <div className="py-16 text-center border border-gray-100">
-          <p style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            No tienes direcciones guardadas
-          </p>
-          <p className="mt-2" style={{ fontSize: '11px', color: '#999' }}>
-            Agrega una para agilizar tus próximas compras
-          </p>
-        </div>
+        <EmptyState title={t('empty_title')} body={t('empty_body')}>
+          <button type="button" onClick={() => setIsAdding(true)} className={buttonClass('primary')}>
+            {t('add')}
+          </button>
+        </EmptyState>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid gap-3 sm:grid-cols-2">
           {optimisticAddresses.map((address) => (
             <AddressCard
               key={address.id}

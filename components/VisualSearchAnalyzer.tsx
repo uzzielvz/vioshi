@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { CloseIcon } from '@/components/ui/icons';
 import VisualSearchDotField from './VisualSearchDotField';
 
 interface VisualSearchAnalyzerProps {
@@ -14,14 +15,13 @@ interface VisualSearchAnalyzerProps {
  * Full-viewport analyzer for the uploaded image.
  *
  * Light theme: white backdrop, image at low opacity, dark dots over the whole
- * photo. No blinking cursor — label just reads "MIRANDO" to feel calm and
- * intentional.
+ * photo, and a single calm status line.
  */
 export default function VisualSearchAnalyzer({
   file,
   onBack,
 }: VisualSearchAnalyzerProps) {
-  const t = useTranslations('search');
+  const t = useTranslations('ui.visual');
   const [previewUrl, setPreviewUrl] = useState<string>('');
 
   useEffect(() => {
@@ -32,58 +32,35 @@ export default function VisualSearchAnalyzer({
     };
   }, [file]);
 
-  const labelStyle: React.CSSProperties = {
-    fontFamily: "var(--font-sans)",
-    fontSize: '11px',
-    fontWeight: 500,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    color: '#000000',
-  };
-
   return (
-    <div className="relative min-h-[calc(100vh-64px)] w-full bg-white overflow-hidden flex items-center justify-center vs-fade-in">
+    <div className="vs-fade-in relative flex min-h-[calc(100vh-64px)] w-full items-center justify-center overflow-hidden bg-paper">
       {previewUrl && (
         <div className="relative inline-block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={previewUrl}
-            alt="Imagen para búsqueda visual"
-            className="block max-h-[75vh] max-w-[min(90vw,540px)]"
-            style={{ opacity: 0.18 }}
+            alt={t('your_photo')}
+            className="block max-h-[75vh] max-w-[min(90vw,540px)] opacity-[0.18]"
           />
           <VisualSearchDotField
             imageUrl={previewUrl}
             color="#111111"
-            className="absolute inset-0 w-full h-full pointer-events-none"
+            className="pointer-events-none absolute inset-0 h-full w-full"
           />
         </div>
       )}
 
-      <div
-        className="absolute"
-        style={{
-          top: '24px',
-          left: '24px',
-          zIndex: 20,
-          ...labelStyle,
-        }}
-      >
+      <p role="status" className="absolute left-4 top-4 z-20 text-[14px] font-semibold text-ink md:left-8">
         {t('looking')}
-      </div>
+      </p>
 
       <button
         type="button"
         onClick={onBack}
-        aria-label={t('back')}
-        className="absolute flex items-center justify-center w-8 h-8 rounded-full border border-black/20 text-black hover:bg-black/5 transition-colors"
-        style={{
-          top: '24px',
-          right: '24px',
-          zIndex: 20,
-        }}
+        aria-label={t('close')}
+        className="absolute right-2 top-2 z-20 grid h-10 w-10 place-items-center text-ink md:right-6"
       >
-        <span className="text-lg leading-none" style={{ transform: 'translateY(-1px)' }}>×</span>
+        <CloseIcon className="h-[22px] w-[22px]" />
       </button>
     </div>
   );

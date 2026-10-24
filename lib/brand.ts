@@ -47,6 +47,13 @@ export const brand = {
   legalEmail:
     process.env.BRAND_LEGAL_EMAIL?.trim() || 'legal@viogi.com',
 
+  /** Support contact on the help pages. */
+  supportEmail:
+    process.env.NEXT_PUBLIC_BRAND_SUPPORT_EMAIL?.trim() || 'soporte@viogi.com',
+
+  /** Support WhatsApp (digits with country code). Hidden on the help page until set. */
+  whatsapp: process.env.NEXT_PUBLIC_BRAND_WHATSAPP?.replace(/\D/g, '') || '',
+
   get titleDefault(): string {
     return `${this.name} - ${this.tagline}`;
   },

@@ -17,3 +17,13 @@ export function formatPrice(
     maximumFractionDigits: showDecimals ? 2 : 0,
   }).format(price);
 }
+
+/** Order amounts were charged in MXN, so every locale shows them in MXN. */
+export function formatMxn(amount: number, locale: Locale): string {
+  return new Intl.NumberFormat(locale === 'es' ? 'es-MX' : 'en-US', {
+    style: 'currency',
+    currency: 'MXN',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
