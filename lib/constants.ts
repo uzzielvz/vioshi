@@ -72,6 +72,8 @@ export const PAYPAL_ME_LINK = 'https://paypal.me/viogi';
 export const STORAGE_KEYS = {
   CART: "viogi_cart",
   WISHLIST: "viogi_wishlist",
+  /** Account the local wishlist was last merged into (see useWishlist). */
+  WISHLIST_OWNER: "viogi_wishlist_owner",
   RECENT_PRODUCTS: "viogi_recent_products",
 } as const;
 

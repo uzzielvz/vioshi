@@ -54,3 +54,6 @@ export function LockIcon({ className }: IconProps) {
 export function CardIcon({ className }: IconProps) {
   return <svg {...base} className={className}><rect x="3" y="6" width="18" height="12" rx="1.5" /><path d="M3 10h18" /></svg>;
 }
+export function CheckIcon({ className }: IconProps) {
+  return <svg {...base} strokeWidth={1.8} className={className}><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>;
+}

@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import ProductGrid from "@/components/ProductGrid";
-import { InstagramIcon } from "@/components/ui/icons";
+import StoreFollowActions from "@/components/StoreFollowActions";
 import { getProductsByStoreId } from "@/lib/products";
 import { getStoreBySlug } from "@/lib/stores";
 import { brand } from "@/lib/brand";
@@ -102,20 +102,14 @@ export default async function StorePage({ params }: PageProps) {
         </div>
 
         <h1 className="mt-2 text-[21px] font-bold tracking-[-0.015em] text-ink">{store.name}</h1>
-        <p className="mt-1 text-[13px] text-muted">{t("pieces", { count: products.length })}</p>
-        {store.bio && <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-ink">{store.bio}</p>}
-
-        {store.instagram && (
-          <a
-            href={instagramHref(store.instagram)}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={t("instagram")}
-            className="mt-3 grid h-10 w-10 place-items-center rounded-btn border border-ink text-ink"
-          >
-            <InstagramIcon className="h-[18px] w-[18px]" />
-          </a>
-        )}
+        <StoreFollowActions
+          storeId={store.id}
+          storeName={store.name}
+          pieces={products.length}
+          instagramHref={store.instagram ? instagramHref(store.instagram) : null}
+        >
+          {store.bio && <p className="max-w-xl text-[13px] leading-relaxed text-ink">{store.bio}</p>}
+        </StoreFollowActions>
       </div>
 
       <div className="border-b border-line px-3.5 md:px-8">

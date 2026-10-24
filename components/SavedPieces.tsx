@@ -10,11 +10,12 @@ import EmptyState from "@/components/ui/EmptyState";
 import { HeartIcon } from "@/components/ui/icons";
 import { buttonClass } from "@/components/ui/styles";
 
-// Saved pieces live in localStorage (useWishlist), so the list is built on the client.
+// Saved pieces live in localStorage and, with a session, in wishlist_items
+// (useWishlist keeps both in step), so the list is built on the client.
 export default function SavedPieces({ products }: { products: ProductData[] }) {
   const t = useTranslations("ui.saved");
   const { locale } = useLocaleContext();
-  const { ids, ready } = useWishlist();
+  const { ids, ready, synced } = useWishlist();
 
   if (!ready) return <div className="min-h-[40vh]" aria-busy="true" />;
 
@@ -39,7 +40,7 @@ export default function SavedPieces({ products }: { products: ProductData[] }) {
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pb-3 md:px-0">
         <p className="text-[13px] font-semibold tabular-nums text-ink">{t("count", { count: saved.length })}</p>
-        <p className="text-[12px] text-muted">{t("device_note")}</p>
+        <p className="text-[12px] text-muted">{synced ? t("account_note") : t("device_note")}</p>
       </div>
       <ProductGrid products={saved} />
     </div>

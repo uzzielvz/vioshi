@@ -293,7 +293,8 @@
       "password_sent": "Done. Check your email to change your password.",
       "language_title": "Language and currency",
       "session_title": "Session",
-      "sign_out": "Log out"
+      "sign_out": "Log out",
+      "following": "Following"
     },
     "saved": {
       "title": "Saved",
@@ -301,7 +302,8 @@
       "empty_title": "No saved pieces yet",
       "empty_body": "Tap the heart on a piece to keep it close.",
       "explore": "See what's new",
-      "device_note": "Your saved pieces stay on this device."
+      "device_note": "Your saved pieces stay on this device.",
+      "account_note": "Your saved pieces stay in your account."
     },
     "addresses": {
       "count": "{count, plural, =0 {No saved addresses} one {# address} other {# addresses}}",
@@ -630,6 +632,27 @@
       "error_body": "We couldn't load this page. Try again in a moment.",
       "retry": "Try again",
       "home": "Go home"
+    },
+    "social": {
+      "follow": "Follow",
+      "following": "Following",
+      "follow_aria": "Follow {name}",
+      "unfollow_aria": "Unfollow {name}",
+      "followers": "{count, plural, one {<b>#</b> follower} other {<b>#</b> followers}}",
+      "title": "Following",
+      "tabs_label": "What you follow",
+      "tab_all": "All",
+      "tab_stores": "Shops",
+      "tab_brands": "Brands",
+      "kind_store": "Shop",
+      "kind_brand": "Brand",
+      "pieces": "{count, plural, =0 {no pieces right now} one {# piece} other {# pieces}}",
+      "empty_title": "You're not following anything yet",
+      "empty_body": "Follow shops and brands to find their new pieces faster.",
+      "empty_cta": "See what's new",
+      "unavailable_title": "Following shops and brands is coming soon",
+      "unavailable_body": "Meanwhile, save the pieces you like with the heart.",
+      "brand_link": "See pieces from {brand}"
     }
   }
 }

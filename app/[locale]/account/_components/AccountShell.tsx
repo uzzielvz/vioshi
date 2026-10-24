@@ -8,7 +8,7 @@ import UnderlineTabs from '@/components/ui/UnderlineTabs';
 import { buttonClass } from '@/components/ui/styles';
 import { getAccountDisplayName } from './accountDisplayName';
 
-export type AccountTab = 'saved' | 'purchases' | 'addresses';
+export type AccountTab = 'saved' | 'purchases' | 'following' | 'addresses';
 
 // A person's profile («Tu perfil» in the prototype). Every account is the
 // same kind of profile; selling is an extra step reached from here.
@@ -35,6 +35,7 @@ export default async function AccountShell({
   const tabs = [
     { key: 'saved', href: `/${locale}/account`, label: t('saved') },
     { key: 'purchases', href: `/${locale}/account/orders`, label: t('purchases') },
+    { key: 'following', href: `/${locale}/account/following`, label: t('following') },
     { key: 'addresses', href: `/${locale}/account/addresses`, label: t('addresses') },
   ] as const;
 

@@ -293,7 +293,8 @@
       "password_sent": "Listo. Revisa tu correo para cambiar tu contraseña.",
       "language_title": "Idioma y moneda",
       "session_title": "Sesión",
-      "sign_out": "Cerrar sesión"
+      "sign_out": "Cerrar sesión",
+      "following": "Siguiendo"
     },
     "saved": {
       "title": "Guardados",
@@ -301,7 +302,8 @@
       "empty_title": "Todavía no guardas piezas",
       "empty_body": "Toca el corazón de una pieza para tenerla a la mano.",
       "explore": "Ver lo nuevo",
-      "device_note": "Tus guardados se quedan en este dispositivo."
+      "device_note": "Tus guardados se quedan en este dispositivo.",
+      "account_note": "Tus guardados se quedan en tu cuenta."
     },
     "addresses": {
       "count": "{count, plural, =0 {Sin direcciones guardadas} one {# dirección} other {# direcciones}}",
@@ -630,6 +632,27 @@
       "error_body": "No pudimos cargar esta página. Intenta de nuevo en un momento.",
       "retry": "Intentar de nuevo",
       "home": "Ir al inicio"
+    },
+    "social": {
+      "follow": "Seguir",
+      "following": "Siguiendo",
+      "follow_aria": "Seguir a {name}",
+      "unfollow_aria": "Dejar de seguir a {name}",
+      "followers": "{count, plural, one {<b>#</b> seguidor} other {<b>#</b> seguidores}}",
+      "title": "Siguiendo",
+      "tabs_label": "Qué sigues",
+      "tab_all": "Todo",
+      "tab_stores": "Tiendas",
+      "tab_brands": "Marcas",
+      "kind_store": "Tienda",
+      "kind_brand": "Marca",
+      "pieces": "{count, plural, =0 {sin piezas por ahora} one {# pieza} other {# piezas}}",
+      "empty_title": "Todavía no sigues nada",
+      "empty_body": "Sigue tiendas y marcas para encontrar sus piezas nuevas más rápido.",
+      "empty_cta": "Ver lo nuevo",
+      "unavailable_title": "Seguir tiendas y marcas llega muy pronto",
+      "unavailable_body": "Mientras, guarda las piezas que te gusten con el corazón.",
+      "brand_link": "Ver piezas de {brand}"
     }
   }
 }

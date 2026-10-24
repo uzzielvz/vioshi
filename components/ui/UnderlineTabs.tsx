@@ -9,20 +9,25 @@ export interface UnderlineTab {
 }
 
 // Text tabs: the active one is ink, 600 and underlined 2px. No pills.
+// `inset` sits inside an already padded column and leaves the bottom rule to
+// the list below it.
 export default function UnderlineTabs({
   tabs,
   label,
+  inset = false,
   className,
 }: {
   tabs: UnderlineTab[];
   label: string;
+  inset?: boolean;
   className?: string;
 }) {
   return (
     <nav
       aria-label={label}
       className={clsx(
-        "flex max-w-full gap-[18px] overflow-x-auto border-b border-line px-4 [scrollbar-width:none] md:px-8 [&::-webkit-scrollbar]:hidden",
+        "flex max-w-full gap-[18px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        inset ? "px-4 md:px-0" : "border-b border-line px-4 md:px-8",
         className
       )}
     >
