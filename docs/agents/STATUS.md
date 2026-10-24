@@ -51,7 +51,7 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 | E Connect | L7 | **BLOQUEADO** — ver `OPEN.md` y más abajo |
 | I front de rail | — | **MERGEADO** (#16) |
 | J front de rail: cuenta, pagar y lo demás | — | **MERGEADO** (#17) |
-| K social 1 + cierre de inserts | — | **EN RAMA** `claude/gifted-fermi-ku1xl3` · migraciones `0024` y `0025` **sin aplicar** |
+| K social 1 + cierre de inserts | — | **MERGEADO** (#18) · migraciones `0024` y `0025` aplicadas en prod el 2026-10-23 |
 
 **Paquete I, mergeado en #16.** Tarjeta de la feed, `useWishlist`, grid, `CategoryTabs`, inicio y colecciones, ficha, bolsa sin cantidades, portada collage en `/tienda/[slug]`, búsqueda por marca; borrados `/archive`, `/pages/chapters` y Unsplash.
 
@@ -67,7 +67,7 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 
 Pendiente: seguir, mensajes, ofertas, «Qué te interesa», portada editable y los pasos 2 y 3 de vender (necesitan base de datos). **Humano:** política de devoluciones (PROYECTO § 8, #14; la página dice «la estamos terminando»), correo y WhatsApp de soporte reales (`NEXT_PUBLIC_BRAND_SUPPORT_EMAIL`, `NEXT_PUBLIC_BRAND_WHATSAPP`; sin el segundo no se muestra WhatsApp).
 
-**Paquete K, en la rama, sin merge.**
+**Paquete K, mergeado en #18.** Migraciones `0024` y `0025` aplicadas en prod el 2026-10-23.
 
 - **Seguridad (`0024_lock_order_inserts.sql`):** quita `orders_insert_any` y `order_items_insert_any`; la app solo inserta pedidos con service_role. Un trigger impide que una sesión `anon`/`authenticated` cambie `profiles.role` (service_role y el SQL editor sí pueden).
 - **Seguir (`0025_follows.sql`):** tabla `follows` (tienda o marca, una por fila, RLS: cada quien lee y borra las suyas) y `follower_count()` para el conteo público. Seguir búsquedas quedó fuera por decisión del humano.
@@ -76,7 +76,7 @@ Pendiente: seguir, mensajes, ofertas, «Qué te interesa», portada editable y l
 - Sin `0025` aplicada, los botones no aparecen y Siguiendo dice «llega muy pronto». Nada se rompe.
 - Verificado: migraciones aplicadas dos veces en un Postgres 16 local con roles estilo Supabase (RLS, trigger, cascada, conteo); flujo en navegador con y sin tablas; type-check, lint y build.
 
-**Humano:** confirmar los números y aplicar `0024` y `0025` en producción, en ese orden.
+Aplicadas con `supabase db push` tras respaldo local (`backups/viogi_2026-10-23_2022_*`). Verificado en prod: ya no existen `orders_insert_any` ni `order_items_insert_any`; trigger `profiles_keep_role` en `profiles`; `follows` con RLS y sus 3 policies; `follower_count('store', viogi)` = 0. Con la anon key por REST, insertar en `order_items` da 401 / `42501` (RLS) y `rpc/follower_count` responde 200.
 
 E sigue bloqueado: es humano, no código.
 
@@ -101,15 +101,16 @@ Marcar entregado **no** transfiere dinero. Eso es el paquete E.
 
 ## Migraciones
 
-Prod: `0001`–`0023`, aplicadas. Siguiente libre: **`0024`**.
+Prod: `0001`–`0025`, aplicadas. Siguiente libre: **`0026`**.
 
 - `0021` abrió la merma a la tienda · `0023` la volvió a cerrar: el estado final es
   que solo `disposition = 'activa'` puede estar `listed` (verificado contra prod).
 - `0022` deja las medidas obligatorias **solo al publicar**. El alta de inventario
   interno guarda tipo, dueño y costo sin cinta métrica.
-- Ojo con el tracking: estas tres se aplicaron con el CLI, así que en
-  `supabase_migrations.schema_migrations` figuran como timestamps
-  (`20261004…`), no como `0021`–`0023`.
+- Tracking: `supabase_migrations.schema_migrations` coincide con los archivos.
+  `0021`–`0023` figuraban como timestamps (`20261004…`) y se repararon el
+  2026-10-23 con `supabase migration repair`. Se aplica con
+  `supabase db push --db-url …` (primero `--dry-run`): el repo no está ligado.
 
 ## Auditoría 2026-09-18
 
