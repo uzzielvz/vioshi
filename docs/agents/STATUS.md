@@ -50,11 +50,12 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 | H inventario + tablero + móvil | L5 | **MERGEADO** (#10) · `0018`–`0020` aplicadas y verificadas en prod |
 | E Connect | L7 | **BLOQUEADO** — ver `OPEN.md` y más abajo |
 | I front de rail | — | **MERGEADO** (#16) |
-| J front de rail: cuenta, pagar y lo demás | — | **EN RAMA** `claude/gifted-fermi-ku1xl3` (sin merge) |
+| J front de rail: cuenta, pagar y lo demás | — | **MERGEADO** (#17) |
+| K social 1 + cierre de inserts | — | **EN RAMA** `claude/gifted-fermi-ku1xl3` · migraciones `0024` y `0025` **sin aplicar** |
 
 **Paquete I, mergeado en #16.** Tarjeta de la feed, `useWishlist`, grid, `CategoryTabs`, inicio y colecciones, ficha, bolsa sin cantidades, portada collage en `/tienda/[slug]`, búsqueda por marca; borrados `/archive`, `/pages/chapters` y Unsplash.
 
-**Paquete J, en la rama, sin merge.** El resto de la tienda con la guía (`docs/design/`):
+**Paquete J, mergeado en #17.** El resto de la tienda con la guía (`docs/design/`):
 
 - **Cuenta:** entrar, crear cuenta, recuperar y nueva contraseña sin header. Perfil de persona con pestañas Guardados · Compras · Direcciones; editar perfil (contraseña por enlace al correo, idioma, cerrar sesión). `/wishlist` manda al perfil si hay sesión. Se borró `/account/archivos` (facturas de ejemplo).
 - **Pagar:** barra propia, entrega en tarjetas de opción (puntos reales y envío a domicilio), contacto, pago con el umbral de `settings`, resumen y «Continuar al pago · $X». `checkout/actions.ts` sin tocar. Pedido pagado y retorno con `components/order/OrderView.tsx`; «pagado» solo si `payment_status = completed`.
@@ -65,6 +66,17 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 - Verificado: type-check, lint, build y capturas a 390 y 1280 px contra un PostgREST simulado (sin scroll horizontal).
 
 Pendiente: seguir, mensajes, ofertas, «Qué te interesa», portada editable y los pasos 2 y 3 de vender (necesitan base de datos). **Humano:** política de devoluciones (PROYECTO § 8, #14; la página dice «la estamos terminando»), correo y WhatsApp de soporte reales (`NEXT_PUBLIC_BRAND_SUPPORT_EMAIL`, `NEXT_PUBLIC_BRAND_WHATSAPP`; sin el segundo no se muestra WhatsApp).
+
+**Paquete K, en la rama, sin merge.**
+
+- **Seguridad (`0024_lock_order_inserts.sql`):** quita `orders_insert_any` y `order_items_insert_any`; la app solo inserta pedidos con service_role. Un trigger impide que una sesión `anon`/`authenticated` cambie `profiles.role` (service_role y el SQL editor sí pueden).
+- **Seguir (`0025_follows.sql`):** tabla `follows` (tienda o marca, una por fila, RLS: cada quien lee y borra las suyas) y `follower_count()` para el conteo público. Seguir búsquedas quedó fuera por decisión del humano.
+- **Guardados en la cuenta** con `wishlist_items` (ya existe desde `0001`): al entrar se suman los del dispositivo una vez y después manda la cuenta.
+- «Seguir» en la prenda (tienda y marca), en la tienda (con seguidores) y en la búsqueda filtrada por marca; la marca de la prenda lleva a sus piezas. Pestaña **Siguiendo** en el perfil.
+- Sin `0025` aplicada, los botones no aparecen y Siguiendo dice «llega muy pronto». Nada se rompe.
+- Verificado: migraciones aplicadas dos veces en un Postgres 16 local con roles estilo Supabase (RLS, trigger, cascada, conteo); flujo en navegador con y sin tablas; type-check, lint y build.
+
+**Humano:** confirmar los números y aplicar `0024` y `0025` en producción, en ese orden.
 
 E sigue bloqueado: es humano, no código.
 

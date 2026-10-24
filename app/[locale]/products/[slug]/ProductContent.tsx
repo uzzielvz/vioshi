@@ -12,6 +12,7 @@ import { formatPrice } from "@/lib/formatters";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import ProductGrid from "@/components/ProductGrid";
+import FollowButton from "@/components/FollowButton";
 import { HeartIcon } from "@/components/ui/icons";
 import {
   CONDITION_LABELS,
@@ -63,6 +64,7 @@ function Accordion({
 export default function ProductContent({ product, more, payThreshold }: ProductContentProps) {
   const t = useTranslations("product");
   const tUi = useTranslations("ui.product");
+  const tSocial = useTranslations("ui.social");
   const { locale } = useLocaleContext();
   const [isAdding, setIsAdding] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -188,9 +190,18 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
 
         <div className="grid content-start gap-2.5 px-3.5 py-4 md:px-0 md:py-0">
           {product.brand?.name && (
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-              {product.brand.name}
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <Link
+                href={`/${locale}/search?brand=${encodeURIComponent(product.brand.name)}`}
+                aria-label={tSocial("brand_link", { brand: product.brand.name })}
+                className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted hover:text-ink"
+              >
+                {product.brand.name}
+              </Link>
+              {product.brand.id && (
+                <FollowButton kind="brand" id={product.brand.id} name={product.brand.name} />
+              )}
+            </div>
           )}
 
           <h1 className="text-balance text-[20px] font-bold leading-tight tracking-[-0.01em] text-ink md:text-[28px]">
@@ -265,22 +276,22 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
           )}
 
           {product.store && (
-            <Link
-              href={`/${locale}/tienda/${product.store.slug}`}
-              className="mt-1 flex items-center gap-3 border-y border-line py-3.5"
-            >
-              <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-ink text-[17px] font-bold text-paper">
-                {initial}
-              </span>
-              <span className="min-w-0">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
-                  {tUi("sold_by")}
+            <div className="mt-1 flex items-center gap-3 border-y border-line py-3.5">
+              <Link href={`/${locale}/tienda/${product.store.slug}`} className="flex min-w-0 flex-1 items-center gap-3">
+                <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-ink text-[17px] font-bold text-paper">
+                  {initial}
                 </span>
-                <span className="block truncate text-[14px] font-semibold text-ink">
-                  {product.store.name}
+                <span className="min-w-0">
+                  <span className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+                    {tUi("sold_by")}
+                  </span>
+                  <span className="block truncate text-[14px] font-semibold text-ink">
+                    {product.store.name}
+                  </span>
                 </span>
-              </span>
-            </Link>
+              </Link>
+              <FollowButton kind="store" id={product.store.id} name={product.store.name} />
+            </div>
           )}
 
           <div className={product.store ? "" : "mt-1 border-t border-line"}>

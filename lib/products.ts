@@ -71,6 +71,7 @@ export interface ProductData {
   defectNotes?: string;
   /** Tienda que vende la prenda. Fase 1 siempre es Viogi (0016). */
   store?: {
+    id: string;
     slug: string;
     name: string;
   };
@@ -197,8 +198,8 @@ function rowToProductData(row: DbProduct): ProductData {
     measurements: Object.keys(measurements).length > 0 ? measurements : undefined,
     condition:   isCondition(row.condition) ? row.condition : undefined,
     defectNotes: row.defect_notes?.trim() || undefined,
-    store: row.stores
-      ? { slug: row.stores.slug, name: row.stores.name }
+    store: row.stores && row.store_id
+      ? { id: row.store_id, slug: row.stores.slug, name: row.stores.name }
       : undefined,
     availability,
     reservedUntil: reservaViva ? (row.reserved_until ?? undefined) : undefined,

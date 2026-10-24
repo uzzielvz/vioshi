@@ -6,6 +6,7 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import clsx from 'clsx';
 import ProductGrid from '@/components/ProductGrid';
+import FollowButton from '@/components/FollowButton';
 import SearchFilterDrawer, {
   DEFAULT_FILTERS,
   type SearchFilters,
@@ -78,6 +79,13 @@ export default function SearchContent({ initialProducts }: { initialProducts: Pr
       ),
     [matching]
   );
+
+  // A brand filter is the brand's page for now, so it offers «Seguir».
+  const brandToFollow = useMemo(() => {
+    if (!filters.brand) return null;
+    const match = initialProducts.find((p) => p.brand?.name === filters.brand)?.brand;
+    return match?.id ? { id: match.id, name: match.name } : null;
+  }, [initialProducts, filters.brand]);
 
   const products = useMemo(() => {
     let list = matching;
@@ -165,13 +173,16 @@ export default function SearchContent({ initialProducts }: { initialProducts: Pr
         ))}
       </div>
 
-      <div className="flex items-baseline justify-between gap-3 px-4 pb-3 md:px-0">
+      <div className="flex min-h-[30px] items-center justify-between gap-3 px-4 pb-3 md:px-0">
         <p className="text-[13px] font-semibold tabular-nums text-ink">{t('count', { count: products.length })}</p>
-        {hasFilters && (
-          <button type="button" onClick={() => updateFilters(DEFAULT_FILTERS)} className="text-[13px] font-semibold text-accent">
-            {t('clear')}
-          </button>
-        )}
+        <div className="flex items-center gap-4">
+          {hasFilters && (
+            <button type="button" onClick={() => updateFilters(DEFAULT_FILTERS)} className="text-[13px] font-semibold text-accent">
+              {t('clear')}
+            </button>
+          )}
+          {brandToFollow && <FollowButton kind="brand" id={brandToFollow.id} name={brandToFollow.name} />}
+        </div>
       </div>
 
       {products.length === 0 ? (
