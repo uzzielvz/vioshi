@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { Cart, CartItem } from "@/types";
+import { uniquePieces } from "@/lib/cart/uniquePieces";
 import { STORAGE_KEYS, STANDARD_SHIPPING_COST } from "@/lib/constants";
 
 interface CartContextType {
@@ -53,7 +54,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const savedCart = localStorage.getItem(STORAGE_KEYS.CART);
       if (savedCart) {
         try {
-          setCart(JSON.parse(savedCart));
+          const saved = JSON.parse(savedCart) as Cart;
+          // Bags saved when they still had +/- buttons may hold quantity 2.
+          const items = uniquePieces(Array.isArray(saved.items) ? saved.items : []);
+          setCart(calculateTotals(items, saved.shipping ?? STANDARD_SHIPPING_COST));
         } catch (error) {
           console.error("Error loading cart:", error);
         }
@@ -118,7 +122,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const replaceItems = useCallback((items: CartItem[]) => {
-    setCart((prevCart) => calculateTotals(items, prevCart.shipping));
+    setCart((prevCart) => calculateTotals(uniquePieces(items), prevCart.shipping));
   }, []);
 
   const clearCart = useCallback(() => {

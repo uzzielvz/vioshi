@@ -1,7 +1,11 @@
 'use server';
 
 import { createHmac } from 'crypto';
+import { revalidateTag } from 'next/cache';
+import { headers } from 'next/headers';
 import { reconcileCartItems } from '@/lib/cart/reconcile';
+import { uniquePieces } from '@/lib/cart/uniquePieces';
+import { checkRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe';
@@ -61,6 +65,7 @@ export type PlaceOrderResult =
         | 'order_insert_failed'
         | 'items_insert_failed'
         | 'stripe_error'
+        | 'rate_limited'
         | 'internal_error';
       message?: string;
       /** Nombres de las prendas que se agotaron, para decírselo al usuario. */
@@ -68,6 +73,8 @@ export type PlaceOrderResult =
     };
 
 // ─── Actions ─────────────────────────────────────────────────────────────────
+
+const CHECKOUT_RATE_LIMIT = { limit: 10, windowMs: 10 * 60 * 1000 };
 
 /** Sync cart lines from DB (fixes stale localStorage slug ids / old prices). */
 export async function syncCartFromDbAction(
@@ -125,6 +132,17 @@ export async function createCheckoutSessionAction(
     return { success: false, error: 'internal_error', message: 'Missing ADMIN_SECRET' };
   }
 
+  // Cada intento aparta piezas 30 minutos: sin límite, un bot podría apartar
+  // el catálogo entero.
+  const ip = getClientIpFromHeaders(headers());
+  if (!checkRateLimit(`checkout:${ip}`, CHECKOUT_RATE_LIMIT).success) {
+    return {
+      success: false,
+      error: 'rate_limited',
+      message: 'Hiciste muchos intentos seguidos. Espera unos minutos y vuelve a intentar.',
+    };
+  }
+
   const supabase = createAdminClient();
   const settings = await getSettings();
 
@@ -145,7 +163,8 @@ export async function createCheckoutSessionAction(
     console.error('[checkout] reconcile failed:', reconciled.message);
     return { success: false, error: 'price_changed', message: reconciled.message };
   }
-  cartItems = reconciled.items;
+  // Pieza única: una línea por prenda y cantidad 1, mande lo que mande el navegador.
+  cartItems = uniquePieces(reconciled.items);
 
   // ── 1. Validate cart prices against DB ─────────────────────────────────────
   const productIds = cartItems.map((i) => i.productId);
@@ -360,6 +379,8 @@ export async function createCheckoutSessionAction(
     console.error('[checkout] reserve failed:', raw);
     return { success: false, error: 'internal_error', message: raw };
   }
+  // La pieza ya sale como «Apartada» en el catálogo.
+  revalidateTag('products');
 
   // ── 8. Stripe Checkout Session ──────────────────────────────────────────────
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = cartItems.map((item) => ({
@@ -460,20 +481,45 @@ export async function createCheckoutSessionAction(
   };
 }
 
-/** Libera la reserva cuando el usuario abandona el checkout a propósito. */
-export async function cancelCheckoutAction(orderId: string): Promise<void> {
-  if (!orderId) return;
+/**
+ * Libera la reserva cuando quien compra abandona el pago a propósito.
+ *
+ * Pide el session_id además del pedido: solo lo tiene quien inició ese pago,
+ * así que nadie puede soltar la reserva de otra persona con un id de pedido.
+ * Primero se cierra la sesión en Stripe; si ya no se puede cerrar (se pagó o
+ * se emitió un voucher), la reserva se queda.
+ */
+export async function cancelCheckoutAction(orderId: string, sessionId: string): Promise<void> {
+  if (!orderId || !sessionId?.startsWith('cs_')) return;
   const supabase = createAdminClient();
+
+  const { data: order } = await supabase
+    .from('orders')
+    .select('id, payment_status')
+    .eq('id', orderId)
+    .eq('stripe_session_id', sessionId)
+    .maybeSingle();
+  if (!order || order.payment_status !== 'pending') return;
+
+  try {
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
+    if (session.status !== 'open') return;
+    await getStripe().checkout.sessions.expire(sessionId);
+  } catch (err) {
+    console.error('[checkout] no se pudo cerrar la sesión de Stripe:', err);
+    return;
+  }
+
   await supabase.rpc('release_reservation', { p_order_id: orderId });
   await supabase
     .from('orders')
     .update({ status: 'cancelled', payment_status: 'failed' })
     .eq('id', orderId)
     .eq('payment_status', 'pending');
+  revalidateTag('products');
 }
 
 async function getOriginUrl(): Promise<string> {
-  const { headers } = await import('next/headers');
   const h = headers();
   const host = h.get('x-forwarded-host') ?? h.get('host');
   const proto = h.get('x-forwarded-proto') ?? (host?.startsWith('localhost') ? 'http' : 'https');

@@ -350,7 +350,7 @@
       "title_paid": "Done, {name}. Your order is paid.",
       "title_paid_anon": "Done. Your order is paid.",
       "title_awaiting": "Your order is on hold. Payment pending.",
-      "body_awaiting": "If you paid with OXXO or SPEI, it takes a while to show up. We'll email you when it arrives.",
+      "body_awaiting": "If you paid with OXXO or SPEI, it takes a while to show up. When it arrives, this order shows as paid.",
       "title_expired": "Time to pay ran out",
       "body_expired": "Nothing was charged and the pieces are available again.",
       "title_failed": "We couldn't charge your payment",

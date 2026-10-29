@@ -232,6 +232,10 @@ export default function CheckoutPage() {
   const [pendingOrderNumber, setPendingOrderNumber] = useState<string | null>(null);
   const [pendingGuestToken, setPendingGuestToken] = useState<string | null>(null);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
+  // A payment left half-way (reload, back button) still holds the pieces.
+  // It is released on load, and a new attempt waits for that first.
+  const staleRelease = useRef<Promise<void> | null>(null);
   const [reservedUntil, setReservedUntil] = useState<string | null>(null);
   const [cardOnly, setCardOnly] = useState(false);
   // Threshold and hold windows come from /admin/settings; null until loaded.
@@ -342,6 +346,20 @@ export default function CheckoutPage() {
   const paymentStepActive = Boolean(clientSecret || pendingOrderNumber);
 
   useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('viogi_pending_order');
+      const pending = raw ? (JSON.parse(raw) as { orderId?: string; sessionId?: string }) : null;
+      if (pending?.orderId && pending.sessionId) {
+        staleRelease.current = cancelCheckoutAction(pending.orderId, pending.sessionId).catch(() => {});
+      }
+      sessionStorage.removeItem('viogi_pending_order');
+      sessionStorage.removeItem('viogi_checkout_payment');
+    } catch {
+      // Without sessionStorage there is nothing to release.
+    }
+  }, []);
+
+  useEffect(() => {
     if (!isReady || paymentStepActive) return;
     if (
       typeof window !== 'undefined' &&
@@ -427,6 +445,7 @@ export default function CheckoutPage() {
     setIsProcessing(true);
 
     try {
+      if (staleRelease.current) await staleRelease.current;
       const result = await createCheckoutSessionAction(
         cart,
         {
@@ -484,6 +503,7 @@ export default function CheckoutPage() {
       sessionStorage.setItem(
         'viogi_pending_order',
         JSON.stringify({
+          orderId: result.orderId,
           orderNumber: result.orderNumber,
           guestToken: result.guestToken,
           sessionId: result.sessionId,
@@ -493,6 +513,7 @@ export default function CheckoutPage() {
       setPendingOrderNumber(result.orderNumber);
       setPendingGuestToken(result.guestToken);
       setPendingOrderId(result.orderId);
+      setPendingSessionId(result.sessionId);
       setReservedUntil(result.reservedUntil);
       setCardOnly(result.cardOnly);
       logCheckoutDebug('Checkout Session creada', {
@@ -578,11 +599,16 @@ export default function CheckoutPage() {
                 onBack={() => {
                   // Volver atrás libera la prenda: no tiene por qué
                   // quedarse apartada mientras el cliente lo piensa.
-                  if (pendingOrderId) void cancelCheckoutAction(pendingOrderId);
+                  if (pendingOrderId && pendingSessionId) {
+                    void cancelCheckoutAction(pendingOrderId, pendingSessionId);
+                  }
+                  sessionStorage.removeItem('viogi_pending_order');
+                  sessionStorage.removeItem('viogi_checkout_payment');
                   setClientSecret(null);
                   setPendingOrderNumber(null);
                   setPendingGuestToken(null);
                   setPendingOrderId(null);
+                  setPendingSessionId(null);
                   setReservedUntil(null);
                   isSubmittingRef.current = false;
                 }}
