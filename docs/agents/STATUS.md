@@ -52,6 +52,7 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 | I front de rail | — | **MERGEADO** (#16) |
 | J front de rail: cuenta, pagar y lo demás | — | **MERGEADO** (#17) |
 | K social 1 + cierre de inserts | — | **MERGEADO** (#18) · migraciones `0024` y `0025` aplicadas en prod el 2026-10-23 |
+| L cobros (Etapa 1) + app instalable | — | **EN RAMA** `claude/gifted-fermi-ku1xl3` · sin migraciones · checklist en `docs/LANZAMIENTO.md` |
 
 **Paquete I, mergeado en #16.** Tarjeta de la feed, `useWishlist`, grid, `CategoryTabs`, inicio y colecciones, ficha, bolsa sin cantidades, portada collage en `/tienda/[slug]`, búsqueda por marca; borrados `/archive`, `/pages/chapters` y Unsplash.
 
