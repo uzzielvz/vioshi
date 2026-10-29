@@ -653,6 +653,13 @@
       "unavailable_title": "Seguir tiendas y marcas llega muy pronto",
       "unavailable_body": "Mientras, guarda las piezas que te gusten con el corazón.",
       "brand_link": "Ver piezas de {brand}"
+    },
+    "pwa": {
+      "title": "Instala {brand}",
+      "body": "Ábrela como app desde tu pantalla de inicio.",
+      "ios_body": "Toca Compartir y luego «Agregar a inicio».",
+      "install": "Instalar",
+      "dismiss": "Cerrar"
     }
   }
 }

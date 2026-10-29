@@ -653,6 +653,13 @@
       "unavailable_title": "Following shops and brands is coming soon",
       "unavailable_body": "Meanwhile, save the pieces you like with the heart.",
       "brand_link": "See pieces from {brand}"
+    },
+    "pwa": {
+      "title": "Install {brand}",
+      "body": "Open it like an app from your home screen.",
+      "ios_body": "Tap Share, then «Add to Home Screen».",
+      "install": "Install",
+      "dismiss": "Close"
     }
   }
 }

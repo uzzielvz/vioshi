@@ -6,6 +6,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import CartDrawer from "./CartDrawer";
 import BottomNav from "./BottomNav";
+import InstallPrompt from "./InstallPrompt";
 
 function getPathWithoutLocale(path: string | null): string {
   if (!path) return '';
@@ -37,6 +38,7 @@ export function ClientLayout({
       <main className={clsx('flex-1', !isStandalone && 'pt-14 md:pt-16')}>{children}</main>
       {!isStandalone && <Footer />}
       {!isStandalone && <BottomNav />}
+      {!isStandalone && <InstallPrompt />}
       <CartDrawer />
     </div>
   );

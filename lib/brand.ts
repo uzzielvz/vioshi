@@ -30,7 +30,7 @@ export const brand = {
   /** Short tagline for metadata / home. */
   tagline:
     process.env.NEXT_PUBLIC_BRAND_TAGLINE?.trim() ||
-    'Premium accessible streetwear',
+    'Ropa de segunda mano',
 
   /** Absolute site origin — required for Open Graph image URLs. */
   siteUrl: resolveSiteUrl(),
@@ -61,7 +61,7 @@ export const brand = {
   get descriptionDefault(): string {
     return (
       process.env.NEXT_PUBLIC_BRAND_DESCRIPTION?.trim() ||
-      `Shop premium accessible streetwear made in Mexico. ${this.name} offers high-quality casual clothing.`
+      'Ropa de segunda mano de gente que vale la pena seguir. Cada pieza es única.'
     );
   },
 } as const;
