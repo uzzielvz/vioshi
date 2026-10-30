@@ -350,7 +350,7 @@
       "title_paid": "Listo, {name}. Tu pedido está pagado.",
       "title_paid_anon": "Listo. Tu pedido está pagado.",
       "title_awaiting": "Tu pedido está apartado. Falta tu pago.",
-      "body_awaiting": "Si pagaste con OXXO o SPEI, el pago tarda en reflejarse. Te avisamos por correo cuando llegue.",
+      "body_awaiting": "Si pagaste con OXXO o SPEI, el pago tarda en reflejarse. Cuando llegue, este pedido aparece como pagado.",
       "title_expired": "Se acabó el tiempo para pagar",
       "body_expired": "No se hizo ningún cargo y las piezas volvieron a estar disponibles.",
       "title_failed": "No se pudo cobrar tu pago",
@@ -653,6 +653,13 @@
       "unavailable_title": "Seguir tiendas y marcas llega muy pronto",
       "unavailable_body": "Mientras, guarda las piezas que te gusten con el corazón.",
       "brand_link": "Ver piezas de {brand}"
+    },
+    "pwa": {
+      "title": "Instala {brand}",
+      "body": "Ábrela como app desde tu pantalla de inicio.",
+      "ios_body": "Toca Compartir y luego «Agregar a inicio».",
+      "install": "Instalar",
+      "dismiss": "Cerrar"
     }
   }
 }

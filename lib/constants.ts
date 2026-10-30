@@ -74,6 +74,9 @@ export const STORAGE_KEYS = {
   WISHLIST: "viogi_wishlist",
   /** Account the local wishlist was last merged into (see useWishlist). */
   WISHLIST_OWNER: "viogi_wishlist_owner",
+  /** Page views and dismissal for the «install the app» bar. */
+  INSTALL_VISITS: "viogi_install_visits",
+  INSTALL_DISMISSED: "viogi_install_dismissed",
   RECENT_PRODUCTS: "viogi_recent_products",
 } as const;
 

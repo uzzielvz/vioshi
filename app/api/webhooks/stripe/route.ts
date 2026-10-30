@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import type Stripe from 'stripe';
 import { getStripe } from '@/lib/stripe';
+import { paymentKindFrom, type PaymentKind } from '@/lib/stripe/paymentKind';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 // Stripe manda el cuerpo crudo para verificar la firma — Next NO debe parsearlo.
@@ -19,7 +21,9 @@ type Supabase = ReturnType<typeof createAdminClient>;
  *   checkout.session.async_payment_succeeded    → VENDIDA
  *   checkout.session.async_payment_failed       → liberar
  *   checkout.session.expired                    → liberar
- *   payment_intent.payment_failed               → liberar
+ *   payment_intent.payment_failed               → nada: la sesión sigue abierta y
+ *                                                 se puede reintentar; si nadie
+ *                                                 paga, `expired` libera
  *   customer_cash_balance_transaction.created   → detectar dinero atrapado
  *
  * NUNCA se marca vendida desde el navegador: el usuario puede cerrar la
@@ -91,14 +95,11 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      // Un rechazo de tarjeta NO libera: Checkout deja reintentar en la misma
+      // sesión hasta que vence, y entonces llega `checkout.session.expired`.
       case 'payment_intent.payment_failed': {
         const intent = event.data.object as Stripe.PaymentIntent;
-        await liberarPedido(
-          supabase,
-          intent.metadata?.order_id ?? null,
-          'failed',
-          'payment_intent.payment_failed'
-        );
+        console.warn('[webhook] pago rechazado, la sesión sigue abierta:', intent.metadata?.order_id ?? intent.id);
         break;
       }
 
@@ -129,17 +130,30 @@ function sessionOrderId(session: Stripe.Checkout.Session): string | null {
   return session.metadata?.order_id ?? null;
 }
 
-/** OXXO → 'voucher'. Transferencia SPEI → 'spei'. Lo demás → 'card'. */
-function kindFromSession(session: Stripe.Checkout.Session): 'card' | 'spei' | 'voucher' {
-  const types = session.payment_method_types ?? [];
-  if (types.includes('oxxo')) return 'voucher';
-  if (types.includes('customer_balance')) return 'spei';
-  return 'card';
+/** El método que la persona usó de verdad, leído del PaymentIntent. */
+async function paymentKind(session: Stripe.Checkout.Session): Promise<PaymentKind> {
+  const intentId =
+    typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
+  let intent: Stripe.PaymentIntent | null = null;
+  if (intentId) {
+    try {
+      intent = await getStripe().paymentIntents.retrieve(intentId, { expand: ['payment_method'] });
+    } catch (err) {
+      console.error('[webhook] no se pudo leer el PaymentIntent', intentId, err);
+    }
+  }
+  return paymentKindFrom(intent, session);
 }
 
-function paymentMethodLabel(session: Stripe.Checkout.Session): string {
-  const kind = kindFromSession(session);
+function paymentMethodLabel(kind: PaymentKind): string {
   return kind === 'voucher' ? 'oxxo' : kind === 'spei' ? 'spei' : 'card';
+}
+
+/** Pedido actual, para no pisar un estado más avanzado con un evento tardío. */
+async function paymentStatusOf(supabase: Supabase, orderId: string): Promise<string | null> {
+  const { data, error } = await supabase.from('orders').select('payment_status').eq('id', orderId).maybeSingle();
+  if (error) throw new Error(`orders select: ${error.message}`);
+  return data?.payment_status ?? null;
 }
 
 /**
@@ -166,6 +180,9 @@ async function venderPedido(
   });
   if (error) throw new Error(`mark_order_sold: ${error.message}`);
 
+  // La pieza ya no puede salir como disponible en el catálogo en caché.
+  revalidateTag('products');
+
   const conflictos = ((resultados ?? []) as { outcome: string; product_name: string }[]).filter(
     (r) => r.outcome === 'conflict'
   );
@@ -173,7 +190,7 @@ async function venderPedido(
   const patch: Record<string, unknown> = {
     payment_status: 'completed',
     status: 'processing',
-    payment_method: paymentMethodLabel(session),
+    payment_method: paymentMethodLabel(await paymentKind(session)),
   };
   if (typeof session.payment_intent === 'string') {
     patch.payment_reference = session.payment_intent;
@@ -189,7 +206,12 @@ async function venderPedido(
     console.error(`[webhook] CONFLICTO DE STOCK en pedido ${orderId}: ${nombres}`);
   }
 
-  const { error: upErr } = await supabase.from('orders').update(patch).eq('id', orderId);
+  // Un reenvío no regresa a «processing» un pedido que el admin ya avanzó.
+  const { error: upErr } = await supabase
+    .from('orders')
+    .update(patch)
+    .eq('id', orderId)
+    .neq('payment_status', 'completed');
   if (upErr) throw new Error(`orders update: ${upErr.message}`);
 }
 
@@ -204,22 +226,31 @@ async function marcarEsperandoPago(
   const orderId = sessionOrderId(session);
   if (!orderId) return;
 
+  // Si el pago asíncrono ya se confirmó (los eventos pueden llegar en
+  // desorden), este aviso tardío no debe regresar el pedido a «esperando».
+  if ((await paymentStatusOf(supabase, orderId)) !== 'pending') return;
+
+  const kind = await paymentKind(session);
   const { error: extErr } = await supabase.rpc('extend_reservation_for_method', {
     p_order_id: orderId,
-    p_kind: kindFromSession(session),
+    p_kind: kind,
   });
   if (extErr) throw new Error(`extend_reservation_for_method: ${extErr.message}`);
 
   const patch: Record<string, unknown> = {
     payment_status: 'awaiting_payment',
     status: 'pending',
-    payment_method: paymentMethodLabel(session),
+    payment_method: paymentMethodLabel(kind),
   };
   if (typeof session.payment_intent === 'string') {
     patch.payment_reference = session.payment_intent;
   }
 
-  const { error } = await supabase.from('orders').update(patch).eq('id', orderId);
+  const { error } = await supabase
+    .from('orders')
+    .update(patch)
+    .eq('id', orderId)
+    .eq('payment_status', 'pending');
   if (error) throw new Error(`orders update: ${error.message}`);
 }
 
@@ -235,8 +266,12 @@ async function liberarPedido(
     return;
   }
 
+  // Un pedido pagado no se libera aunque llegue un evento de fallo tardío.
+  if ((await paymentStatusOf(supabase, orderId)) === 'completed') return;
+
   const { error: relErr } = await supabase.rpc('release_reservation', { p_order_id: orderId });
   if (relErr) throw new Error(`release_reservation: ${relErr.message}`);
+  revalidateTag('products');
 
   // No se pisa un pedido ya pagado: si el dinero entró, `completed` manda.
   const { error } = await supabase
