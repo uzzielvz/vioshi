@@ -221,11 +221,18 @@
       "instagram": "Instagram"
     },
     "store": {
-      "pieces": "{count, plural, one {# pieza en venta} other {# piezas en venta}}",
       "on_sale": "En venta",
       "instagram": "Instagram",
       "empty": "Todavía no hay piezas publicadas.",
-      "sells_on": "Vende en {brand}"
+      "sells_on": "Vende en {brand}",
+      "sold": "Vendidas",
+      "stat_sold": "{count, plural, one {<b>#</b> vendida} other {<b>#</b> vendidas}}",
+      "stat_on_sale": "{count, plural, other {<b>#</b> en venta}}",
+      "brands": "Marcas principales",
+      "share": "Compartir",
+      "link_copied": "Enlace copiado",
+      "empty_sold": "Todavía no hay piezas vendidas.",
+      "tabs_label": "Piezas de la tienda"
     },
     "auth": {
       "close": "Cerrar",
@@ -274,7 +281,6 @@
       "saved": "Guardados",
       "purchases": "Compras",
       "addresses": "Direcciones",
-      "since": "En {brand} desde {date}",
       "edit": "Editar perfil",
       "start_selling": "Empezar a vender",
       "back": "Tu perfil",
@@ -294,7 +300,20 @@
       "language_title": "Idioma y moneda",
       "session_title": "Sesión",
       "sign_out": "Cerrar sesión",
-      "following": "Siguiendo"
+      "following": "Siguiendo",
+      "joined": "Se unió en {date}",
+      "settings": "Ajustes",
+      "stat_following": "{count, plural, other {<b>#</b> siguiendo}}",
+      "stat_purchases": "{count, plural, one {<b>#</b> compra} other {<b>#</b> compras}}",
+      "brands_saved": "Marcas que guardas",
+      "change_cover": "Cambiar portada",
+      "change_photo": "Cambiar foto",
+      "uploading": "Subiendo…",
+      "upload_error": "No se pudo subir. Prueba con otra foto.",
+      "media_title": "Foto y portada",
+      "media_hint": "La portada va arriba de tu perfil. Mientras no subas una, se arma con piezas que guardas.",
+      "addresses_cta": "Tus direcciones",
+      "addresses_body": "Para pedir a domicilio más rápido."
     },
     "saved": {
       "title": "Guardados",

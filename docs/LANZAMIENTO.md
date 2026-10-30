@@ -18,6 +18,9 @@ bloquea el lanzamiento. Actualizado el 2026-10-29.
   - catálogo fresco al vender.
 - Web instalable como app (PWA): ícono, pantalla completa, aviso «Instala rail»
   y página sin conexión.
+- Perfil único para personas y tiendas: portada, foto, números, marcas,
+  pestañas y filtros. La foto y la portada se pueden cambiar cuando se aplique
+  `0026`.
 
 ## Bloquea el lanzamiento
 
@@ -48,6 +51,14 @@ bloquea el lanzamiento. Actualizado el 2026-10-29.
   - `payment_intent.payment_failed` (solo se registra; ya no libera)
   - `customer_cash_balance_transaction.created`
 - [ ] OXXO y transferencia bancaria (SPEI) activados en el panel de Stripe.
+
+### 2b. Migración `0026` (foto y portada) — humano
+
+- [ ] Aplicar `supabase/migrations/0026_profile_media.sql`, igual que
+  `0024`/`0025`: primero con `--dry-run`. Crea el bucket `profile-media`.
+- [ ] Opcional: portada de Viogi. Subir la imagen al bucket y correr
+  `update stores set cover_url = '<url pública>' where slug = 'viogi'`. Sin
+  ella, la portada es un collage de sus piezas.
 
 ### 3. Dominio y marca — humano
 
@@ -91,7 +102,8 @@ bloquea el lanzamiento. Actualizado el 2026-10-29.
 ## Después del lanzamiento (no bloquea)
 
 - Feed «Para ti», Actividad, mensajes y ofertas.
-- Portada de tienda editable y los pasos 2–3 de vender (cobros y revisión).
+- Botón para que la tienda cambie su portada desde el panel, y los pasos 2–3
+  de vender (cobros y revisión).
 - Decidir la bolsa: por tienda más «Comprar» directo, o quitarla.
 - App en tiendas con Capacitor, cuando exista la empresa.
 - Admin con la nueva estética (PR #15).

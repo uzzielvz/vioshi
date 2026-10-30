@@ -256,7 +256,7 @@ export default function AddressesClient({ initial }: { initial: AddressRow[] }) 
   const closeForm = useCallback(() => setIsAdding(false), []);
 
   return (
-    <div className="px-4 md:max-w-[720px] md:px-0">
+    <div>
       {optimisticAddresses.length > 0 && (
         <div className="mb-4 flex items-center justify-between gap-3">
           <p className="text-[13px] font-semibold text-ink">{t('count', { count: optimisticAddresses.length })}</p>

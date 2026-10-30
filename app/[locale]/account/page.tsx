@@ -25,17 +25,7 @@ export default async function AccountPage({
     return <LoginForm locale={locale} notice={notice} />;
   }
 
-  const [{ data: profile }, products] = await Promise.all([
-    supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
-    getProducts(),
-  ]);
+  const products = await getProducts();
 
-  return (
-    <AccountDashboard
-      user={user}
-      profileName={profile?.name ?? null}
-      locale={locale}
-      products={products}
-    />
-  );
+  return <AccountDashboard user={user} locale={locale} products={products} />;
 }

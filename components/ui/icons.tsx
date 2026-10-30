@@ -57,3 +57,14 @@ export function CardIcon({ className }: IconProps) {
 export function CheckIcon({ className }: IconProps) {
   return <svg {...base} strokeWidth={1.8} className={className}><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>;
 }
+export function ShareIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="M12 4v11M8 7.5L12 4l4 3.5" /><path d="M7 11H5.5v9h13v-9H17" /></svg>;
+}
+export function GearIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.3 1a7.4 7.4 0 0 0-2.6-1.5L14 2.6h-4l-.5 2.5A7.4 7.4 0 0 0 6.9 6.6l-2.3-1-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.3-1a7.4 7.4 0 0 0 2.6 1.5l.5 2.5h4l.5-2.5a7.4 7.4 0 0 0 2.6-1.5l2.3 1 2-3.4z" />
+    </svg>
+  );
+}

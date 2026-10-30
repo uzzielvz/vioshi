@@ -30,3 +30,7 @@ export const textLinkClass = "font-semibold text-accent hover:text-accent-press"
 export const noteClass = "bg-carton p-3 text-[12.5px] leading-[1.45] text-ink";
 
 export const screenTitleClass = "text-[20px] font-bold tracking-[-0.015em] text-ink";
+
+/** Round 36px icon button (share, settings) on a profile. */
+export const iconButtonClass =
+  "grid h-9 w-9 flex-none place-items-center rounded-full border border-line bg-paper text-ink transition-colors hover:border-ink";

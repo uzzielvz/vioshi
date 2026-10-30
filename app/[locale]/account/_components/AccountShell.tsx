@@ -2,32 +2,41 @@ import Link from 'next/link';
 import type { User } from '@supabase/supabase-js';
 import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@/i18n';
-import { brand } from '@/lib/brand';
-import Avatar from '@/components/ui/Avatar';
-import UnderlineTabs from '@/components/ui/UnderlineTabs';
-import { buttonClass } from '@/components/ui/styles';
+import { getProducts } from '@/lib/products';
+import { getPersonProfile } from '@/lib/profile/person';
+import ProfileHeader, { topBrands, type ProfileCover } from '@/components/profile/ProfileHeader';
+import ProfileMediaButton from '@/components/profile/ProfileMediaButton';
+import { boldStat, ProfileStat } from '@/components/profile/ProfileStat';
+import { GearIcon } from '@/components/ui/icons';
+import { buttonClass, iconButtonClass } from '@/components/ui/styles';
 import { getAccountDisplayName } from './accountDisplayName';
 
-export type AccountTab = 'saved' | 'purchases' | 'following' | 'addresses';
+export type AccountTab = 'saved' | 'purchases' | 'following';
 
-// A person's profile («Tu perfil» in the prototype). Every account is the
-// same kind of profile; selling is an extra step reached from here.
+// A person's profile («Tu perfil» in the prototype). It is the same profile a
+// store has (ProfileHeader); selling is an extra step reached from here.
 export default async function AccountShell({
   locale,
   user,
-  profileName,
   active,
   children,
 }: {
   locale: Locale;
   user: User;
-  profileName: string | null;
   active: AccountTab;
   children: React.ReactNode;
 }) {
-  const t = await getTranslations('ui.profile');
-  const displayName = getAccountDisplayName(user, profileName);
-  const since = new Intl.DateTimeFormat(locale === 'es' ? 'es-MX' : 'en-US', {
+  const [person, t] = await Promise.all([getPersonProfile(user), getTranslations('ui.profile')]);
+  const displayName = getAccountDisplayName(user, person.name);
+
+  // Saved pieces give the brand chips and, until a photo is uploaded, the cover.
+  const savedIds = new Set(person.savedIds);
+  const saved = savedIds.size > 0 ? (await getProducts()).filter((p) => savedIds.has(p.id)) : [];
+  const cover: ProfileCover = person.coverUrl
+    ? { kind: 'photo', src: person.coverUrl }
+    : { kind: 'collage', images: saved.map((p) => p.image).filter(Boolean) };
+
+  const joined = new Intl.DateTimeFormat(locale === 'es' ? 'es-MX' : 'en-US', {
     month: 'long',
     year: 'numeric',
   }).format(new Date(user.created_at));
@@ -36,32 +45,46 @@ export default async function AccountShell({
     { key: 'saved', href: `/${locale}/account`, label: t('saved') },
     { key: 'purchases', href: `/${locale}/account/orders`, label: t('purchases') },
     { key: 'following', href: `/${locale}/account/following`, label: t('following') },
-    { key: 'addresses', href: `/${locale}/account/addresses`, label: t('addresses') },
   ] as const;
 
   return (
     <div className="mx-auto w-full max-w-[1280px] pb-10">
-      <section className="grid gap-3 px-4 pb-4 pt-5 md:px-8 md:pt-8">
-        <div className="flex items-center gap-3.5">
-          <Avatar name={displayName} className="h-[72px] w-[72px] text-[28px]" />
-          <div className="min-w-0">
-            <h1 className="truncate text-[20px] font-bold tracking-[-0.01em] text-ink">{displayName}</h1>
-            <p className="truncate text-[12.5px] text-muted">{user.email}</p>
-            <p className="text-[12.5px] text-muted">{t('since', { brand: brand.name, date: since })}</p>
+      <ProfileHeader
+        name={displayName}
+        avatarSrc={person.avatarUrl}
+        cover={cover}
+        coverEdit={person.mediaReady ? <ProfileMediaButton kind="cover" variant="overlay" /> : undefined}
+        avatarEdit={person.mediaReady ? <ProfileMediaButton kind="avatar" variant="overlay" /> : undefined}
+        tools={
+          <Link href={`/${locale}/account/profile`} aria-label={t('settings')} title={t('settings')} className={iconButtonClass}>
+            <GearIcon className="h-[18px] w-[18px]" />
+          </Link>
+        }
+        sub={t('joined', { date: joined })}
+        stats={
+          <>
+            {person.followingCount !== null && (
+              <ProfileStat>{t.rich('stat_following', { count: person.followingCount, b: boldStat })}</ProfileStat>
+            )}
+            <ProfileStat>{t.rich('stat_purchases', { count: person.purchasesCount, b: boldStat })}</ProfileStat>
+          </>
+        }
+        actions={
+          <div className="grid grid-cols-2 gap-2">
+            <Link href={`/${locale}/account/profile`} className={buttonClass('line', 'sm')}>
+              {t('edit')}
+            </Link>
+            <Link href={`/${locale}/vender`} className={buttonClass('soft', 'sm')}>
+              {t('start_selling')}
+            </Link>
           </div>
-        </div>
-        <div className="grid grid-cols-2 gap-2 md:max-w-[420px]">
-          <Link href={`/${locale}/account/profile`} className={buttonClass('line', 'sm')}>
-            {t('edit')}
-          </Link>
-          <Link href={`/${locale}/vender`} className={buttonClass('soft', 'sm')}>
-            {t('start_selling')}
-          </Link>
-        </div>
-      </section>
-
-      <UnderlineTabs
-        label={t('tabs_label')}
+        }
+        brandsLabel={t('brands_saved')}
+        brands={topBrands(saved.map((p) => p.brand?.name)).map((name) => ({
+          name,
+          href: `/${locale}/search?brand=${encodeURIComponent(name)}`,
+        }))}
+        tabsLabel={t('tabs_label')}
         tabs={tabs.map((tab) => ({ href: tab.href, label: tab.label, active: tab.key === active }))}
       />
 

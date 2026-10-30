@@ -221,11 +221,18 @@
       "instagram": "Instagram"
     },
     "store": {
-      "pieces": "{count, plural, one {# piece for sale} other {# pieces for sale}}",
       "on_sale": "For sale",
       "instagram": "Instagram",
       "empty": "No pieces published yet.",
-      "sells_on": "Sells on {brand}"
+      "sells_on": "Sells on {brand}",
+      "sold": "Sold",
+      "stat_sold": "{count, plural, other {<b>#</b> sold}}",
+      "stat_on_sale": "{count, plural, other {<b>#</b> for sale}}",
+      "brands": "Top brands",
+      "share": "Share",
+      "link_copied": "Link copied",
+      "empty_sold": "No sold pieces yet.",
+      "tabs_label": "Store pieces"
     },
     "auth": {
       "close": "Close",
@@ -274,7 +281,6 @@
       "saved": "Saved",
       "purchases": "Purchases",
       "addresses": "Addresses",
-      "since": "On {brand} since {date}",
       "edit": "Edit profile",
       "start_selling": "Start selling",
       "back": "Your profile",
@@ -294,7 +300,20 @@
       "language_title": "Language and currency",
       "session_title": "Session",
       "sign_out": "Log out",
-      "following": "Following"
+      "following": "Following",
+      "joined": "Joined {date}",
+      "settings": "Settings",
+      "stat_following": "{count, plural, other {<b>#</b> following}}",
+      "stat_purchases": "{count, plural, one {<b>#</b> purchase} other {<b>#</b> purchases}}",
+      "brands_saved": "Brands you save",
+      "change_cover": "Change cover",
+      "change_photo": "Change photo",
+      "uploading": "Uploading…",
+      "upload_error": "Couldn't upload it. Try another photo.",
+      "media_title": "Photo and cover",
+      "media_hint": "Your cover sits at the top of your profile. Until you upload one, it's made from pieces you save.",
+      "addresses_cta": "Your addresses",
+      "addresses_body": "For faster home delivery."
     },
     "saved": {
       "title": "Saved",

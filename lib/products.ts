@@ -307,6 +307,14 @@ export const getProductsByStoreId = unstable_cache(
   { revalidate: 60, tags: ['products'] }
 )
 
+/** Prendas vendidas de una tienda, para la pestaña «Vendidas» de su perfil. */
+export const getSoldProductsByStoreId = unstable_cache(
+  async (storeId: string) =>
+    (await fetchProducts(undefined, true, true, storeId)).filter((p) => p.soldOut),
+  ['sold-products-by-store'],
+  { revalidate: 60, tags: ['products'] }
+)
+
 /** Admin list moved to lib/admin/inventory.ts (service role, incluye no publicadas). */
 
 export const getProductBySlug = unstable_cache(
