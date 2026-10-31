@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
@@ -10,6 +10,14 @@ import { useCart } from "@/store/cartStore";
 import { STORE_CATEGORIES } from "@/lib/categories";
 import Wordmark from "@/components/ui/Wordmark";
 import { BagIcon, CameraIcon, CloseIcon, MenuIcon, SearchIcon } from "@/components/ui/icons";
+import SearchSheet from "@/components/search/SearchSheet";
+import CameraSheet from "@/components/search/CameraSheet";
+import { rememberSearch } from "@/lib/search/recent";
+
+/** BottomNav fires this to open the phone search screen. */
+export const OPEN_SEARCH_EVENT = "rail:search-open";
+/** /visual-search fires this once it shows the photo. */
+const VS_SHOWN_EVENT = "viogi:vs-shown";
 
 function pathWithoutLocale(pathname: string): string {
   return pathname.replace(/^\/[a-z]{2}(?=\/|$)/, "") || "/";
@@ -28,35 +36,45 @@ export default function Header({ userEmail = null }: HeaderProps) {
   const { itemCount, openCart } = useCart();
 
   const [query, setQuery] = useState("");
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraLeaving, setCameraLeaving] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  // Always mounted so every camera button can open the picker.
-  const photoInputRef = useRef<HTMLInputElement>(null);
+  const leaveTimer = useRef<number | null>(null);
 
   const path = pathWithoutLocale(pathname);
 
+  // The camera stays open across its own hop to /visual-search.
   useEffect(() => {
     setMenuOpen(false);
-    setMobileSearchOpen(false);
+    setSearchOpen(false);
   }, [pathname]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setMenuOpen(false);
-        setMobileSearchOpen(false);
-      }
+      if (e.key === "Escape") setMenuOpen(false);
     };
+    const onOpenSearch = () => setSearchOpen(true);
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    window.addEventListener(OPEN_SEARCH_EVENT, onOpenSearch);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener(OPEN_SEARCH_EVENT, onOpenSearch);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (leaveTimer.current) window.clearTimeout(leaveTimer.current);
+    };
   }, []);
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const q = query.trim();
     if (!q) return;
+    rememberSearch(q);
     setQuery("");
-    setMobileSearchOpen(false);
     router.push(`/${locale}/search?q=${encodeURIComponent(q)}`);
   };
 
@@ -67,11 +85,9 @@ export default function Header({ userEmail = null }: HeaderProps) {
   };
 
   // The visual search page reads the photo from sessionStorage; the event
-  // tells it to reload when we are already on that route.
-  const onPhotoPicked = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
+  // tells it to reload when we are already on that route. The camera fades
+  // out once that page shows the photo (or after a moment, whatever comes first).
+  const searchByPhoto = useCallback(async (file: File) => {
     try {
       const dataUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -86,14 +102,30 @@ export default function Header({ userEmail = null }: HeaderProps) {
     } catch {
       // The page shows its own upload state if the handoff fails.
     }
-    setMobileSearchOpen(false);
+    const leave = () => {
+      window.removeEventListener(VS_SHOWN_EVENT, leave);
+      if (leaveTimer.current) window.clearTimeout(leaveTimer.current);
+      setCameraLeaving(true);
+      leaveTimer.current = window.setTimeout(() => {
+        setCameraOpen(false);
+        setCameraLeaving(false);
+      }, 520);
+    };
+    window.addEventListener(VS_SHOWN_EVENT, leave);
+    leaveTimer.current = window.setTimeout(leave, 2500);
     router.push(`/${locale}/visual-search`);
     window.dispatchEvent(new Event("viogi:vs-new"));
+  }, [locale, router]);
+
+  const openCamera = () => {
+    setSearchOpen(false);
+    setCameraLeaving(false);
+    setCameraOpen(true);
   };
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
+  const closeCamera = useCallback(() => setCameraOpen(false), []);
 
-  const openPhotoPicker = () => photoInputRef.current?.click();
-
-  const searchField = (mobile: boolean) => (
+  const searchField = () => (
     <form
       onSubmit={submitSearch}
       className="flex h-10 flex-1 items-center gap-2.5 rounded-btn bg-carton px-3"
@@ -101,15 +133,14 @@ export default function Header({ userEmail = null }: HeaderProps) {
     >
       <SearchIcon className="h-[17px] w-[17px] flex-none text-muted" />
       <input
-        id={mobile ? "header-search-mobile" : "header-search"}
+        id="header-search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={t("search_placeholder")}
         aria-label={t("search")}
-        autoFocus={mobile}
         className="min-w-0 flex-1 bg-transparent text-[16px] text-ink outline-none placeholder:text-muted md:text-[14px]"
       />
-      <button type="button" onClick={openPhotoPicker} aria-label={t("visual_search")} className="flex-none text-ink">
+      <button type="button" onClick={openCamera} aria-label={t("visual_search")} className="flex-none text-ink">
         <CameraIcon className="h-5 w-5" />
       </button>
     </form>
@@ -132,7 +163,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
           <Wordmark className="text-[25px] md:text-[26px]" />
         </Link>
 
-        <div className="hidden max-w-[460px] flex-1 md:flex">{searchField(false)}</div>
+        <div className="hidden max-w-[460px] flex-1 md:flex">{searchField()}</div>
 
         <nav className="ml-auto flex items-center gap-4 md:gap-6" aria-label={t("menu")}>
           <Link href={`/${locale}/vender`} className="hidden text-[14px] font-semibold md:inline">
@@ -152,14 +183,14 @@ export default function Header({ userEmail = null }: HeaderProps) {
 
           <button
             type="button"
-            onClick={() => setMobileSearchOpen((v) => !v)}
+            onClick={() => setSearchOpen(true)}
             className="md:hidden"
             aria-label={t("search")}
-            aria-expanded={mobileSearchOpen}
+            aria-expanded={searchOpen}
           >
             <SearchIcon className="h-[22px] w-[22px]" />
           </button>
-          <button type="button" onClick={openPhotoPicker} className="md:hidden" aria-label={t("visual_search")}>
+          <button type="button" onClick={openCamera} className="md:hidden" aria-label={t("visual_search")}>
             <CameraIcon className="h-[22px] w-[22px]" />
           </button>
 
@@ -189,24 +220,8 @@ export default function Header({ userEmail = null }: HeaderProps) {
         </nav>
       </div>
 
-      {mobileSearchOpen && (
-        <div className="flex items-center gap-3 border-t border-line bg-paper px-4 py-2 md:hidden">
-          {searchField(true)}
-          <button type="button" onClick={() => setMobileSearchOpen(false)} className="text-[14px] font-semibold text-muted">
-            {t("cancel")}
-          </button>
-        </div>
-      )}
-
-      <input
-        ref={photoInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        className="hidden"
-        onChange={onPhotoPicked}
-        aria-hidden="true"
-        tabIndex={-1}
-      />
+      {searchOpen && <SearchSheet onClose={closeSearch} onCamera={openCamera} />}
+      {cameraOpen && <CameraSheet leaving={cameraLeaving} onClose={closeCamera} onPhoto={searchByPhoto} />}
 
       {menuOpen && (
         <div className="fixed inset-x-0 bottom-0 top-14 z-40 overflow-y-auto bg-paper md:hidden">

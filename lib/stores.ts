@@ -14,10 +14,19 @@ export interface Store {
   bio: string | null
   logo_url: string | null
   instagram: string | null
+  /** Portada subida (0026). Sin ella el perfil arma un collage con sus piezas. */
+  cover_url: string | null
+  created_at: string | null
 }
 
 /** Columnas públicas. Excluye stripe_account_id por diseño. */
-const PUBLIC_STORE_SELECT = 'id, slug, name, bio, logo_url, instagram' as const
+const PUBLIC_STORE_SELECT = 'id, slug, name, bio, logo_url, instagram, created_at' as const
+/** Con la portada de 0026. Si la columna aún no existe se lee sin ella. */
+const PUBLIC_STORE_SELECT_WITH_COVER = `${PUBLIC_STORE_SELECT}, cover_url` as const
+
+function withCover(row: Omit<Store, 'cover_url'> & { cover_url?: string | null }): Store {
+  return { ...row, cover_url: row.cover_url ?? null }
+}
 
 // Public client — catalog-level data, anon key is enough.
 function getSupabase() {
@@ -38,22 +47,21 @@ async function fetchActiveStores(): Promise<Store[]> {
 
   if (error || !data) return []
 
-  return data as Store[]
+  return (data as Omit<Store, 'cover_url'>[]).map(withCover)
 }
 
 async function fetchStoreBySlug(slug: string): Promise<Store | null> {
   const supabase = getSupabase()
 
-  const { data, error } = await supabase
-    .from('stores')
-    .select(PUBLIC_STORE_SELECT)
-    .eq('slug', slug)
-    .eq('status', 'active')
-    .maybeSingle()
+  const query = (columns: string) =>
+    supabase.from('stores').select(columns).eq('slug', slug).eq('status', 'active').maybeSingle()
+
+  let { data, error } = await query(PUBLIC_STORE_SELECT_WITH_COVER)
+  if (error) ({ data, error } = await query(PUBLIC_STORE_SELECT))
 
   if (error || !data) return null
 
-  return data as Store
+  return withCover(data as unknown as Store)
 }
 
 export const getActiveStores = unstable_cache(

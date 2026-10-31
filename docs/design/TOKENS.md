@@ -59,8 +59,11 @@ Contraste: blanco sobre `accent` 7.4:1; `muted` sobre blanco 5.4:1. No se usa ve
 - **Botón:** rectángulo de 48 px de alto, radio 3 px. Variantes: azul (`accent`), contorno (`ink`)
   y suave (`carton`). Uno azul por pantalla como máximo.
 - **Seguir:** botón azul chico de 30 px («Seguir»). Ya seguido: texto `muted` con palomita, sin caja.
-- **Pestañas:** texto; la activa en `ink`, 600 y subrayado de 2 px. Sin píldoras ni puntos.
+- **Pestañas:** texto; la activa en `ink`, 600 y subrayado de 2 px. Sin puntos. **Excepción:** las
+  pestañas del perfil son píldoras de 36 px en mayúsculas (activa `ink`, las demás `carton`),
+  decisión del humano el 2026-10-31.
 - **Filtros (búsqueda):** caja de 32 px con borde `line` y flechita; el filtro activo con borde `ink`.
+  En el perfil: botón de ajustes y etiquetas en mayúsculas sin caja; el filtro activo sobre `carton`.
 - **Badge de estado sobre la foto:** «Apartada» (blanco, borde `ink`) y «Vendida» (`ink` con texto
   blanco), 10 px, mayúsculas. Se ven distintos a propósito. La foto vendida va en gris.
 - **Avatar:** redondo para todos los perfiles (todas las cuentas son iguales); búsqueda = redondo
@@ -68,11 +71,14 @@ Contraste: blanco sobre `accent` 7.4:1; `muted` sobre blanco 5.4:1. No se usa ve
 - **Historias (inicio):** círculos de 60 px. Aro azul de 2 px si hay piezas nuevas; gris si no;
   punteado si es una búsqueda.
 - **Tarjeta de la feed:** foto 3:4 sobre `carton` (las fotos de fondo blanco se mezclan en
-  multiplicar), marca + tipo y talla, precio y corazón. **Nada más**: sin medidas ni estado.
+  multiplicar); marca en `ink` y talla a la derecha; el título que puso quien vende en `muted`;
+  precio y corazón (el corazón alineado con la talla). **Nada más**: sin medidas ni estado.
 - **Grid de la feed:** 2 columnas en móvil, de borde a borde, 2 px entre columnas y 22 px entre filas.
-- **Perfil de tienda:** portada 16:7, logo cuadrado de 68 px montado sobre la portada, nombre,
-  ciudad, «seguidores · vendidas», bio, «Seguir» + Instagram, pestañas «En venta · Vendidas ·
-  Información» y la misma feed de tarjetas (no la cuadrícula de Instagram).
+- **Perfil (persona y tienda, el mismo):** portada 16:7 (gris `carton` si no hay foto), avatar
+  redondo de 76 px montado sobre la portada con el nombre y los íconos (compartir, Instagram,
+  ajustes) a su lado; números con la etiqueta arriba y la cifra abajo, junto al único botón
+  («Editar perfil» o «Seguir»); «Se unió en…», bio, marcas en mayúsculas, pestañas en píldora,
+  filtros y la misma feed de tarjetas (no la cuadrícula de Instagram).
 - **Mi tienda:** la misma portada con el botón «Cambiar portada».
 - **Barra inferior:** Inicio · Siguiendo · Vender · Bolsa · Perfil.
 - **Avisos:** filas de texto simple. Sin cuadritos ni filetes de color a la izquierda.

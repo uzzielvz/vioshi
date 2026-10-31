@@ -52,7 +52,8 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 | I front de rail | — | **MERGEADO** (#16) |
 | J front de rail: cuenta, pagar y lo demás | — | **MERGEADO** (#17) |
 | K social 1 + cierre de inserts | — | **MERGEADO** (#18) · migraciones `0024` y `0025` aplicadas en prod el 2026-10-23 |
-| L cobros (Etapa 1) + app instalable | — | **EN RAMA** `claude/gifted-fermi-ku1xl3` · sin migraciones · checklist en `docs/LANZAMIENTO.md` |
+| L cobros (Etapa 1) + app instalable | — | **MERGEADO** (#20) · sin migraciones · checklist en `docs/LANZAMIENTO.md` |
+| M perfil único (persona = tienda) | — | **EN RAMA** `claude/gifted-fermi-ku1xl3` · migración `0026` por aplicar |
 
 **Paquete I, mergeado en #16.** Tarjeta de la feed, `useWishlist`, grid, `CategoryTabs`, inicio y colecciones, ficha, bolsa sin cantidades, portada collage en `/tienda/[slug]`, búsqueda por marca; borrados `/archive`, `/pages/chapters` y Unsplash.
 
@@ -79,6 +80,20 @@ Pendiente: seguir, mensajes, ofertas, «Qué te interesa», portada editable y l
 
 Aplicadas con `supabase db push` tras respaldo local (`backups/viogi_2026-10-23_2022_*`). Verificado en prod: ya no existen `orders_insert_any` ni `order_items_insert_any`; trigger `profiles_keep_role` en `profiles`; `follows` con RLS y sus 3 policies; `follower_count('store', viogi)` = 0. Con la anon key por REST, insertar en `order_items` da 401 / `42501` (RLS) y `rpc/follower_count` responde 200.
 
+**Paquete M, en rama.** Una persona y una tienda tienen el mismo perfil (FROZEN: todas las cuentas son iguales).
+
+- `components/profile/ProfileHeader.tsx`: portada (foto subida o collage de sus piezas), avatar redondo montado, nombre, «@slug · Se unió en…», números, bio, botones, marcas y pestañas. Lo usan `AccountShell` y `/tienda/[slug]`.
+- Tienda: seguidores · vendidas · en venta, «Seguir» + Instagram, compartir, «Marcas principales» (filtran la tienda), pestañas **En venta · Vendidas** y la fila de filtros de la búsqueda (orden, talla, categoría, marca).
+- Persona: siguiendo · compras, «Editar perfil» + «Empezar a vender», ajustes (engrane), «Marcas que guardas», pestañas Guardados · Compras · Siguiendo. **Direcciones** pasó a Editar perfil (`/account/addresses` es subpágina).
+- Filtros compartidos: `hooks/useCatalogFilters.ts` + `components/CatalogFilterBar.tsx` (la búsqueda ya los usa).
+- **Foto y portada (`0026_profile_media.sql`):** `profiles.avatar_url`, `profiles.cover_url`, `stores.cover_url` (con su `grant select` por columna) y bucket público `profile-media` (1 MB, jpg/png/webp). El navegador reduce la foto (avatar 480 px, portada 1800 px) y `lib/profile/actions.ts` la sube con service_role a `<user_id>/`; borra la anterior. Sin `0026`, los botones de foto no aparecen y la tienda se lee sin `cover_url`.
+- Portada de Viogi: por ahora con SQL (`update stores set cover_url = '<url pública>' where slug = 'viogi'`); sin ella la franja queda gris.
+- 2026-10-31, a pedido del humano (referencia Grailed): perfil compacto para que manden las piezas (portada 3:1 gris sin foto, avatar de 64 px con nombre e íconos al lado, números con etiqueta arriba junto al único botón, marcas chicas en una línea, pestañas en píldora y filtros en texto). Tarjeta: marca en negro, título de quien vende en gris y el corazón alineado con la talla.
+- **Buscar en el celular** (`components/search/SearchSheet.tsx`): pantalla completa con «Vistos hace poco», «Búsquedas recientes» (con X) y «Marcas»; la barra flota abajo sobre el teclado (`visualViewport`) con la cámara. La abren la lupa del header y «Buscar» de la barra inferior. Lo reciente vive en `localStorage` (`lib/search/recent.ts`).
+- **Cámara** (`components/search/CameraSheet.tsx`): `getUserMedia` con galería, disparador y voltear; al tomar la foto hay destello y la imagen se acomoda en el lugar de «Buscando…» con los mismos puntos, y pasa a `/visual-search`. Sin permiso o sin HTTPS, ofrece la galería.
+- `scripts/data/productos-muestra.json`: las 13 piezas de `public/products` (marca, título, categoría, tipo, talla, precio, estado). Darlas de alta en prod es del humano (pide dueño, costo y medidas).
+- Verificado (cámara con dispositivo simulado de Chromium: abrir, voltear, disparar, animación y paso a `/visual-search`; búsquedas recientes y vistos): `0026` aplicada dos veces en Postgres 16 local (anon lee `cover_url` y no escribe; cada quien cambia solo su perfil); subida, reemplazo y borrado contra el mock; perfiles con y sin `0026` y sin `follows`; type-check, lint, build y capturas a 390 y 1280 px sin scroll horizontal.
+
 E sigue bloqueado: es humano, no código.
 
 Worktrees libres: `../viogi-L1` (`agent/L1-settings`) y `../viogi-L5` (`agent/L5-entregado`),
@@ -102,7 +117,7 @@ Marcar entregado **no** transfiere dinero. Eso es el paquete E.
 
 ## Migraciones
 
-Prod: `0001`–`0025`, aplicadas. Siguiente libre: **`0026`**.
+Prod: `0001`–`0025`, aplicadas. `0026_profile_media.sql` en rama, por aplicar. Siguiente libre: **`0027`**.
 
 - `0021` abrió la merma a la tienda · `0023` la volvió a cerrar: el estado final es
   que solo `disposition = 'activa'` puede estar `listed` (verificado contra prod).

@@ -57,3 +57,42 @@ export function CardIcon({ className }: IconProps) {
 export function CheckIcon({ className }: IconProps) {
   return <svg {...base} strokeWidth={1.8} className={className}><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>;
 }
+export function ShareIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="M12 4v11M8 7.5L12 4l4 3.5" /><path d="M7 11H5.5v9h13v-9H17" /></svg>;
+}
+export function GearIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.3 1a7.4 7.4 0 0 0-2.6-1.5L14 2.6h-4l-.5 2.5A7.4 7.4 0 0 0 6.9 6.6l-2.3-1-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.3-1a7.4 7.4 0 0 0 2.6 1.5l.5 2.5h4l.5-2.5a7.4 7.4 0 0 0 2.6-1.5l2.3 1 2-3.4z" />
+    </svg>
+  );
+}
+export function SlidersIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
+      <circle cx="15" cy="7" r="2" />
+      <circle cx="9" cy="17" r="2" />
+    </svg>
+  );
+}
+export function ImageIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="1.5" />
+      <circle cx="9" cy="10" r="1.6" />
+      <path d="M4 17l4.5-4.5 3.5 3.5 2.5-2.5L20 18.5" />
+    </svg>
+  );
+}
+export function FlipCameraIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M4 10a8 8 0 0 1 14.2-3.8L20 8" />
+      <path d="M20 4v4h-4" />
+      <path d="M20 14a8 8 0 0 1-14.2 3.8L4 16" />
+      <path d="M4 20v-4h4" />
+    </svg>
+  );
+}

@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
 import { useCart } from "@/store/cartStore";
 import { BagIcon, HomeIcon, SearchIcon, SellIcon, UserIcon } from "@/components/ui/icons";
+import { OPEN_SEARCH_EVENT } from "@/components/Header";
 
 // App-style navigation for phones. Desktop uses the header instead.
 export default function BottomNav() {
@@ -19,23 +20,34 @@ export default function BottomNav() {
   const item = "grid justify-items-center gap-[3px] pt-2 text-[10px] font-medium text-muted";
   const active = "font-semibold text-ink";
 
-  const links = [
-    { href: `/${locale}`, label: t("home"), Icon: HomeIcon, on: path === "/" || path.startsWith("/collections") },
-    { href: `/${locale}/search`, label: t("search"), Icon: SearchIcon, on: path.startsWith("/search") || path.startsWith("/visual-search") },
-    { href: `/${locale}/vender`, label: t("sell"), Icon: SellIcon, on: path.startsWith("/vender") },
-  ];
+  const searching = path.startsWith("/search") || path.startsWith("/visual-search");
 
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-paper pb-[max(6px,env(safe-area-inset-bottom))] md:hidden"
       aria-label={t("menu")}
     >
-      {links.map(({ href, label, Icon, on }) => (
-        <Link key={href} href={href} className={clsx(item, on && active)} aria-current={on ? "page" : undefined}>
-          <Icon className="h-[22px] w-[22px]" />
-          {label}
-        </Link>
-      ))}
+      <Link
+        href={`/${locale}`}
+        className={clsx(item, (path === "/" || path.startsWith("/collections")) && active)}
+        aria-current={path === "/" ? "page" : undefined}
+      >
+        <HomeIcon className="h-[22px] w-[22px]" />
+        {t("home")}
+      </Link>
+      {/* Opens the search screen (Header) instead of a page. */}
+      <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_SEARCH_EVENT))} className={clsx(item, searching && active)}>
+        <SearchIcon className="h-[22px] w-[22px]" />
+        {t("search")}
+      </button>
+      <Link
+        href={`/${locale}/vender`}
+        className={clsx(item, path.startsWith("/vender") && active)}
+        aria-current={path.startsWith("/vender") ? "page" : undefined}
+      >
+        <SellIcon className="h-[22px] w-[22px]" />
+        {t("sell")}
+      </Link>
       <button type="button" onClick={openCart} className={clsx(item, isCartOpen && active)} aria-label={t("bag_count", { count: itemCount })}>
         <span className="relative">
           <BagIcon className="h-[22px] w-[22px]" />

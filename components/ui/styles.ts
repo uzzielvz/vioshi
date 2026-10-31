@@ -3,12 +3,12 @@ import clsx from "clsx";
 // Class recipes for the approved rail components (docs/design/TOKENS.md).
 
 type ButtonVariant = "primary" | "line" | "soft";
-type ButtonSize = "md" | "sm";
+type ButtonSize = "md" | "sm" | "xs";
 
 export function buttonClass(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string) {
   return clsx(
     "inline-flex items-center justify-center gap-2 rounded-btn font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-    size === "md" ? "h-12 px-[18px] text-[14px]" : "h-10 px-4 text-[13px]",
+    size === "md" ? "h-12 px-[18px] text-[14px]" : size === "sm" ? "h-10 px-4 text-[13px]" : "h-8 px-3.5 text-[12.5px]",
     variant === "primary" && "bg-accent text-paper hover:bg-accent-press",
     variant === "line" && "border border-ink bg-paper text-ink",
     variant === "soft" && "bg-carton text-ink",
@@ -30,3 +30,7 @@ export const textLinkClass = "font-semibold text-accent hover:text-accent-press"
 export const noteClass = "bg-carton p-3 text-[12.5px] leading-[1.45] text-ink";
 
 export const screenTitleClass = "text-[20px] font-bold tracking-[-0.015em] text-ink";
+
+/** Round 32px icon button (share, settings) on a profile. */
+export const iconButtonClass =
+  "grid h-8 w-8 flex-none place-items-center rounded-full border border-line bg-paper text-ink transition-colors hover:border-ink";

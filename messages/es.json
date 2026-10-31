@@ -221,11 +221,18 @@
       "instagram": "Instagram"
     },
     "store": {
-      "pieces": "{count, plural, one {# pieza en venta} other {# piezas en venta}}",
       "on_sale": "En venta",
       "instagram": "Instagram",
       "empty": "Todavía no hay piezas publicadas.",
-      "sells_on": "Vende en {brand}"
+      "sells_on": "Vende en {brand}",
+      "sold": "Vendidas",
+      "stat_sold": "Vendidas",
+      "stat_on_sale": "En venta",
+      "brands": "Marcas principales",
+      "share": "Compartir",
+      "link_copied": "Enlace copiado",
+      "empty_sold": "Todavía no hay piezas vendidas.",
+      "tabs_label": "Piezas de la tienda"
     },
     "auth": {
       "close": "Cerrar",
@@ -274,7 +281,6 @@
       "saved": "Guardados",
       "purchases": "Compras",
       "addresses": "Direcciones",
-      "since": "En {brand} desde {date}",
       "edit": "Editar perfil",
       "start_selling": "Empezar a vender",
       "back": "Tu perfil",
@@ -294,7 +300,20 @@
       "language_title": "Idioma y moneda",
       "session_title": "Sesión",
       "sign_out": "Cerrar sesión",
-      "following": "Siguiendo"
+      "following": "Siguiendo",
+      "joined": "Se unió en {date}",
+      "settings": "Ajustes",
+      "stat_following": "Siguiendo",
+      "stat_purchases": "Compras",
+      "brands_saved": "Marcas que guardas",
+      "change_cover": "Cambiar portada",
+      "change_photo": "Cambiar foto",
+      "uploading": "Subiendo…",
+      "upload_error": "No se pudo subir. Prueba con otra foto.",
+      "media_title": "Foto y portada",
+      "media_hint": "La portada va arriba de tu perfil. Si no subes una, se ve en gris.",
+      "addresses_cta": "Tus direcciones",
+      "addresses_body": "Para pedir a domicilio más rápido."
     },
     "saved": {
       "title": "Guardados",
@@ -470,7 +489,13 @@
       "empty_filters_title": "No hay piezas con estos filtros",
       "empty_body": "Cada pieza es única y llegan nuevas todos los días.",
       "explore": "Ver lo nuevo",
-      "loading": "Cargando piezas…"
+      "loading": "Cargando piezas…",
+      "recently_viewed": "Vistos hace poco",
+      "recent_searches": "Búsquedas recientes",
+      "remove_recent": "Quitar «{query}»",
+      "brands_title": "Marcas",
+      "search_for": "Buscar «{query}»",
+      "close_search": "Cerrar búsqueda"
     },
     "visual": {
       "looking": "Buscando piezas parecidas…",
@@ -652,7 +677,8 @@
       "empty_cta": "Ver lo nuevo",
       "unavailable_title": "Seguir tiendas y marcas llega muy pronto",
       "unavailable_body": "Mientras, guarda las piezas que te gusten con el corazón.",
-      "brand_link": "Ver piezas de {brand}"
+      "brand_link": "Ver piezas de {brand}",
+      "followers_label": "Seguidores"
     },
     "pwa": {
       "title": "Instala {brand}",
@@ -660,6 +686,17 @@
       "ios_body": "Toca Compartir y luego «Agregar a inicio».",
       "install": "Instalar",
       "dismiss": "Cerrar"
+    },
+    "camera": {
+      "title": "Buscar por foto",
+      "close": "Cerrar cámara",
+      "hint": "Apunta a la prenda",
+      "gallery": "Elegir de tus fotos",
+      "shutter": "Tomar foto",
+      "flip": "Voltear cámara",
+      "unavailable_title": "No pudimos abrir la cámara",
+      "unavailable_body": "Dale permiso a la cámara en tu navegador o elige una foto de tu galería.",
+      "choose": "Elegir foto"
     }
   }
 }

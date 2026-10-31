@@ -38,8 +38,7 @@ export default async function FollowingPage({
   } = await supabase.auth.getUser();
   if (!user) redirect(`/${locale}/account`);
 
-  const [{ data: profile }, followsRes, products, t] = await Promise.all([
-    supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
+  const [followsRes, products, t] = await Promise.all([
     supabase
       .from('follows')
       .select('id, store_id, brand_id, stores (id, slug, name, logo_url), brands (id, slug, name, logo_url)')
@@ -88,7 +87,7 @@ export default async function FollowingPage({
   const base = `/${locale}/account/following`;
 
   return (
-    <AccountShell locale={locale} user={user} profileName={profile?.name ?? null} active="following">
+    <AccountShell locale={locale} user={user} active="following">
       {unavailable ? (
         <EmptyState icon={<UserIcon />} title={t('unavailable_title')} body={t('unavailable_body')} />
       ) : follows.length === 0 ? (

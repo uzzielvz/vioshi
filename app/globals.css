@@ -116,3 +116,15 @@ input[type="number"] {
 .vs-fade-in-slow {
   animation: vs-fade-in 900ms ease-out both;
 }
+
+/* Camera shutter flash (components/search/CameraSheet.tsx). */
+@keyframes cam-flash {
+  from { opacity: 0.9; }
+  to { opacity: 0; }
+}
+.cam-flash {
+  animation: cam-flash 360ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cam-flash { animation: none; opacity: 0; }
+}

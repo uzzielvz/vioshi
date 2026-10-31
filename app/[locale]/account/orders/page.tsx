@@ -28,8 +28,7 @@ export default async function OrdersPage({ params }: Props) {
     redirect(`/${locale}/account`);
   }
 
-  const [{ data: profile }, orders, t] = await Promise.all([
-    supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
+  const [orders, t] = await Promise.all([
     getOrdersByUser(),
     getTranslations('ui.order'),
   ]);
@@ -41,7 +40,7 @@ export default async function OrdersPage({ params }: Props) {
   });
 
   return (
-    <AccountShell locale={locale} user={user} profileName={profile?.name ?? null} active="purchases">
+    <AccountShell locale={locale} user={user} active="purchases">
       {orders.length === 0 ? (
         <EmptyState icon={<BagIcon />} title={t('empty_title')} body={t('empty_body')}>
           <Link href={`/${locale}`} className={buttonClass('primary')}>

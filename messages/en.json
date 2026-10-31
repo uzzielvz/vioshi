@@ -221,11 +221,18 @@
       "instagram": "Instagram"
     },
     "store": {
-      "pieces": "{count, plural, one {# piece for sale} other {# pieces for sale}}",
       "on_sale": "For sale",
       "instagram": "Instagram",
       "empty": "No pieces published yet.",
-      "sells_on": "Sells on {brand}"
+      "sells_on": "Sells on {brand}",
+      "sold": "Sold",
+      "stat_sold": "Sold",
+      "stat_on_sale": "For sale",
+      "brands": "Top brands",
+      "share": "Share",
+      "link_copied": "Link copied",
+      "empty_sold": "No sold pieces yet.",
+      "tabs_label": "Store pieces"
     },
     "auth": {
       "close": "Close",
@@ -274,7 +281,6 @@
       "saved": "Saved",
       "purchases": "Purchases",
       "addresses": "Addresses",
-      "since": "On {brand} since {date}",
       "edit": "Edit profile",
       "start_selling": "Start selling",
       "back": "Your profile",
@@ -294,7 +300,20 @@
       "language_title": "Language and currency",
       "session_title": "Session",
       "sign_out": "Log out",
-      "following": "Following"
+      "following": "Following",
+      "joined": "Joined {date}",
+      "settings": "Settings",
+      "stat_following": "Following",
+      "stat_purchases": "Purchases",
+      "brands_saved": "Brands you save",
+      "change_cover": "Change cover",
+      "change_photo": "Change photo",
+      "uploading": "Uploading…",
+      "upload_error": "Couldn't upload it. Try another photo.",
+      "media_title": "Photo and cover",
+      "media_hint": "Your cover sits at the top of your profile. Without one, it shows gray.",
+      "addresses_cta": "Your addresses",
+      "addresses_body": "For faster home delivery."
     },
     "saved": {
       "title": "Saved",
@@ -470,7 +489,13 @@
       "empty_filters_title": "No pieces with these filters",
       "empty_body": "Every piece is one of a kind and new ones arrive every day.",
       "explore": "See what's new",
-      "loading": "Loading pieces…"
+      "loading": "Loading pieces…",
+      "recently_viewed": "Recently viewed",
+      "recent_searches": "Recent searches",
+      "remove_recent": "Remove “{query}”",
+      "brands_title": "Brands",
+      "search_for": "Search “{query}”",
+      "close_search": "Close search"
     },
     "visual": {
       "looking": "Looking for similar pieces…",
@@ -652,7 +677,8 @@
       "empty_cta": "See what's new",
       "unavailable_title": "Following shops and brands is coming soon",
       "unavailable_body": "Meanwhile, save the pieces you like with the heart.",
-      "brand_link": "See pieces from {brand}"
+      "brand_link": "See pieces from {brand}",
+      "followers_label": "Followers"
     },
     "pwa": {
       "title": "Install {brand}",
@@ -660,6 +686,17 @@
       "ios_body": "Tap Share, then «Add to Home Screen».",
       "install": "Install",
       "dismiss": "Close"
+    },
+    "camera": {
+      "title": "Search by photo",
+      "close": "Close camera",
+      "hint": "Point at the piece",
+      "gallery": "Choose from your photos",
+      "shutter": "Take photo",
+      "flip": "Flip camera",
+      "unavailable_title": "We couldn't open the camera",
+      "unavailable_body": "Allow camera access in your browser or pick a photo from your gallery.",
+      "choose": "Choose a photo"
     }
   }
 }
