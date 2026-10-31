@@ -54,11 +54,29 @@ bloquea el lanzamiento. Actualizado el 2026-10-29.
 
 ### 2b. Migración `0026` (foto y portada) — humano
 
-- [ ] Aplicar `supabase/migrations/0026_profile_media.sql`, igual que
-  `0024`/`0025`: primero con `--dry-run`. Crea el bucket `profile-media`.
+- [x] `supabase/migrations/0026_profile_media.sql` aplicada en prod el
+  2026-10-30, con respaldo previo en `backups/2026-10-30-*.sql`.
 - [ ] Opcional: portada de Viogi. Subir la imagen al bucket y correr
   `update stores set cover_url = '<url pública>' where slug = 'viogi'`. Sin
-  ella, la portada es un collage de sus piezas.
+  ella, la portada se ve gris.
+
+### 2c. Quitar las piezas de muestra — humano
+
+Las 12 piezas de `scripts/data/productos-muestra.json` (todas menos la
+chamarra Nike SB) están **publicadas como demo** desde el 2026-10-30:
+- medidas aproximadas;
+- sin costo;
+- se pueden pagar.
+
+- [ ] Antes de abrir al público, despublicarlas (desaparecen en menos de 60 s)
+  o cambiarlas por piezas reales:
+
+  ```sql
+  update products set listed = false, is_featured = false, is_new = false, embedding = null
+  where id in ('f82ad0cd-b930-467f-a91f-0de6368f73ee','b270bb58-2c47-4378-96c2-b91a496c6795','b851d1c3-d4aa-4f5d-807a-65ac2efeb1b5','f9b8864b-b991-462e-a547-2b2813217d6d','9845b023-67a6-42bc-8334-83f400f96962','6e21f227-e079-4004-bf4d-5e8d7c93ea3c','247c67db-d61f-4668-89f2-b007c8ad20e8','44220f53-0e89-4eee-a9fa-52681fc079f5','d6e7a0cc-66e6-405b-87c8-50c8c6683496','e3dea0f1-4a9e-4975-b906-0c4a7547df64','0bb2c095-415c-4f22-b7b8-593075fcaaec','e1c232b1-5c7c-4308-94ea-a11746c62b51');
+  ```
+
+  Con el CLI enlazado: `npx --yes supabase@2.115.0 db query --linked "<la línea de arriba>"`.
 
 ### 3. Dominio y marca — humano
 
