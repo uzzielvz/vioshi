@@ -77,6 +77,8 @@ export const STORAGE_KEYS = {
   /** Page views and dismissal for the «install the app» bar. */
   INSTALL_VISITS: "viogi_install_visits",
   INSTALL_DISMISSED: "viogi_install_dismissed",
+  /** Pieces opened lately and searches typed, for the search screen. */
   RECENT_PRODUCTS: "viogi_recent_products",
+  RECENT_SEARCHES: "viogi_recent_searches",
 } as const;
 

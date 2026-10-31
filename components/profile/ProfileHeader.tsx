@@ -28,7 +28,7 @@ function ProfileTabs({ tabs, label }: { tabs: ProfileTab[]; label: string }) {
           href={tab.href}
           aria-current={tab.active ? 'page' : undefined}
           className={clsx(
-            'inline-flex h-9 flex-none items-center gap-1.5 rounded-full px-4 text-[12px] font-bold uppercase tracking-[0.06em] transition-colors',
+            'inline-flex h-8 flex-none items-center gap-1.5 rounded-full px-3.5 text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-colors',
             tab.active ? 'bg-ink text-paper' : 'bg-carton text-ink hover:bg-line'
           )}
         >
@@ -45,6 +45,7 @@ function ProfileTabs({ tabs, label }: { tabs: ProfileTab[]; label: string }) {
 // One profile for every account (FROZEN: all accounts are equal). A store and a
 // person get the same cover, identity row, numbers, brands and tabs; only what
 // fills each slot changes. Without an uploaded cover the band stays gray.
+// Kept compact on purpose: the pieces below are what the profile is for.
 export default function ProfileHeader({
   name,
   avatarSrc,
@@ -89,57 +90,57 @@ export default function ProfileHeader({
 }) {
   return (
     <header className="pb-1">
-      <div className="relative aspect-[16/7] overflow-hidden bg-carton md:aspect-[4/1]">
+      <div className="relative aspect-[3/1] overflow-hidden bg-carton md:aspect-[5/1]">
         {coverSrc && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={coverSrc} alt="" className="h-full w-full object-cover" />
         )}
-        {coverEdit && <div className="absolute bottom-2.5 right-2.5 md:bottom-4 md:right-4">{coverEdit}</div>}
+        {coverEdit && <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3">{coverEdit}</div>}
       </div>
 
-      <div className="grid gap-4 px-4 pb-5 md:px-8">
+      <div className="grid gap-3 px-4 pb-4 md:px-8">
         <div className="flex items-end gap-3 md:gap-4">
-          <div className="relative -mt-9 flex-none md:-mt-[52px]">
+          <div className="relative -mt-8 flex-none md:-mt-11">
             <Avatar
               name={name}
               src={avatarSrc}
               tone={avatarTone}
-              className="h-[76px] w-[76px] border-[3px] border-paper text-[28px] md:h-[104px] md:w-[104px] md:text-[38px]"
+              className="h-16 w-16 border-[3px] border-paper text-[24px] md:h-[88px] md:w-[88px] md:text-[32px]"
             />
             {avatarEdit && <div className="absolute -bottom-0.5 -right-0.5">{avatarEdit}</div>}
           </div>
           <div className="min-w-0 flex-1 pb-0.5">
-            <h1 className="truncate text-[20px] font-bold leading-tight tracking-[-0.015em] text-ink md:text-[24px]">
+            <h1 className="truncate text-[17px] font-bold leading-tight tracking-[-0.01em] text-ink md:text-[20px]">
               {name}
             </h1>
-            {sub && <p className="truncate text-[13px] text-muted">{sub}</p>}
+            {sub && <p className="truncate text-[12.5px] text-muted">{sub}</p>}
           </div>
-          {tools && <div className="flex flex-none gap-2 pb-1">{tools}</div>}
+          {tools && <div className="flex flex-none gap-1.5 pb-0.5">{tools}</div>}
         </div>
 
         {(stats || action) && (
-          <div className="flex items-center justify-between gap-4 md:max-w-[560px]">
-            {stats && <dl className="flex min-w-0 gap-5">{stats}</dl>}
+          <div className="flex items-center justify-between gap-4 md:max-w-[520px]">
+            {stats && <dl className="flex min-w-0 gap-4">{stats}</dl>}
             {action && <div className="flex-none">{action}</div>}
           </div>
         )}
 
         {(meta || bio) && (
-          <div className="grid gap-1.5">
-            {meta && <p className="text-[13.5px] text-ink">{meta}</p>}
-            {bio && <p className="max-w-xl text-[13.5px] leading-relaxed text-ink">{bio}</p>}
+          <div className="grid gap-1">
+            {bio && <p className="max-w-xl text-[13px] leading-relaxed text-ink">{bio}</p>}
+            {meta && <p className="text-[12px] text-muted">{meta}</p>}
           </div>
         )}
 
         {brands.length > 0 && (
-          <div className="grid gap-2">
-            {brandsLabel && <p className="text-[13px] text-ink">{brandsLabel}</p>}
-            <ul className="flex flex-wrap gap-1.5">
+          <div className="-mx-4 flex items-center gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
+            {brandsLabel && <p className="mr-1 flex-none text-[12px] text-muted">{brandsLabel}</p>}
+            <ul className="contents">
               {brands.map((brand) => (
-                <li key={brand.name}>
+                <li key={brand.name} className="flex-none">
                   <Link
                     href={brand.href}
-                    className="inline-flex h-9 items-center rounded-btn border border-line px-3 text-[12px] font-bold uppercase tracking-[0.06em] text-ink transition-colors hover:border-ink"
+                    className="inline-flex h-6 flex-none items-center whitespace-nowrap rounded-btn border border-line px-2 text-[10.5px] font-semibold uppercase tracking-[0.05em] text-ink transition-colors hover:border-ink"
                   >
                     {brand.name}
                   </Link>
@@ -153,14 +154,4 @@ export default function ProfileHeader({
       <ProfileTabs tabs={tabs} label={tabsLabel} />
     </header>
   );
-}
-
-/** Most frequent brands first (ties alphabetical), for the brand chips. */
-export function topBrands(names: (string | null | undefined)[], limit = 5): string[] {
-  const counts = new Map<string, number>();
-  for (const name of names) if (name) counts.set(name, (counts.get(name) ?? 0) + 1);
-  return Array.from(counts.entries())
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, limit)
-    .map(([name]) => name);
 }

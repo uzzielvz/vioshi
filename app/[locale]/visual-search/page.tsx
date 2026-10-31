@@ -100,6 +100,11 @@ export default function VisualSearchPage() {
     };
   }, [previewUrl]);
 
+  // Lets the camera sheet (Header) fade out once the photo is on screen here.
+  useEffect(() => {
+    if (file && previewUrl) window.dispatchEvent(new Event('viogi:vs-shown'));
+  }, [file, previewUrl]);
+
   // Fire the search automatically whenever a new file is loaded.
   useEffect(() => {
     if (!file) return;

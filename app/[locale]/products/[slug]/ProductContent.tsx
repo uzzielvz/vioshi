@@ -11,6 +11,7 @@ import { generateId } from "@/lib/utils";
 import { formatPrice } from "@/lib/formatters";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
 import { useWishlist } from "@/hooks/useWishlist";
+import { rememberProduct } from "@/lib/search/recent";
 import ProductGrid from "@/components/ProductGrid";
 import FollowButton from "@/components/FollowButton";
 import { HeartIcon } from "@/components/ui/icons";
@@ -78,6 +79,18 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
+
+  // «Vistos hace poco» on the search screen.
+  useEffect(() => {
+    if (!product.image) return;
+    rememberProduct({
+      id: product.id,
+      slug: product.slug,
+      image: product.image,
+      brand: product.brand?.name ?? null,
+      name: product.name,
+    });
+  }, [product.id, product.slug, product.image, product.brand?.name, product.name]);
 
   const galleryImages = product.images && product.images.length > 0 ? product.images : [product.image];
   const measurementLabels = locale === "en" ? MEASUREMENT_LABELS_EN : MEASUREMENT_LABELS;

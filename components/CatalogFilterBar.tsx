@@ -60,11 +60,11 @@ export default function CatalogFilterBar({
             type="button"
             onClick={() => setOpen(true)}
             aria-label={t('filters')}
-            className="relative grid h-8 w-8 flex-none place-items-center text-ink"
+            className="relative grid h-7 w-7 flex-none place-items-center text-ink"
           >
-            <SlidersIcon className="h-5 w-5" />
+            <SlidersIcon className="h-4 w-4" />
             {activeCount > 0 && (
-              <span className="absolute right-0 top-0 grid h-4 min-w-4 place-items-center rounded-full bg-ink px-1 text-[10px] font-bold text-paper">
+              <span className="absolute -right-0.5 -top-0.5 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-ink px-0.5 text-[9px] font-bold text-paper">
                 {activeCount}
               </span>
             )}
@@ -77,12 +77,12 @@ export default function CatalogFilterBar({
               type="button"
               onClick={() => setOpen(true)}
               className={clsx(
-                'inline-flex h-8 flex-none items-center gap-1 rounded-btn px-2.5 text-[12px] font-bold uppercase tracking-[0.06em] text-ink',
+                'inline-flex h-7 flex-none items-center gap-1 rounded-btn px-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-ink',
                 box.value && 'bg-carton'
               )}
             >
               {box.value ? `${box.label}: ${box.value}` : box.label}
-              <ChevronIcon className="h-3.5 w-3.5 rotate-90" />
+              <ChevronIcon className="h-3 w-3 rotate-90 text-muted" />
             </button>
           ) : (
             <button

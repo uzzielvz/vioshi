@@ -29,7 +29,7 @@ export default function ShareButton({ title, label, copiedLabel }: { title: stri
 
   return (
     <button type="button" onClick={share} aria-label={label} title={copied ? copiedLabel : label} className={iconButtonClass}>
-      {copied ? <CheckIcon className="h-[17px] w-[17px]" /> : <ShareIcon className="h-[17px] w-[17px]" />}
+      {copied ? <CheckIcon className="h-4 w-4" /> : <ShareIcon className="h-4 w-4" />}
       <span className="sr-only" aria-live="polite">
         {copied ? copiedLabel : ''}
       </span>

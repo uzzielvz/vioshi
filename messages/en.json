@@ -489,7 +489,13 @@
       "empty_filters_title": "No pieces with these filters",
       "empty_body": "Every piece is one of a kind and new ones arrive every day.",
       "explore": "See what's new",
-      "loading": "Loading pieces…"
+      "loading": "Loading pieces…",
+      "recently_viewed": "Recently viewed",
+      "recent_searches": "Recent searches",
+      "remove_recent": "Remove “{query}”",
+      "brands_title": "Brands",
+      "search_for": "Search “{query}”",
+      "close_search": "Close search"
     },
     "visual": {
       "looking": "Looking for similar pieces…",
@@ -680,6 +686,17 @@
       "ios_body": "Tap Share, then «Add to Home Screen».",
       "install": "Install",
       "dismiss": "Close"
+    },
+    "camera": {
+      "title": "Search by photo",
+      "close": "Close camera",
+      "hint": "Point at the piece",
+      "gallery": "Choose from your photos",
+      "shutter": "Take photo",
+      "flip": "Flip camera",
+      "unavailable_title": "We couldn't open the camera",
+      "unavailable_body": "Allow camera access in your browser or pick a photo from your gallery.",
+      "choose": "Choose a photo"
     }
   }
 }

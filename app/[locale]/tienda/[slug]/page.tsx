@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { FollowAction, FollowerStat, FollowScope } from "@/components/profile/FollowScope";
 import ProfileCatalog from "@/components/profile/ProfileCatalog";
-import ProfileHeader, { topBrands } from "@/components/profile/ProfileHeader";
+import ProfileHeader from "@/components/profile/ProfileHeader";
+import { topBrands } from "@/lib/topBrands";
 import { ProfileStat } from "@/components/profile/ProfileStat";
 import ShareButton from "@/components/profile/ShareButton";
 import { InstagramIcon } from "@/components/ui/icons";
@@ -96,7 +97,7 @@ export default async function StorePage({ params, searchParams }: PageProps) {
                   aria-label={t("instagram")}
                   className={iconButtonClass}
                 >
-                  <InstagramIcon className="h-[18px] w-[18px]" />
+                  <InstagramIcon className="h-4 w-4" />
                 </a>
               )}
               <ShareButton title={store.name} label={t("share")} copiedLabel={t("link_copied")} />
@@ -123,7 +124,7 @@ export default async function StorePage({ params, searchParams }: PageProps) {
         />
       </FollowScope>
 
-      <section className="pt-4 md:px-8">
+      <section className="pt-3 md:px-8">
         <ProfileCatalog
           key={showSold ? "sold" : "on_sale"}
           products={showSold ? sold : onSale}

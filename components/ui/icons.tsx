@@ -77,3 +77,22 @@ export function SlidersIcon({ className }: IconProps) {
     </svg>
   );
 }
+export function ImageIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="1.5" />
+      <circle cx="9" cy="10" r="1.6" />
+      <path d="M4 17l4.5-4.5 3.5 3.5 2.5-2.5L20 18.5" />
+    </svg>
+  );
+}
+export function FlipCameraIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M4 10a8 8 0 0 1 14.2-3.8L20 8" />
+      <path d="M20 4v4h-4" />
+      <path d="M20 14a8 8 0 0 1-14.2 3.8L4 16" />
+      <path d="M4 20v-4h4" />
+    </svg>
+  );
+}

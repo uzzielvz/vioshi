@@ -88,11 +88,11 @@ export default function ProfileMediaButton({
             aria-label={label}
             title={label}
             className={clsx(
-              'grid h-7 w-7 place-items-center rounded-full border-2 border-paper bg-ink text-paper md:h-8 md:w-8',
+              'grid h-6 w-6 place-items-center rounded-full border-2 border-paper bg-ink text-paper md:h-7 md:w-7',
               pending && 'opacity-70'
             )}
           >
-            <CameraIcon className="h-3.5 w-3.5" />
+            <CameraIcon className="h-3 w-3" />
           </button>
           <span
             role="status"
@@ -109,9 +109,9 @@ export default function ProfileMediaButton({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={pending}
-          className="inline-flex h-8 items-center gap-1.5 rounded-btn bg-paper px-2.5 text-[12px] font-semibold text-ink shadow-[0_1px_2px_rgba(0,0,0,0.15)] disabled:opacity-70"
+          className="inline-flex h-7 items-center gap-1.5 rounded-btn bg-paper/95 px-2 text-[11.5px] font-semibold text-ink shadow-[0_1px_2px_rgba(0,0,0,0.15)] disabled:opacity-70"
         >
-          <CameraIcon className="h-[15px] w-[15px]" />
+          <CameraIcon className="h-3.5 w-3.5" />
           {text}
         </button>
       )}

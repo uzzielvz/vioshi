@@ -4,7 +4,8 @@ import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@/i18n';
 import { getProducts } from '@/lib/products';
 import { getPersonProfile } from '@/lib/profile/person';
-import ProfileHeader, { topBrands } from '@/components/profile/ProfileHeader';
+import ProfileHeader from '@/components/profile/ProfileHeader';
+import { topBrands } from '@/lib/topBrands';
 import ProfileMediaButton from '@/components/profile/ProfileMediaButton';
 import { ProfileStat } from '@/components/profile/ProfileStat';
 import { GearIcon } from '@/components/ui/icons';
@@ -54,7 +55,7 @@ export default async function AccountShell({
         avatarEdit={person.mediaReady ? <ProfileMediaButton kind="avatar" variant="overlay" /> : undefined}
         tools={
           <Link href={`/${locale}/account/profile`} aria-label={t('settings')} title={t('settings')} className={iconButtonClass}>
-            <GearIcon className="h-[18px] w-[18px]" />
+            <GearIcon className="h-4 w-4" />
           </Link>
         }
         stats={
@@ -64,7 +65,7 @@ export default async function AccountShell({
           </>
         }
         action={
-          <Link href={`/${locale}/account/profile`} className={buttonClass('line', 'sm')}>
+          <Link href={`/${locale}/account/profile`} className={buttonClass('line', 'xs')}>
             {t('edit')}
           </Link>
         }
@@ -78,7 +79,7 @@ export default async function AccountShell({
         tabs={tabs.map((tab) => ({ href: tab.href, label: tab.label, active: tab.key === active }))}
       />
 
-      <div className="pt-4 md:px-8">{children}</div>
+      <div className="pt-3 md:px-8">{children}</div>
     </div>
   );
 }

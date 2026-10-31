@@ -17,6 +17,7 @@ export function FollowToggle({
   onToggle,
   name,
   variant = "small",
+  size = "sm",
   className,
 }: {
   following: boolean;
@@ -24,6 +25,8 @@ export function FollowToggle({
   onToggle: () => void;
   name: string;
   variant?: "small" | "block";
+  /** Height of the block variant: 40px, or 32px on the compact profile. */
+  size?: "sm" | "xs";
   className?: string;
 }) {
   const t = useTranslations("ui.social");
@@ -38,7 +41,7 @@ export function FollowToggle({
       aria-label={following ? t("unfollow_aria", { name }) : t("follow_aria", { name })}
       className={
         variant === "block"
-          ? buttonClass(following ? "line" : "primary", "sm", clsx("w-full", className))
+          ? buttonClass(following ? "line" : "primary", size, clsx("w-full", className))
           : clsx(
               "inline-flex h-[30px] flex-none items-center gap-[5px] rounded-btn border text-[12px] font-semibold transition-colors disabled:opacity-60",
               following

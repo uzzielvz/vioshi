@@ -489,7 +489,13 @@
       "empty_filters_title": "No hay piezas con estos filtros",
       "empty_body": "Cada pieza es única y llegan nuevas todos los días.",
       "explore": "Ver lo nuevo",
-      "loading": "Cargando piezas…"
+      "loading": "Cargando piezas…",
+      "recently_viewed": "Vistos hace poco",
+      "recent_searches": "Búsquedas recientes",
+      "remove_recent": "Quitar «{query}»",
+      "brands_title": "Marcas",
+      "search_for": "Buscar «{query}»",
+      "close_search": "Cerrar búsqueda"
     },
     "visual": {
       "looking": "Buscando piezas parecidas…",
@@ -680,6 +686,17 @@
       "ios_body": "Toca Compartir y luego «Agregar a inicio».",
       "install": "Instalar",
       "dismiss": "Cerrar"
+    },
+    "camera": {
+      "title": "Buscar por foto",
+      "close": "Cerrar cámara",
+      "hint": "Apunta a la prenda",
+      "gallery": "Elegir de tus fotos",
+      "shutter": "Tomar foto",
+      "flip": "Voltear cámara",
+      "unavailable_title": "No pudimos abrir la cámara",
+      "unavailable_body": "Dale permiso a la cámara en tu navegador o elige una foto de tu galería.",
+      "choose": "Elegir foto"
     }
   }
 }

@@ -38,11 +38,11 @@ export function FollowAction({ name }: { name: string }) {
   if (ready && !available) return null;
 
   return (
-    <div className="w-[128px]">
+    <div className="w-[108px]">
       {ready ? (
-        <FollowToggle following={following} pending={pending} onToggle={toggle} name={name} variant="block" />
+        <FollowToggle following={following} pending={pending} onToggle={toggle} name={name} variant="block" size="xs" />
       ) : (
-        <span className="block h-10" />
+        <span className="block h-8" />
       )}
     </div>
   );

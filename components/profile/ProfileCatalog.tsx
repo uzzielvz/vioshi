@@ -36,13 +36,13 @@ export default function ProfileCatalog({
         brands={brands}
         resultCount={products.length}
         variant="text"
-        className="-ml-2 px-4 pb-2 md:px-0"
+        className="-ml-1.5 gap-1 px-4 pb-1 md:px-0"
       />
 
-      <div className="flex min-h-[30px] items-center justify-between gap-3 px-4 pb-3 md:px-0">
-        <p className="text-[13px] font-semibold tabular-nums text-ink">{t('count', { count: products.length })}</p>
+      <div className="flex min-h-[26px] items-center justify-between gap-3 px-4 pb-2 md:px-0">
+        <p className="text-[12px] tabular-nums text-muted">{t('count', { count: products.length })}</p>
         {hasFilters && (
-          <button type="button" onClick={() => updateFilters(DEFAULT_FILTERS)} className="text-[13px] font-semibold text-accent">
+          <button type="button" onClick={() => updateFilters(DEFAULT_FILTERS)} className="text-[12px] font-semibold text-accent">
             {t('clear')}
           </button>
         )}
