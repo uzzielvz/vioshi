@@ -241,6 +241,13 @@ async function findOrCreateBrand(
   return { brand_id: data.id }
 }
 
+// «Nuevo» only passes the CHECK once migration 0027 is applied.
+function productDbError(message: string): string {
+  return message.includes('products_condition_check')
+    ? 'El estado «Nuevo» todavía no está activo en la base de datos (falta la migración 0027). Elige otro estado.'
+    : message
+}
+
 export async function createProduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const supabase = createAdminClient()
 
@@ -289,7 +296,7 @@ export async function createProduct(_prev: ActionState, formData: FormData): Pro
     .select('id')
     .single()
 
-  if (error) return { error: error.message }
+  if (error) return { error: productDbError(error.message) }
 
   if (listed) {
     const hasNewPhoto = (formData.getAll('images') as File[]).some((f) => f instanceof File && f.size > 0)
@@ -355,7 +362,7 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
     })
     .eq('id', id)
 
-  if (error) return { error: error.message }
+  if (error) return { error: productDbError(error.message) }
 
   if (listed) {
     const keptIds = formData.getAll('keptImageIds') as string[]

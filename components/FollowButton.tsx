@@ -18,6 +18,7 @@ export function FollowToggle({
   name,
   variant = "small",
   size = "sm",
+  quiet = false,
   className,
 }: {
   following: boolean;
@@ -25,6 +26,8 @@ export function FollowToggle({
   onToggle: () => void;
   name: string;
   variant?: "small" | "block";
+  /** Outlined instead of blue, where another button is the page's blue one. */
+  quiet?: boolean;
   /** Height of the block variant: 40px, or 32px on the compact profile. */
   size?: "sm" | "xs";
   className?: string;
@@ -46,7 +49,9 @@ export function FollowToggle({
               "inline-flex h-[30px] flex-none items-center gap-[5px] rounded-btn border text-[12px] font-semibold transition-colors disabled:opacity-60",
               following
                 ? "border-transparent bg-transparent px-1 text-muted"
-                : "border-accent bg-accent px-3 text-paper hover:bg-accent-press",
+                : quiet
+                  ? "border-line bg-paper px-3 text-ink hover:border-ink"
+                  : "border-accent bg-accent px-3 text-paper hover:bg-accent-press",
               className
             )
       }
@@ -65,12 +70,14 @@ export default function FollowButton({
   name,
   variant,
   initialFollowing,
+  quiet,
   className,
 }: {
   kind: FollowKind;
   id: string;
   name: string;
   variant?: "small" | "block";
+  quiet?: boolean;
   initialFollowing?: boolean;
   className?: string;
 }) {
@@ -83,6 +90,7 @@ export default function FollowButton({
       onToggle={toggle}
       name={name}
       variant={variant}
+      quiet={quiet}
       className={className}
     />
   );

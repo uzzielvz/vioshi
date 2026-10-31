@@ -47,7 +47,8 @@ export const MEASUREMENTS_BY_TYPE: Record<GarmentType, readonly MeasurementKey[]
   otro:     [],
 };
 
-export const CONDITIONS = ['impecable', 'buen_estado', 'con_detalles'] as const;
+/** Best to worst. 'nuevo' needs migration 0027. */
+export const CONDITIONS = ['nuevo', 'impecable', 'buen_estado', 'con_detalles'] as const;
 export type Condition = (typeof CONDITIONS)[number];
 
 export const OWNERS = ['uzziel', 'mario'] as const;
@@ -116,13 +117,15 @@ export const MEASUREMENT_LABELS_EN: Record<MeasurementKey, string> = {
 };
 
 export const CONDITION_LABELS: Record<Condition, string> = {
+  nuevo:         'Nuevo',
   impecable:     'Impecable',
   buen_estado:   'Buen estado',
   con_detalles:  'Con detalles',
 };
 
 export const CONDITION_LABELS_EN: Record<Condition, string> = {
-  impecable:    'Pristine',
+  nuevo:        'New',
+  impecable:    'Like new',
   buen_estado:  'Good condition',
   con_detalles: 'With flaws',
 };

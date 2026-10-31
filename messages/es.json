@@ -181,7 +181,6 @@
     "product": {
       "add_to_bag": "Agregar a la bolsa",
       "adding": "Agregando…",
-      "in_bag": "Ya está en tu bolsa",
       "size": "Talla {size}",
       "measurements": "Medidas",
       "condition": "Estado de la prenda",
@@ -198,7 +197,15 @@
       "see_others": "Ver otras piezas",
       "photo": "Foto {n} de {total}",
       "prev_photo": "Foto anterior",
-      "next_photo": "Foto siguiente"
+      "next_photo": "Foto siguiente",
+      "condition_title": "Estado",
+      "condition_help": "Qué significa cada estado",
+      "condition_defect": "Detalle:",
+      "condition_desc_nuevo": "Con etiqueta y sin usar.",
+      "condition_desc_impecable": "Usada, pero al 100: sin marcas, manchas ni desgaste.",
+      "condition_desc_buen_estado": "Uso normal con desgaste leve. Sin manchas ni roturas.",
+      "condition_desc_con_detalles": "Tiene algo que debes ver antes de comprar: lo describimos y sale en las fotos.",
+      "in_bag_open": "En tu bolsa · Ver bolsa"
     },
     "bag": {
       "title": "Bolsa",
@@ -495,7 +502,8 @@
       "remove_recent": "Quitar «{query}»",
       "brands_title": "Marcas",
       "search_for": "Buscar «{query}»",
-      "close_search": "Cerrar búsqueda"
+      "close_search": "Cerrar búsqueda",
+      "clear_query": "Borrar texto"
     },
     "visual": {
       "looking": "Buscando piezas parecidas…",
@@ -564,7 +572,7 @@
       "help_title": "Cómo funciona {brand}",
       "help_lead": "Ropa de segunda mano de gente que vale la pena seguir. Cada pieza es única.",
       "buy_title": "Comprar",
-      "buy_body": "Cada pieza es única. Antes de comprar ves sus medidas en cm, con la prenda en plano, y su estado: impecable, buen estado o con detalles.",
+      "buy_body": "Cada pieza es única. Antes de comprar ves sus medidas en cm, con la prenda en plano, y su estado: nuevo, impecable, buen estado o con detalles.",
       "pay_title": "Pagar",
       "pay_body": "Pagas dentro de {brand}. Con tarjeta siempre, y con OXXO o SPEI en compras de hasta {threshold}. La pieza se aparta mientras pagas y nadie más la puede comprar.",
       "receive_title": "Recibir",

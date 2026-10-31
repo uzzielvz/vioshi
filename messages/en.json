@@ -181,7 +181,6 @@
     "product": {
       "add_to_bag": "Add to bag",
       "adding": "Adding…",
-      "in_bag": "Already in your bag",
       "size": "Size {size}",
       "measurements": "Measurements",
       "condition": "Condition",
@@ -198,7 +197,15 @@
       "see_others": "See other pieces",
       "photo": "Photo {n} of {total}",
       "prev_photo": "Previous photo",
-      "next_photo": "Next photo"
+      "next_photo": "Next photo",
+      "condition_title": "Condition",
+      "condition_help": "What each condition means",
+      "condition_defect": "Flaw:",
+      "condition_desc_nuevo": "Tags on, never worn.",
+      "condition_desc_impecable": "Worn, but like new: no marks, stains or wear.",
+      "condition_desc_buen_estado": "Normal use with light wear. No stains or tears.",
+      "condition_desc_con_detalles": "Has something you should see before buying: we describe it and it shows in the photos.",
+      "in_bag_open": "In your bag · View bag"
     },
     "bag": {
       "title": "Bag",
@@ -495,7 +502,8 @@
       "remove_recent": "Remove “{query}”",
       "brands_title": "Brands",
       "search_for": "Search “{query}”",
-      "close_search": "Close search"
+      "close_search": "Close search",
+      "clear_query": "Clear text"
     },
     "visual": {
       "looking": "Looking for similar pieces…",
@@ -564,7 +572,7 @@
       "help_title": "How {brand} works",
       "help_lead": "Second-hand clothes from people worth following. Every piece is one of a kind.",
       "buy_title": "Buy",
-      "buy_body": "Every piece is one of a kind. Before you buy, you see its measurements in cm, taken flat, and its condition: pristine, good condition or with flaws.",
+      "buy_body": "Every piece is one of a kind. Before you buy, you see its measurements in cm, taken flat, and its condition: new, like new, good condition or with flaws.",
       "pay_title": "Pay",
       "pay_body": "You pay inside {brand}. By card always, and with OXXO or SPEI on purchases up to {threshold}. The piece is held while you pay and nobody else can buy it.",
       "receive_title": "Receive",

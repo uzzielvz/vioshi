@@ -98,6 +98,26 @@ Aplicadas con `supabase db push` tras respaldo local (`backups/viogi_2026-10-23_
   El comando para despublicarlas está en `docs/LANZAMIENTO.md` § 2c, y los ids en `backups/productos-muestra-ids.json` (local).
 - Verificado (cámara con dispositivo simulado de Chromium: abrir, voltear, disparar, animación y paso a `/visual-search`; búsquedas recientes y vistos): `0026` aplicada dos veces en Postgres 16 local (anon lee `cover_url` y no escribe; cada quien cambia solo su perfil); subida, reemplazo y borrado contra el mock; perfiles con y sin `0026` y sin `follows`; type-check, lint, build y capturas a 390 y 1280 px sin scroll horizontal.
 
+**Paquete N, en rama: estado de 4 pasos, Buscar y auditoría de la interfaz (2026-10-31).**
+
+- **Estado de la prenda:**
+  - La escala es nuevo (con etiqueta, sin usar) · impecable (al 100) · buen estado · con detalles.
+  - En la ficha se ve como una barra de 4 pasos con la descripción del estado y «Qué significa cada estado».
+  - El detalle de «con detalles» va ahí mismo.
+  - `0027` agrega `nuevo` al CHECK.
+- **Medidas:** la ficha ya no muestra «Medidas» en piezas sin medidas (tipo `otro`).
+- **Buscar:** la barra va arriba, donde está el header, con «Cancelar»; ya no sigue al teclado.
+  - Antes de cerrar o navegar se quita el foco.
+  - `ClientLayout` re-sincroniza las barras fijas al perder el foco, por el desfase de iOS que dejaba la barra de abajo a media pantalla.
+  - La barra de abajo va en su propia capa (`translateZ(0)`).
+- **Auditoría** de las 29 rutas a 390 y 1280 px: sin scroll horizontal, imágenes rotas ni errores de la app. Se arregló:
+  - Precios del resumen de Pagar y del pedido que se salían de la tarjeta (un grid sin `min-w-0`).
+  - «Ya está en tu bolsa» ahora abre la bolsa en vez de quedar deshabilitado.
+  - «Seguir» de marca y tienda en la ficha es de contorno, para que el único azul sea «Agregar a la bolsa».
+  - Filtros de la búsqueda iguales a los del perfil.
+  - La bolsa es un diálogo y cierra con Escape.
+  - Áreas de toque de «Guardar» y «Qué significa».
+
 E sigue bloqueado: es humano, no código.
 
 Worktrees libres: `../viogi-L1` (`agent/L1-settings`) y `../viogi-L5` (`agent/L5-entregado`),
@@ -121,7 +141,7 @@ Marcar entregado **no** transfiere dinero. Eso es el paquete E.
 
 ## Migraciones
 
-Prod: `0001`–`0026`, aplicadas (`0026` el 2026-10-30, tras respaldo `backups/2026-10-30-*.sql`). Siguiente libre: **`0027`**.
+Prod: `0001`–`0026`, aplicadas (`0026` el 2026-10-30, tras respaldo `backups/2026-10-30-*.sql`). `0027_condition_nuevo.sql` en rama, por aplicar. Siguiente libre: **`0028`**.
 
 - `0021` abrió la merma a la tienda · `0023` la volvió a cerrar: el estado final es
   que solo `disposition = 'activa'` puede estar `listed` (verificado contra prod).

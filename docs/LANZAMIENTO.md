@@ -60,6 +60,13 @@ bloquea el lanzamiento. Actualizado el 2026-10-29.
   `update stores set cover_url = '<url pública>' where slug = 'viogi'`. Sin
   ella, la portada se ve gris.
 
+### 2b-bis. Migración `0027` (estado «Nuevo») — humano
+
+- [ ] Aplicar `supabase/migrations/0027_condition_nuevo.sql`, igual que la
+  `0026`: respaldo y luego `--dry-run`.
+  - Solo amplía el CHECK de `products.condition` para aceptar `nuevo`.
+  - Sin ella, elegir «Nuevo» en el panel avisa que falta la migración.
+
 ### 2c. Quitar las piezas de muestra — humano
 
 Las 12 piezas de `scripts/data/productos-muestra.json` (todas menos la
