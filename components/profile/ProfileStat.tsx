@@ -1,7 +1,9 @@
-/** One «**N** label» item of a profile's numbers row. */
-export function ProfileStat({ children }: { children: React.ReactNode }) {
-  return <span className="whitespace-nowrap">{children}</span>;
+/** One number of a profile, Grailed style: the label on top, the number below. */
+export function ProfileStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="grid gap-1">
+      <dt className="whitespace-nowrap text-[12.5px] text-muted">{label}</dt>
+      <dd className="text-[18px] font-bold leading-none tabular-nums text-ink">{value.toLocaleString('es-MX')}</dd>
+    </div>
+  );
 }
-
-/** The `b` tag for rich stat messages. */
-export const boldStat = (chunks: React.ReactNode) => <b className="font-bold tabular-nums">{chunks}</b>;

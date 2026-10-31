@@ -35,7 +35,8 @@ export default function ProfileCatalog({
         sizes={sizes}
         brands={brands}
         resultCount={products.length}
-        className="px-4 pb-3 md:px-0"
+        variant="text"
+        className="-ml-2 px-4 pb-2 md:px-0"
       />
 
       <div className="flex min-h-[30px] items-center justify-between gap-3 px-4 pb-3 md:px-0">

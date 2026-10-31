@@ -7,11 +7,7 @@ import { useTranslations } from "next-intl";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import { formatPrice } from "@/lib/formatters";
-import {
-  GARMENT_TYPE_LABELS,
-  GARMENT_TYPE_LABELS_EN,
-  type GarmentType,
-} from "@/lib/garments";
+import type { GarmentType } from "@/lib/garments";
 import { HeartIcon } from "@/components/ui/icons";
 
 interface ProductCardProps {
@@ -38,7 +34,6 @@ export default function ProductCard({
   size,
   availability,
   brand,
-  garmentType,
 }: ProductCardProps) {
   const { locale } = useLocaleContext();
   const t = useTranslations("ui.card");
@@ -49,15 +44,7 @@ export default function ProductCard({
   const sold = estado === "vendida";
   const reserved = estado === "apartada";
 
-  // "otro" is an internal bucket, not something a buyer should read on the card.
-  const typeLabel = garmentType && garmentType !== "otro"
-    ? (locale === "en" ? GARMENT_TYPE_LABELS_EN : GARMENT_TYPE_LABELS)[garmentType]
-    : undefined;
-  const title = brand?.name
-    ? typeLabel
-      ? `${brand.name} ${typeLabel}`
-      : brand.name
-    : name;
+  const title = brand?.name ? `${brand.name} · ${name}` : name;
 
   return (
     <article className="min-w-0">
@@ -89,45 +76,45 @@ export default function ProductCard({
         </div>
       </Link>
 
-      <div className="mt-[9px] flex items-center justify-between gap-2 px-2.5 md:px-0">
-        <p className="min-w-0 truncate text-[13px] leading-tight text-ink">
-          {brand?.name ? (
-            <>
-              <span className="font-semibold">{brand.name}</span>
-              {typeLabel ? <span className="font-normal"> {typeLabel}</span> : null}
-            </>
-          ) : (
-            <span className="font-semibold">{name}</span>
-          )}
-        </p>
-        {size ? (
-          <span className="flex-none text-[13px] font-medium tabular-nums text-ink">{size}</span>
-        ) : null}
-      </div>
+      <div className="mt-2.5 grid gap-0.5 px-2.5 md:px-0">
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="min-w-0 truncate text-[13.5px] font-semibold leading-tight text-ink">
+            {brand?.name ?? name}
+          </p>
+          {size ? (
+            <span className="flex-none text-[13px] font-semibold leading-tight tabular-nums text-ink">{size}</span>
+          ) : null}
+        </div>
+        {/* The seller's own title, under the brand and quieter. */}
+        {brand?.name ? <p className="truncate text-[12.5px] leading-snug text-muted">{name}</p> : null}
 
-      <div className="flex items-center justify-between gap-2 px-2.5 md:px-0">
-        <p
-          className={clsx(
-            "text-[13px] font-bold tabular-nums",
-            sold ? "text-muted line-through" : "text-ink"
-          )}
-        >
-          {formatPrice(price, locale, false)}
-        </p>
-        <button
-          type="button"
-          aria-pressed={saved}
-          aria-label={saved ? t("unsave", { name: title }) : t("save", { name: title })}
-          onClick={() => toggle(id)}
-          className="grid h-9 w-9 flex-none place-items-center"
-        >
-          <HeartIcon
+        <div className="mt-1 flex h-5 items-center justify-between gap-2">
+          <p
             className={clsx(
-              "h-[18px] w-[18px]",
-              saved ? "fill-accent text-accent" : "fill-none text-ink"
+              "text-[13.5px] font-bold leading-none tabular-nums",
+              sold ? "text-muted line-through" : "text-ink"
             )}
-          />
-        </button>
+          >
+            {formatPrice(price, locale, false)}
+          </p>
+          {/* 40px tap target that grows to the left; the glyph sits on the right edge
+              (the heart path has ~3px of air in its box, hence -mr-[3px]) so it lines up
+              with the size above without making the price row taller. */}
+          <button
+            type="button"
+            aria-pressed={saved}
+            aria-label={saved ? t("unsave", { name: title }) : t("save", { name: title })}
+            onClick={() => toggle(id)}
+            className="-my-2.5 -mr-[3px] flex h-10 w-10 flex-none items-center justify-end"
+          >
+            <HeartIcon
+              className={clsx(
+                "h-[18px] w-[18px]",
+                saved ? "fill-accent text-accent" : "fill-none text-ink"
+              )}
+            />
+          </button>
+        </div>
       </div>
     </article>
   );

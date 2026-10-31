@@ -1,0 +1,15 @@
+[
+  { "foto": "CHAMARRA NIKE SB-L-700.png", "marca": "Nike SB", "titulo": "Chamarra de nylon con franjas reflejantes", "categoria": "chamarra", "tipo": "chamarra", "talla": "L", "precio_mxn": 700, "estado": "buen_estado" },
+  { "foto": "TEE STUSSY-S-200.png", "marca": "Stüssy", "titulo": "Playera corona clásica", "categoria": "playeras", "tipo": "playera", "talla": "S", "precio_mxn": 200, "estado": "buen_estado" },
+  { "foto": "JESEY INGLATERRA 2002 NIKE-S-350.png", "marca": "Nike", "titulo": "Jersey Inglaterra 2002 local", "categoria": "playeras", "tipo": "playera", "talla": "S", "precio_mxn": 350, "estado": "buen_estado" },
+  { "foto": "GORRA SUPREME-500.png", "marca": "Supreme", "titulo": "Camp cap de cuadros", "categoria": "accesorios", "tipo": "otro", "talla": "Única", "precio_mxn": 500, "estado": "impecable" },
+  { "foto": "HOODIE PLAYBOY-M-400.png", "marca": "Playboy", "titulo": "Sudadera verde con logo repetido", "categoria": "hoodie", "tipo": "hoodie", "talla": "M", "precio_mxn": 400, "estado": "buen_estado" },
+  { "foto": "JEANS WRANGLER-32x32- 250.png", "marca": "Wrangler", "titulo": "Jeans rectos lavado claro", "categoria": "jeans", "tipo": "jeans", "talla": "32×32", "precio_mxn": 250, "estado": "con_detalles" },
+  { "foto": "CHAMARRA ADIDAS FB-L-500.png", "marca": "Adidas", "titulo": "Chamarra con logo grande en la espalda", "categoria": "chamarra", "tipo": "chamarra", "talla": "L", "precio_mxn": 500, "estado": "buen_estado" },
+  { "foto": "TNFBAG-600.png", "marca": "The North Face", "titulo": "Mochila Borealis verde azulado", "categoria": "bolsos", "tipo": "otro", "talla": "Única", "precio_mxn": 600, "estado": "buen_estado" },
+  { "foto": "CHAMARRA ARSENAL NIKE-XL-500.png", "marca": "Nike", "titulo": "Chamarra Arsenal de entrenamiento", "categoria": "chamarra", "tipo": "chamarra", "talla": "XL", "precio_mxn": 500, "estado": "buen_estado" },
+  { "foto": "CHAMARRA HALPUTT-L-400.png", "marca": "Halputt", "titulo": "Chamarra con estampado de La Última Cena", "categoria": "chamarra", "tipo": "chamarra", "talla": "L", "precio_mxn": 400, "estado": "buen_estado" },
+  { "foto": "PANTS NIKE FB-L-370.png", "marca": "Nike", "titulo": "Pants de nylon con vivos blancos", "categoria": "pants", "tipo": "pants", "talla": "L", "precio_mxn": 370, "estado": "buen_estado" },
+  { "foto": "TEE TACTIC STUSSY-L-190.png", "marca": "Stüssy", "titulo": "Playera de camuflaje de bosque", "categoria": "playeras", "tipo": "playera", "talla": "L", "precio_mxn": 190, "estado": "buen_estado" },
+  { "foto": "BENNIE STUSSY-UNISEX-200.png", "marca": "Stüssy", "titulo": "Gorra tejida multicolor", "categoria": "accesorios", "tipo": "otro", "talla": "Única", "precio_mxn": 200, "estado": "buen_estado" }
+]

@@ -4,9 +4,9 @@ import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@/i18n';
 import { getProducts } from '@/lib/products';
 import { getPersonProfile } from '@/lib/profile/person';
-import ProfileHeader, { topBrands, type ProfileCover } from '@/components/profile/ProfileHeader';
+import ProfileHeader, { topBrands } from '@/components/profile/ProfileHeader';
 import ProfileMediaButton from '@/components/profile/ProfileMediaButton';
-import { boldStat, ProfileStat } from '@/components/profile/ProfileStat';
+import { ProfileStat } from '@/components/profile/ProfileStat';
 import { GearIcon } from '@/components/ui/icons';
 import { buttonClass, iconButtonClass } from '@/components/ui/styles';
 import { getAccountDisplayName } from './accountDisplayName';
@@ -14,7 +14,7 @@ import { getAccountDisplayName } from './accountDisplayName';
 export type AccountTab = 'saved' | 'purchases' | 'following';
 
 // A person's profile («Tu perfil» in the prototype). It is the same profile a
-// store has (ProfileHeader); selling is an extra step reached from here.
+// store has (ProfileHeader); selling is an extra step, from «Vender» in the nav.
 export default async function AccountShell({
   locale,
   user,
@@ -29,12 +29,9 @@ export default async function AccountShell({
   const [person, t] = await Promise.all([getPersonProfile(user), getTranslations('ui.profile')]);
   const displayName = getAccountDisplayName(user, person.name);
 
-  // Saved pieces give the brand chips and, until a photo is uploaded, the cover.
+  // Saved pieces give the brand chips.
   const savedIds = new Set(person.savedIds);
   const saved = savedIds.size > 0 ? (await getProducts()).filter((p) => savedIds.has(p.id)) : [];
-  const cover: ProfileCover = person.coverUrl
-    ? { kind: 'photo', src: person.coverUrl }
-    : { kind: 'collage', images: saved.map((p) => p.image).filter(Boolean) };
 
   const joined = new Intl.DateTimeFormat(locale === 'es' ? 'es-MX' : 'en-US', {
     month: 'long',
@@ -52,7 +49,7 @@ export default async function AccountShell({
       <ProfileHeader
         name={displayName}
         avatarSrc={person.avatarUrl}
-        cover={cover}
+        coverSrc={person.coverUrl}
         coverEdit={person.mediaReady ? <ProfileMediaButton kind="cover" variant="overlay" /> : undefined}
         avatarEdit={person.mediaReady ? <ProfileMediaButton kind="avatar" variant="overlay" /> : undefined}
         tools={
@@ -60,25 +57,18 @@ export default async function AccountShell({
             <GearIcon className="h-[18px] w-[18px]" />
           </Link>
         }
-        sub={t('joined', { date: joined })}
         stats={
           <>
-            {person.followingCount !== null && (
-              <ProfileStat>{t.rich('stat_following', { count: person.followingCount, b: boldStat })}</ProfileStat>
-            )}
-            <ProfileStat>{t.rich('stat_purchases', { count: person.purchasesCount, b: boldStat })}</ProfileStat>
+            {person.followingCount !== null && <ProfileStat label={t('stat_following')} value={person.followingCount} />}
+            <ProfileStat label={t('stat_purchases')} value={person.purchasesCount} />
           </>
         }
-        actions={
-          <div className="grid grid-cols-2 gap-2">
-            <Link href={`/${locale}/account/profile`} className={buttonClass('line', 'sm')}>
-              {t('edit')}
-            </Link>
-            <Link href={`/${locale}/vender`} className={buttonClass('soft', 'sm')}>
-              {t('start_selling')}
-            </Link>
-          </div>
+        action={
+          <Link href={`/${locale}/account/profile`} className={buttonClass('line', 'sm')}>
+            {t('edit')}
+          </Link>
         }
+        meta={t('joined', { date: joined })}
         brandsLabel={t('brands_saved')}
         brands={topBrands(saved.map((p) => p.brand?.name)).map((name) => ({
           name,

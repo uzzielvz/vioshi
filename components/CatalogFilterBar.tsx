@@ -4,20 +4,22 @@ import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import clsx from 'clsx';
 import SearchFilterDrawer, { type SearchFilters } from '@/components/SearchFilterDrawer';
-import { ChevronIcon } from '@/components/ui/icons';
+import { ChevronIcon, SlidersIcon } from '@/components/ui/icons';
 import { STORE_CATEGORIES, type StoreCategory } from '@/lib/categories';
 
 function isCategory(v: string): v is StoreCategory {
   return (STORE_CATEGORIES as readonly string[]).includes(v);
 }
 
-// Row of 32px filter boxes; any box opens the filter drawer.
+// Filters that open the drawer. `boxes` are the 32px boxes of search; `text`
+// is the profile row (uppercase labels after a sliders button, as in Grailed).
 export default function CatalogFilterBar({
   filters,
   onChange,
   sizes,
   brands,
   resultCount,
+  variant = 'boxes',
   className,
 }: {
   filters: SearchFilters;
@@ -25,6 +27,7 @@ export default function CatalogFilterBar({
   sizes: string[];
   brands: string[];
   resultCount: number;
+  variant?: 'boxes' | 'text';
   className?: string;
 }) {
   const t = useTranslations('ui.search');
@@ -42,6 +45,7 @@ export default function CatalogFilterBar({
     },
     { key: 'brand', label: t('brand'), value: filters.brand },
   ];
+  const activeCount = boxes.filter((box) => box.value).length;
 
   return (
     <>
@@ -51,20 +55,50 @@ export default function CatalogFilterBar({
           className
         )}
       >
-        {boxes.map((box) => (
+        {variant === 'text' && (
           <button
-            key={box.key}
             type="button"
             onClick={() => setOpen(true)}
-            className={clsx(
-              'inline-flex h-8 flex-none items-center gap-1.5 rounded-btn border px-3 text-[13px] text-ink',
-              box.value ? 'border-ink font-semibold' : 'border-line'
-            )}
+            aria-label={t('filters')}
+            className="relative grid h-8 w-8 flex-none place-items-center text-ink"
           >
-            {box.value ? `${box.label}: ${box.value}` : box.label}
-            <ChevronIcon className="h-3.5 w-3.5 rotate-90 text-muted" />
+            <SlidersIcon className="h-5 w-5" />
+            {activeCount > 0 && (
+              <span className="absolute right-0 top-0 grid h-4 min-w-4 place-items-center rounded-full bg-ink px-1 text-[10px] font-bold text-paper">
+                {activeCount}
+              </span>
+            )}
           </button>
-        ))}
+        )}
+        {boxes.map((box) =>
+          variant === 'text' ? (
+            <button
+              key={box.key}
+              type="button"
+              onClick={() => setOpen(true)}
+              className={clsx(
+                'inline-flex h-8 flex-none items-center gap-1 rounded-btn px-2.5 text-[12px] font-bold uppercase tracking-[0.06em] text-ink',
+                box.value && 'bg-carton'
+              )}
+            >
+              {box.value ? `${box.label}: ${box.value}` : box.label}
+              <ChevronIcon className="h-3.5 w-3.5 rotate-90" />
+            </button>
+          ) : (
+            <button
+              key={box.key}
+              type="button"
+              onClick={() => setOpen(true)}
+              className={clsx(
+                'inline-flex h-8 flex-none items-center gap-1.5 rounded-btn border px-3 text-[13px] text-ink',
+                box.value ? 'border-ink font-semibold' : 'border-line'
+              )}
+            >
+              {box.value ? `${box.label}: ${box.value}` : box.label}
+              <ChevronIcon className="h-3.5 w-3.5 rotate-90 text-muted" />
+            </button>
+          )
+        )}
       </div>
 
       <SearchFilterDrawer

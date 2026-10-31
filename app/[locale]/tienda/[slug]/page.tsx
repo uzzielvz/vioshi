@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { FollowActions, FollowerStat, FollowScope } from "@/components/profile/FollowScope";
+import { FollowAction, FollowerStat, FollowScope } from "@/components/profile/FollowScope";
 import ProfileCatalog from "@/components/profile/ProfileCatalog";
-import ProfileHeader, { topBrands, type ProfileCover } from "@/components/profile/ProfileHeader";
-import { boldStat, ProfileStat } from "@/components/profile/ProfileStat";
+import ProfileHeader, { topBrands } from "@/components/profile/ProfileHeader";
+import { ProfileStat } from "@/components/profile/ProfileStat";
 import ShareButton from "@/components/profile/ShareButton";
+import { InstagramIcon } from "@/components/ui/icons";
+import { iconButtonClass } from "@/components/ui/styles";
 import { getProductsByStoreId, getSoldProductsByStoreId } from "@/lib/products";
 import { getStoreBySlug } from "@/lib/stores";
 import { brand } from "@/lib/brand";
@@ -63,9 +65,6 @@ export default async function StorePage({ params, searchParams }: PageProps) {
   ]);
 
   const base = `/${locale}/tienda/${store.slug}`;
-  const cover: ProfileCover = store.cover_url
-    ? { kind: "photo", src: store.cover_url }
-    : { kind: "collage", images: onSale.map((product) => product.image).filter(Boolean) };
   const joined = store.created_at
     ? new Intl.DateTimeFormat(locale === "es" ? "es-MX" : "en-US", { month: "long", year: "numeric" }).format(
         new Date(store.created_at)
@@ -86,25 +85,34 @@ export default async function StorePage({ params, searchParams }: PageProps) {
           name={store.name}
           avatarSrc={store.logo_url}
           avatarTone="ink"
-          cover={cover}
-          tools={<ShareButton title={store.name} label={t("share")} copiedLabel={t("link_copied")} />}
-          sub={
+          coverSrc={store.cover_url}
+          tools={
             <>
-              @{store.slug}
-              {joined && <> · {tProfile("joined", { date: joined })}</>}
+              {store.instagram && (
+                <a
+                  href={instagramHref(store.instagram)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t("instagram")}
+                  className={iconButtonClass}
+                >
+                  <InstagramIcon className="h-[18px] w-[18px]" />
+                </a>
+              )}
+              <ShareButton title={store.name} label={t("share")} copiedLabel={t("link_copied")} />
             </>
           }
+          sub={`@${store.slug}`}
           stats={
             <>
               <FollowerStat />
-              {sold.length > 0 && <ProfileStat>{t.rich("stat_sold", { count: sold.length, b: boldStat })}</ProfileStat>}
-              <ProfileStat>{t.rich("stat_on_sale", { count: onSale.length, b: boldStat })}</ProfileStat>
+              {sold.length > 0 && <ProfileStat label={t("stat_sold")} value={sold.length} />}
+              <ProfileStat label={t("stat_on_sale")} value={onSale.length} />
             </>
           }
+          action={<FollowAction name={store.name} />}
+          meta={joined ? tProfile("joined", { date: joined }) : null}
           bio={store.bio}
-          actions={
-            <FollowActions name={store.name} instagramHref={store.instagram ? instagramHref(store.instagram) : null} />
-          }
           brandsLabel={t("brands")}
           brands={topBrands(onSale.map((product) => product.brand?.name)).map((name) => ({
             name,
