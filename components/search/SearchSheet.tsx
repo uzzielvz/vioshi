@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -19,7 +19,8 @@ const sectionTitle = 'px-4 pb-1.5 text-[15px] font-bold tracking-[-0.01em] text-
 const row = 'flex h-11 w-full items-center px-4 text-left text-[15px] text-ink';
 
 // Phone search screen, after Grailed: what you looked at, what you searched and
-// the brands, with the field floating at the bottom, above the keyboard.
+// the brands. The field takes the header's place at the top: a field pinned
+// above the keyboard is fragile on iOS and could leave fixed bars misplaced.
 export default function SearchSheet({ onClose, onCamera }: { onClose: () => void; onCamera: () => void }) {
   const t = useTranslations('ui.search');
   const tNav = useTranslations('ui.nav');
@@ -30,7 +31,6 @@ export default function SearchSheet({ onClose, onCamera }: { onClose: () => void
   const [recentProducts, setRecentProducts] = useState<RecentProduct[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
-  const [keyboard, setKeyboard] = useState(0);
 
   useEffect(() => {
     setRecentProducts(getRecentProducts());
@@ -44,31 +44,23 @@ export default function SearchSheet({ onClose, onCamera }: { onClose: () => void
     };
   }, []);
 
+  // Blur first so iOS closes the keyboard and lays the page out again before
+  // this screen goes away.
+  const close = useCallback(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    onClose();
+  }, [onClose]);
+
   useEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close();
     document.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = previous;
       document.removeEventListener('keydown', onKey);
     };
-  }, [onClose]);
-
-  // The layout viewport keeps its height when the keyboard opens (iOS, recent
-  // Android), so the bar is lifted by the part the keyboard covers.
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const update = () => setKeyboard(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
-    update();
-    vv.addEventListener('resize', update);
-    vv.addEventListener('scroll', update);
-    return () => {
-      vv.removeEventListener('resize', update);
-      vv.removeEventListener('scroll', update);
-    };
-  }, []);
+  }, [close]);
 
   const q = query.trim();
   const brandRows = useMemo(() => {
@@ -78,7 +70,7 @@ export default function SearchSheet({ onClose, onCamera }: { onClose: () => void
   }, [brands, q]);
 
   function go(href: string) {
-    onClose();
+    close();
     router.push(href);
   }
 
@@ -105,8 +97,47 @@ export default function SearchSheet({ onClose, onCamera }: { onClose: () => void
   );
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={t('title')} className="vs-fade-in fixed inset-0 z-50 bg-paper md:hidden">
-      <div className="h-full overflow-y-auto overscroll-contain pb-36 pt-[max(18px,env(safe-area-inset-top))]">
+    <div role="dialog" aria-modal="true" aria-label={t('title')} className="vs-fade-in fixed inset-0 z-50 flex flex-col bg-paper md:hidden">
+      <form onSubmit={submit} role="search" className="flex h-14 flex-none items-center gap-3 border-b border-line px-4">
+        <div className="flex h-10 min-w-0 flex-1 items-center gap-2.5 rounded-btn bg-carton pl-3 pr-1">
+          <SearchIcon className="h-[17px] w-[17px] flex-none text-muted" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={tNav('search_placeholder')}
+            aria-label={tNav('search')}
+            enterKeyHint="search"
+            autoFocus
+            className="min-w-0 flex-1 bg-transparent text-[16px] text-ink outline-none placeholder:text-muted"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              aria-label={t('clear_query')}
+              className="grid h-8 w-8 flex-none place-items-center text-muted"
+            >
+              <CloseIcon className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              (document.activeElement as HTMLElement | null)?.blur();
+              onCamera();
+            }}
+            aria-label={tNav('visual_search')}
+            className="grid h-8 w-8 flex-none place-items-center text-ink"
+          >
+            <CameraIcon className="h-5 w-5" />
+          </button>
+        </div>
+        <button type="button" onClick={close} className="flex-none text-[14px] font-semibold text-ink">
+          {tNav('cancel')}
+        </button>
+      </form>
+
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(24px,env(safe-area-inset-bottom))] pt-4">
         {q ? (
           <>
             <button type="button" className={`${row} gap-3 font-semibold`} onClick={() => searchFor(q)}>
@@ -174,42 +205,6 @@ export default function SearchSheet({ onClose, onCamera }: { onClose: () => void
           </div>
         )}
       </div>
-
-      <form
-        onSubmit={submit}
-        role="search"
-        style={{ bottom: keyboard }}
-        className="fixed inset-x-0 flex items-center gap-2.5 bg-gradient-to-t from-paper via-paper to-paper/0 px-4 pb-[max(14px,env(safe-area-inset-bottom))] pt-6"
-      >
-        <div className="flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-full border border-line bg-paper pl-4 pr-1.5 shadow-[0_4px_18px_rgba(17,17,17,0.08)]">
-          <SearchIcon className="h-[18px] w-[18px] flex-none text-muted" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={tNav('search_placeholder')}
-            aria-label={tNav('search')}
-            enterKeyHint="search"
-            autoFocus
-            className="min-w-0 flex-1 bg-transparent text-[16px] text-ink outline-none placeholder:text-muted"
-          />
-          <button
-            type="button"
-            onClick={onCamera}
-            aria-label={tNav('visual_search')}
-            className="grid h-9 w-9 flex-none place-items-center rounded-full text-ink transition-colors hover:bg-carton"
-          >
-            <CameraIcon className="h-5 w-5" />
-          </button>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={t('close_search')}
-          className="grid h-12 w-12 flex-none place-items-center rounded-full border border-line bg-paper text-ink shadow-[0_4px_18px_rgba(17,17,17,0.08)]"
-        >
-          <CloseIcon className="h-5 w-5" />
-        </button>
-      </form>
     </div>
   );
 }

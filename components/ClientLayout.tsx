@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import Header from "./Header";
@@ -23,6 +24,19 @@ export function ClientLayout({
   userEmail?: string | null;
 }) {
   const path = getPathWithoutLocale(usePathname());
+
+  // iOS can leave the fixed header and bottom nav where the keyboard pushed
+  // them once a field loses focus; scrolling to the same spot makes Safari
+  // place them again.
+  useEffect(() => {
+    const onFocusOut = (event: FocusEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target || !['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+      window.setTimeout(() => window.scrollTo(window.scrollX, window.scrollY), 60);
+    };
+    document.addEventListener('focusout', onFocusOut);
+    return () => document.removeEventListener('focusout', onFocusOut);
+  }, []);
   const route = path.replace(/\/$/, '');
   // The payment form, login and password screens run without the store shell
   // (they bring their own bar). Order pages after paying keep it.

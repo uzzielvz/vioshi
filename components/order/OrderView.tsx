@@ -143,10 +143,10 @@ export default async function OrderView({
         </div>
       )}
 
-      <div>
+      <div className="min-w-0">
         <ul className="divide-y divide-line border-y border-line">
           {order.order_items.map((item) => (
-            <li key={item.id} className="flex items-center gap-3 py-3">
+            <li key={item.id} className="flex min-w-0 items-center gap-3 py-3">
               <div className="h-20 w-16 flex-none overflow-hidden bg-carton">
                 {item.product_image && (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -157,7 +157,7 @@ export default async function OrderView({
                 <p className="truncate text-[13.5px] font-semibold text-ink">{item.product_name}</p>
                 {item.size && <p className="text-[12.5px] text-muted">{t('size', { size: item.size })}</p>}
               </div>
-              <p className="text-[13.5px] font-semibold tabular-nums text-ink">
+              <p className="flex-none text-[13.5px] font-semibold tabular-nums text-ink">
                 {formatMxn(Number(item.total_price_mxn), locale)}
               </p>
             </li>

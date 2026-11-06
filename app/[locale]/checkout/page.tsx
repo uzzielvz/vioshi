@@ -950,9 +950,10 @@ export default function CheckoutPage() {
         {/* Resumen */}
         <aside className="mt-6 border-t border-line px-4 pt-4 md:sticky md:top-24 md:mt-0 md:rounded-btn md:border md:p-5">
           <h2 className={sectionLabelClass}>{tc('summary')}</h2>
+          {/* min-w-0: a long one-line name would otherwise widen the grid track and push prices out. */}
           <ul className="mt-3 grid gap-3">
             {cart.map((item) => (
-              <li key={item.id} className="flex items-center gap-3">
+              <li key={item.id} className="flex min-w-0 items-center gap-3">
                 <div className="relative h-16 w-12 flex-none overflow-hidden bg-carton">
                   <Image src={item.image} alt="" fill sizes="48px" className="object-cover mix-blend-multiply" />
                 </div>
@@ -960,7 +961,7 @@ export default function CheckoutPage() {
                   <p className="truncate text-[13px] font-semibold text-ink">{item.productName}</p>
                   {item.size && <p className="text-[12px] text-muted">{tc('size', { size: item.size })}</p>}
                 </div>
-                <p className="text-[13px] font-semibold tabular-nums text-ink">
+                <p className="flex-none text-[13px] font-semibold tabular-nums text-ink">
                   {money(item.price * item.quantity)}
                 </p>
               </li>

@@ -24,7 +24,8 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-paper pb-[max(6px,env(safe-area-inset-bottom))] md:hidden"
+      // Own compositing layer: keeps iOS from dragging the bar while it scrolls.
+      className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-paper pb-[max(6px,env(safe-area-inset-bottom))] [transform:translateZ(0)] md:hidden"
       aria-label={t("menu")}
     >
       <Link

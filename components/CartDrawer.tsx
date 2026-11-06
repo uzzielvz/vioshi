@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -13,6 +14,13 @@ export default function CartDrawer() {
   const t = useTranslations("ui.bag");
   const tNav = useTranslations("ui.nav");
   const { locale } = useLocaleContext();
+
+  useEffect(() => {
+    if (!isCartOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeCart();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isCartOpen, closeCart]);
 
   if (!isCartOpen) return null;
 
@@ -28,7 +36,12 @@ export default function CartDrawer() {
         className="fixed inset-0 z-40 bg-ink/40"
       />
 
-      <div className="fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-paper shadow-2xl animate-slide-in md:w-[420px]">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("title")}
+        className="fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-paper shadow-2xl animate-slide-in md:w-[420px]"
+      >
         <div className="flex h-14 flex-none items-center justify-between border-b border-line px-3.5">
           <h2 className="text-[20px] font-bold tracking-[-0.015em] text-ink">{t("title")}</h2>
           <div className="flex items-center gap-4">

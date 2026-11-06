@@ -14,6 +14,7 @@ import { buttonClass, screenTitleClass } from '@/components/ui/styles';
 import { useCatalogFilters } from '@/hooks/useCatalogFilters';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 import type { ProductData } from '@/lib/products';
+import { rememberSearch } from '@/lib/search/recent';
 
 function matchesQuery(p: ProductData, q: string) {
   return (
@@ -52,6 +53,7 @@ export default function SearchContent({ initialProducts }: { initialProducts: Pr
   function submitQuery(e: React.FormEvent) {
     e.preventDefault();
     const q = draft.trim();
+    if (q) rememberSearch(q);
     replaceParams((params) => {
       if (q) params.set('q', q);
       else params.delete('q');
@@ -80,11 +82,12 @@ export default function SearchContent({ initialProducts }: { initialProducts: Pr
         sizes={sizes}
         brands={brands}
         resultCount={products.length}
-        className="px-4 py-3 md:px-0"
+        variant="text"
+        className="-ml-1.5 gap-1 px-4 py-2 md:px-0"
       />
 
       <div className="flex min-h-[30px] items-center justify-between gap-3 px-4 pb-3 md:px-0">
-        <p className="text-[13px] font-semibold tabular-nums text-ink">{t('count', { count: products.length })}</p>
+        <p className="text-[12px] tabular-nums text-muted">{t('count', { count: products.length })}</p>
         <div className="flex items-center gap-4">
           {hasFilters && (
             <button type="button" onClick={() => updateFilters(DEFAULT_FILTERS)} className="text-[13px] font-semibold text-accent">

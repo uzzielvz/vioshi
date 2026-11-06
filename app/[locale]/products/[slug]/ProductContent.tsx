@@ -14,7 +14,8 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { rememberProduct } from "@/lib/search/recent";
 import ProductGrid from "@/components/ProductGrid";
 import FollowButton from "@/components/FollowButton";
-import { HeartIcon } from "@/components/ui/icons";
+import ConditionScale from "@/components/product/ConditionScale";
+import { CheckIcon, HeartIcon } from "@/components/ui/icons";
 import {
   CONDITION_LABELS,
   CONDITION_LABELS_EN,
@@ -212,7 +213,7 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
                 {product.brand.name}
               </Link>
               {product.brand.id && (
-                <FollowButton kind="brand" id={product.brand.id} name={product.brand.name} />
+                <FollowButton kind="brand" id={product.brand.id} name={product.brand.name} quiet />
               )}
             </div>
           )}
@@ -261,14 +262,24 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
               </button>
               <p className="text-[13px] leading-relaxed text-muted">{t("reserved_note")}</p>
             </div>
+          ) : inBag && !isAdding ? (
+            // Already in the bag: the button opens it instead of sitting disabled.
+            <button
+              type="button"
+              onClick={openCart}
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-btn border border-ink bg-paper text-[14px] font-semibold text-ink"
+            >
+              <CheckIcon className="h-4 w-4" />
+              {tUi("in_bag_open")}
+            </button>
           ) : (
             <button
               type="button"
               onClick={handleAddToCart}
-              disabled={isAdding || inBag}
+              disabled={isAdding}
               className="h-12 w-full rounded-btn bg-accent text-[14px] font-semibold text-paper hover:bg-accent-press disabled:opacity-80"
             >
-              {isAdding ? tUi("adding") : inBag ? tUi("in_bag") : tUi("add_to_bag")}
+              {isAdding ? tUi("adding") : tUi("add_to_bag")}
             </button>
           )}
 
@@ -276,17 +287,13 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
             type="button"
             aria-pressed={saved}
             onClick={() => toggle(product.id)}
-            className="inline-flex w-fit items-center gap-1.5 text-[13px] font-semibold text-ink"
+            className="-my-1.5 inline-flex w-fit items-center gap-1.5 py-1.5 text-[13px] font-semibold text-ink"
           >
             <HeartIcon
               className={clsx("h-4 w-4", saved ? "fill-accent text-accent" : "fill-none text-ink")}
             />
             {saved ? tUi("saved") : tUi("save")}
           </button>
-
-          {product.condition === "con_detalles" && product.defectNotes && (
-            <p className="text-[13px] leading-relaxed text-ink">{product.defectNotes}</p>
-          )}
 
           {product.store && (
             <div className="mt-1 flex items-center gap-3 border-y border-line py-3.5">
@@ -303,13 +310,18 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
                   </span>
                 </span>
               </Link>
-              <FollowButton kind="store" id={product.store.id} name={product.store.name} />
+              <FollowButton kind="store" id={product.store.id} name={product.store.name} quiet />
             </div>
           )}
 
+          {product.condition && (
+            <ConditionScale condition={product.condition} defectNotes={product.defectNotes} locale={locale} />
+          )}
+
           <div className={product.store ? "" : "mt-1 border-t border-line"}>
-            <Accordion title={tUi("measurements")} defaultOpen>
-              {measurementEntries.length > 0 && (
+            {/* Caps, bags and other «otro» pieces have no measurements to show. */}
+            {measurementEntries.length > 0 && (
+              <Accordion title={tUi("measurements")} defaultOpen>
                 <dl className="mb-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5">
                   {measurementEntries.map(([key, value]) => (
                     <Fragment key={key}>
@@ -318,13 +330,7 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
                     </Fragment>
                   ))}
                 </dl>
-              )}
-              <p className="text-[12px] text-muted">{t("measurement_note")}</p>
-            </Accordion>
-
-            {product.condition && (
-              <Accordion title={tUi("condition")}>
-                <p>{conditionLabels[product.condition]}</p>
+                <p className="text-[12px] text-muted">{t("measurement_note")}</p>
               </Accordion>
             )}
 
