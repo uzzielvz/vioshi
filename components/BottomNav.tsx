@@ -5,8 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
-import { useCart } from "@/store/cartStore";
-import { BagIcon, HomeIcon, SearchIcon, SellIcon, UserIcon } from "@/components/ui/icons";
+import { HeartIcon, HomeIcon, SearchIcon, SellIcon, UserIcon } from "@/components/ui/icons";
 import { OPEN_SEARCH_EVENT } from "@/components/Header";
 
 // App-style navigation for phones. Desktop uses the header instead.
@@ -14,7 +13,6 @@ export default function BottomNav() {
   const t = useTranslations("ui.nav");
   const { locale } = useLocaleContext();
   const pathname = usePathname();
-  const { itemCount, openCart, isCartOpen } = useCart();
   const path = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, "") || "/";
 
   const item = "grid justify-items-center gap-[3px] pt-2 text-[10px] font-medium text-muted";
@@ -49,20 +47,18 @@ export default function BottomNav() {
         <SellIcon className="h-[22px] w-[22px]" />
         {t("sell")}
       </Link>
-      <button type="button" onClick={openCart} className={clsx(item, isCartOpen && active)} aria-label={t("bag_count", { count: itemCount })}>
-        <span className="relative">
-          <BagIcon className="h-[22px] w-[22px]" />
-          {itemCount > 0 && (
-            <span className="absolute -right-2 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold text-paper">
-              {itemCount}
-            </span>
-          )}
-        </span>
-        {t("bag")}
-      </button>
+      {/* No bag: pieces are bought one by one, so saving is what this slot is for. */}
+      <Link
+        href={`/${locale}/wishlist`}
+        className={clsx(item, path.startsWith("/wishlist") && active)}
+        aria-current={path.startsWith("/wishlist") ? "page" : undefined}
+      >
+        <HeartIcon className="h-[22px] w-[22px]" />
+        {t("saved")}
+      </Link>
       <Link
         href={`/${locale}/account`}
-        className={clsx(item, (path.startsWith("/account") || path.startsWith("/wishlist")) && active)}
+        className={clsx(item, path.startsWith("/account") && active)}
       >
         <UserIcon className="h-[22px] w-[22px]" />
         {t("account")}

@@ -28,6 +28,8 @@ import {
   syncCartFromDbAction,
 } from './actions';
 import { logCheckoutDebug } from '@/lib/stripe/formatPaymentError';
+import { generateId } from '@/lib/utils';
+import MoreFromStore from '@/components/checkout/MoreFromStore';
 import { CardIcon, ChevronIcon, LockIcon } from '@/components/ui/icons';
 import {
   buttonClass,
@@ -219,7 +221,7 @@ export default function CheckoutPage() {
   const t = useTranslations('checkout');
   const tc = useTranslations('ui.checkout');
   const { locale } = useLocaleContext();
-  const { cart: cartData, closeCart, updateShippingCost, replaceItems, isReady } = useCart();
+  const { cart: cartData, addItem, removeItem, updateShippingCost, replaceItems, isReady } = useCart();
   const cart = cartData.items;
   const subtotal = cartData.subtotal;
   const shipping = cartData.shipping;
@@ -367,8 +369,9 @@ export default function CheckoutPage() {
     ) {
       return;
     }
+    // Nothing left to pay (the last piece was taken out): back to the shop.
     if (cart.length === 0 && !isSubmittingRef.current) {
-      router.push(`/${locale}/cart`);
+      router.replace(`/${locale}`);
     }
   }, [cart, router, locale, paymentStepActive, isReady]);
 
@@ -569,8 +572,9 @@ export default function CheckoutPage() {
           <button
             type="button"
             onClick={() => {
-              closeCart();
-              router.push(`/${locale}/cart`);
+              // Back to the piece (or wherever «Comprar» was tapped).
+              if (window.history.length > 1) router.back();
+              else router.push(`/${locale}`);
             }}
             className="inline-flex items-center gap-1 justify-self-start text-[13px] font-medium text-ink"
             aria-label={tc('back')}
@@ -616,6 +620,54 @@ export default function CheckoutPage() {
             </section>
           ) : (
             <form id="checkout-form" onSubmit={handleSubmit} className="grid gap-2">
+              {/* Tu compra: what is being paid, with «Quitar», and more of the
+                  same store. Pieces only change before «Continuar al pago»,
+                  which is when they get reserved. */}
+              <section className="grid gap-4 pt-4">
+                <div className="grid gap-3 md:hidden">
+                  <h2 className={sectionLabelClass}>{tc('your_purchase')}</h2>
+                  <ul className="grid gap-3">
+                    {cart.map((item) => (
+                      <li key={item.id} className="flex min-w-0 items-center gap-3">
+                        <div className="relative h-16 w-12 flex-none overflow-hidden bg-carton">
+                          <Image src={item.image} alt="" fill sizes="48px" className="object-cover mix-blend-multiply" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[13px] font-semibold text-ink">{item.productName}</p>
+                          {item.size && <p className="text-[12px] text-muted">{tc('size', { size: item.size })}</p>}
+                        </div>
+                        <div className="grid flex-none justify-items-end gap-0.5">
+                          <p className="text-[13px] font-semibold tabular-nums text-ink">{money(item.price * item.quantity)}</p>
+                          <button
+                            type="button"
+                            onClick={() => removeItem(item.id)}
+                            className="text-[12px] text-muted underline decoration-line underline-offset-2 hover:text-ink"
+                          >
+                            {tc('remove')}
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <MoreFromStore
+                  productIds={cart.map((item) => item.productId)}
+                  onAdd={(piece) =>
+                    addItem({
+                      id: generateId(),
+                      productId: piece.id,
+                      productName: piece.name,
+                      quantity: 1,
+                      price: piece.price,
+                      image: piece.image,
+                      slug: piece.slug,
+                      size: piece.size ?? undefined,
+                      storeId: piece.storeId,
+                    })
+                  }
+                />
+              </section>
+
               {/* Entrega */}
               <section className="grid gap-2">
                 <h2 className={clsx(sectionLabelClass, 'pb-1 pt-4')}>{tc('delivery')}</h2>
@@ -951,7 +1003,8 @@ export default function CheckoutPage() {
         <aside className="mt-6 border-t border-line px-4 pt-4 md:sticky md:top-24 md:mt-0 md:rounded-btn md:border md:p-5">
           <h2 className={sectionLabelClass}>{tc('summary')}</h2>
           {/* min-w-0: a long one-line name would otherwise widen the grid track and push prices out. */}
-          <ul className="mt-3 grid gap-3">
+          {/* On phones the pieces are listed at the top of the form instead. */}
+          <ul className="mt-3 hidden gap-3 md:grid">
             {cart.map((item) => (
               <li key={item.id} className="flex min-w-0 items-center gap-3">
                 <div className="relative h-16 w-12 flex-none overflow-hidden bg-carton">
@@ -961,9 +1014,18 @@ export default function CheckoutPage() {
                   <p className="truncate text-[13px] font-semibold text-ink">{item.productName}</p>
                   {item.size && <p className="text-[12px] text-muted">{tc('size', { size: item.size })}</p>}
                 </div>
-                <p className="flex-none text-[13px] font-semibold tabular-nums text-ink">
-                  {money(item.price * item.quantity)}
-                </p>
+                <div className="grid flex-none justify-items-end gap-0.5">
+                  <p className="text-[13px] font-semibold tabular-nums text-ink">{money(item.price * item.quantity)}</p>
+                  {!clientSecret && (
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.id)}
+                      className="text-[12px] text-muted underline decoration-line underline-offset-2 hover:text-ink"
+                    >
+                      {tc('remove')}
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

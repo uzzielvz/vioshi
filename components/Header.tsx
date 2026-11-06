@@ -6,10 +6,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
-import { useCart } from "@/store/cartStore";
 import { STORE_CATEGORIES } from "@/lib/categories";
 import Wordmark from "@/components/ui/Wordmark";
-import { BagIcon, CameraIcon, CloseIcon, MenuIcon, SearchIcon } from "@/components/ui/icons";
+import { CameraIcon, CloseIcon, HeartIcon, MenuIcon, SearchIcon } from "@/components/ui/icons";
 import SearchSheet from "@/components/search/SearchSheet";
 import CameraSheet from "@/components/search/CameraSheet";
 import { rememberSearch } from "@/lib/search/recent";
@@ -33,7 +32,6 @@ export default function Header({ userEmail = null }: HeaderProps) {
   const t = useTranslations("ui.nav");
   const tCats = useTranslations("ui.cats");
   const { locale } = useLocaleContext();
-  const { itemCount, openCart } = useCart();
 
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -194,19 +192,10 @@ export default function Header({ userEmail = null }: HeaderProps) {
             <CameraIcon className="h-[22px] w-[22px]" />
           </button>
 
-          <button
-            type="button"
-            onClick={openCart}
-            className="relative hidden md:block"
-            aria-label={t("bag_count", { count: itemCount })}
-          >
-            <BagIcon className="h-[22px] w-[22px]" />
-            {itemCount > 0 && (
-              <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold text-paper">
-                {itemCount}
-              </span>
-            )}
-          </button>
+          {/* No bag (pieces are bought one by one): the corner goes to saved pieces. */}
+          <Link href={`/${locale}/wishlist`} className="hidden md:block" aria-label={t("saved")} title={t("saved")}>
+            <HeartIcon className="h-[22px] w-[22px]" />
+          </Link>
 
           <button
             type="button"

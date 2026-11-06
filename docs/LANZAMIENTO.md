@@ -136,7 +136,6 @@ chamarra Nike SB) están **publicadas como demo** desde el 2026-10-30:
 - Feed «Para ti», Actividad, mensajes y ofertas.
 - Botón para que la tienda cambie su portada desde el panel, y los pasos 2–3
   de vender (cobros y revisión).
-- Decidir la bolsa: por tienda más «Comprar» directo, o quitarla.
 - App en tiendas con Capacitor, cuando exista la empresa.
 - Admin con la nueva estética (PR #15).
 - Empresa y fiscal (ver `docs/archive` y la guía fiscal del humano). Es

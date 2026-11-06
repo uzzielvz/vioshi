@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import Header from "./Header";
 import Footer from "./Footer";
-import CartDrawer from "./CartDrawer";
 import BottomNav from "./BottomNav";
 import InstallPrompt from "./InstallPrompt";
 
@@ -53,7 +52,6 @@ export function ClientLayout({
       {!isStandalone && <Footer />}
       {!isStandalone && <BottomNav />}
       {!isStandalone && <InstallPrompt />}
-      <CartDrawer />
     </div>
   );
 }

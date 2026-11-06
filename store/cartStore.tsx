@@ -17,9 +17,6 @@ interface CartContextType {
   /** True once the saved cart was read from localStorage. Child effects run
    * before this provider's, so anything that acts on an empty cart waits for it. */
   isReady: boolean;
-  isCartOpen: boolean;
-  openCart: () => void;
-  closeCart: () => void;
 }
 
 export const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -46,7 +43,6 @@ function calculateTotals(items: CartItem[], prevShipping: number = STANDARD_SHIP
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<Cart>(initialCart);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -129,9 +125,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart(initialCart);
   }, []);
 
-  const openCart = useCallback(() => setIsCartOpen(true), []);
-  const closeCart = useCallback(() => setIsCartOpen(false), []);
-
   const itemCount = cart.items.reduce((count, item) => count + item.quantity, 0);
 
   return (
@@ -146,9 +139,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         itemCount,
         isReady: isInitialized,
-        isCartOpen,
-        openCart,
-        closeCart,
       }}
     >
       {children}

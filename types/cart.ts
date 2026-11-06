@@ -22,5 +22,7 @@ export type CartItem = {
   size?: string;
   image: string;
   slug?: string;
+  /** The store the piece belongs to; one checkout is one store. */
+  storeId?: string;
 };
 
