@@ -12,7 +12,7 @@
     "stripe:check-pi": "node scripts/stripe-check-pi.mjs",
     "test:stock": "node scripts/test-stock.mjs",
     "test:checkout": "node scripts/test-checkout-flow.mjs",
-    "test:rules": "node --import tsx --test scripts/test-payment-rules.ts"
+    "test:rules": "node --import tsx --test scripts/test-payment-rules.ts scripts/test-order-email.ts"
   },
   "dependencies": {
     "@google/genai": "^2.18.0",

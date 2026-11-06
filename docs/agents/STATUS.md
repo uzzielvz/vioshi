@@ -54,6 +54,26 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 | K social 1 + cierre de inserts | — | **MERGEADO** (#18) · migraciones `0024` y `0025` aplicadas en prod el 2026-10-23 |
 | L cobros (Etapa 1) + app instalable | — | **MERGEADO** (#20) · sin migraciones · checklist en `docs/LANZAMIENTO.md` |
 | M perfil único (persona = tienda) | — | **MERGEADO** (#21) · `0026` aplicada en prod el 2026-10-30 · 12 piezas demo publicadas |
+| N estado de 4 pasos, Buscar arriba, auditoría | — | **MERGEADO** (#23) · `0027` por aplicar |
+| O correo de compra + reembolsos + borradores legales | — | **EN RAMA** `claude/gifted-fermi-ku1xl3` · sin migraciones |
+
+**Paquete O, en rama (2026-11-06).**
+
+- **Correo «Tu pedido está pagado»:**
+  - `lib/email/orderPaid.ts` arma el correo como función pura y `lib/email/sendOrderPaid.ts` lo manda por la API de Resend.
+  - Lleva un link al pedido que funciona sin cuenta (con el `guest_token`).
+  - El webhook lo manda solo en la transición a pagado y no si hay conflicto de stock. Usa una llave de idempotencia de Resend, y si el correo falla, Stripe no reintenta.
+  - Apagado hasta que existan `RESEND_API_KEY` y `BRAND_EMAIL_FROM`, porque necesita el dominio.
+- **Reembolsos:**
+  - `charge.refunded` total pasa el pedido de `completed` a `refunded`; uno parcial solo se registra.
+  - La pieza no vuelve sola al catálogo.
+  - Hay que agregar el evento al webhook en vivo (LANZAMIENTO § 2).
+- **Borradores** de Devoluciones, Quién vende y Aviso de privacidad en `docs/BORRADORES-LEGALES.md`, para que el humano los apruebe.
+- **Verificado:**
+  - `npm run test:rules`: 12 pruebas (6 de cobros y 6 del correo).
+  - Webhook con eventos firmados contra una base simulada: pago, reenvío sin segundo correo, reembolso parcial sin cambios y reembolso total.
+  - Captura del correo a 390 px.
+  - type-check, lint y build.
 
 **Paquete I, mergeado en #16.** Tarjeta de la feed, `useWishlist`, grid, `CategoryTabs`, inicio y colecciones, ficha, bolsa sin cantidades, portada collage en `/tienda/[slug]`, búsqueda por marca; borrados `/archive`, `/pages/chapters` y Unsplash.
 
