@@ -137,8 +137,6 @@
       "home": "Home",
       "search": "Search",
       "sell": "Sell",
-      "bag": "Bag",
-      "bag_count": "Bag, {count, plural, one {# piece} other {# pieces}}",
       "account": "Account",
       "login": "Log in",
       "menu": "Menu",
@@ -179,8 +177,6 @@
       "empty": "No pieces right now."
     },
     "product": {
-      "add_to_bag": "Add to bag",
-      "adding": "Adding…",
       "size": "Size {size}",
       "measurements": "Measurements",
       "condition": "Condition",
@@ -205,19 +201,7 @@
       "condition_desc_impecable": "Worn, but like new: no marks, stains or wear.",
       "condition_desc_buen_estado": "Normal use with light wear. No stains or tears.",
       "condition_desc_con_detalles": "Has something you should see before buying: we describe it and it shows in the photos.",
-      "in_bag_open": "In your bag · View bag"
-    },
-    "bag": {
-      "title": "Bag",
-      "count": "{count, plural, one {# piece} other {# pieces}}",
-      "empty": "Your bag is empty.",
-      "empty_cta": "See what's new",
-      "remove": "Remove",
-      "subtotal": "Subtotal",
-      "delivery_note": "You choose delivery at checkout.",
-      "unique_note": "Every piece is one of a kind. We hold it for you once you start paying, not before.",
-      "checkout": "Checkout · {total}",
-      "size": "Size {size}"
+      "buy": "Buy"
     },
     "footer": {
       "sell": "Sell",
@@ -380,7 +364,7 @@
       "title_expired": "Time to pay ran out",
       "body_expired": "Nothing was charged and the pieces are available again.",
       "title_failed": "We couldn't charge your payment",
-      "body_failed": "Nothing was charged. You can try again from your bag.",
+      "body_failed": "Nothing was charged. You can try again from the piece.",
       "title_cancelled": "This order was cancelled",
       "body_cancelled": "If you have questions, write to us.",
       "title_refunded": "This order was refunded",
@@ -421,7 +405,7 @@
     },
     "checkout": {
       "title": "Checkout",
-      "back": "Back to bag",
+      "back": "Back",
       "secure": "Secure payment",
       "delivery": "Delivery",
       "pickup": "Pick up at a point",
@@ -474,7 +458,14 @@
       "time_minutes": "{count, plural, one {# minute} other {# minutes}}",
       "time_hours": "{count, plural, one {# hour} other {# hours}}",
       "time_days": "{count, plural, one {# day} other {# days}}",
-      "time_moments": "a few moments"
+      "time_moments": "a few moments",
+      "your_purchase": "Your purchase",
+      "remove": "Remove",
+      "more_title": "Add more from {store}",
+      "more_note": "Same delivery",
+      "more_add": "Add",
+      "more_add_aria": "Add {name}",
+      "more_saved": "Saved"
     },
     "search": {
       "title": "Search",

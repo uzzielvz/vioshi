@@ -50,6 +50,8 @@ bloquea el lanzamiento. Actualizado el 2026-10-29.
   - `checkout.session.expired`
   - `payment_intent.payment_failed` (solo se registra; ya no libera)
   - `customer_cash_balance_transaction.created`
+  - `charge.refunded`: un reembolso total desde Stripe marca el pedido como
+    reembolsado. La pieza no vuelve sola a la tienda.
 - [ ] OXXO y transferencia bancaria (SPEI) activados en el panel de Stripe.
 
 ### 2b. Migración `0026` (foto y portada) — humano
@@ -120,16 +122,20 @@ chamarra Nike SB) están **publicadas como demo** desde el 2026-10-30:
 
 ## Muy recomendable antes de abrir
 
-- **Correo de confirmación de compra (Resend).** Una persona que compra sin
-  cuenta solo ve su pedido en la página de confirmación. Si la cierra, no tiene
-  cómo volver a verlo.
+- [ ] **Encender el correo de confirmación de compra.** El código ya está
+  (`lib/email/`): al quedar pagado, el pedido manda «Tu pedido está pagado»
+  con un link que funciona sin cuenta. Se enciende solo con dos variables en
+  Vercel, cuando exista el dominio verificado en Resend:
+  - `RESEND_API_KEY`
+  - `BRAND_EMAIL_FROM`, por ejemplo `rail <pedidos@<dominio>>`
+- [ ] **Devoluciones y Legal.** Borradores para aprobar en
+  `docs/BORRADORES-LEGALES.md`.
 
 ## Después del lanzamiento (no bloquea)
 
 - Feed «Para ti», Actividad, mensajes y ofertas.
 - Botón para que la tienda cambie su portada desde el panel, y los pasos 2–3
   de vender (cobros y revisión).
-- Decidir la bolsa: por tienda más «Comprar» directo, o quitarla.
 - App en tiendas con Capacitor, cuando exista la empresa.
 - Admin con la nueva estética (PR #15).
 - Empresa y fiscal (ver `docs/archive` y la guía fiscal del humano). Es

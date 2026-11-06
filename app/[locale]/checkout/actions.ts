@@ -13,6 +13,7 @@ import { getSettings, isCardOnly, DEFERRED_PAYMENT_METHODS } from '@/lib/setting
 import { normalizePhone } from '@/lib/phone';
 import { EXPRESS_SHIPPING_COST } from '@/lib/constants';
 import { mapPickupPointRow, type PickupPointRow } from '@/lib/pickup';
+import { getProducts } from '@/lib/products';
 import type { CartItem } from '@/types';
 import type { PickupPoint } from '@/types/delivery';
 import type Stripe from 'stripe';
@@ -90,6 +91,55 @@ export async function syncCartFromDbAction(
   }
 
   return { items: reconciled.items };
+}
+
+export interface MorePiece {
+  id: string;
+  slug: string;
+  name: string;
+  brand: string | null;
+  size: string | null;
+  price: number;
+  image: string;
+  storeId: string;
+}
+
+/**
+ * «Agrega más de Viogi»: otras piezas disponibles de la misma tienda que las
+ * del pedido (mismo envío). Las apartadas o vendidas no salen. Lee el catálogo
+ * en caché, como la tienda.
+ */
+export async function getMorePiecesAction(
+  productIds: string[]
+): Promise<{ store: { name: string; slug: string }; pieces: MorePiece[] } | null> {
+  const ids = productIds.filter((id) => typeof id === 'string').slice(0, 30);
+  if (ids.length === 0) return null;
+
+  const products = await getProducts();
+  const store = products.find((p) => ids.includes(p.id))?.store;
+  if (!store?.id) return null;
+
+  const pieces = products
+    .filter(
+      (p) =>
+        p.store?.id === store.id &&
+        !ids.includes(p.id) &&
+        (p.availability ?? 'disponible') === 'disponible' &&
+        Boolean(p.image)
+    )
+    .slice(0, 24)
+    .map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      brand: p.brand?.name ?? null,
+      size: p.size ?? null,
+      price: p.price,
+      image: p.image,
+      storeId: store.id,
+    }));
+
+  return { store: { name: store.name, slug: store.slug }, pieces };
 }
 
 /** Umbral y ventanas, para que el checkout muestre el aviso correcto. */

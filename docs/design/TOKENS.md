@@ -80,7 +80,12 @@ Contraste: blanco sobre `accent` 7.4:1; `muted` sobre blanco 5.4:1. No se usa ve
   («Editar perfil» o «Seguir»); «Se unió en…», bio, marcas en mayúsculas, pestañas en píldora,
   filtros y la misma feed de tarjetas (no la cuadrícula de Instagram).
 - **Mi tienda:** la misma portada con el botón «Cambiar portada».
-- **Barra inferior:** Inicio · Siguiendo · Vender · Bolsa · Perfil.
+- **Barra inferior:** Inicio · Buscar · Vender · Guardados · Cuenta.
+- **Sin bolsa** (decisión del humano, 2026-11-06):
+  - La ficha dice «Comprar» y lleva directo a pagar.
+  - Al pagar, «Agrega más de {tienda} · mismo envío» ofrece otras piezas de la
+    misma tienda, con las guardadas primero.
+  - Un pedido es de una sola tienda.
 - **Avisos:** filas de texto simple. Sin cuadritos ni filetes de color a la izquierda.
 - **Mensajes:** burbujas; las mías en `ink` con texto blanco, las de la otra persona en `carton`.
   La pieza va fija arriba con «Comprar». La oferta es una tarjeta dentro del chat.

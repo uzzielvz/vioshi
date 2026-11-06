@@ -4,6 +4,7 @@ import type Stripe from 'stripe';
 import { getStripe } from '@/lib/stripe';
 import { paymentKindFrom, type PaymentKind } from '@/lib/stripe/paymentKind';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { sendOrderPaidEmail } from '@/lib/email/sendOrderPaid';
 
 // Stripe manda el cuerpo crudo para verificar la firma — Next NO debe parsearlo.
 export const runtime = 'nodejs';
@@ -25,6 +26,9 @@ type Supabase = ReturnType<typeof createAdminClient>;
  *                                                 se puede reintentar; si nadie
  *                                                 paga, `expired` libera
  *   customer_cash_balance_transaction.created   → detectar dinero atrapado
+ *   charge.refunded (total)                     → pedido «reembolsado»; la
+ *                                                 pieza NO vuelve sola a la
+ *                                                 tienda: la decide el admin
  *
  * NUNCA se marca vendida desde el navegador: el usuario puede cerrar la
  * pestaña, y con OXXO/SPEI el pago se confirma horas después.
@@ -108,6 +112,12 @@ export async function POST(req: NextRequest) {
       // 90 lo barre a nuestro balance. Hay que verlo y devolverlo a mano.
       case 'customer_cash_balance_transaction.created': {
         await registrarFondosHuerfanos(supabase, event);
+        break;
+      }
+
+      // Reembolso hecho desde el panel de Stripe.
+      case 'charge.refunded': {
+        await marcarReembolsado(supabase, event.data.object as Stripe.Charge);
         break;
       }
 
@@ -207,12 +217,66 @@ async function venderPedido(
   }
 
   // Un reenvío no regresa a «processing» un pedido que el admin ya avanzó.
-  const { error: upErr } = await supabase
+  const { data: updated, error: upErr } = await supabase
     .from('orders')
     .update(patch)
     .eq('id', orderId)
-    .neq('payment_status', 'completed');
+    .neq('payment_status', 'completed')
+    .select('id');
   if (upErr) throw new Error(`orders update: ${upErr.message}`);
+
+  // Solo en la transición a pagado, y no si falta la prenda: ese pedido lo
+  // resuelve el admin. Un fallo del correo no debe hacer que Stripe reintente.
+  if ((updated ?? []).length > 0 && conflictos.length === 0) {
+    try {
+      const result = await sendOrderPaidEmail(supabase, orderId);
+      if (!result.sent && result.reason !== 'not_configured') {
+        console.error(`[webhook] correo de pedido ${orderId} no salió:`, result.reason);
+      }
+    } catch (err) {
+      console.error(`[webhook] correo de pedido ${orderId} falló:`, err);
+    }
+  }
+}
+
+/**
+ * Reembolso total: el pedido pasa a «refunded». Uno parcial solo se registra.
+ * La pieza no regresa sola al catálogo (puede seguir con quien la compró).
+ */
+async function marcarReembolsado(supabase: Supabase, charge: Stripe.Charge): Promise<void> {
+  const intentId = typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
+  if (!intentId) return;
+
+  if (!charge.refunded) {
+    console.warn(
+      `[webhook] reembolso parcial de $${(charge.amount_refunded ?? 0) / 100} en ${intentId}; el pedido no cambia.`
+    );
+    return;
+  }
+
+  // payment_reference se guarda al pagar; si faltara, la metadata del intent trae el pedido.
+  const { data: byRef, error: refErr } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('payment_reference', intentId)
+    .maybeSingle();
+  if (refErr) throw new Error(`orders select: ${refErr.message}`);
+  let orderId: string | null = byRef?.id ?? null;
+  if (!orderId) {
+    const intent = await getStripe().paymentIntents.retrieve(intentId);
+    orderId = intent.metadata?.order_id ?? null;
+  }
+  if (!orderId) {
+    console.error('[webhook] reembolso sin pedido:', intentId);
+    return;
+  }
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ payment_status: 'refunded' })
+    .eq('id', orderId)
+    .eq('payment_status', 'completed');
+  if (error) throw new Error(`orders update: ${error.message}`);
 }
 
 /**

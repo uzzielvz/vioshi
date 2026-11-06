@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import clsx from "clsx";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ProductData as Product } from "@/lib/products";
 import { useCart } from "@/store/cartStore";
@@ -15,7 +16,7 @@ import { rememberProduct } from "@/lib/search/recent";
 import ProductGrid from "@/components/ProductGrid";
 import FollowButton from "@/components/FollowButton";
 import ConditionScale from "@/components/product/ConditionScale";
-import { CheckIcon, HeartIcon } from "@/components/ui/icons";
+import { HeartIcon } from "@/components/ui/icons";
 import {
   CONDITION_LABELS,
   CONDITION_LABELS_EN,
@@ -68,18 +69,11 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
   const tUi = useTranslations("ui.product");
   const tSocial = useTranslations("ui.social");
   const { locale } = useLocaleContext();
-  const [isAdding, setIsAdding] = useState(false);
+  const router = useRouter();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { addItem, openCart, cart } = useCart();
+  const { replaceItems, cart } = useCart();
   const { has, toggle } = useWishlist();
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saved = has(product.id);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
 
   // «Vistos hace poco» on the search screen.
   useEffect(() => {
@@ -103,25 +97,29 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
     .map((key) => [key, product.measurements?.[key]] as const)
     .filter((entry): entry is readonly [MeasurementKey, number] => typeof entry[1] === "number");
 
-  const handleAddToCart = () => {
-    if (inBag) return;
-    setIsAdding(true);
-    addItem({
-      id: generateId(),
-      productId: product.id,
-      productName: product.name,
-      quantity: 1,
-      price: product.price,
-      image: product.image,
-      slug: product.slug,
-      size: product.size,
-    });
-
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      setIsAdding(false);
-      openCart();
-    }, 500);
+  // No bag: «Comprar» goes straight to paying, where more pieces of the same
+  // store can be added. An order is one store, so pieces from another store
+  // that were left in the draft drop out.
+  const handleBuy = () => {
+    if (!inBag) {
+      const storeId = product.store?.id;
+      const sameStore = cart.items.filter((item) => !storeId || !item.storeId || item.storeId === storeId);
+      replaceItems([
+        {
+          id: generateId(),
+          productId: product.id,
+          productName: product.name,
+          quantity: 1,
+          price: product.price,
+          image: product.image,
+          slug: product.slug,
+          size: product.size,
+          storeId,
+        },
+        ...sameStore,
+      ]);
+    }
+    router.push(`/${locale}/checkout`);
   };
 
   const initial = product.store?.name.trim().charAt(0).toUpperCase() || "";
@@ -262,24 +260,13 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
               </button>
               <p className="text-[13px] leading-relaxed text-muted">{t("reserved_note")}</p>
             </div>
-          ) : inBag && !isAdding ? (
-            // Already in the bag: the button opens it instead of sitting disabled.
-            <button
-              type="button"
-              onClick={openCart}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-btn border border-ink bg-paper text-[14px] font-semibold text-ink"
-            >
-              <CheckIcon className="h-4 w-4" />
-              {tUi("in_bag_open")}
-            </button>
           ) : (
             <button
               type="button"
-              onClick={handleAddToCart}
-              disabled={isAdding}
-              className="h-12 w-full rounded-btn bg-accent text-[14px] font-semibold text-paper hover:bg-accent-press disabled:opacity-80"
+              onClick={handleBuy}
+              className="h-12 w-full rounded-btn bg-accent text-[14px] font-semibold text-paper hover:bg-accent-press"
             >
-              {isAdding ? tUi("adding") : tUi("add_to_bag")}
+              {tUi("buy")}
             </button>
           )}
 

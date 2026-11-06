@@ -137,8 +137,6 @@
       "home": "Inicio",
       "search": "Buscar",
       "sell": "Vender",
-      "bag": "Bolsa",
-      "bag_count": "Bolsa, {count, plural, one {# pieza} other {# piezas}}",
       "account": "Cuenta",
       "login": "Entrar",
       "menu": "Menú",
@@ -179,8 +177,6 @@
       "empty": "No hay piezas por ahora."
     },
     "product": {
-      "add_to_bag": "Agregar a la bolsa",
-      "adding": "Agregando…",
       "size": "Talla {size}",
       "measurements": "Medidas",
       "condition": "Estado de la prenda",
@@ -205,19 +201,7 @@
       "condition_desc_impecable": "Usada, pero al 100: sin marcas, manchas ni desgaste.",
       "condition_desc_buen_estado": "Uso normal con desgaste leve. Sin manchas ni roturas.",
       "condition_desc_con_detalles": "Tiene algo que debes ver antes de comprar: lo describimos y sale en las fotos.",
-      "in_bag_open": "En tu bolsa · Ver bolsa"
-    },
-    "bag": {
-      "title": "Bolsa",
-      "count": "{count, plural, one {# pieza} other {# piezas}}",
-      "empty": "Tu bolsa está vacía.",
-      "empty_cta": "Ver lo nuevo",
-      "remove": "Quitar",
-      "subtotal": "Subtotal",
-      "delivery_note": "La entrega se elige al pagar.",
-      "unique_note": "Cada pieza es única. Te la apartamos cuando empiezas a pagar, no antes.",
-      "checkout": "Ir a pagar · {total}",
-      "size": "Talla {size}"
+      "buy": "Comprar"
     },
     "footer": {
       "sell": "Vender",
@@ -380,7 +364,7 @@
       "title_expired": "Se acabó el tiempo para pagar",
       "body_expired": "No se hizo ningún cargo y las piezas volvieron a estar disponibles.",
       "title_failed": "No se pudo cobrar tu pago",
-      "body_failed": "No se hizo ningún cargo. Puedes intentarlo de nuevo desde la bolsa.",
+      "body_failed": "No se hizo ningún cargo. Puedes intentarlo de nuevo desde la pieza.",
       "title_cancelled": "Este pedido se canceló",
       "body_cancelled": "Si tienes dudas, escríbenos.",
       "title_refunded": "Este pedido se reembolsó",
@@ -421,7 +405,7 @@
     },
     "checkout": {
       "title": "Pagar",
-      "back": "Volver a la bolsa",
+      "back": "Volver",
       "secure": "Pago seguro",
       "delivery": "Entrega",
       "pickup": "Recoger en un punto",
@@ -474,7 +458,14 @@
       "time_minutes": "{count, plural, one {# minuto} other {# minutos}}",
       "time_hours": "{count, plural, one {# hora} other {# horas}}",
       "time_days": "{count, plural, one {# día} other {# días}}",
-      "time_moments": "unos momentos"
+      "time_moments": "unos momentos",
+      "your_purchase": "Tu compra",
+      "remove": "Quitar",
+      "more_title": "Agrega más de {store}",
+      "more_note": "Mismo envío",
+      "more_add": "Agregar",
+      "more_add_aria": "Agregar {name}",
+      "more_saved": "Guardada"
     },
     "search": {
       "title": "Buscar",
