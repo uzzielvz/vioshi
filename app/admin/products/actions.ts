@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { getAdminActor } from '@/lib/admin/session'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateProductEmbedding } from '@/lib/embeddings'
+import { asMoney, nextOriginalPrice } from '@/lib/pricing'
 import {
   generateSku,
   isCondition,
@@ -338,7 +339,7 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
 
   const { data: current } = await supabase
     .from('products')
-    .select('slug, sku')
+    .select('slug, sku, price_mxn, original_price_mxn')
     .eq('id', id)
     .maybeSingle()
 
@@ -353,6 +354,11 @@ export async function updateProduct(_prev: ActionState, formData: FormData): Pro
     .update({
       name,
       price_mxn: price.price_mxn,
+      original_price_mxn: nextOriginalPrice(
+        asMoney(current?.price_mxn),
+        asMoney(current?.original_price_mxn),
+        price.price_mxn,
+      ),
       category_id,
       brand_id: brand.brand_id,
       sku,

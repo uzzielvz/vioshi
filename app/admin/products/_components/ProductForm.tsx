@@ -236,6 +236,14 @@ export default function ProductForm({
               min="0"
               step="0.01"
             />
+            <p className="text-gray-400 mt-1" style={{ ...font, fontSize: '10px' }}>
+              Si lo bajas, la tienda tacha el precio de ahora y muestra el nuevo en rojo.
+              {product?.original_price_mxn != null &&
+              product.price_mxn != null &&
+              Number(product.original_price_mxn) > Number(product.price_mxn)
+                ? ` Hoy se ve tachado: $${product.original_price_mxn}.`
+                : ''}
+            </p>
           </div>
           <div>
             <FieldLabel>Costo de adquisición</FieldLabel>
