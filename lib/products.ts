@@ -8,6 +8,7 @@ import {
   type GarmentType,
   type MeasurementKey,
 } from '@/lib/garments'
+import { compareAtPrice } from '@/lib/pricing'
 
 /**
  * ⚠️ Estas consultas son PÚBLICAS. Nunca agregues `owner`, `cost_mxn`,
@@ -86,6 +87,10 @@ export interface ProductData {
   availability?: 'disponible' | 'apartada' | 'vendida';
   /** Cuándo se libera la reserva, si está apartada. */
   reservedUntil?: string;
+  /** Precio anterior, solo si sigue siendo mayor que el actual. */
+  compareAt?: number;
+  /** Primera publicación (0028). Ausente si la columna aún no existe. */
+  publishedAt?: string;
   attributes?: { key: string; value: string }[];
 }
 
@@ -94,7 +99,9 @@ type DbProduct = {
   slug: string;
   name: string;
   description: string | null;
-  price_mxn: string;
+  price_mxn: string | number;
+  original_price_mxn: string | number | null;
+  published_at?: string | null;
   sold_out: boolean;
   is_new: boolean;
   brand_id: string | null;
@@ -121,7 +128,7 @@ type DbProduct = {
  * `stores` solo expone slug y name: `stripe_account_id` es interno (0016).
  */
 const PUBLIC_PRODUCT_SELECT = `
-  id, slug, name, description, price_mxn, sold_out, is_new, brand_id,
+  id, slug, name, description, price_mxn, original_price_mxn, sold_out, is_new, brand_id,
   garment_type, chest_cm, length_cm, sleeve_cm, waist_cm, rise_cm, inseam_cm,
   condition, defect_notes, reserved_until, store_id,
   product_images (url, is_primary, sort_order),
@@ -130,6 +137,13 @@ const PUBLIC_PRODUCT_SELECT = `
   brands (id, name, slug, logo_url),
   stores (slug, name)
 ` as const
+
+/** 0028. Si la columna no existe, el catálogo se lee sin ella. */
+const PUBLIC_PRODUCT_SELECT_DATED = `${PUBLIC_PRODUCT_SELECT}, published_at` as const
+
+function missingPublishedAt(error: { message?: string } | null): boolean {
+  return Boolean(error?.message?.includes('published_at'))
+}
 
 // Public client — no cookies needed for catalog reads (anon key, public data)
 function getSupabase() {
@@ -174,10 +188,12 @@ function rowToProductData(row: DbProduct): ProductData {
       ? 'apartada'
       : 'disponible'
 
+  const price = typeof row.price_mxn === 'number' ? row.price_mxn : parseFloat(row.price_mxn)
+
   return {
     id:          row.id,
     name:        row.name,
-    price:       parseFloat(row.price_mxn),
+    price,
     image,
     images:      images.length > 1 ? images : undefined,
     slug:        row.slug,
@@ -203,6 +219,8 @@ function rowToProductData(row: DbProduct): ProductData {
       : undefined,
     availability,
     reservedUntil: reservaViva ? (row.reserved_until ?? undefined) : undefined,
+    compareAt: compareAtPrice(price, row.original_price_mxn),
+    publishedAt: row.published_at ?? undefined,
     attributes:  visibleAttrs.length > 0 ? visibleAttrs : undefined,
   }
 }
@@ -215,31 +233,38 @@ async function fetchProducts(
 ): Promise<ProductData[]> {
   const supabase = getSupabase()
 
-  let query = supabase
-    .from('products')
-    .select(PUBLIC_PRODUCT_SELECT)
-    .order('created_at', { ascending: false })
+  const run = (columns: string) => {
+    let query = supabase
+      .from('products')
+      .select(columns)
+      .order('created_at', { ascending: false })
 
-  if (storeId) {
-    query = query.eq('store_id', storeId)
+    if (storeId) {
+      query = query.eq('store_id', storeId)
+    }
+
+    // El listado NO muestra prendas vendidas. Las apartadas SÍ se muestran,
+    // marcadas: pueden liberarse y el cliente se queda esperando.
+    if (!includeSold) {
+      query = query.eq('sold_out', false)
+    }
+
+    // Inventario interno (listed = false) no es catálogo. La policy RLS
+    // también lo oculta a anon; este filtro cubre el service role si alguien
+    // reusa esta función.
+    query = query.eq('listed', true)
+
+    if (category === 'new') {
+      query = query.eq('is_new', true)
+    }
+
+    return query
   }
 
-  // El listado NO muestra prendas vendidas. Las apartadas SÍ se muestran,
-  // marcadas: pueden liberarse y el cliente se queda esperando.
-  if (!includeSold) {
-    query = query.eq('sold_out', false)
+  let { data, error } = await run(PUBLIC_PRODUCT_SELECT_DATED)
+  if (missingPublishedAt(error)) {
+    ({ data, error } = await run(PUBLIC_PRODUCT_SELECT))
   }
-
-  // Inventario interno (listed = false) no es catálogo. La policy RLS
-  // también lo oculta a anon; este filtro cubre el service role si alguien
-  // reusa esta función.
-  query = query.eq('listed', true)
-
-  if (category === 'new') {
-    query = query.eq('is_new', true)
-  }
-
-  const { data, error } = await query
 
   if (error || !data) return []
 
@@ -262,12 +287,21 @@ async function fetchProducts(
 async function fetchProductBySlug(slug: string): Promise<ProductData | null> {
   const supabase = getSupabase()
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('products')
-    .select(PUBLIC_PRODUCT_SELECT)
+    .select(PUBLIC_PRODUCT_SELECT_DATED)
     .eq('slug', slug)
     .eq('listed', true)
     .single()
+
+  if (missingPublishedAt(error)) {
+    ({ data, error } = await supabase
+      .from('products')
+      .select(PUBLIC_PRODUCT_SELECT)
+      .eq('slug', slug)
+      .eq('listed', true)
+      .single())
+  }
 
   if (error || !data) return null
 

@@ -536,7 +536,6 @@ export default function CheckoutPage() {
 
   const money = (amount: number) => formatPrice(amount, locale, false);
   const pieceCount = cart.reduce((n, item) => n + item.quantity, 0);
-  const pickupAreas = pickupByMunicipality.map(([municipio]) => municipio).join(' · ');
   const cheapestPickup = pickupPoints.length
     ? Math.min(...pickupPoints.map((p) => p.additionalCost))
     : null;
@@ -678,7 +677,6 @@ export default function CheckoutPage() {
                   checked={isPickup}
                   onChange={handleInputChange}
                   title={tc('pickup')}
-                  description={pickupAreas || tc('pickup_desc')}
                   price={
                     cheapestPickup === null
                       ? undefined
@@ -689,45 +687,61 @@ export default function CheckoutPage() {
                 />
 
                 {isPickup && (
-                  <div className="grid gap-2">
+                  <div className="ml-6 grid gap-3">
                     {pickupPointsLoading ? (
-                      <p className="ml-6 text-[12.5px] text-muted">{tc('points_loading')}</p>
+                      <p className="text-[12.5px] text-muted">{tc('points_loading')}</p>
                     ) : pickupByMunicipality.length === 0 ? (
-                      <p className="ml-6 text-[12.5px] text-ink">{tc('points_empty')}</p>
+                      <p className="text-[12.5px] text-ink">{tc('points_empty')}</p>
                     ) : (
-                      pickupByMunicipality.map(([municipio, points]) => (
-                        <div key={municipio} role="radiogroup" aria-label={municipio} className="grid gap-2">
-                          {pickupByMunicipality.length > 1 && (
-                            <p className="ml-6 pt-1 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">
-                              {municipio}
-                            </p>
-                          )}
-                          {points.map((point) => (
-                            <OptionCard
-                              key={point.id}
-                              nested
-                              name="pickupPointId"
-                              value={point.id}
-                              checked={formData.pickupPointId === point.id}
-                              onChange={handleInputChange}
-                              title={point.name}
-                              description={[`${point.address}, ${point.city}`, point.availableHours]
-                                .filter(Boolean)
-                                .join(' · ')}
-                              price={point.additionalCost > 0 ? money(point.additionalCost) : tc('free')}
-                            />
+                      <Field id="pickupPointId" label={tc('pickup_point')}>
+                        <SelectInput
+                          id="pickupPointId"
+                          name="pickupPointId"
+                          value={formData.pickupPointId}
+                          onChange={handleInputChange}
+                          required
+                        >
+                          <option value="">{tc('pickup_choose')}</option>
+                          {pickupByMunicipality.map(([municipio, points]) => (
+                            <optgroup key={municipio} label={municipio}>
+                              {points.map((point) => (
+                                <option key={point.id} value={point.id}>
+                                  {point.name}
+                                  {' · '}
+                                  {point.additionalCost > 0 ? money(point.additionalCost) : tc('free')}
+                                </option>
+                              ))}
+                            </optgroup>
                           ))}
-                        </div>
-                      ))
+                        </SelectInput>
+                      </Field>
                     )}
 
                     {formErrors.pickup && <FieldError>{formErrors.pickup}</FieldError>}
 
                     {selectedPickupPoint && (
-                      <div className="ml-6 grid gap-2.5 pt-1">
-                        {pickupAvailabilityLabel && (
-                          <p className="text-[12.5px] text-muted">{pickupAvailabilityLabel}</p>
-                        )}
+                      <div className="grid gap-2.5">
+                        <div className="grid gap-1">
+                          <p className="text-[13px] text-ink">
+                            {selectedPickupPoint.address}, {selectedPickupPoint.city}
+                          </p>
+                          {selectedPickupPoint.availableHours ? (
+                            <p className="text-[12.5px] text-muted">{selectedPickupPoint.availableHours}</p>
+                          ) : null}
+                          {pickupAvailabilityLabel ? (
+                            <p className="text-[12.5px] text-muted">{pickupAvailabilityLabel}</p>
+                          ) : null}
+                          {selectedPickupPoint.mapsUrl ? (
+                            <a
+                              href={selectedPickupPoint.mapsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-fit text-[13px] font-semibold text-ink underline decoration-line underline-offset-2"
+                            >
+                              {tc('pickup_map')}
+                            </a>
+                          ) : null}
+                        </div>
                         <div className="grid gap-2.5 sm:grid-cols-2">
                           <Field id="pickupDate" label={tc('pickup_date')}>
                             <input
@@ -779,6 +793,7 @@ export default function CheckoutPage() {
                         checked={formData.shippingMethod === 'standard'}
                         onChange={handleInputChange}
                         title={tc('shipping_standard')}
+                        description={tc('shipping_standard_desc')}
                         price={money(homeShippingMxn)}
                       />
                       <OptionCard
@@ -788,6 +803,7 @@ export default function CheckoutPage() {
                         checked={formData.shippingMethod === 'express'}
                         onChange={handleInputChange}
                         title={tc('shipping_express')}
+                        description={tc('shipping_express_desc')}
                         price={money(EXPRESS_SHIPPING_COST)}
                       />
                     </div>

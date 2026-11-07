@@ -21,7 +21,7 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 | IVA no se suma ni se muestra | `tax_mxn = 0` |
 | Lookup `guest_token` / `session_id` | `lib/orders.ts` |
 | Pickup desde DB | `lib/pickup.ts`, `0015` |
-| Envío a domicilio editable | `settings.home_shipping_mxn`, `/admin/settings`, `0017` |
+| Correos de México editable | `settings.home_shipping_mxn` ($90), `/admin/settings`, `0017`. Express $200 en `EXPRESS_SHIPPING_COST` |
 | Marca por env | `lib/brand.ts` |
 | Medidas, estado, `owner`, `cost_mxn` | `0010` |
 | Brands | `/admin/brands` |
@@ -55,7 +55,8 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 | L cobros (Etapa 1) + app instalable | — | **MERGEADO** (#20) · sin migraciones · checklist en `docs/LANZAMIENTO.md` |
 | M perfil único (persona = tienda) | — | **MERGEADO** (#21) · `0026` aplicada en prod el 2026-10-30 · 12 piezas demo publicadas |
 | N estado de 4 pasos, Buscar arriba, auditoría | — | **MERGEADO** (#23) · `0027` por aplicar |
-| O correo de compra + reembolsos + borradores legales + sin bolsa | — | **EN RAMA** `claude/gifted-fermi-ku1xl3` · sin migraciones |
+| O correo de compra + reembolsos + borradores legales + sin bolsa | — | **MERGEADO** (#24) · sin migraciones |
+| P ficha: rebaja, publicado hace, vendedor al final | L5 | **EN RAMA** `agent/L5-ficha-grailed` · `0028` por aplicar |
 
 **Sin bolsa (2026-11-06, decisión del humano).**
 - **Ficha:** dice «Comprar». La pieza va al borrador de compra (`cartStore`, el mismo `localStorage`), que guarda la tienda (`CartItem.storeId`); las piezas de otra tienda se descartan. Lleva directo a `/checkout`.
@@ -151,6 +152,8 @@ Aplicadas con `supabase db push` tras respaldo local (`backups/viogi_2026-10-23_
   - La bolsa es un diálogo y cierra con Escape.
   - Áreas de toque de «Guardar» y «Qué significa».
 
+**Paquete P, en rama `agent/L5-ficha-grailed`.** Sin reseñas (FROZEN). La ficha muestra «Publicado hace» solo con `published_at` (`0028`). Al bajar el precio, el panel guarda el anterior en `original_price_mxn` (columna de `0001`) y la tienda lo tacha en rojo (`text-sale`, nada más usa ese color). El bloque de quien vende va después de los detalles, luego «Más de», y «Comprar» queda en una barra fija. Sin `0028` el catálogo se lee igual y se omite la fecha.
+
 E sigue bloqueado: es humano, no código.
 
 Worktrees libres: `../viogi-L1` (`agent/L1-settings`) y `../viogi-L5` (`agent/L5-entregado`),
@@ -162,7 +165,7 @@ No registro abierto. No reviews. No Skydropx. No Next 16.
 
 | Qué | Dónde |
 |---|---|
-| Precio de envío a domicilio | `/admin/settings` → "Envío a domicilio (MXN)". Semilla $10 |
+| Correos de México | `/admin/settings` → "Correos de México (MXN)". $90, 8 a 14 días hábiles. Express $200 (FedEx, DHL o Estafeta, 2 a 5 días) en `EXPRESS_SHIPPING_COST` |
 | Costo por punto de entrega | `/admin/pickup-points` (por fila, no el setting de domicilio) |
 | Ventanas de reserva y umbral solo-tarjeta | `/admin/settings` |
 | Tienda Viogi | `/es/tienda/viogi` · "Vendido por Viogi" en cada ficha |
@@ -174,7 +177,7 @@ Marcar entregado **no** transfiere dinero. Eso es el paquete E.
 
 ## Migraciones
 
-Prod: `0001`–`0026`, aplicadas (`0026` el 2026-10-30, tras respaldo `backups/2026-10-30-*.sql`). `0027_condition_nuevo.sql` en rama, por aplicar. Siguiente libre: **`0028`**.
+Prod: `0001`–`0026`, aplicadas (`0026` el 2026-10-30, tras respaldo `backups/2026-10-30-*.sql`). `0027_condition_nuevo.sql` por aplicar. `0028_published_at.sql` está en `agent/L5-ficha-grailed`, por aplicar. Siguiente libre: **`0029`**.
 
 - `0021` abrió la merma a la tienda · `0023` la volvió a cerrar: el estado final es
   que solo `disposition = 'activa'` puede estar `listed` (verificado contra prod).

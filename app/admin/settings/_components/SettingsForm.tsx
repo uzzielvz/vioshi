@@ -119,8 +119,8 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
       />
       <Campo
         name="home_shipping_mxn"
-        label="Envío a domicilio (MXN)"
-        hint="Semilla $10, editable aquí. Pickup sigue por punto en /admin/pickup-points, no aquí."
+        label="Correos de México (MXN)"
+        hint="8 a 14 días hábiles. El express (FedEx, DHL o Estafeta, 2 a 5 días hábiles) es $200 y no se cambia aquí. Recoger en punto sigue en /admin/pickup-points."
         defaultValue={settings.home_shipping_mxn}
         min={0}
         max={10000}

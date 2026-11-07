@@ -21,7 +21,7 @@ export default async function AdminSettingsPage() {
     spei_reserve_minutes: Number(data?.spei_reserve_minutes ?? 30),
     voucher_hours: Number(data?.voucher_hours ?? 24),
     manual_hold_days: Number(data?.manual_hold_days ?? 3),
-    home_shipping_mxn: Number(data?.home_shipping_mxn ?? 10),
+    home_shipping_mxn: Number(data?.home_shipping_mxn ?? 90),
   }
 
   return (

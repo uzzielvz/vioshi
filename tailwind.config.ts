@@ -16,6 +16,7 @@ const config: Config = {
         carton: "#F3F2EE",
         line: "#E4E2DC",
         muted: "#6B6B66",
+        sale: "#C8102E",
         accent: {
           DEFAULT: "#1F2BFF",
           press: "#1620D6",
