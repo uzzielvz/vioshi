@@ -71,6 +71,14 @@ Fuente de los porqués: Obsidian `Decisiones.md` + `Plataforma_MVP.md`.
 - **Mensajes:** sí. **Ofertas:** diseñadas, sin implementar hasta que el humano lo decida.
 - Lo social y los arreglos de compra avanzan **en paralelo**.
 
+## Agregado 2026-11-16 (humano)
+
+- **Primero se lanza Viogi sola, en su dominio.** El sitio sale como la tienda de Viogi: sin «Vender», sin seguir y sin perfiles de tienda. Plan: [`packets/V-lanzamiento-viogi.md`](./packets/V-lanzamiento-viogi.md).
+- **rail sigue siendo el destino.** Mismo repo y misma base: el modo plataforma se enciende con `NEXT_PUBLIC_MARKETPLACE=on`. No se borra nada de lo social; solo se apaga.
+- **Logo de Viogi:** el dibujo del de rail, diciendo «viogi», todo en negro (sin el punto azul).
+- **Cuentas de cliente básicas** en modo tienda: entrar, guardados y compras. Sin portada, foto, números ni marcas.
+- **Devoluciones:** no hay cambios ni devoluciones, salvo que la pieza no coincida con lo publicado; 48 horas para avisar.
+
 ## Prohibido en Fase 1 de plataforma
 
 Registro abierto · reviews · Skydropx · recolección propia · Next 16 · segundo codebase · renombrar `VIO-` · borrar seeds de ejemplo que rompan `order_items`.
