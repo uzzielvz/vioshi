@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { FollowAction, FollowerStat, FollowScope } from "@/components/profile/FollowScope";
 import ProfileCatalog from "@/components/profile/ProfileCatalog";
@@ -12,6 +12,7 @@ import { iconButtonClass } from "@/components/ui/styles";
 import { getProductsByStoreId, getSoldProductsByStoreId } from "@/lib/products";
 import { getStoreBySlug } from "@/lib/stores";
 import { brand } from "@/lib/brand";
+import { isMarketplace } from "@/lib/mode";
 
 interface PageProps {
   params: {
@@ -49,6 +50,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 // A store's profile: the same header as a person's (ProfileHeader), with its
 // pieces for sale and the ones already sold.
 export default async function StorePage({ params, searchParams }: PageProps) {
+  if (!isMarketplace) redirect(`/${params.locale}`);
+
   const store = await getStoreBySlug(params.slug);
 
   if (!store) {

@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import { useTranslations } from "next-intl";
 import { useFollow } from "@/hooks/useFollow";
+import { isMarketplace } from "@/lib/mode";
 import type { FollowKind } from "@/lib/social/actions";
 import { CheckIcon } from "@/components/ui/icons";
 import { buttonClass } from "@/components/ui/styles";
@@ -62,17 +63,7 @@ export function FollowToggle({
   );
 }
 
-// Renders nothing until the state loads, or at all while the social tables
-// are unavailable (migration not applied).
-export default function FollowButton({
-  kind,
-  id,
-  name,
-  variant,
-  initialFollowing,
-  quiet,
-  className,
-}: {
+type FollowButtonProps = {
   kind: FollowKind;
   id: string;
   name: string;
@@ -80,7 +71,16 @@ export default function FollowButton({
   quiet?: boolean;
   initialFollowing?: boolean;
   className?: string;
-}) {
+};
+
+// Following is a platform feature: the single store has no «Seguir».
+export default function FollowButton(props: FollowButtonProps) {
+  return isMarketplace ? <LiveFollowButton {...props} /> : null;
+}
+
+// Renders nothing until the state loads, or at all while the social tables
+// are unavailable (migration not applied).
+function LiveFollowButton({ kind, id, name, variant, initialFollowing, quiet, className }: FollowButtonProps) {
   const { ready, available, following, pending, toggle } = useFollow(kind, id, initialFollowing);
   if (!ready || !available) return null;
   return (

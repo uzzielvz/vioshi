@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@/i18n';
 import { brand } from '@/lib/brand';
 import { formatMxn } from '@/lib/formatters';
+import { isMarketplace } from '@/lib/mode';
 import { getSettings } from '@/lib/settings';
 import HelpLayout, { HelpSection } from '@/components/help/HelpLayout';
 import { ChevronIcon } from '@/components/ui/icons';
@@ -27,7 +28,7 @@ export default async function CustomerSupportPage({ params }: { params: { locale
       locale={locale}
       active="help"
       title={t('help_title', { brand: brand.name })}
-      lead={t('help_lead')}
+      lead={t(isMarketplace ? 'help_lead' : 'help_lead_store')}
     >
       <HelpSection title={t('buy_title')}>
         <p>{t('buy_body')}</p>
@@ -46,12 +47,14 @@ export default async function CustomerSupportPage({ params }: { params: { locale
       <HelpSection title={t('trouble_title')}>
         <p>{t('trouble_body')}</p>
       </HelpSection>
-      <HelpSection title={t('sell_title')}>
-        <p>{t('sell_body')}</p>
-        <Link href={`/${locale}/vender`} className={buttonClass('soft', 'sm', 'justify-self-start')}>
-          {t('sell_cta')}
-        </Link>
-      </HelpSection>
+      {isMarketplace && (
+        <HelpSection title={t('sell_title')}>
+          <p>{t('sell_body')}</p>
+          <Link href={`/${locale}/vender`} className={buttonClass('soft', 'sm', 'justify-self-start')}>
+            {t('sell_cta')}
+          </Link>
+        </HelpSection>
+      )}
       <HelpSection title={t('contact_title')}>
         <p className="text-muted">{t('contact_body')}</p>
         <ul className="divide-y divide-line border-y border-line">

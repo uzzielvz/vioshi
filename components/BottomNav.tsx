@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
+import { isMarketplace } from "@/lib/mode";
 import { HeartIcon, HomeIcon, SearchIcon, SellIcon, UserIcon } from "@/components/ui/icons";
 import { OPEN_SEARCH_EVENT } from "@/components/Header";
 
@@ -23,7 +24,10 @@ export default function BottomNav() {
   return (
     <nav
       // Own compositing layer: keeps iOS from dragging the bar while it scrolls.
-      className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-paper pb-[max(6px,env(safe-area-inset-bottom))] [transform:translateZ(0)] md:hidden"
+      className={clsx(
+        "fixed inset-x-0 bottom-0 z-30 grid border-t border-line bg-paper pb-[max(6px,env(safe-area-inset-bottom))] [transform:translateZ(0)] md:hidden",
+        isMarketplace ? "grid-cols-5" : "grid-cols-4"
+      )}
       aria-label={t("menu")}
     >
       <Link
@@ -39,14 +43,16 @@ export default function BottomNav() {
         <SearchIcon className="h-[22px] w-[22px]" />
         {t("search")}
       </button>
-      <Link
-        href={`/${locale}/vender`}
-        className={clsx(item, path.startsWith("/vender") && active)}
-        aria-current={path.startsWith("/vender") ? "page" : undefined}
-      >
-        <SellIcon className="h-[22px] w-[22px]" />
-        {t("sell")}
-      </Link>
+      {isMarketplace && (
+        <Link
+          href={`/${locale}/vender`}
+          className={clsx(item, path.startsWith("/vender") && active)}
+          aria-current={path.startsWith("/vender") ? "page" : undefined}
+        >
+          <SellIcon className="h-[22px] w-[22px]" />
+          {t("sell")}
+        </Link>
+      )}
       {/* No bag: pieces are bought one by one, so saving is what this slot is for. */}
       <Link
         href={`/${locale}/wishlist`}

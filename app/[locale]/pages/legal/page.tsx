@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { brand } from '@/lib/brand';
+import { isMarketplace } from '@/lib/mode';
 import HelpLayout, { HelpList, HelpSection } from '@/components/help/HelpLayout';
 
 export default async function LegalPage({ params: { locale } }: { params: { locale: string } }) {
@@ -31,7 +32,7 @@ export default async function LegalPage({ params: { locale } }: { params: { loca
       </HelpSection>
 
       <HelpSection title={t('ip_title')}>
-        <p>{t('ip_p', b)}</p>
+        <p>{t(isMarketplace ? 'ip_p' : 'ip_p_store', b)}</p>
       </HelpSection>
 
       <HelpSection title={t('cookies_title')}>

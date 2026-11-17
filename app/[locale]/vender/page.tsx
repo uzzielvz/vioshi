@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import clsx from 'clsx';
 import { useTranslations } from 'next-intl';
 import { useLocaleContext } from '@/hooks/useLocaleContext';
 import { brand } from '@/lib/brand';
+import { isMarketplace } from '@/lib/mode';
 import EmptyState from '@/components/ui/EmptyState';
 import { ChevronIcon, SellIcon } from '@/components/ui/icons';
 import {
@@ -56,7 +58,10 @@ function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   );
 }
 
-export default function VenderPage() {
+export default function VenderPage({ params }: { params: { locale: string } }) {
+  // Runs during the server render too, so the single store answers with a redirect.
+  if (!isMarketplace) redirect(`/${params.locale}`);
+
   const { locale } = useLocaleContext();
   const t = useTranslations('ui.sell');
   const [isSubmitting, setIsSubmitting] = useState(false);

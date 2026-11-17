@@ -4,7 +4,10 @@
  * store-facing copy ("Vendido por Viogi", /tienda/viogi) with these values.
  *
  * Rename the platform by setting env vars in Vercel — no code rewrite.
+ * In single-store mode (lib/mode.ts) the site *is* Viogi, so the defaults say so.
  */
+
+import { isMarketplace } from '@/lib/mode';
 
 function trimTrailingSlash(url: string): string {
   return url.replace(/\/+$/, '');
@@ -25,7 +28,7 @@ function resolveSiteUrl(): string {
 
 export const brand = {
   /** Public platform name (header, titles, OG siteName). */
-  name: process.env.NEXT_PUBLIC_BRAND_NAME?.trim() || 'VIOGI',
+  name: process.env.NEXT_PUBLIC_BRAND_NAME?.trim() || 'Viogi',
 
   /** Short tagline for metadata / home. */
   tagline:
@@ -61,7 +64,9 @@ export const brand = {
   get descriptionDefault(): string {
     return (
       process.env.NEXT_PUBLIC_BRAND_DESCRIPTION?.trim() ||
-      'Ropa de segunda mano de gente que vale la pena seguir. Cada pieza es única.'
+      (isMarketplace
+        ? 'Ropa de segunda mano de gente que vale la pena seguir. Cada pieza es única.'
+        : 'Ropa de segunda mano curada. Cada pieza es única.')
     );
   },
 } as const;

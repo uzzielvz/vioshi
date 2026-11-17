@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
+import { isMarketplace } from '@/lib/mode';
 import type { Locale } from '@/i18n';
 import ProfileMediaButton from '@/components/profile/ProfileMediaButton';
 import Avatar from '@/components/ui/Avatar';
@@ -36,8 +37,10 @@ export default async function ProfilePage({
     getTranslations('ui.nav'),
   ]);
 
-  // Without migration 0026 the photo columns do not exist yet.
+  // Without migration 0026 the photo columns do not exist yet. The single
+  // store's basic account has no photo or cover either way.
   const mediaReady = !withMedia.error;
+  const showMedia = isMarketplace && mediaReady;
   const profile = (
     mediaReady ? withMedia.data : (await supabase.from('profiles').select('name, phone').eq('id', user.id).maybeSingle()).data
   ) as { name: string | null; phone: string | null; avatar_url?: string | null; cover_url?: string | null } | null;
@@ -47,7 +50,7 @@ export default async function ProfilePage({
   return (
     <AccountSubpage backHref={`/${locale}/account`} backLabel={t('back')} title={t('edit_title')}>
       <div className="grid gap-7">
-        {mediaReady && (
+        {showMedia && (
           <section className="grid gap-3">
             <h2 className={sectionLabelClass}>{t('media_title')}</h2>
             <div className="flex items-center gap-3.5">
@@ -65,7 +68,7 @@ export default async function ProfilePage({
           </section>
         )}
 
-        <section className={mediaReady ? section : 'grid gap-3'}>
+        <section className={showMedia ? section : 'grid gap-3'}>
           <h2 className={sectionLabelClass}>{t('details_title')}</h2>
           <ProfileForm
             email={user.email ?? ''}
@@ -116,9 +119,11 @@ export default async function ProfilePage({
         <section className={section}>
           <h2 className={sectionLabelClass}>{t('session_title')}</h2>
           <div className="flex flex-wrap gap-2">
-            <Link href={`/${locale}/vender`} className={buttonClass('soft', 'sm')}>
-              {t('start_selling')}
-            </Link>
+            {isMarketplace && (
+              <Link href={`/${locale}/vender`} className={buttonClass('soft', 'sm')}>
+                {t('start_selling')}
+              </Link>
+            )}
             <form action={signOutAction}>
               <input type="hidden" name="locale" value={locale} />
               <button type="submit" className={buttonClass('line', 'sm')}>

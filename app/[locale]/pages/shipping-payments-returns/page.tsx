@@ -4,6 +4,7 @@ import type { Locale } from '@/i18n';
 import { brand } from '@/lib/brand';
 import { EXPRESS_SHIPPING_COST } from '@/lib/constants';
 import { formatMxn } from '@/lib/formatters';
+import { isMarketplace } from '@/lib/mode';
 import { getActivePickupPoints } from '@/lib/pickupPoints';
 import { getSettings } from '@/lib/settings';
 import HelpLayout, { HelpList, HelpSection } from '@/components/help/HelpLayout';
@@ -60,7 +61,7 @@ export default async function ShippingPage({ params }: { params: { locale: strin
               hours: settings.voucher_hours,
             }),
             t('pay_hold', { minutes: settings.card_reserve_minutes }),
-            t('pay_inside', { brand: brand.name }),
+            t(isMarketplace ? 'pay_inside' : 'pay_inside_store', { brand: brand.name }),
           ]}
         />
       </HelpSection>

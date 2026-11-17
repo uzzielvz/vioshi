@@ -1,40 +1,40 @@
-# Estado del código
+# Estado del cÃ³digo
 
-**Verificado:** 2026-10-04 · A1 + F + D + G1 + G2 + H en `main` · prod `vioshi.vercel.app`
+**Verificado:** 2026-10-04 Â· A1 + F + D + G1 + G2 + H en `main` Â· prod `vioshi.vercel.app`
 
-> Actualiza **solo este archivo** al cerrar un paquete. Es el único doc que describe estado:
-> si otro archivo cuenta qué se mergeó, en dos semanas se contradicen.
-> Histórico de sesiones: `sessions.md` en la raíz.
+> Actualiza **solo este archivo** al cerrar un paquete. Es el Ãºnico doc que describe estado:
+> si otro archivo cuenta quÃ© se mergeÃ³, en dos semanas se contradicen.
+> HistÃ³rico de sesiones: `sessions.md` en la raÃ­z.
 
-## Qué es hoy
+## QuÃ© es hoy
 
 Tienda Next.js 14 + Supabase + Stripe Checkout Sessions, con **Viogi como primera `store`**.  
-Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no está.
+Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no estÃ¡.
 
 ## Hecho (no rehacer)
 
-| Área | Evidencia |
+| Ãrea | Evidencia |
 |---|---|
 | Checkout Sessions (tarjeta / OXXO / SPEI) | `app/[locale]/checkout/actions.ts` |
-| Reserva atómica | `0012`–`0014` |
-| Webhook asíncrono | `app/api/webhooks/stripe/route.ts` |
+| Reserva atÃ³mica | `0012`â€“`0014` |
+| Webhook asÃ­ncrono | `app/api/webhooks/stripe/route.ts` |
 | IVA no se suma ni se muestra | `tax_mxn = 0` |
 | Lookup `guest_token` / `session_id` | `lib/orders.ts` |
 | Pickup desde DB | `lib/pickup.ts`, `0015` |
-| Correos de México editable | `settings.home_shipping_mxn` ($90), `/admin/settings`, `0017`. Express $200 en `EXPRESS_SHIPPING_COST` |
+| Correos de MÃ©xico editable | `settings.home_shipping_mxn` ($90), `/admin/settings`, `0017`. Express $200 en `EXPRESS_SHIPPING_COST` |
 | Marca por env | `lib/brand.ts` |
 | Medidas, estado, `owner`, `cost_mxn` | `0010` |
 | Brands | `/admin/brands` |
 | Visual search + embed al publicar | `lib/embeddings.ts`, `/admin/products` |
 | Marcar pedido entregado | `/admin/reservas` (sin Stripe). **Exige `payment_status = 'completed'`** (#8) |
 | Inventario interno | `/admin` tablero. Prenda nueva nace con `listed = false`. Entrada por correo (`UZZIEL_ADMIN_*` / `MARIO_ADMIN_*`): Uzziel ve ambos `owner`; Mario solo el suyo |
-| Viogi como tienda | `0016`, `/tienda/viogi`, “Vendido por” |
-| Inventario interno | `products.listed` (`0018`). Prenda en el panel sin salir al catálogo |
+| Viogi como tienda | `0016`, `/tienda/viogi`, â€œVendido porâ€ |
+| Inventario interno | `products.listed` (`0018`). Prenda en el panel sin salir al catÃ¡logo |
 | Acceso separado Uzziel / Mario | `lib/admin/session.ts`, `middleware.ts`. Mario solo ve y edita `owner = mario` |
 | Fecha de venta y de compra | `sold_at`, `acquired_on` (`0019`) |
-| Merma fuera del capital | `disposition` (`0020`): activa · merma · uso_personal · donada |
+| Merma fuera del capital | `disposition` (`0020`): activa Â· merma Â· uso_personal Â· donada |
 | Tablero de ganancia por periodo | `lib/admin/stats.ts`, `/admin` |
-| Panel usable en móvil | barra sticky, campos a 16px, tablas como tarjetas |
+| Panel usable en mÃ³vil | barra sticky, campos a 16px, tablas como tarjetas |
 | `/vender` persiste `pending` | `store_applications`, no auto-aprueba |
 | Auth clientes | `app/[locale]/account/**` |
 
@@ -47,129 +47,131 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 | D stores | L4 | **MERGEADO** (#6) |
 | G1 entregado-pagado | L5 | **MERGEADO** (#8) |
 | G2 settings-limpieza | L1 | **MERGEADO** (#9) |
-| H inventario + tablero + móvil | L5 | **MERGEADO** (#10) · `0018`–`0020` aplicadas y verificadas en prod |
-| E Connect | L7 | **BLOQUEADO** — ver `OPEN.md` y más abajo |
-| I front de rail | — | **MERGEADO** (#16) |
-| J front de rail: cuenta, pagar y lo demás | — | **MERGEADO** (#17) |
-| K social 1 + cierre de inserts | — | **MERGEADO** (#18) · migraciones `0024` y `0025` aplicadas en prod el 2026-10-23 |
-| L cobros (Etapa 1) + app instalable | — | **MERGEADO** (#20) · sin migraciones · checklist en `docs/LANZAMIENTO.md` |
-| M perfil único (persona = tienda) | — | **MERGEADO** (#21) · `0026` aplicada en prod el 2026-10-30 · 12 piezas demo publicadas |
-| N estado de 4 pasos, Buscar arriba, auditoría | — | **MERGEADO** (#23) · `0027` por aplicar |
-| O correo de compra + reembolsos + borradores legales + sin bolsa | — | **MERGEADO** (#24) · sin migraciones |
-| P ficha: rebaja, publicado hace, vendedor al final | L5 | **EN PR** (#25) · `0028` por aplicar |
-| **V lanzamiento de viogi.com como tienda única** | — | **LISTO para repartir** (2026-11-17) · [`packets/V-lanzamiento-viogi.md`](./packets/V-lanzamiento-viogi.md) · primero se revisa y mergea el PR #25 (ficha, rebaja y envíos; trae `0028`) · V0–V5 sin empezar · `0027` sin confirmar en prod |
+| H inventario + tablero + mÃ³vil | L5 | **MERGEADO** (#10) Â· `0018`â€“`0020` aplicadas y verificadas en prod |
+| E Connect | L7 | **BLOQUEADO** â€” ver `OPEN.md` y mÃ¡s abajo |
+| I front de rail | â€” | **MERGEADO** (#16) |
+| J front de rail: cuenta, pagar y lo demÃ¡s | â€” | **MERGEADO** (#17) |
+| K social 1 + cierre de inserts | â€” | **MERGEADO** (#18) Â· migraciones `0024` y `0025` aplicadas en prod el 2026-10-23 |
+| L cobros (Etapa 1) + app instalable | â€” | **MERGEADO** (#20) Â· sin migraciones Â· checklist en `docs/LANZAMIENTO.md` |
+| M perfil Ãºnico (persona = tienda) | â€” | **MERGEADO** (#21) Â· `0026` aplicada en prod el 2026-10-30 Â· 12 piezas demo publicadas |
+| N estado de 4 pasos, Buscar arriba, auditorÃ­a | â€” | **MERGEADO** (#23) Â· `0027` por aplicar |
+| O correo de compra + reembolsos + borradores legales + sin bolsa | â€” | **MERGEADO** (#24) Â· sin migraciones |
+| P ficha: rebaja, publicado hace, vendedor al final | L5 | **MERGEADO** (#25) Â· `0028` por aplicar |
+| **V lanzamiento de viogi.com como tienda Ãºnica** | â€” | **EN CURSO** (2026-11-16) Â· [`packets/V-lanzamiento-viogi.md`](./packets/V-lanzamiento-viogi.md) |
+| V0 producciÃ³n y `0027` | â€” | **HECHO** (2026-11-16) Â· `0027` aplicada en prod y registrada como `0027` Â· sin respaldo en archivo (no habÃ­a CLI) Â· 13 publicadas, 12 de ellas demo Â· 0 pedidos pagados Â· `0028` pendiente (llegÃ³ con #25) |
+| V1 modo tienda Ãºnica + marca Viogi | â€” | **EN PR** Â· `agent/V1-tienda-unica` Â· sin migraciones |
 
-**Sin bolsa (2026-11-06, decisión del humano).**
-- **Ficha:** dice «Comprar». La pieza va al borrador de compra (`cartStore`, el mismo `localStorage`), que guarda la tienda (`CartItem.storeId`); las piezas de otra tienda se descartan. Lleva directo a `/checkout`.
+**Sin bolsa (2026-11-06, decisiÃ³n del humano).**
+- **Ficha:** dice Â«ComprarÂ». La pieza va al borrador de compra (`cartStore`, el mismo `localStorage`), que guarda la tienda (`CartItem.storeId`); las piezas de otra tienda se descartan. Lleva directo a `/checkout`.
 - **Pagar:**
-  - Arriba, «Tu compra» con «Quitar» (en escritorio va en el resumen).
-  - `components/checkout/MoreFromStore.tsx`, «Agrega más de {tienda} · mismo envío», con otras piezas disponibles de la tienda (`getMorePiecesAction`) y las guardadas primero.
-  - Las piezas solo cambian antes de «Continuar al pago», que es cuando se apartan.
-  - Al quitar la última se regresa al inicio. La flecha regresa a la ficha.
-- **Se quitó:**
+  - Arriba, Â«Tu compraÂ» con Â«QuitarÂ» (en escritorio va en el resumen).
+  - `components/checkout/MoreFromStore.tsx`, Â«Agrega mÃ¡s de {tienda} Â· mismo envÃ­oÂ», con otras piezas disponibles de la tienda (`getMorePiecesAction`) y las guardadas primero.
+  - Las piezas solo cambian antes de Â«Continuar al pagoÂ», que es cuando se apartan.
+  - Al quitar la Ãºltima se regresa al inicio. La flecha regresa a la ficha.
+- **Se quitÃ³:**
   - `CartDrawer` y el estado de abrir y cerrar la bolsa.
-  - La bolsa de la barra de abajo y del header; ahí quedó «Guardados».
-  - `/cart` ahora redirige a `/checkout`, así que una bolsa vieja aparece al pagar.
-- **Verificado:** flujo completo a 390 y 1280 px, que incluye agregar, quitar, quitar la última, la flecha de atrás y una bolsa vieja vía `/cart`. type-check, lint y build pasan.
+  - La bolsa de la barra de abajo y del header; ahÃ­ quedÃ³ Â«GuardadosÂ».
+  - `/cart` ahora redirige a `/checkout`, asÃ­ que una bolsa vieja aparece al pagar.
+- **Verificado:** flujo completo a 390 y 1280 px, que incluye agregar, quitar, quitar la Ãºltima, la flecha de atrÃ¡s y una bolsa vieja vÃ­a `/cart`. type-check, lint y build pasan.
 
 **Paquete O, en rama (2026-11-06).**
 
-- **Correo «Tu pedido está pagado»:**
-  - `lib/email/orderPaid.ts` arma el correo como función pura y `lib/email/sendOrderPaid.ts` lo manda por la API de Resend.
+- **Correo Â«Tu pedido estÃ¡ pagadoÂ»:**
+  - `lib/email/orderPaid.ts` arma el correo como funciÃ³n pura y `lib/email/sendOrderPaid.ts` lo manda por la API de Resend.
   - Lleva un link al pedido que funciona sin cuenta (con el `guest_token`).
-  - El webhook lo manda solo en la transición a pagado y no si hay conflicto de stock. Usa una llave de idempotencia de Resend, y si el correo falla, Stripe no reintenta.
+  - El webhook lo manda solo en la transiciÃ³n a pagado y no si hay conflicto de stock. Usa una llave de idempotencia de Resend, y si el correo falla, Stripe no reintenta.
   - Apagado hasta que existan `RESEND_API_KEY` y `BRAND_EMAIL_FROM`, porque necesita el dominio.
 - **Reembolsos:**
   - `charge.refunded` total pasa el pedido de `completed` a `refunded`; uno parcial solo se registra.
-  - La pieza no vuelve sola al catálogo.
-  - Hay que agregar el evento al webhook en vivo (LANZAMIENTO § 2).
-- **Borradores** de Devoluciones, Quién vende y Aviso de privacidad en `docs/BORRADORES-LEGALES.md`, para que el humano los apruebe.
+  - La pieza no vuelve sola al catÃ¡logo.
+  - Hay que agregar el evento al webhook en vivo (LANZAMIENTO Â§ 2).
+- **Borradores** de Devoluciones, QuiÃ©n vende y Aviso de privacidad en `docs/BORRADORES-LEGALES.md`, para que el humano los apruebe.
 - **Verificado:**
   - `npm run test:rules`: 12 pruebas (6 de cobros y 6 del correo).
-  - Webhook con eventos firmados contra una base simulada: pago, reenvío sin segundo correo, reembolso parcial sin cambios y reembolso total.
+  - Webhook con eventos firmados contra una base simulada: pago, reenvÃ­o sin segundo correo, reembolso parcial sin cambios y reembolso total.
   - Captura del correo a 390 px.
   - type-check, lint y build.
 
-**Paquete I, mergeado en #16.** Tarjeta de la feed, `useWishlist`, grid, `CategoryTabs`, inicio y colecciones, ficha, bolsa sin cantidades, portada collage en `/tienda/[slug]`, búsqueda por marca; borrados `/archive`, `/pages/chapters` y Unsplash.
+**Paquete I, mergeado en #16.** Tarjeta de la feed, `useWishlist`, grid, `CategoryTabs`, inicio y colecciones, ficha, bolsa sin cantidades, portada collage en `/tienda/[slug]`, bÃºsqueda por marca; borrados `/archive`, `/pages/chapters` y Unsplash.
 
-**Paquete J, mergeado en #17.** El resto de la tienda con la guía (`docs/design/`):
+**Paquete J, mergeado en #17.** El resto de la tienda con la guÃ­a (`docs/design/`):
 
-- **Cuenta:** entrar, crear cuenta, recuperar y nueva contraseña sin header. Perfil de persona con pestañas Guardados · Compras · Direcciones; editar perfil (contraseña por enlace al correo, idioma, cerrar sesión). `/wishlist` manda al perfil si hay sesión. Se borró `/account/archivos` (facturas de ejemplo).
-- **Pagar:** barra propia, entrega en tarjetas de opción (puntos reales y envío a domicilio), contacto, pago con el umbral de `settings`, resumen y «Continuar al pago · $X». `checkout/actions.ts` sin tocar. Pedido pagado y retorno con `components/order/OrderView.tsx`; «pagado» solo si `payment_status = completed`.
-- **Búsqueda** con filtros de categoría, talla, marca y orden; **búsqueda por foto** y **/vender** (tres pasos, la solicitud es el paso 1).
-- **Ayuda:** cómo funciona, envíos y pagos (de `settings`, `pickup_points` y `EXPRESS_SHIPPING_COST`), medidas, puntos de entrega (de la tabla), legal y accesibilidad en i18n. 404 y error dentro de `[locale]`.
-- **Arreglo:** el carrito expone `isReady`; antes, abrir `/checkout` directo mandaba a `/cart` y el carrito podía volver después de pagar.
+- **Cuenta:** entrar, crear cuenta, recuperar y nueva contraseÃ±a sin header. Perfil de persona con pestaÃ±as Guardados Â· Compras Â· Direcciones; editar perfil (contraseÃ±a por enlace al correo, idioma, cerrar sesiÃ³n). `/wishlist` manda al perfil si hay sesiÃ³n. Se borrÃ³ `/account/archivos` (facturas de ejemplo).
+- **Pagar:** barra propia, entrega en tarjetas de opciÃ³n (puntos reales y envÃ­o a domicilio), contacto, pago con el umbral de `settings`, resumen y Â«Continuar al pago Â· $XÂ». `checkout/actions.ts` sin tocar. Pedido pagado y retorno con `components/order/OrderView.tsx`; Â«pagadoÂ» solo si `payment_status = completed`.
+- **BÃºsqueda** con filtros de categorÃ­a, talla, marca y orden; **bÃºsqueda por foto** y **/vender** (tres pasos, la solicitud es el paso 1).
+- **Ayuda:** cÃ³mo funciona, envÃ­os y pagos (de `settings`, `pickup_points` y `EXPRESS_SHIPPING_COST`), medidas, puntos de entrega (de la tabla), legal y accesibilidad en i18n. 404 y error dentro de `[locale]`.
+- **Arreglo:** el carrito expone `isReady`; antes, abrir `/checkout` directo mandaba a `/cart` y el carrito podÃ­a volver despuÃ©s de pagar.
 - Primitivas en `components/ui/` (`styles.ts`, `Avatar`, `UnderlineTabs`, `EmptyState`). Se borraron `components/common` y los namespaces de mensajes sin uso.
 - Verificado: type-check, lint, build y capturas a 390 y 1280 px contra un PostgREST simulado (sin scroll horizontal).
 
-Pendiente: seguir, mensajes, ofertas, «Qué te interesa», portada editable y los pasos 2 y 3 de vender (necesitan base de datos). **Humano:** política de devoluciones (PROYECTO § 8, #14; la página dice «la estamos terminando»), correo y WhatsApp de soporte reales (`NEXT_PUBLIC_BRAND_SUPPORT_EMAIL`, `NEXT_PUBLIC_BRAND_WHATSAPP`; sin el segundo no se muestra WhatsApp).
+Pendiente: seguir, mensajes, ofertas, Â«QuÃ© te interesaÂ», portada editable y los pasos 2 y 3 de vender (necesitan base de datos). **Humano:** polÃ­tica de devoluciones (PROYECTO Â§ 8, #14; la pÃ¡gina dice Â«la estamos terminandoÂ»), correo y WhatsApp de soporte reales (`NEXT_PUBLIC_BRAND_SUPPORT_EMAIL`, `NEXT_PUBLIC_BRAND_WHATSAPP`; sin el segundo no se muestra WhatsApp).
 
 **Paquete K, mergeado en #18.** Migraciones `0024` y `0025` aplicadas en prod el 2026-10-23.
 
-- **Seguridad (`0024_lock_order_inserts.sql`):** quita `orders_insert_any` y `order_items_insert_any`; la app solo inserta pedidos con service_role. Un trigger impide que una sesión `anon`/`authenticated` cambie `profiles.role` (service_role y el SQL editor sí pueden).
-- **Seguir (`0025_follows.sql`):** tabla `follows` (tienda o marca, una por fila, RLS: cada quien lee y borra las suyas) y `follower_count()` para el conteo público. Seguir búsquedas quedó fuera por decisión del humano.
-- **Guardados en la cuenta** con `wishlist_items` (ya existe desde `0001`): al entrar se suman los del dispositivo una vez y después manda la cuenta.
-- «Seguir» en la prenda (tienda y marca), en la tienda (con seguidores) y en la búsqueda filtrada por marca; la marca de la prenda lleva a sus piezas. Pestaña **Siguiendo** en el perfil.
-- Sin `0025` aplicada, los botones no aparecen y Siguiendo dice «llega muy pronto». Nada se rompe.
+- **Seguridad (`0024_lock_order_inserts.sql`):** quita `orders_insert_any` y `order_items_insert_any`; la app solo inserta pedidos con service_role. Un trigger impide que una sesiÃ³n `anon`/`authenticated` cambie `profiles.role` (service_role y el SQL editor sÃ­ pueden).
+- **Seguir (`0025_follows.sql`):** tabla `follows` (tienda o marca, una por fila, RLS: cada quien lee y borra las suyas) y `follower_count()` para el conteo pÃºblico. Seguir bÃºsquedas quedÃ³ fuera por decisiÃ³n del humano.
+- **Guardados en la cuenta** con `wishlist_items` (ya existe desde `0001`): al entrar se suman los del dispositivo una vez y despuÃ©s manda la cuenta.
+- Â«SeguirÂ» en la prenda (tienda y marca), en la tienda (con seguidores) y en la bÃºsqueda filtrada por marca; la marca de la prenda lleva a sus piezas. PestaÃ±a **Siguiendo** en el perfil.
+- Sin `0025` aplicada, los botones no aparecen y Siguiendo dice Â«llega muy prontoÂ». Nada se rompe.
 - Verificado: migraciones aplicadas dos veces en un Postgres 16 local con roles estilo Supabase (RLS, trigger, cascada, conteo); flujo en navegador con y sin tablas; type-check, lint y build.
 
 Aplicadas con `supabase db push` tras respaldo local (`backups/viogi_2026-10-23_2022_*`). Verificado en prod: ya no existen `orders_insert_any` ni `order_items_insert_any`; trigger `profiles_keep_role` en `profiles`; `follows` con RLS y sus 3 policies; `follower_count('store', viogi)` = 0. Con la anon key por REST, insertar en `order_items` da 401 / `42501` (RLS) y `rpc/follower_count` responde 200.
 
 **Paquete M, mergeado en #21.** Una persona y una tienda tienen el mismo perfil (FROZEN: todas las cuentas son iguales).
 
-- `components/profile/ProfileHeader.tsx`: portada (foto subida o collage de sus piezas), avatar redondo montado, nombre, «@slug · Se unió en…», números, bio, botones, marcas y pestañas. Lo usan `AccountShell` y `/tienda/[slug]`.
-- Tienda: seguidores · vendidas · en venta, «Seguir» + Instagram, compartir, «Marcas principales» (filtran la tienda), pestañas **En venta · Vendidas** y la fila de filtros de la búsqueda (orden, talla, categoría, marca).
-- Persona: siguiendo · compras, «Editar perfil» + «Empezar a vender», ajustes (engrane), «Marcas que guardas», pestañas Guardados · Compras · Siguiendo. **Direcciones** pasó a Editar perfil (`/account/addresses` es subpágina).
-- Filtros compartidos: `hooks/useCatalogFilters.ts` + `components/CatalogFilterBar.tsx` (la búsqueda ya los usa).
-- **Foto y portada (`0026_profile_media.sql`):** `profiles.avatar_url`, `profiles.cover_url`, `stores.cover_url` (con su `grant select` por columna) y bucket público `profile-media` (1 MB, jpg/png/webp). El navegador reduce la foto (avatar 480 px, portada 1800 px) y `lib/profile/actions.ts` la sube con service_role a `<user_id>/`; borra la anterior. Sin `0026`, los botones de foto no aparecen y la tienda se lee sin `cover_url`.
-- Portada de Viogi: por ahora con SQL (`update stores set cover_url = '<url pública>' where slug = 'viogi'`); sin ella la franja queda gris.
-- 2026-10-31, a pedido del humano (referencia Grailed): perfil compacto para que manden las piezas (portada 3:1 gris sin foto, avatar de 64 px con nombre e íconos al lado, números con etiqueta arriba junto al único botón, marcas chicas en una línea, pestañas en píldora y filtros en texto). Tarjeta: marca en negro, título de quien vende en gris y el corazón alineado con la talla.
-- **Buscar en el celular** (`components/search/SearchSheet.tsx`): pantalla completa con «Vistos hace poco», «Búsquedas recientes» (con X) y «Marcas»; la barra flota abajo sobre el teclado (`visualViewport`) con la cámara. La abren la lupa del header y «Buscar» de la barra inferior. Lo reciente vive en `localStorage` (`lib/search/recent.ts`).
-- **Cámara** (`components/search/CameraSheet.tsx`): `getUserMedia` con galería, disparador y voltear; al tomar la foto hay destello y la imagen se acomoda en el lugar de «Buscando…» con los mismos puntos, y pasa a `/visual-search`. Sin permiso o sin HTTPS, ofrece la galería.
+- `components/profile/ProfileHeader.tsx`: portada (foto subida o collage de sus piezas), avatar redondo montado, nombre, Â«@slug Â· Se uniÃ³ enâ€¦Â», nÃºmeros, bio, botones, marcas y pestaÃ±as. Lo usan `AccountShell` y `/tienda/[slug]`.
+- Tienda: seguidores Â· vendidas Â· en venta, Â«SeguirÂ» + Instagram, compartir, Â«Marcas principalesÂ» (filtran la tienda), pestaÃ±as **En venta Â· Vendidas** y la fila de filtros de la bÃºsqueda (orden, talla, categorÃ­a, marca).
+- Persona: siguiendo Â· compras, Â«Editar perfilÂ» + Â«Empezar a venderÂ», ajustes (engrane), Â«Marcas que guardasÂ», pestaÃ±as Guardados Â· Compras Â· Siguiendo. **Direcciones** pasÃ³ a Editar perfil (`/account/addresses` es subpÃ¡gina).
+- Filtros compartidos: `hooks/useCatalogFilters.ts` + `components/CatalogFilterBar.tsx` (la bÃºsqueda ya los usa).
+- **Foto y portada (`0026_profile_media.sql`):** `profiles.avatar_url`, `profiles.cover_url`, `stores.cover_url` (con su `grant select` por columna) y bucket pÃºblico `profile-media` (1 MB, jpg/png/webp). El navegador reduce la foto (avatar 480 px, portada 1800 px) y `lib/profile/actions.ts` la sube con service_role a `<user_id>/`; borra la anterior. Sin `0026`, los botones de foto no aparecen y la tienda se lee sin `cover_url`.
+- Portada de Viogi: por ahora con SQL (`update stores set cover_url = '<url pÃºblica>' where slug = 'viogi'`); sin ella la franja queda gris.
+- 2026-10-31, a pedido del humano (referencia Grailed): perfil compacto para que manden las piezas (portada 3:1 gris sin foto, avatar de 64 px con nombre e Ã­conos al lado, nÃºmeros con etiqueta arriba junto al Ãºnico botÃ³n, marcas chicas en una lÃ­nea, pestaÃ±as en pÃ­ldora y filtros en texto). Tarjeta: marca en negro, tÃ­tulo de quien vende en gris y el corazÃ³n alineado con la talla.
+- **Buscar en el celular** (`components/search/SearchSheet.tsx`): pantalla completa con Â«Vistos hace pocoÂ», Â«BÃºsquedas recientesÂ» (con X) y Â«MarcasÂ»; la barra flota abajo sobre el teclado (`visualViewport`) con la cÃ¡mara. La abren la lupa del header y Â«BuscarÂ» de la barra inferior. Lo reciente vive en `localStorage` (`lib/search/recent.ts`).
+- **CÃ¡mara** (`components/search/CameraSheet.tsx`): `getUserMedia` con galerÃ­a, disparador y voltear; al tomar la foto hay destello y la imagen se acomoda en el lugar de Â«Buscandoâ€¦Â» con los mismos puntos, y pasa a `/visual-search`. Sin permiso o sin HTTPS, ofrece la galerÃ­a.
 - `scripts/data/productos-muestra.json`: las 13 piezas de `public/products`. En prod, el 2026-10-30, el humano:
-  - creó las 12 que faltaban como **demo publicada** (dueño uzziel, sin costo, medidas aproximadas, sin embedding);
-  - dejó la chamarra Nike SB como estaba.
+  - creÃ³ las 12 que faltaban como **demo publicada** (dueÃ±o uzziel, sin costo, medidas aproximadas, sin embedding);
+  - dejÃ³ la chamarra Nike SB como estaba.
   
-  El comando para despublicarlas está en `docs/LANZAMIENTO.md` § 2c, y los ids en `backups/productos-muestra-ids.json` (local).
-- Verificado (cámara con dispositivo simulado de Chromium: abrir, voltear, disparar, animación y paso a `/visual-search`; búsquedas recientes y vistos): `0026` aplicada dos veces en Postgres 16 local (anon lee `cover_url` y no escribe; cada quien cambia solo su perfil); subida, reemplazo y borrado contra el mock; perfiles con y sin `0026` y sin `follows`; type-check, lint, build y capturas a 390 y 1280 px sin scroll horizontal.
+  El comando para despublicarlas estÃ¡ en `docs/LANZAMIENTO.md` Â§ 2c, y los ids en `backups/productos-muestra-ids.json` (local).
+- Verificado (cÃ¡mara con dispositivo simulado de Chromium: abrir, voltear, disparar, animaciÃ³n y paso a `/visual-search`; bÃºsquedas recientes y vistos): `0026` aplicada dos veces en Postgres 16 local (anon lee `cover_url` y no escribe; cada quien cambia solo su perfil); subida, reemplazo y borrado contra el mock; perfiles con y sin `0026` y sin `follows`; type-check, lint, build y capturas a 390 y 1280 px sin scroll horizontal.
 
-**Paquete N, en rama: estado de 4 pasos, Buscar y auditoría de la interfaz (2026-10-31).**
+**Paquete N, en rama: estado de 4 pasos, Buscar y auditorÃ­a de la interfaz (2026-10-31).**
 
 - **Estado de la prenda:**
-  - La escala es nuevo (con etiqueta, sin usar) · impecable (al 100) · buen estado · con detalles.
-  - En la ficha se ve como una barra de 4 pasos con la descripción del estado y «Qué significa cada estado».
-  - El detalle de «con detalles» va ahí mismo.
+  - La escala es nuevo (con etiqueta, sin usar) Â· impecable (al 100) Â· buen estado Â· con detalles.
+  - En la ficha se ve como una barra de 4 pasos con la descripciÃ³n del estado y Â«QuÃ© significa cada estadoÂ».
+  - El detalle de Â«con detallesÂ» va ahÃ­ mismo.
   - `0027` agrega `nuevo` al CHECK.
-- **Medidas:** la ficha ya no muestra «Medidas» en piezas sin medidas (tipo `otro`).
-- **Buscar:** la barra va arriba, donde está el header, con «Cancelar»; ya no sigue al teclado.
+- **Medidas:** la ficha ya no muestra Â«MedidasÂ» en piezas sin medidas (tipo `otro`).
+- **Buscar:** la barra va arriba, donde estÃ¡ el header, con Â«CancelarÂ»; ya no sigue al teclado.
   - Antes de cerrar o navegar se quita el foco.
   - `ClientLayout` re-sincroniza las barras fijas al perder el foco, por el desfase de iOS que dejaba la barra de abajo a media pantalla.
   - La barra de abajo va en su propia capa (`translateZ(0)`).
-- **Auditoría** de las 29 rutas a 390 y 1280 px: sin scroll horizontal, imágenes rotas ni errores de la app. Se arregló:
-  - Precios del resumen de Pagar y del pedido que se salían de la tarjeta (un grid sin `min-w-0`).
-  - «Ya está en tu bolsa» ahora abre la bolsa en vez de quedar deshabilitado.
-  - «Seguir» de marca y tienda en la ficha es de contorno, para que el único azul sea «Agregar a la bolsa».
-  - Filtros de la búsqueda iguales a los del perfil.
-  - La bolsa es un diálogo y cierra con Escape.
-  - Áreas de toque de «Guardar» y «Qué significa».
+- **AuditorÃ­a** de las 29 rutas a 390 y 1280 px: sin scroll horizontal, imÃ¡genes rotas ni errores de la app. Se arreglÃ³:
+  - Precios del resumen de Pagar y del pedido que se salÃ­an de la tarjeta (un grid sin `min-w-0`).
+  - Â«Ya estÃ¡ en tu bolsaÂ» ahora abre la bolsa en vez de quedar deshabilitado.
+  - Â«SeguirÂ» de marca y tienda en la ficha es de contorno, para que el Ãºnico azul sea Â«Agregar a la bolsaÂ».
+  - Filtros de la bÃºsqueda iguales a los del perfil.
+  - La bolsa es un diÃ¡logo y cierra con Escape.
+  - Ãreas de toque de Â«GuardarÂ» y Â«QuÃ© significaÂ».
 
-**Paquete P, en rama `agent/L5-ficha-grailed`.** Sin reseñas (FROZEN). La ficha muestra «Publicado hace» solo con `published_at` (`0028`). Al bajar el precio, el panel guarda el anterior en `original_price_mxn` (columna de `0001`) y la tienda lo tacha en rojo (`text-sale`, nada más usa ese color). El bloque de quien vende va después de los detalles, luego «Más de», y «Comprar» queda en una barra fija. Sin `0028` el catálogo se lee igual y se omite la fecha.
+**Paquete P, en rama `agent/L5-ficha-grailed`.** Sin reseÃ±as (FROZEN). La ficha muestra Â«Publicado haceÂ» solo con `published_at` (`0028`). Al bajar el precio, el panel guarda el anterior en `original_price_mxn` (columna de `0001`) y la tienda lo tacha en rojo (`text-sale`, nada mÃ¡s usa ese color). El bloque de quien vende va despuÃ©s de los detalles, luego Â«MÃ¡s deÂ», y Â«ComprarÂ» queda en una barra fija. Sin `0028` el catÃ¡logo se lee igual y se omite la fecha.
 
-E sigue bloqueado: es humano, no código.
+E sigue bloqueado: es humano, no cÃ³digo.
 
 Worktrees libres: `../viogi-L1` (`agent/L1-settings`) y `../viogi-L5` (`agent/L5-entregado`),
 con `npm ci` hecho. El siguiente agente hace `git fetch` + `checkout -B <rama> origin/main`.
 
 No registro abierto. No reviews. No Skydropx. No Next 16.
 
-## Dónde se opera (sin desplegar código)
+## DÃ³nde se opera (sin desplegar cÃ³digo)
 
-| Qué | Dónde |
+| QuÃ© | DÃ³nde |
 |---|---|
-| Correos de México | `/admin/settings` ? "Correos de México (MXN)". $90, 8 a 14 días hábiles. Express $200 (FedEx, DHL o Estafeta, 2 a 5 días) en `EXPRESS_SHIPPING_COST` |
+| Correos de MÃ©xico | `/admin/settings` ? "Correos de MÃ©xico (MXN)". $90, 8 a 14 dÃ­as hÃ¡biles. Express $200 (FedEx, DHL o Estafeta, 2 a 5 dÃ­as) en `EXPRESS_SHIPPING_COST` |
 | Costo por punto de entrega | `/admin/pickup-points` (por fila, no el setting de domicilio) |
 | Ventanas de reserva y umbral solo-tarjeta | `/admin/settings` |
-| Tienda Viogi | `/es/tienda/viogi` · "Vendido por Viogi" en cada ficha |
+| Tienda Viogi | `/es/tienda/viogi` Â· "Vendido por Viogi" en cada ficha |
 | Solicitudes de vendedor | `/es/vender` ? fila `pending` en `store_applications`. **No se aprueba sola** |
 | Embedding al publicar | crear/editar en `/admin/products`. Si Gemini falla: banner "Embedding pendiente" |
 | Marcar entregado | `/admin/reservas` ? "Pedidos por entregar" |
@@ -178,32 +180,32 @@ Marcar entregado **no** transfiere dinero. Eso es el paquete E.
 
 ## Migraciones
 
-Prod: `0001`–`0026`, aplicadas (`0026` el 2026-10-30, tras respaldo `backups/2026-10-30-*.sql`). `0027_condition_nuevo.sql` por aplicar. `0028_published_at.sql` está en `agent/L5-ficha-grailed`, por aplicar. Siguiente libre: **`0029`**.
+Prod: `0001`â€“`0027`, aplicadas (`0026` el 2026-10-30, tras respaldo `backups/2026-10-30-*.sql`; `0027` el 2026-11-16 por el MCP de Supabase, sin respaldo en archivo). `0028_published_at.sql` llegÃ³ con el PR #25 y falta aplicarla. Siguiente libre: **`0029`**.
 
-- `0021` abrió la merma a la tienda · `0023` la volvió a cerrar: el estado final es
+- `0021` abriÃ³ la merma a la tienda Â· `0023` la volviÃ³ a cerrar: el estado final es
   que solo `disposition = 'activa'` puede estar `listed` (verificado contra prod).
 - `0022` deja las medidas obligatorias **solo al publicar**. El alta de inventario
-  interno guarda tipo, dueño y costo sin cinta métrica.
+  interno guarda tipo, dueÃ±o y costo sin cinta mÃ©trica.
 - Tracking: `supabase_migrations.schema_migrations` coincide con los archivos.
-  `0021`–`0023` figuraban como timestamps (`20261004…`) y se repararon el
+  `0021`â€“`0023` figuraban como timestamps (`20261004â€¦`) y se repararon el
   2026-10-23 con `supabase migration repair`. Se aplica con
-  `supabase db push --db-url …` (primero `--dry-run`): el repo no está ligado.
+  `supabase db push --db-url â€¦` (primero `--dry-run`): el repo no estÃ¡ ligado.
 
-## Auditoría 2026-09-18
+## AuditorÃ­a 2026-09-18
 
-`main` @ `634cecb` auditado contra código y contra prod. Cobro intacto, A1/D/F vivos,
+`main` @ `634cecb` auditado contra cÃ³digo y contra prod. Cobro intacto, A1/D/F vivos,
 grants correctos (`owner` y `stripe_account_id` dan 401 a anon), 28/28 prendas con
 `store_id`, `settings.home_shipping_mxn = 10`. Sin P0. Los dos rotos encontrados son
 G1 y G2. Nits no urgentes: prompt de Gemini duplicado en `scripts/generate-embeddings.ts`
 vs `lib/embeddings.ts` (canon = `lib/`), `?embed=pending` en productos sin imagen.
 
-## Incidente 2026-10-04 — el proyecto de Supabase se pausó
+## Incidente 2026-10-04 â€” el proyecto de Supabase se pausÃ³
 
 El plan Free pausa el proyecto por inactividad y **el subdominio deja de resolver**
-(`Non-existent domain`). Efecto visible: la tienda responde 200 pero con catálogo
-vacío y `/tienda/viogi` da 404, porque las consultas fallan y devuelven lista
-vacía. No es un bug del código. Se restaura desde el dashboard; los datos quedan
-intactos. **Si la tienda se ve vacía, revisa Supabase antes que el repo.**
+(`Non-existent domain`). Efecto visible: la tienda responde 200 pero con catÃ¡logo
+vacÃ­o y `/tienda/viogi` da 404, porque las consultas fallan y devuelven lista
+vacÃ­a. No es un bug del cÃ³digo. Se restaura desde el dashboard; los datos quedan
+intactos. **Si la tienda se ve vacÃ­a, revisa Supabase antes que el repo.**
 
 ## Incidente 2026-09-18
 
