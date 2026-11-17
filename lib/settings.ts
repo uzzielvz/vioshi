@@ -11,8 +11,7 @@ export interface BusinessSettings {
   card_reserve_minutes: number
   voucher_hours: number
   manual_hold_days: number
-  /** Editable en /admin/settings. Semilla $10 (0017). El monto real es una
-   * decisión de negocio abierta: no se hardcodea "el correcto" en otro sitio. */
+  /** Correos de México, editable en /admin/settings. El express no vive aquí. */
   home_shipping_mxn: number
 }
 
@@ -26,7 +25,7 @@ const FALLBACK: BusinessSettings = {
   card_reserve_minutes: 30,
   voucher_hours: 24,
   manual_hold_days: 3,
-  home_shipping_mxn: 10,
+  home_shipping_mxn: 90,
 }
 
 const COLUMNS =

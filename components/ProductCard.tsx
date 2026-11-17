@@ -6,9 +6,9 @@ import clsx from "clsx";
 import { useTranslations } from "next-intl";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
 import { useWishlist } from "@/hooks/useWishlist";
-import { formatPrice } from "@/lib/formatters";
 import type { GarmentType } from "@/lib/garments";
 import { HeartIcon } from "@/components/ui/icons";
+import Price from "@/components/product/Price";
 
 interface ProductCardProps {
   id: string;
@@ -22,6 +22,7 @@ interface ProductCardProps {
   availability?: "disponible" | "apartada" | "vendida";
   brand?: { name: string };
   garmentType?: GarmentType;
+  compareAt?: number;
 }
 
 export default function ProductCard({
@@ -34,6 +35,7 @@ export default function ProductCard({
   size,
   availability,
   brand,
+  compareAt,
 }: ProductCardProps) {
   const { locale } = useLocaleContext();
   const t = useTranslations("ui.card");
@@ -78,7 +80,13 @@ export default function ProductCard({
 
       <div className="mt-2.5 grid gap-0.5 px-2.5 md:px-0">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="min-w-0 truncate text-[13.5px] font-semibold leading-tight text-ink">
+          <p
+            className={
+              brand?.name
+                ? "min-w-0 truncate text-[11px] font-semibold uppercase leading-tight tracking-[0.08em] text-ink"
+                : "min-w-0 truncate text-[13px] font-semibold leading-tight text-ink"
+            }
+          >
             {brand?.name ?? name}
           </p>
           {size ? (
@@ -86,17 +94,17 @@ export default function ProductCard({
           ) : null}
         </div>
         {/* The seller's own title, under the brand and quieter. */}
-        {brand?.name ? <p className="truncate text-[12.5px] leading-snug text-muted">{name}</p> : null}
+        {brand?.name ? <p className="truncate text-[12px] leading-snug text-muted">{name}</p> : null}
 
-        <div className="mt-1 flex h-5 items-center justify-between gap-2">
-          <p
-            className={clsx(
-              "text-[13.5px] font-bold leading-none tabular-nums",
-              sold ? "text-muted line-through" : "text-ink"
-            )}
-          >
-            {formatPrice(price, locale, false)}
-          </p>
+        <div className="mt-1 flex items-start justify-between gap-2">
+          <Price
+            price={price}
+            compareAt={compareAt}
+            locale={locale}
+            sold={sold}
+            className="text-[13.5px] font-bold leading-none tabular-nums"
+            compareClassName="text-[12px]"
+          />
           {/* 40px tap target that grows to the left; the glyph sits on the right edge
               (the heart path has ~3px of air in its box, hence -mr-[3px]) so it lines up
               with the size above without making the price row taller. */}

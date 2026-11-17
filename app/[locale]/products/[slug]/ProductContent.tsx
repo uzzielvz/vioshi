@@ -9,13 +9,14 @@ import { useTranslations } from "next-intl";
 import { ProductData as Product } from "@/lib/products";
 import { useCart } from "@/store/cartStore";
 import { generateId } from "@/lib/utils";
-import { formatPrice } from "@/lib/formatters";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import { rememberProduct } from "@/lib/search/recent";
+import { postedAgo, type PostedUnit } from "@/lib/posted";
 import ProductGrid from "@/components/ProductGrid";
 import FollowButton from "@/components/FollowButton";
 import ConditionScale from "@/components/product/ConditionScale";
+import Price from "@/components/product/Price";
 import { HeartIcon } from "@/components/ui/icons";
 import {
   CONDITION_LABELS,
@@ -30,7 +31,17 @@ interface ProductContentProps {
   product: Product;
   more: Product[];
   payThreshold: string;
+  now: number;
 }
+
+const POSTED_KEY: Record<PostedUnit, "posted_minute" | "posted_hour" | "posted_day" | "posted_week" | "posted_month" | "posted_year"> = {
+  minute: "posted_minute",
+  hour: "posted_hour",
+  day: "posted_day",
+  week: "posted_week",
+  month: "posted_month",
+  year: "posted_year",
+};
 
 function Accordion({
   title,
@@ -64,7 +75,7 @@ function Accordion({
   );
 }
 
-export default function ProductContent({ product, more, payThreshold }: ProductContentProps) {
+export default function ProductContent({ product, more, payThreshold, now }: ProductContentProps) {
   const t = useTranslations("product");
   const tUi = useTranslations("ui.product");
   const tSocial = useTranslations("ui.social");
@@ -123,6 +134,7 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
   };
 
   const initial = product.store?.name.trim().charAt(0).toUpperCase() || "";
+  const posted = product.publishedAt ? postedAgo(product.publishedAt, now) : null;
 
   return (
     <div>
@@ -228,19 +240,21 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
             </p>
           )}
 
-          <p className="text-[24px] font-bold tabular-nums text-ink md:text-[30px]">
-            {formatPrice(product.price, locale, false)}
-          </p>
+          <Price
+            price={product.price}
+            compareAt={product.compareAt}
+            locale={locale}
+            sold={estado === "vendida"}
+            className="text-[24px] font-bold leading-none tabular-nums md:text-[30px]"
+            compareClassName="text-[16px] md:text-[18px]"
+          />
+
+          {posted ? (
+            <p className="text-[13px] text-muted">{tUi(POSTED_KEY[posted.unit], { count: posted.count })}</p>
+          ) : null}
 
           {estado === "vendida" ? (
             <div className="grid gap-2.5">
-              <button
-                type="button"
-                disabled
-                className="h-12 w-full cursor-not-allowed rounded-btn bg-carton text-[14px] font-semibold text-muted"
-              >
-                {t("sold_out")}
-              </button>
               <p className="text-[13px] leading-relaxed text-muted">{t("sold_note")}</p>
               <Link
                 href={`/${locale}/collections/all`}
@@ -250,25 +264,8 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
               </Link>
             </div>
           ) : estado === "apartada" ? (
-            <div className="grid gap-2.5">
-              <button
-                type="button"
-                disabled
-                className="h-12 w-full cursor-not-allowed rounded-btn border border-ink bg-paper text-[14px] font-semibold text-ink"
-              >
-                {t("reserved")}
-              </button>
-              <p className="text-[13px] leading-relaxed text-muted">{t("reserved_note")}</p>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handleBuy}
-              className="h-12 w-full rounded-btn bg-accent text-[14px] font-semibold text-paper hover:bg-accent-press"
-            >
-              {tUi("buy")}
-            </button>
-          )}
+            <p className="text-[13px] leading-relaxed text-muted">{t("reserved_note")}</p>
+          ) : null}
 
           <button
             type="button"
@@ -282,30 +279,11 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
             {saved ? tUi("saved") : tUi("save")}
           </button>
 
-          {product.store && (
-            <div className="mt-1 flex items-center gap-3 border-y border-line py-3.5">
-              <Link href={`/${locale}/tienda/${product.store.slug}`} className="flex min-w-0 flex-1 items-center gap-3">
-                <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-ink text-[17px] font-bold text-paper">
-                  {initial}
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
-                    {tUi("sold_by")}
-                  </span>
-                  <span className="block truncate text-[14px] font-semibold text-ink">
-                    {product.store.name}
-                  </span>
-                </span>
-              </Link>
-              <FollowButton kind="store" id={product.store.id} name={product.store.name} quiet />
-            </div>
-          )}
-
           {product.condition && (
             <ConditionScale condition={product.condition} defectNotes={product.defectNotes} locale={locale} />
           )}
 
-          <div className={product.store ? "" : "mt-1 border-t border-line"}>
+          <div className="mt-1 border-t border-line">
             {/* Caps, bags and other «otro» pieces have no measurements to show. */}
             {measurementEntries.length > 0 && (
               <Accordion title={tUi("measurements")} defaultOpen>
@@ -345,6 +323,27 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
         </div>
       </div>
 
+      {product.store && (
+        <section className="px-3.5 py-4 md:px-8">
+          <div className="flex items-center gap-3 border-y border-line py-3.5">
+            <Link href={`/${locale}/tienda/${product.store.slug}`} className="flex min-w-0 flex-1 items-center gap-3">
+              <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-ink text-[17px] font-bold text-paper">
+                {initial}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+                  {tUi("sold_by")}
+                </span>
+                <span className="block truncate text-[14px] font-semibold text-ink">
+                  {product.store.name}
+                </span>
+              </span>
+            </Link>
+            <FollowButton kind="store" id={product.store.id} name={product.store.name} quiet />
+          </div>
+        </section>
+      )}
+
       {more.length > 0 && product.store && (
         <section className="px-0 py-6 md:px-8">
           <div className="mb-3 flex items-baseline justify-between gap-3 px-3.5 md:px-0">
@@ -361,6 +360,44 @@ export default function ProductContent({ product, more, payThreshold }: ProductC
           <ProductGrid products={more} />
         </section>
       )}
+
+      <div className="fixed inset-x-0 bottom-[60px] z-40 border-t border-line bg-paper md:bottom-0">
+        <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3 px-3.5 py-2.5 md:px-8 md:pb-[max(10px,env(safe-area-inset-bottom))]">
+          <Price
+            price={product.price}
+            compareAt={product.compareAt}
+            locale={locale}
+            sold={estado === "vendida"}
+            className="min-w-0 text-[18px] font-bold leading-none tabular-nums"
+            compareClassName="text-[13px]"
+          />
+          {estado === "vendida" ? (
+            <button
+              type="button"
+              disabled
+              className="h-12 w-[46%] max-w-[280px] flex-none cursor-not-allowed rounded-btn bg-carton text-[14px] font-semibold text-muted"
+            >
+              {t("sold_out")}
+            </button>
+          ) : estado === "apartada" ? (
+            <button
+              type="button"
+              disabled
+              className="h-12 w-[46%] max-w-[280px] flex-none cursor-not-allowed rounded-btn border border-ink bg-paper text-[14px] font-semibold text-ink"
+            >
+              {t("reserved")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleBuy}
+              className="h-12 w-[46%] max-w-[280px] flex-none rounded-btn bg-accent text-[14px] font-semibold text-paper hover:bg-accent-press"
+            >
+              {tUi("buy")}
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

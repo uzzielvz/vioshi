@@ -17,6 +17,7 @@ interface Product {
   reservedUntil?: string;
   brand?: { name: string };
   garmentType?: GarmentType;
+  compareAt?: number;
 }
 
 interface ProductGridProps {
@@ -50,6 +51,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
           availability={product.availability}
           brand={product.brand}
           garmentType={product.garmentType}
+          compareAt={product.compareAt}
         />
       ))}
     </div>

@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import clsx from "clsx";
 import { brand } from "@/lib/brand";
 import { STORAGE_KEYS } from "@/lib/constants";
 import { CloseIcon } from "@/components/ui/icons";
@@ -45,6 +47,8 @@ function isStandalone(): boolean {
  */
 export default function InstallPrompt() {
   const t = useTranslations("ui.pwa");
+  const path = (usePathname() ?? "").replace(/^\/[a-z]{2}(?=\/|$)/, "");
+  const onProduct = path.startsWith("/products/");
   const [mode, setMode] = useState<Mode>(null);
   const [installEvent, setInstallEvent] = useState<InstallEvent | null>(null);
 
@@ -92,7 +96,12 @@ export default function InstallPrompt() {
     <div
       role="region"
       aria-label={t("title", { brand: brand.name })}
-      className="fixed inset-x-2 bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 flex items-center gap-3 rounded-btn border border-line bg-paper p-3 shadow-[0_6px_24px_rgba(17,17,17,0.12)] md:hidden"
+      className={clsx(
+        "fixed inset-x-2 z-30 flex items-center gap-3 rounded-btn border border-line bg-paper p-3 shadow-[0_6px_24px_rgba(17,17,17,0.12)] md:hidden",
+        onProduct
+          ? "bottom-[calc(132px+env(safe-area-inset-bottom))]"
+          : "bottom-[calc(64px+env(safe-area-inset-bottom))]"
+      )}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icons/icon-192.png" alt="" width={40} height={40} className="h-10 w-10 flex-none rounded-btn border border-line" />

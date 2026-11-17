@@ -79,5 +79,5 @@ export default async function ProductPage({ params }: PageProps) {
     }
   }
 
-  return <ProductContent product={product} more={more} payThreshold={payThreshold} />;
+  return <ProductContent product={product} more={more} payThreshold={payThreshold} now={Date.now()} />;
 }

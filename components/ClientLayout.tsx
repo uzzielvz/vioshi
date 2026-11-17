@@ -43,10 +43,17 @@ export function ClientLayout({
     route === '/checkout' ||
     AUTH_PATHS.some((p) => route.startsWith(p)) ||
     (route === '/account' && !userEmail);
+  // The product page adds a fixed buy bar above the phone nav.
+  const isProduct = route.startsWith('/products/');
 
   return (
     // The bottom nav is fixed on phones; the padding keeps the footer visible above it.
-    <div className={clsx('flex min-h-screen flex-col', !isStandalone && 'pb-[60px] md:pb-0')}>
+    <div
+      className={clsx(
+        'flex min-h-screen flex-col',
+        !isStandalone && (isProduct ? 'pb-[128px] md:pb-[72px]' : 'pb-[60px] md:pb-0')
+      )}
+    >
       {!isStandalone && <Header userEmail={userEmail ?? null} />}
       <main className={clsx('flex-1', !isStandalone && 'pt-14 md:pt-16')}>{children}</main>
       {!isStandalone && <Footer />}
