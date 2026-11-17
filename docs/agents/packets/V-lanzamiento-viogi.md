@@ -1,6 +1,6 @@
 # Paquete V — Lanzar viogi.com como tienda única
 
-**Estado:** LISTO para repartir · **Escrito:** 2026-11-16 · **Base:** `origin/main` en `7eb0c32` (PR #24)
+**Estado:** LISTO para repartir · **Escrito:** 2026-11-16 · **Actualizado:** 2026-11-17 · **Base:** `origin/main` en `7eb0c32` (PR #24)
 
 **Meta:** el sábado 21 de noviembre Viogi vende sus piezas reales en su propio
 dominio, cobrando con Stripe en vivo. El código queda listo el jueves 19.
@@ -33,11 +33,17 @@ aparte, en § Trámites.
   - compra sin bolsa («Comprar» directo y «Agrega más de Viogi» al pagar);
   - correo de compra, apagado hasta que existan las variables de Resend;
   - reembolsos desde Stripe.
-- **Se perdió** el trabajo sin commit del 2026-11-07. Lo que aplica a Viogi se
-  rehace en V3:
-  - marca en mayúsculas;
-  - rebaja en rojo;
-  - «Comprar» fijo.
+- **PR #25 abierto, sin mergear** (`agent/L5-ficha-grailed`, del 2026-11-07).
+  Al 2026-11-17 se mergea limpio sobre `main`. Trae:
+  - tarjeta con la marca en mayúsculas y el precio anterior tachado en rojo;
+  - ficha con rebaja, «Publicado hace», el vendedor al final y «Comprar» en una
+    barra fija;
+  - envíos: Correos de México a $90 y express a $200; recoger en punto queda
+    en un menú;
+  - la migración `0028_published_at.sql`, por aplicar.
+
+  Va **antes** de V1 (ver § 4): toca `ProductContent.tsx`, `checkout/page.tsx`
+  y `messages/*.json`, los mismos archivos que V1.
 - **Migraciones:** según `STATUS.md`, producción tiene `0001`–`0026`. La
   `0027_condition_nuevo.sql` está en `main` y **no está confirmado** que se
   haya aplicado. La sesión que escribió este plan no tiene red hacia Supabase:
@@ -68,9 +74,9 @@ aparte, en § Trámites.
   - `app/api/webhooks/stripe/**`;
   - las RPC de stock.
 - Sin dependencias nuevas, salvo V4 si el humano lo aprueba.
-- **`messages/*.json` lo tocan V1, V2 y V3.** Por eso van en serie:
-  V1 → V2 → V3. El que llega después parte de `origin/main` ya con el anterior
-  mergeado.
+- **`messages/*.json` lo tocan el PR #25, V1, V2 y V3.** Por eso van en serie:
+  PR #25 → V1 → V2 → V3. El que llega después parte de `origin/main` ya con el
+  anterior mergeado.
 - **DoD de cada sub-paquete:**
   - `npm run type-check`, `npm run lint`, `npm run build` y `npm run test:rules`
     en verde;
@@ -81,27 +87,34 @@ aparte, en § Trámites.
 
 | # | Sub-paquete | Quién | Depende de | Paralelo con |
 |---|---|---|---|---|
-| V0 | Confirmar producción y aplicar `0027` | Agente local con acceso a Supabase | — | todo |
-| V1 | Modo tienda única + marca Viogi | Agente de código | — | V0, trámites |
+| P25 | Revisar y mergear el PR #25 | Humano (un agente puede revisarlo antes) | — | V0, trámites |
+| V0 | Confirmar producción y aplicar `0027` y `0028` | Agente local con acceso a Supabase | `0028` necesita P25 | todo |
+| V1 | Modo tienda única + marca Viogi | Agente de código | P25 | V0, trámites |
 | V2 | Devoluciones y Legal publicados | Agente de código | V1 mergeado + dudas 2 y 3 | V0 |
-| V3 | Tarjeta y ficha (rehacer lo perdido) | Agente de código | V2 mergeado | V0 |
+| V3 | Cerrar tarjeta y ficha sobre el PR #25 | Agente de código | V2 mergeado | V0 |
 | V4 | Medición (opcional) | Agente de código | V3 mergeado + duda 4 | — |
 | V5 | Verificación final en producción | Agente + humano | V0–V3 y trámites H1–H5 | — |
+
+**P25, en concreto:**
+- Revisa el PR #25 con su propio plan de pruebas y mergéalo.
+- Si choca con `main` en `docs/agents/STATUS.md`, conserva las filas de los dos
+  lados.
+- Si el humano decide no mergearlo, V3 vuelve a incluir la rebaja y la barra
+  de compra, y V1 puede empezar sin esperar.
 
 Calendario propuesto:
 
 | Día | Código | Humano |
 |---|---|---|
-| Lun 16 | V0, V1 | H1 dominio. H2 empezar Stripe y pedir OXXO. H5 empezar fotos y medidas. |
-| Mar 17 | V1 mergeado, V2 | H1 dominio en Vercel. H3 Resend y correo de Supabase. H4 variables. |
-| Mié 18 | V3 | H2 llaves y webhook. Aprobar textos de V2. |
-| Jue 19 | V4 si aplica, V5 | H5 quitar demo y publicar piezas reales. H6 prueba de compra. |
+| Mar 17 | P25, V0, V1 | H1 dominio. H2 empezar Stripe y pedir OXXO. H5 empezar fotos y medidas. |
+| Mié 18 | V1 mergeado, V2, V3 | H1 dominio en Vercel. H3 Resend y correo de Supabase. H4 variables. Aprobar textos de V2. |
+| Jue 19 | V4 si aplica, V5 | H2 llaves y webhook. H5 quitar demo y publicar piezas reales. H6 prueba de compra. |
 | Vie 20 | Arreglos | Abrir a 10–20 clientes de confianza. |
 | Sáb 21 | — | Post y stories con el link en la bio. |
 
 ---
 
-## V0 — Confirmar producción y aplicar `0027`
+## V0 — Confirmar producción y aplicar `0027` y `0028`
 
 **Quién:** agente local (la máquina del humano tiene el CLI de Supabase
 enlazado al proyecto `viogi`). **Rama:** ninguna; no cambia código.
@@ -121,13 +134,20 @@ enlazado al proyecto `viogi`). **Rama:** ninguna; no cambia código.
    Si falta otra o sobra alguna, detente y avisa.
 3. Respaldo de esquema y datos a `backups/` con la fecha. Confirma que los
    archivos no están vacíos.
-4. `--dry-run`: debe salir solo `0027_condition_nuevo.sql`. Aplícala con
-   `db push --linked`.
+4. `--dry-run`: debe salir `0027_condition_nuevo.sql` y, si el PR #25 ya está
+   en `main`, también `0028_published_at.sql`. Ninguna otra. Aplícalas con
+   `db push --linked`. Si el PR #25 se mergea después, repite este paso solo
+   para la `0028`.
 5. Verifica y reporta:
    - `products_condition_check` acepta `nuevo`, `impecable`, `buen_estado` y
      `con_detalles`;
    - ninguna fila de `products` tiene un `condition` fuera de esos cuatro;
-   - `products_defect_notes_required_check` sigue existiendo.
+   - `products_defect_notes_required_check` sigue existiendo;
+   - si aplicaste la `0028`:
+     - existe `products.published_at`;
+     - las piezas publicadas la tienen llena;
+     - `anon` puede leerla;
+     - existe el trigger `products_stamp_published_at`.
 6. Solo lectura, para el reporte:
    - cuántas piezas hay con `listed = true`;
    - cuáles de los 12 ids de `docs/LANZAMIENTO.md` § 2c siguen publicadas;
@@ -141,7 +161,7 @@ pieza.
 
 ## V1 — Modo tienda única y marca Viogi
 
-**Rama:** `agent/V1-tienda-unica` · **Sin migraciones.**
+**Rama:** `agent/V1-tienda-unica` · **Depende de:** P25 · **Sin migraciones.**
 
 ### Idea
 
@@ -156,8 +176,8 @@ acordarse de poner una variable, y volver a rail es poner esa variable y
 `components/BottomNav.tsx` · `components/Header.tsx` · `components/Footer.tsx` ·
 `components/FollowButton.tsx` · `app/[locale]/vender/page.tsx` ·
 `app/[locale]/tienda/[slug]/page.tsx` ·
-`app/[locale]/products/[slug]/ProductContent.tsx` (solo la fila «Vende», los
-«Seguir» y el encabezado de «Más de») ·
+`app/[locale]/products/[slug]/ProductContent.tsx` (solo el bloque del
+vendedor, los «Seguir» y el encabezado de «Más de») ·
 `app/[locale]/account/_components/AccountShell.tsx` ·
 `app/[locale]/account/following/page.tsx` ·
 `app/[locale]/account/profile/page.tsx` ·
@@ -209,10 +229,12 @@ variante de tienda) · `messages/es.json` · `messages/en.json` ·
    - No toques `hooks/useFollow.ts`, `lib/social/**` ni la tabla `follows`.
 
 7. **Ficha (`ProductContent.tsx`), solo en modo tienda**
-   - Quita la fila «Vende · Viogi».
+   - Quita el bloque del vendedor («Vende · Viogi»). Con el PR #25 está al
+     final de la ficha; sin él, debajo de «Guardar».
    - «Más de {store} · Ver perfil» pasa a un título «Más piezas», sin link al
      perfil. La cuadrícula de 4 piezas se queda.
    - La marca sigue siendo link a `/search?brand=`.
+   - «Publicado hace», la rebaja y la barra de «Comprar» se quedan.
    - No toques el botón «Comprar», el precio ni la escala de estado: eso es V3.
 
 8. **Cuenta básica (`AccountShell.tsx`), solo en modo tienda**
@@ -346,92 +368,60 @@ estamos terminando».
 
 ---
 
-## V3 — Tarjeta y ficha (rehacer lo perdido)
+## V3 — Cerrar tarjeta y ficha sobre el PR #25
 
-**Rama:** `agent/V3-ficha` · **Depende de:** V2 mergeado · **Sin migraciones**
-(`original_price_mxn` ya existe y ya es legible para `anon` desde `0011`).
+**Rama:** `agent/V3-ficha` · **Depende de:** P25 y V2 mergeados · **Sin
+migraciones.**
+
+El PR #25 ya trae la rebaja, la marca en mayúsculas, «Publicado hace» y la
+barra de «Comprar». Este sub-paquete **no las rehace**: revisa que queden bien
+en modo tienda y arregla lo que falle.
 
 ### Archivos permitidos
 
-`lib/pricing.ts` (nuevo) · `scripts/test-pricing.ts` (nuevo) · `package.json`
-(**solo** agregar el archivo de prueba a `test:rules`; es archivo serializado y
-este paquete lo autoriza) · `lib/products.ts` (solo `original_price_mxn`) ·
-`app/admin/products/actions.ts` (solo `updateProduct`) · `tailwind.config.ts`
-(un color) · `components/ui/Price.tsx` (nuevo) · `components/ProductCard.tsx` ·
-`components/ProductGrid.tsx` · `components/product/BuyBar.tsx` (nuevo) ·
-`app/[locale]/products/[slug]/ProductContent.tsx` · `messages/*.json` ·
-`docs/design/TOKENS.md` · `docs/agents/STATUS.md`.
+`app/[locale]/products/[slug]/ProductContent.tsx` · `components/ProductCard.tsx` ·
+`components/product/Price.tsx` · `messages/*.json` · `docs/design/TOKENS.md` ·
+`docs/agents/STATUS.md`.
 
 ### Tareas
 
-1. **Rebaja de precio**
-   - `lib/products.ts`:
-     - agrega `original_price_mxn` a `PUBLIC_PRODUCT_SELECT` y a `DbProduct`;
-     - `ProductData.originalPrice?: number`, solo cuando es mayor que `price`.
-   - `lib/pricing.ts`, función pura
-     `originalPriceAfterEdit({ wasListed, oldPrice, oldOriginal, newPrice })`:
-     - sin precio nuevo → `undefined` (no tocar la columna);
-     - la pieza no estaba publicada → `null` (corregir un precio antes de
-       publicar no es rebaja);
-     - `antes = max(oldOriginal, oldPrice)`. Si `newPrice < antes` → `antes`;
-       si no → `null`.
-   - `scripts/test-pricing.ts`, con `node:test`. Casos:
-     - 500 → 400 guarda 500;
-     - segunda rebaja 400 → 350, con original 500, conserva 500;
-     - volver a 500 o subir limpia;
-     - sin publicar no cuenta;
-     - sin precio devuelve `undefined`.
-   - `app/admin/products/actions.ts`, en `updateProduct`:
-     - lee `listed, price_mxn, original_price_mxn` actuales;
-     - incluye `original_price_mxn` en el `update` cuando la función no
-       devuelve `undefined`.
-   - `tailwind.config.ts`: color `drop: "#D92D20"`. Se usa **solo** para el
-     precio rebajado.
-   - `components/ui/Price.tsx`:
-     - precio normal en `ink`;
-     - con rebaja, el nuevo en `text-drop` y al lado el anterior tachado en
-       `muted`;
-     - vendida: tachado en `muted`, sin rojo.
+1. **Barra de «Comprar» contra la barra de navegación en iPhone.** El PR #25
+   la fija con `bottom-[60px]`. La barra de navegación crece con
+   `env(safe-area-inset-bottom)`, así que en iPhones con barra de inicio puede
+   quedar encimada.
+   - Compruébalo con un viewport que tenga área segura.
+   - Si se encima, cambia el `bottom` para sumar el área segura.
+   - Confirma que no tapa el final de la página ni el footer.
+2. **Corazón de la tarjeta.** Con los tamaños nuevos, el borde derecho del
+   dibujo debe quedar a ≤ 1 px del borde derecho de la talla, a 390 y 1280 px.
+   Con una rebaja (dos precios en la fila) el corazón no debe bajar de renglón.
+3. **Rebaja de punta a punta.**
+   - Baja el precio de una pieza publicada desde `/admin/products`.
+   - El precio nuevo sale en rojo y el anterior tachado en la tarjeta, la
+     ficha y la barra.
+   - Al regresar al precio original, la rebaja desaparece.
+   - Corregir el precio de una pieza sin publicar no crea rebaja.
+4. **Modo tienda.** Con V1 ya mergeado, la ficha no muestra el bloque del
+   vendedor y sí muestra «Publicado hace», la rebaja y la barra.
+5. **Envíos.** Los precios de Correos y express que muestra Pagar deben ser
+   los mismos en `/pages/shipping-payments-returns` y en la ficha.
+6. `TOKENS.md`: anota la tarjeta (mayúsculas y tamaños), el rojo de rebaja y
+   la barra de compra, si el PR #25 no lo dejó escrito.
 
-2. **Tarjeta (`ProductCard.tsx`)**
-   - Marca en **mayúsculas**: 11.5 px, `font-semibold`, `tracking-[0.04em]`.
-   - Talla 11.5 px. Título del vendedor 12 px `muted`. Precio 12.5 px
-     `font-semibold`, con `Price`. Corazón de 16 px.
-   - El corazón debe seguir alineado con el borde derecho de la talla. Mídelo:
-     el borde del dibujo queda a ≤ 1 px del de la talla, a 390 y 1280 px.
-   - `ProductGrid.tsx` pasa `originalPrice`.
-
-3. **«Comprar» siempre a la vista (`BuyBar.tsx` + `ProductContent.tsx`)**
-   - **Celular:** barra fija justo arriba de la barra de navegación. Mide el
-     alto real de `BottomNav` para el `bottom` (`ClientLayout` le reserva
-     60 px), y suma `env(safe-area-inset-bottom)`. A la izquierda van la marca
-     y el precio (con `Price`); a la derecha, el botón azul «Comprar». El botón
-     dentro de la página se oculta en celular.
-   - **Escritorio:** el botón de la página se queda. La barra aparece abajo
-     solo cuando ese botón sale de la pantalla (`IntersectionObserver`), con
-     miniatura, nombre, precio y «Comprar».
-   - Solo para piezas disponibles. Vendidas y apartadas no llevan barra.
-   - Deja espacio al final de la página para que la barra no tape el footer.
-   - El precio grande de la ficha también usa `Price`.
-
-4. `TOKENS.md`: anota la tarjeta (mayúsculas y tamaños), el rojo de rebaja y
-   la barra de compra.
+Si todo pasa sin cambios de código, el PR de este sub-paquete solo lleva los
+docs y el reporte de la verificación.
 
 ### Fuera de este paquete (es de rail, no de Viogi)
 
-- Cuántas personas guardaron la pieza y «publicado hace…». Necesitan una
-  migración.
-- El bloque del vendedor con ventas y seguidores.
+- Cuántas personas guardaron la pieza.
+- El vendedor con sus ventas y seguidores.
 - Reseñas. Están prohibidas en Fase 1 (`FROZEN.md`).
 
 ### Verificación
 
-- `npm run test:rules` incluye las pruebas nuevas.
-- **Rebaja:** una pieza con `original_price_mxn` mayor que su precio se ve en
-  rojo con el anterior tachado, en la tarjeta, la ficha y la barra.
-- **«Comprar»** lleva a Pagar desde la barra, en celular y en escritorio.
-- **Alineación:** el corazón queda alineado con la talla.
-- Sin scroll horizontal a 390 y 1280 px.
+- `npm run test:rules` en verde, con las pruebas de precio del PR #25.
+- Capturas de la ficha y el inicio a 390 y 1280 px, con y sin rebaja.
+- Sin scroll horizontal.
 
 ---
 
