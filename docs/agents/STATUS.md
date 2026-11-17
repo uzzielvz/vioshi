@@ -56,11 +56,8 @@ Mario no es tienda: `products.owner` (`uzziel` | `mario`) es interno. Connect no
 | M perfil único (persona = tienda) | — | **MERGEADO** (#21) · `0026` aplicada en prod el 2026-10-30 · 12 piezas demo publicadas |
 | N estado de 4 pasos, Buscar arriba, auditoría | — | **MERGEADO** (#23) · `0027` por aplicar |
 | O correo de compra + reembolsos + borradores legales + sin bolsa | — | **MERGEADO** (#24) · sin migraciones |
-<<<<<<< HEAD
-| P ficha: rebaja, publicado hace, vendedor al final | L5 | **EN RAMA** `agent/L5-ficha-grailed` · `0028` por aplicar |
-=======
+| P ficha: rebaja, publicado hace, vendedor al final | L5 | **EN PR** (#25) · `0028` por aplicar |
 | **V lanzamiento de viogi.com como tienda única** | — | **LISTO para repartir** (2026-11-17) · [`packets/V-lanzamiento-viogi.md`](./packets/V-lanzamiento-viogi.md) · primero se revisa y mergea el PR #25 (ficha, rebaja y envíos; trae `0028`) · V0–V5 sin empezar · `0027` sin confirmar en prod |
->>>>>>> origin/main
 
 **Sin bolsa (2026-11-06, decisión del humano).**
 - **Ficha:** dice «Comprar». La pieza va al borrador de compra (`cartStore`, el mismo `localStorage`), que guarda la tienda (`CartItem.storeId`); las piezas de otra tienda se descartan. Lleva directo a `/checkout`.
