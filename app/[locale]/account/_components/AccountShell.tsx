@@ -2,31 +2,73 @@ import Link from 'next/link';
 import type { User } from '@supabase/supabase-js';
 import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@/i18n';
+import { isMarketplace } from '@/lib/mode';
 import { getProducts } from '@/lib/products';
 import { getPersonProfile } from '@/lib/profile/person';
+import { createClient } from '@/lib/supabase/server';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import { topBrands } from '@/lib/topBrands';
 import ProfileMediaButton from '@/components/profile/ProfileMediaButton';
 import { ProfileStat } from '@/components/profile/ProfileStat';
+import UnderlineTabs from '@/components/ui/UnderlineTabs';
 import { GearIcon } from '@/components/ui/icons';
-import { buttonClass, iconButtonClass } from '@/components/ui/styles';
+import { buttonClass, iconButtonClass, screenTitleClass } from '@/components/ui/styles';
 import { getAccountDisplayName } from './accountDisplayName';
 
 export type AccountTab = 'saved' | 'purchases' | 'following';
 
-// A person's profile («Tu perfil» in the prototype). It is the same profile a
-// store has (ProfileHeader); selling is an extra step, from «Vender» in the nav.
-export default async function AccountShell({
-  locale,
-  user,
-  active,
-  children,
-}: {
+type ShellProps = {
   locale: Locale;
   user: User;
   active: AccountTab;
   children: React.ReactNode;
-}) {
+};
+
+export default function AccountShell(props: ShellProps) {
+  return isMarketplace ? <PlatformShell {...props} /> : <StoreShell {...props} />;
+}
+
+// The single store's account: who you are, saved pieces and purchases. No
+// cover, photo, numbers or brands.
+async function StoreShell({ locale, user, active, children }: ShellProps) {
+  const supabase = createClient();
+  const [{ data: profile }, t] = await Promise.all([
+    supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
+    getTranslations('ui.profile'),
+  ]);
+  const displayName = getAccountDisplayName(user, (profile as { name: string | null } | null)?.name ?? null);
+
+  const tabs = [
+    { key: 'saved', href: `/${locale}/account`, label: t('saved') },
+    { key: 'purchases', href: `/${locale}/account/orders`, label: t('purchases') },
+  ] as const;
+
+  return (
+    <div className="mx-auto w-full max-w-[1280px] pb-10">
+      <header className="grid gap-4 pt-5 md:pt-8">
+        <div className="flex items-center justify-between gap-4 px-4 md:px-8">
+          <div className="min-w-0">
+            <h1 className={`truncate ${screenTitleClass}`}>{displayName}</h1>
+            {user.email && <p className="truncate text-[13px] text-muted">{user.email}</p>}
+          </div>
+          <Link href={`/${locale}/account/profile`} className={buttonClass('line', 'sm', 'flex-none')}>
+            {t('edit')}
+          </Link>
+        </div>
+        <UnderlineTabs
+          label={t('tabs_label')}
+          tabs={tabs.map((tab) => ({ href: tab.href, label: tab.label, active: tab.key === active }))}
+        />
+      </header>
+
+      <div className="pt-3 md:px-8">{children}</div>
+    </div>
+  );
+}
+
+// A person's profile («Tu perfil» in the prototype). It is the same profile a
+// store has (ProfileHeader); selling is an extra step, from «Vender» in the nav.
+async function PlatformShell({ locale, user, active, children }: ShellProps) {
   const [person, t] = await Promise.all([getPersonProfile(user), getTranslations('ui.profile')]);
   const displayName = getAccountDisplayName(user, person.name);
 

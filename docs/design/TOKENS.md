@@ -17,6 +17,10 @@
   (`ı`, U+0131) y el punto se dibuja aparte en azul `accent` (círculo de 0.18em, a 0.09em del tope
   de la caja de línea). Ver `.wm` en el prototipo.
 - Las tiendas (Viogi) tienen su propio logo y portada. No se mezclan con la marca de la plataforma.
+- **Modo tienda única** (`lib/mode.ts`, por defecto; `NEXT_PUBLIC_MARKETPLACE=on` vuelve a rail):
+  logo «viogi» con el mismo dibujo, cada i con su punto y todo en `ink`; barra inferior de 4
+  (Inicio · Buscar · Guardados · Cuenta). Íconos de la app en negro sobre blanco; los de rail
+  quedan en `public/icons/rail/`.
 
 ## Color
 

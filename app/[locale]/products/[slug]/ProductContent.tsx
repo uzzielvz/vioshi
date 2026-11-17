@@ -13,6 +13,7 @@ import { useLocaleContext } from "@/hooks/useLocaleContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import { rememberProduct } from "@/lib/search/recent";
 import { postedAgo, type PostedUnit } from "@/lib/posted";
+import { isMarketplace } from "@/lib/mode";
 import ProductGrid from "@/components/ProductGrid";
 import FollowButton from "@/components/FollowButton";
 import ConditionScale from "@/components/product/ConditionScale";
@@ -135,6 +136,8 @@ export default function ProductContent({ product, more, payThreshold, now }: Pro
 
   const initial = product.store?.name.trim().charAt(0).toUpperCase() || "";
   const posted = product.publishedAt ? postedAgo(product.publishedAt, now) : null;
+  // The single store has no store profiles, so there is no seller to show.
+  const showSeller = isMarketplace && Boolean(product.store);
 
   return (
     <div>
@@ -323,7 +326,7 @@ export default function ProductContent({ product, more, payThreshold, now }: Pro
         </div>
       </div>
 
-      {product.store && (
+      {showSeller && product.store && (
         <section className="px-3.5 py-4 md:px-8">
           <div className="flex items-center gap-3 border-y border-line py-3.5">
             <Link href={`/${locale}/tienda/${product.store.slug}`} className="flex min-w-0 flex-1 items-center gap-3">
@@ -348,14 +351,16 @@ export default function ProductContent({ product, more, payThreshold, now }: Pro
         <section className="px-0 py-6 md:px-8">
           <div className="mb-3 flex items-baseline justify-between gap-3 px-3.5 md:px-0">
             <h2 className="text-[17px] font-bold text-ink">
-              {tUi("more_from", { store: product.store.name })}
+              {isMarketplace ? tUi("more_from", { store: product.store.name }) : tUi("more_pieces")}
             </h2>
-            <Link
-              href={`/${locale}/tienda/${product.store.slug}`}
-              className="text-[13px] font-semibold text-ink"
-            >
-              {tUi("see_profile")}
-            </Link>
+            {isMarketplace && (
+              <Link
+                href={`/${locale}/tienda/${product.store.slug}`}
+                className="text-[13px] font-semibold text-ink"
+              >
+                {tUi("see_profile")}
+              </Link>
+            )}
           </div>
           <ProductGrid products={more} />
         </section>

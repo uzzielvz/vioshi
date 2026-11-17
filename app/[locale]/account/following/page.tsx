@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { getProducts } from '@/lib/products';
+import { isMarketplace } from '@/lib/mode';
 import type { Locale } from '@/i18n';
 import FollowButton from '@/components/FollowButton';
 import Avatar from '@/components/ui/Avatar';
@@ -30,6 +31,8 @@ export default async function FollowingPage({
   searchParams: { type?: string };
 }) {
   const locale = params.locale as Locale;
+  if (!isMarketplace) redirect(`/${locale}/account`);
+
   const filter: Filter = searchParams.type === 'stores' || searchParams.type === 'brands' ? searchParams.type : 'all';
 
   const supabase = createClient();

@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import clsx from "clsx";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
 import { STORE_CATEGORIES } from "@/lib/categories";
+import { isMarketplace } from "@/lib/mode";
 import Wordmark from "@/components/ui/Wordmark";
 import { CameraIcon, CloseIcon, HeartIcon, MenuIcon, SearchIcon } from "@/components/ui/icons";
 import SearchSheet from "@/components/search/SearchSheet";
@@ -164,9 +165,11 @@ export default function Header({ userEmail = null }: HeaderProps) {
         <div className="hidden max-w-[460px] flex-1 md:flex">{searchField()}</div>
 
         <nav className="ml-auto flex items-center gap-4 md:gap-6" aria-label={t("menu")}>
-          <Link href={`/${locale}/vender`} className="hidden text-[14px] font-semibold md:inline">
-            {t("sell")}
-          </Link>
+          {isMarketplace && (
+            <Link href={`/${locale}/vender`} className="hidden text-[14px] font-semibold md:inline">
+              {t("sell")}
+            </Link>
+          )}
           <Link href={`/${locale}/account`} className="hidden text-[14px] font-semibold md:inline">
             {userEmail ? t("account") : t("login")}
           </Link>
@@ -224,7 +227,7 @@ export default function Header({ userEmail = null }: HeaderProps) {
             <p className="pb-1 pt-6 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">{t("account")}</p>
             {menuLink(`/${locale}/account`, userEmail ? t("account") : t("login"))}
             {menuLink(`/${locale}/wishlist`, t("saved"))}
-            {menuLink(`/${locale}/vender`, t("sell"))}
+            {isMarketplace && menuLink(`/${locale}/vender`, t("sell"))}
             {menuLink(`/${locale}/pages/customer-support`, t("help"))}
 
             <p className="pb-2 pt-6 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">{t("language")}</p>

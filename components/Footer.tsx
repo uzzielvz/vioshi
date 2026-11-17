@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useLocaleContext } from "@/hooks/useLocaleContext";
 import { brand } from "@/lib/brand";
+import { isMarketplace } from "@/lib/mode";
 import Wordmark from "@/components/ui/Wordmark";
 
 export default function Footer() {
@@ -12,7 +13,7 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   const links = [
-    { href: `/${locale}/vender`, label: t("sell") },
+    ...(isMarketplace ? [{ href: `/${locale}/vender`, label: t("sell") }] : []),
     { href: `/${locale}/pages/shipping-payments-returns`, label: t("shipping") },
     { href: `/${locale}/pages/size-guide`, label: t("size_guide") },
     { href: `/${locale}/pages/customer-support`, label: t("help") },

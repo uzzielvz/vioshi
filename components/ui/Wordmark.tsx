@@ -1,14 +1,16 @@
+import { Fragment } from "react";
 import clsx from "clsx";
 import { brand } from "@/lib/brand";
+import { isMarketplace } from "@/lib/mode";
 
 /**
- * Platform wordmark: the brand name in lowercase with the first "i" drawn
- * dotless and its dot painted in the accent blue. Names without an "i"
- * render as plain text, so renaming the platform by env keeps working.
+ * Brand wordmark: the name in lowercase with every "i" drawn dotless and the
+ * same round dot painted on top (accent blue on the platform, ink on the
+ * single store). Names without an "i" render as plain text, so renaming by env
+ * keeps working.
  */
 export default function Wordmark({ className }: { className?: string }) {
-  const name = brand.name.toLowerCase();
-  const i = name.indexOf("i");
+  const parts = brand.name.toLowerCase().split("i");
 
   return (
     <span
@@ -16,18 +18,22 @@ export default function Wordmark({ className }: { className?: string }) {
       style={{ fontVariationSettings: "'opsz' 32" }}
       aria-label={brand.name}
     >
-      {i === -1 ? (
-        name
-      ) : (
-        <>
-          {name.slice(0, i)}
-          <span className="relative inline-block" aria-hidden="true">
-            ı
-            <span className="absolute left-1/2 top-[0.09em] h-[0.18em] w-[0.18em] -translate-x-1/2 rounded-full bg-accent" />
-          </span>
-          {name.slice(i + 1)}
-        </>
-      )}
+      {parts.map((part, index) => (
+        <Fragment key={index}>
+          {index > 0 && (
+            <span className="relative inline-block" aria-hidden="true">
+              ı
+              <span
+                className={clsx(
+                  "absolute left-1/2 top-[0.09em] h-[0.18em] w-[0.18em] -translate-x-1/2 rounded-full",
+                  isMarketplace ? "bg-accent" : "bg-ink"
+                )}
+              />
+            </span>
+          )}
+          {part}
+        </Fragment>
+      ))}
     </span>
   );
 }

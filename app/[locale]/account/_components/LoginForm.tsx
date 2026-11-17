@@ -5,6 +5,7 @@ import { useFormState, useFormStatus } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import type { Locale } from '@/i18n';
 import { brand } from '@/lib/brand';
+import { isMarketplace } from '@/lib/mode';
 import { buttonClass, inputClass, labelClass, textLinkClass } from '@/components/ui/styles';
 import { signInAction, type AuthState } from '../actions';
 import AuthScreen, { FormAlert, GoogleButton, OrDivider } from './AuthScreen';
@@ -34,7 +35,7 @@ export default function LoginForm({ locale, notice }: { locale: Locale; notice?:
     <AuthScreen
       locale={locale}
       title={t('login_title', { brand: brand.name })}
-      subtitle={t('login_body')}
+      subtitle={t(isMarketplace ? 'login_body' : 'login_body_store')}
       closeLabel={t('close')}
     >
       {notice && <FormAlert>{notice === 'oauth' ? t('error_oauth') : t('error_reset_expired')}</FormAlert>}

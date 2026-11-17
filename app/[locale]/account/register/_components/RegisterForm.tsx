@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useFormState, useFormStatus } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import type { Locale } from '@/i18n';
+import { isMarketplace } from '@/lib/mode';
 import { buttonClass, hintClass, inputClass, labelClass, textLinkClass } from '@/components/ui/styles';
 import { signUpAction, type AuthState } from '../../actions';
 import AuthScreen, { FormAlert, GoogleButton, OrDivider } from '../../_components/AuthScreen';
@@ -33,7 +34,7 @@ export default function RegisterForm({ locale }: { locale: Locale }) {
   );
 
   return (
-    <AuthScreen locale={locale} title={t('register_title')} subtitle={t('register_body')} closeLabel={t('close')}>
+    <AuthScreen locale={locale} title={t('register_title')} subtitle={t(isMarketplace ? 'register_body' : 'register_body_store')} closeLabel={t('close')}>
       <form action={formAction} noValidate className="grid gap-3.5">
         <input type="hidden" name="locale" value={locale} />
 
