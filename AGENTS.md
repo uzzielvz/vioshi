@@ -19,7 +19,7 @@ Negocio (cambia): Obsidian `70_Trabajo/Viogi` · playbook `Divide and Conquer.md
 
 Un agente = un carril = archivos del paquete. Si dos tocan el mismo archivo, serie.
 
-**Siguiente trabajo:** [`docs/agents/packets/V-lanzamiento-viogi.md`](./docs/agents/packets/V-lanzamiento-viogi.md): lanzar viogi.com como tienda única (sub-paquetes V0–V5, en el orden que marca el archivo). Connect (L7) sigue bloqueado hasta `OPEN.md` § Connect.
+**Siguiente trabajo:** [`docs/agents/packets/V-lanzamiento-viogi.md`](./docs/agents/packets/V-lanzamiento-viogi.md): lanzar viogi.com como tienda única (primero el PR #25; luego los sub-paquetes V0–V5, en el orden que marca el archivo). Connect (L7) sigue bloqueado hasta `OPEN.md` § Connect.
 
 ## Serializado
 
