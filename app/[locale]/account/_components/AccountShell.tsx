@@ -5,7 +5,6 @@ import type { Locale } from '@/i18n';
 import { isMarketplace } from '@/lib/mode';
 import { getProducts } from '@/lib/products';
 import { getPersonProfile } from '@/lib/profile/person';
-import { createClient } from '@/lib/supabase/server';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import { topBrands } from '@/lib/topBrands';
 import ProfileMediaButton from '@/components/profile/ProfileMediaButton';
@@ -29,14 +28,10 @@ export default function AccountShell(props: ShellProps) {
 }
 
 // The single store's account: who you are, saved pieces and purchases. No
-// cover, photo, numbers or brands.
+// cover, photo, numbers or brands. Title is the login handle, not the full name.
 async function StoreShell({ locale, user, active, children }: ShellProps) {
-  const supabase = createClient();
-  const [{ data: profile }, t] = await Promise.all([
-    supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
-    getTranslations('ui.profile'),
-  ]);
-  const displayName = getAccountDisplayName(user, (profile as { name: string | null } | null)?.name ?? null);
+  const t = await getTranslations('ui.profile');
+  const handle = accountHandle(user);
 
   const tabs = [
     { key: 'saved', href: `/${locale}/account`, label: t('saved') },
@@ -47,10 +42,7 @@ async function StoreShell({ locale, user, active, children }: ShellProps) {
     <div className="mx-auto w-full max-w-[1280px] pb-10">
       <header className="grid gap-4 pt-5 md:pt-8">
         <div className="flex items-center justify-between gap-4 px-4 md:px-8">
-          <div className="min-w-0">
-            <h1 className={`truncate ${screenTitleClass}`}>{displayName}</h1>
-            {user.email && <p className="truncate text-[13px] text-muted">{user.email}</p>}
-          </div>
+          <h1 className={`min-w-0 truncate ${screenTitleClass}`}>{handle}</h1>
           <Link href={`/${locale}/account/profile`} className={buttonClass('line', 'sm', 'flex-none')}>
             {t('edit')}
           </Link>
@@ -64,6 +56,15 @@ async function StoreShell({ locale, user, active, children }: ShellProps) {
       <div className="pt-3 md:px-8">{children}</div>
     </div>
   );
+}
+
+function accountHandle(user: User): string {
+  const email = user.email?.trim();
+  if (email) {
+    const at = email.indexOf('@');
+    return at > 0 ? email.slice(0, at) : email;
+  }
+  return 'Usuario';
 }
 
 // A person's profile («Tu perfil» in the prototype). It is the same profile a

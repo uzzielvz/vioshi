@@ -6,9 +6,8 @@ import { useLocaleContext } from "@/hooks/useLocaleContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import type { ProductData } from "@/lib/products";
 import ProductGrid from "@/components/ProductGrid";
-import EmptyState from "@/components/ui/EmptyState";
 import { HeartIcon } from "@/components/ui/icons";
-import { buttonClass } from "@/components/ui/styles";
+import { textLinkClass } from "@/components/ui/styles";
 
 // Saved pieces live in localStorage and, with a session, in wishlist_items
 // (useWishlist keeps both in step), so the list is built on the client.
@@ -28,11 +27,16 @@ export default function SavedPieces({ products }: { products: ProductData[] }) {
 
   if (saved.length === 0) {
     return (
-      <EmptyState icon={<HeartIcon />} title={t("empty_title")} body={t("empty_body")}>
-        <Link href={`/${locale}`} className={buttonClass("primary")}>
+      <div className="mx-auto grid max-w-[320px] justify-items-center gap-2.5 px-4 py-12 text-center">
+        <HeartIcon className="h-5 w-5 text-muted" />
+        <p className="text-[13.5px] leading-snug text-muted">{t("empty_title")}</p>
+        <Link
+          href={`/${locale}`}
+          className={`${textLinkClass} text-[11.5px] uppercase tracking-[0.1em]`}
+        >
           {t("explore")}
         </Link>
-      </EmptyState>
+      </div>
     );
   }
 
